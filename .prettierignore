@@ -1,0 +1,14 @@
+node_modules
+pnpm-lock.yaml
+dist
+.next
+.source
+next-env.d.ts
+playwright-report
+test-results
+*.tsbuildinfo
+openspec/
+
+# Preserve the formatting of planning documents outside Step 01.
+docs/*.md
+!docs/development.md

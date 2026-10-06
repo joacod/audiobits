@@ -1,0 +1,29 @@
+{
+  "name": "@audiobits/www",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev --webpack --hostname 127.0.0.1",
+    "build": "next build --webpack",
+    "start": "next start --hostname 127.0.0.1",
+    "generate": "fumadocs-mdx && next typegen",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "audiobits": "workspace:*",
+    "next": "16.3.8",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "fumadocs-core": "16.16.1",
+    "fumadocs-ui": "16.16.1",
+    "fumadocs-mdx": "15.4.6",
+    "@base-ui/react": "1.8.0",
+    "tailwindcss": "4.3.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.3.3",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@types/mdx": "2.0.14"
+  }
+}

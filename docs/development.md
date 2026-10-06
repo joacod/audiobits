@@ -1,108 +1,99 @@
-# Local development and tooling design
+# Local development
 
-Status: target workflow for Step 01. No package manifest, build, or development
-server exists yet. Commands below must be implemented and verified before they
-become onboarding instructions.
+The Step 01 workspace foundation is implemented. Audio APIs and playback remain
+planned. See [Step 01 verification](../openspec/changes/01-workspace-foundation/verification.md)
+for executed checks and limitations.
 
-## Tool choices
+## Setup
 
-Use pnpm workspaces, TypeScript, tsdown, Next.js App Router, compatible React,
-Tailwind CSS, shadcn/ui with Base UI, Fumadocs MDX, Vitest, Playwright, Changesets,
-publint, ESLint, and Prettier. No Turborepo or Nx is needed for this graph.
-Add tools at the step that uses them; do not install presentation libraries just
-to reserve them. The runtime has no framework dependencies.
+Use the Node version in [.node-version](../.node-version) and the pnpm version
+in [package.json](../package.json). The root enforces Node 24 LTS. Direct
+versions are exact-pinned; the lockfile is shared by all four workspaces.
 
-On 2026-10-06 official documentation identifies Node 24 as LTS, pnpm 12 as the
-current release line, Next.js 16.3.8 in its documentation, and TypeScript 6.0 as
-a released line. Use these as candidates, not an untested compatibility promise.
-Step 01 resolves current stable compatible releases, pins exact direct versions,
-pins the package manager and Node baseline, and commits one lockfile. Do not use
-canary builds or inherit older dependency versions from reference projects.
-
-Verify tsdown declaration generation, Next/Fumadocs MDX integration, UI primitive
-compatibility, and the test runner's Node requirements before locking the stack.
-Record chosen versions in executable configuration, not repeated prose tables.
-
-## Workspace linkage
-
-The site and vanilla example declare a dependency on the local package:
-
-```json
-{
-  "private": true,
-  "dependencies": {
-    "audiobits": "workspace:*"
-  }
-}
+```sh
+pnpm install --frozen-lockfile
+pnpm dev
 ```
 
-`audiobits` is the provisional package identifier. The workspace protocol requires
-local resolution; it does not silently fetch another package with the same name.
-No global `npm link`, registry upload, or release bump is needed for local work.
+Open [the site](http://127.0.0.1:3000). Development builds the library before
+starting the library watcher and Next.js server. An initial build failure
+prevents site startup. A child failure stops the other process and returns a
+failure status; Ctrl+C stops both and their process groups on macOS/Linux.
+Windows process-tree termination has not been verified.
 
-The library exports built ESM and declarations from `dist`. The website imports
-those public exports. Do not alias imports to `src`: that could conceal broken
-exports, missing generated files, and declaration/package problems.
+The site uses Next.js with webpack, Fumadocs MDX, Tailwind, and a small Base UI
+control. webpack is the verified path for this foundation; Turbopack's MDX
+worker failed in the validation environment. shadcn presentation components,
+Changesets, and gallery design are deferred until a step uses them.
 
-## Development loop
+## Local package edits
 
-Implement these root script contracts in Step 01:
+Edit `packages/audiobits/src/index.ts` while `pnpm dev` runs. After tsdown emits
+the change, reload the page to see the updated `workspaceStatus` value. The site
+uses `transpilePackages` and imports `audiobits` through its public exports,
+which point to `dist`; it never aliases library source. A refresh is the
+supported verification path; state-preserving hot updates are not promised.
 
-| Target command | Required behavior |
-| --- | --- |
-| `pnpm dev` | Build the library once, then run its watcher and the site server; propagate failures and terminate both on exit |
-| `pnpm build:lib` | Build ESM, declarations, and applicable generated metadata |
-| `pnpm build:site` | Build the library first, then the website from that checkout |
-| `pnpm build` | Build all applicable workspaces in dependency order |
-| `pnpm typecheck` | Check runtime, site, and consumer types |
-| `pnpm lint` | Check configured source and documentation rules |
-| `pnpm test` | Run pure unit tests |
-| `pnpm test:browser` | Run the pinned Playwright Chromium suite |
-| `pnpm test:package` | Build, pack, validate, and install the tarball in an isolated consumer |
+The vanilla example also uses `audiobits: workspace:*`. Its separate development
+server needs a completed library build:
 
-The first build must complete before Next starts. Confirm that edits emitted by
-tsdown cause the site to update; use Next's `transpilePackages` for the workspace
-if required by the selected integration. A browser refresh is acceptable if
-audio state cannot safely survive a hot update. Dispose the previous engine on
-unmount or hot replacement; never retain two contexts accidentally.
+```sh
+pnpm build:lib
+pnpm --filter @audiobits/vanilla dev
+```
 
-Prefer existing pnpm process support or a small explicit supervisor with correct
-exit handling. Do not leave orphan watchers or add a large task orchestrator.
+## Root commands
 
-## Verification without publishing
+| Command             | Behavior                                                     |
+| ------------------- | ------------------------------------------------------------ |
+| `pnpm dev`          | Initial library build, library watch, and site server        |
+| `pnpm build:lib`    | Library ESM and declarations                                 |
+| `pnpm build:site`   | Library build followed by site build                         |
+| `pnpm build`        | Library, site, and vanilla production builds                 |
+| `pnpm typecheck`    | Build library, generate site types, check all workspaces     |
+| `pnpm lint`         | ESLint, formatting, and relative Markdown file-target checks |
+| `pnpm format`       | Format in-scope source/configuration/onboarding files        |
+| `pnpm test`         | Supervisor failure and shutdown tests                        |
+| `pnpm test:package` | Build, lint, pack, isolated install/import/typecheck         |
+| `pnpm test:browser` | Production builds and Chromium site/MDX/vanilla smoke checks |
 
-There are two distinct checks:
+For browser checks, install the browser matching the pinned Playwright version:
 
-1. Workspace integration: a library edit changes the local gallery and its tests.
-2. Distribution integration: a clean consumer installs a locally packed tarball,
-   imports its exports, typechecks, and plays a sample in Chromium.
+```sh
+pnpm exec playwright install chromium
+pnpm test:browser
+```
 
-The second check must run outside workspace resolution, with no source aliases
-or access to unpublished source required. Inspect the archive file list for
-metadata, declarations, license, and accidental internal/private files. Keep
-temporary tarballs and consumer output untracked. No registry publication is
-part of either check.
+CI uses `playwright install --with-deps chromium` on Linux. The browser suite
+starts its own site on port 3100 and vanilla preview on port 4173. Neither port
+may already be occupied. Keep `NODE_ENV` unset for normal local commands; an
+unrelated value can interfere with Next.js. CI disables Next telemetry.
 
-Once Step 02 exists, a library API change must update its tests and affected
-site examples in the same change. CI builds the site after the library and
-typechecks copied examples to catch drift.
+## Package verification
 
-## Independent deployment
+`pnpm test:package` validates the built ESM/declaration exports with publint,
+inspects a five-file archive allowlist, and installs that archive into a fresh
+system temporary directory using npm offline with install scripts disabled.
+The Node import and TypeScript NodeNext check use only the installed package
+for library resolution. Workspace source and browser globals are not required.
+The temporary consumer is removed afterward.
 
-Configure the site host to access the whole monorepo even if its app directory
-is `apps/www`. Install from the root lockfile and invoke the root site build.
-Library changes must trigger relevant site builds/previews; a path filter that
-watches only `apps/www` is incorrect. Keep deploy credentials at the host or CI
-boundary, not in repository files.
+The package currently exports only `workspaceStatus`. This proves the build
+boundary; it does not establish audio behavior. The runtime has zero runtime
+dependencies. The root, site, example, and runtime are all publication-guarded.
 
-Hosting provider selection is deferred until deployment is requested. Next.js
-does not require choosing a provider during library setup. See the separate
-[release design](releases.md) for development versus stable documentation.
+Formatting preserves the existing planning documents outside this step.
+Relative Markdown checks verify file targets, not remote links or heading
+anchors. Validate OpenSpec separately:
 
-## References
+```sh
+OPENSPEC_TELEMETRY=0 openspec validate --all --strict --no-interactive
+```
 
-- [pnpm workspaces](https://pnpm.io/workspaces)
-- [tsdown watch mode](https://tsdown.dev/options/watch-mode)
-- [Next.js local package support](https://nextjs.org/docs/app/api-reference/config/next-config-js/transpilePackages)
-- [Node release policy](https://nodejs.org/en/about/previous-releases)
-- [Fumadocs](https://www.fumadocs.dev/docs/ui)
+## Independent delivery
+
+The site consumes the local runtime without a version bump or npm publication.
+`pnpm build:site` includes the library build from the same checkout. No hosting
+provider, deployment credentials, npm workflow, or publication target is enabled.
+Future delivery must keep [site deployment and npm releases](releases.md)
+separate and label development documentation distinctly from a stable release.

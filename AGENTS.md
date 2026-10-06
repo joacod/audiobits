@@ -4,8 +4,9 @@
 
 AudioBits is a browser-native procedural audio library with a separate public
 documentation and demo site in one monorepo. Read [the roadmap](docs/roadmap.md)
-and the selected OpenSpec change before implementation. The repository is
-currently planning-only; proposed APIs and commands are not implemented.
+and the selected OpenSpec change before implementation. The repository has a
+workspace foundation and minimal site. Audio APIs remain proposed; use the
+roadmap and each change's verification note for current status.
 
 - Work on the explicitly selected step. Do not automatically start the next.
 - Explain material scope changes before implementing them. Keep changes small.

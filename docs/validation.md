@@ -1,7 +1,8 @@
 # Validation and acceptance design
 
-Status: planned checks. No sound, browser, package, or performance result exists
-yet. Each implementation change records its own executed evidence.
+Status: audio and release checks remain planned. Foundation package and Chromium
+smoke evidence is recorded in [Step 01](../openspec/changes/01-workspace-foundation/verification.md).
+Each implementation change records its own executed evidence.
 
 ## Initial browser policy
 

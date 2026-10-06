@@ -1,0 +1,29 @@
+{
+  "name": "audiobits",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Procedural browser audio library (unreleased workspace foundation).",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "tsdown": "0.23.0"
+  }
+}

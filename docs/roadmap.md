@@ -1,6 +1,7 @@
 # Implementation roadmap
 
-Status: planning complete; runtime implementation has not started.
+Status: Step 00 planning complete; Step 01 workspace foundation implemented.
+Audio runtime implementation starts at Step 02, after a separate review gate.
 
 Read [AGENTS.md](../AGENTS.md) before implementation. Every numbered step is an
 OpenSpec change with its own proposal, design, and tasks. Runtime changes also
@@ -53,7 +54,7 @@ without authorizing their implementation.
 
 ## Verification and execution
 
-Current planning checks:
+OpenSpec checks:
 
 ```sh
 OPENSPEC_TELEMETRY=0 openspec validate --all --strict --no-interactive
@@ -61,7 +62,8 @@ OPENSPEC_TELEMETRY=0 openspec status --change 01-workspace-foundation
 git diff --check
 ```
 
-Application scripts listed in [the development design](development.md) are
-targets for Step 01, not commands available in this planning-only repository.
+Application scripts in [local development](development.md) are now available.
+See [Step 01 evidence](../openspec/changes/01-workspace-foundation/verification.md)
+for foundation verification. Later audio APIs remain unimplemented.
 At each gate, record exact commands and outcomes, browser/version where relevant,
 listening evidence, and unresolved limitations in that change's verification note.
