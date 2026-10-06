@@ -1,0 +1,33 @@
+{
+  "name": "audiobits-workspace",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.9.1",
+  "engines": {
+    "node": ">=24.21.0 <25"
+  },
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "build:lib": "pnpm --filter audiobits build",
+    "build:site": "pnpm build:lib && pnpm --filter @audiobits/www build",
+    "build": "pnpm build:site && pnpm --filter @audiobits/vanilla build",
+    "typecheck": "pnpm build:lib && pnpm --filter @audiobits/www generate && pnpm -r typecheck",
+    "lint": "eslint . && prettier --check . && node scripts/check-doc-links.mjs",
+    "format": "prettier --write .",
+    "test": "vitest run",
+    "test:browser": "pnpm build && playwright test",
+    "test:package": "pnpm build:lib && node scripts/test-package.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "@playwright/test": "1.63.0",
+    "@types/node": "24.19.1",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.3.8",
+    "prettier": "3.9.9",
+    "publint": "0.3.25",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.71.0",
+    "vitest": "5.0.3"
+  }
+}

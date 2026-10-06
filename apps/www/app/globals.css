@@ -1,0 +1,32 @@
+@import "tailwindcss";
+@import "fumadocs-ui/css/neutral.css";
+@import "fumadocs-ui/css/preset.css";
+
+body {
+  margin: 0;
+}
+.foundation {
+  max-width: 48rem;
+  margin: 4rem auto;
+  padding: 0 1.5rem;
+}
+.foundation h1 {
+  font-size: 2.5rem;
+  font-weight: 650;
+}
+.foundation p {
+  margin: 1rem 0;
+}
+.foundation a {
+  text-decoration: underline;
+}
+.foundation button {
+  padding: 0.5rem 1rem;
+  border: 1px solid currentColor;
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
+.foundation :focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 4px;
+}

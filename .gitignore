@@ -1,3 +1,14 @@
 # macOS metadata
 .DS_Store
 ._*
+
+# Dependencies and generated outputs
+node_modules/
+dist/
+.next/
+.source/
+next-env.d.ts
+*.tsbuildinfo
+playwright-report/
+test-results/
+*.tgz

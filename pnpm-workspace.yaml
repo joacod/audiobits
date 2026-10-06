@@ -1,0 +1,14 @@
+packages:
+  - packages/*
+  - apps/*
+  - examples/*
+
+strictPeerDependencies: true
+minimumReleaseAge: 2880
+
+# Only the native build tools used by this workspace may run install scripts.
+allowBuilds:
+  esbuild: true
+  sharp: true
+  "@tailwindcss/oxide": true
+  unrs-resolver: true
