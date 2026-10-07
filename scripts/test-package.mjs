@@ -130,7 +130,9 @@ try {
     for (const recipe of Object.values(recipes)) audio.sound(defineSound(recipe));
     assert.equal(audio.state, 'idle');
     await audio.dispose();
-    assert.equal('AudioBits workspace ready');
+    assert.equal(typeof createAudio, 'function');
+    assert.equal(typeof defineSound, 'function');
+    assert.equal(typeof validateRecipe, 'function');
     assert.ok(import.meta.resolve('audiobits').startsWith(new URL('./node_modules/', import.meta.url).href));
     console.log('Isolated Node import and exported value passed.');
   `,
