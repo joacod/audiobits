@@ -12,3 +12,7 @@ next-env.d.ts
 playwright-report/
 test-results/
 *.tgz
+
+# Local showcase visual verification
+apps/www/.impeccable/review/
+apps/www/.impeccable/config.local.json

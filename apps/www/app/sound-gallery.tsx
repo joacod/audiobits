@@ -3,16 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Button } from "@base-ui/react/button";
+import { SoundCard } from "./sound-card";
 import { OutputScope } from "./output-scope";
-import { RecipeTools } from "./recipe-tools";
-import {
-  soundInfo,
-  soundKinds,
-  sounds,
-  parametersFor,
-  parameterLabel,
-  parameterEndpoints,
-} from "../lib/gallery";
+import { soundInfo, soundKinds, sounds, parametersFor } from "../lib/gallery";
 import type { SoundKind } from "../lib/gallery";
 import { createAudio } from "audiobits";
 import type {
@@ -29,12 +22,14 @@ const defaults = () =>
     soundKinds.map((kind) => [kind, parametersFor(sounds[kind])]),
   ) as Record<SoundKind, Record<string, number>>;
 
-export function ConfirmationDemo({
+export function SoundGallery({
   rawSource,
   selected,
+  home = false,
 }: {
   rawSource: string;
   selected?: SoundKind;
+  home?: boolean;
 }) {
   const definitions = useRef<Partial<Record<SoundKind, Sound>>>({});
   const voices = useRef<Partial<Record<SoundKind, Voice>>>({});
@@ -200,12 +195,9 @@ export function ConfirmationDemo({
   }
   return (
     <section aria-labelledby="gallery-heading">
-      <h2 id="gallery-heading" className={selected ? "sr-only" : undefined}>
+      <h2 id="gallery-heading" className="sr-only">
         Procedural sound gallery
       </h2>
-      <p>
-        Browse silently. Play a sound, adjust it, then copy your configuration.
-      </p>
       <div className="gallery-mixer">
         <div className="audio-controls">
           <Button
@@ -252,6 +244,22 @@ export function ConfirmationDemo({
           (value) => value === "running" || value === "playing",
         )}
       />
+      {home && (
+        <SoundCard
+          kind="impact"
+          recipe={recipes["impact"]}
+          controls={controls["impact"]}
+          playing={playing["impact"]}
+          rawSource={rawSource}
+          onPlay={play}
+          onStop={stop}
+          onUpdateControl={updateControl}
+          onReset={resetControl}
+          onSeed={setSeed}
+          onApply={applyRecipe}
+          featured
+        />
+      )}
       {!selected && (
         <nav className="sound-index" aria-label="Sound collection">
           {soundKinds.map((kind) => (
@@ -265,79 +273,33 @@ export function ConfirmationDemo({
           ))}
         </nav>
       )}
-      {(selected ? [selected] : soundKinds).map((kind) => {
-        const recipe = recipes[kind];
-        const info = soundInfo[kind];
-        const sustained = recipe.kind === "sustained";
-        const status = playing[kind] ?? (sustained ? "stopped" : "ready");
-        return (
-          <article className="sound-card" id={kind} key={kind}>
-            <div className="sound-preview">
-              <h3>
-                <Link href={`/sounds/${kind}`}>{info.title}</Link>
-              </h3>
-              <p className="sound-use">{info.use}</p>
-              <p>{info.description}</p>
-              {Object.entries(recipe.parameters ?? {}).map(
-                ([name, parameter]) => (
-                  <label key={name}>
-                    {parameterLabel(kind, name)}:{" "}
-                    {controls[kind][name]?.toFixed(2)}
-                    <input
-                      aria-label={parameterLabel(kind, name)}
-                      type="range"
-                      min={parameter.min}
-                      max={parameter.max}
-                      step={(parameter.max - parameter.min) / 100}
-                      value={controls[kind][name] ?? parameter.default}
-                      onChange={(event) =>
-                        updateControl(kind, name, Number(event.target.value))
-                      }
-                    />
-                    {parameterEndpoints(kind, name) && (
-                      <span className="morph-endpoints" aria-hidden="true">
-                        {parameterEndpoints(kind, name)?.map((endpoint) => (
-                          <span key={endpoint}>{endpoint}</span>
-                        ))}
-                      </span>
-                    )}
-                    <span className="control-mode">
-                      {parameter.mode === "live"
-                        ? "Changes this voice while it plays"
-                        : "Applies on the next Play"}
-                    </span>
-                  </label>
-                ),
-              )}
-              <div className="audio-controls">
-                <Button
-                  className="play-action"
-                  disabled={
-                    sustained && (status === "starting" || status === "running")
-                  }
-                  onClick={() => void play(kind)}
-                >
-                  {sustained ? "Start" : "Play"} {kind}
-                </Button>
-                {sustained && (
-                  <Button onClick={() => stop(kind)}>Stop {kind}</Button>
-                )}
-              </div>
-              <p data-testid={`${kind}-state`} aria-live="polite">
-                {info.title}: {status}
-              </p>
-            </div>
-            <RecipeTools
-              kind={kind}
-              controls={controls[kind]}
-              rawSource={rawSource}
-              onReset={resetControl}
-              onSeed={setSeed}
-              onApply={applyRecipe}
-            />
-          </article>
-        );
-      })}
+      {!selected && (
+        <div id="collection" className="collection-title">
+          <h2>
+            {home ? "A character for every interaction." : "Find your sound."}
+          </h2>
+          <p>Play. Change. Repeat.</p>
+        </div>
+      )}
+      {(selected
+        ? [selected]
+        : soundKinds.filter((kind) => !home || kind !== "impact")
+      ).map((kind) => (
+        <SoundCard
+          key={kind}
+          kind={kind}
+          recipe={recipes[kind]}
+          controls={controls[kind]}
+          playing={playing[kind]}
+          rawSource={rawSource}
+          onPlay={play}
+          onStop={stop}
+          onUpdateControl={updateControl}
+          onReset={resetControl}
+          onSeed={setSeed}
+          onApply={applyRecipe}
+        />
+      ))}
     </section>
   );
 }

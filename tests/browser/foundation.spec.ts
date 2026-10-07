@@ -9,7 +9,7 @@ test("site uses public exports and keyboard-operated Base UI playback", async ({
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("http://127.0.0.1:3100");
   await expect(
-    page.getByRole("heading", { name: "AudioBits", exact: true }),
+    page.getByRole("heading", { name: "Sound as code.", exact: true }),
   ).toBeVisible();
   await expect(
     page.getByText("Unreleased · 0.1.0-rc.0 · Local workspace package"),
