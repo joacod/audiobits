@@ -48,7 +48,16 @@ const capabilities = {
     automationCurves: definitions.Value.anyOf[1].properties.curve.enum,
     values: ["number", "mapping", "seeded-variation", "frequency-automation"],
   },
-  curatedRecipes: ["confirmation", "impact", "thruster"],
+  curatedRecipes: [
+    "confirmation",
+    "impact",
+    "thruster",
+    "tactileClick",
+    "gentleRejection",
+    "glassNotification",
+    "whoosh",
+    "powerUp",
+  ],
   runtime: [
     "gesture-start",
     "bounded-voices",

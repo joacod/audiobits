@@ -663,3 +663,46 @@ async function capabilitySignal(recipe: unknown) {
   return { energy, tail, finished };
 }
 Object.assign(globalThis, { capabilitySignal });
+
+async function curatedSignal(
+  recipe: import("../../packages/audiobits/src/recipe/generated").Recipe,
+  rate: number,
+  values: Record<string, number>,
+  count = 1,
+  cancel = false,
+) {
+  const context = new OfflineAudioContext(1, rate * 2, rate);
+  const plan = compile(recipe, values, 42);
+  let finished = 0;
+  const graphs = Array.from({ length: count }, (_, i) =>
+    createGraph(
+      context,
+      context.destination,
+      plan,
+      0.05 + i * 0.008,
+      -12,
+      0,
+      () => {
+        finished++;
+      },
+    ),
+  );
+  if (cancel) graphs.forEach((graph) => graph.stop());
+  const buffer = await context.startRendering();
+  const samples = buffer.getChannelData(0);
+  let peak = 0,
+    energy = 0,
+    tail = 0,
+    onset = 0,
+    delta = 0;
+  for (let i = 0; i < samples.length; i++) {
+    require(Number.isFinite(samples[i]), "Nonfinite curated output");
+    peak = Math.max(peak, Math.abs(samples[i]));
+    energy += samples[i] ** 2;
+    if (i < rate * 0.05) onset = Math.max(onset, Math.abs(samples[i]));
+    if (i > rate * 1.5) tail = Math.max(tail, Math.abs(samples[i]));
+    if (i) delta = Math.max(delta, Math.abs(samples[i] - samples[i - 1]));
+  }
+  return { peak, energy, onset, tail, delta, finished };
+}
+Object.assign(globalThis, { curatedSignal });

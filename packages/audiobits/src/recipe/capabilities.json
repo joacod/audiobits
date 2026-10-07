@@ -13,7 +13,16 @@
     "automationCurves": ["linear", "exponential"],
     "values": ["number", "mapping", "seeded-variation", "frequency-automation"]
   },
-  "curatedRecipes": ["confirmation", "impact", "thruster"],
+  "curatedRecipes": [
+    "confirmation",
+    "impact",
+    "thruster",
+    "tactileClick",
+    "gentleRejection",
+    "glassNotification",
+    "whoosh",
+    "powerUp"
+  ],
   "runtime": [
     "gesture-start",
     "bounded-voices",

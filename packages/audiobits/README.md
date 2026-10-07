@@ -1,7 +1,7 @@
 # AudioBits
 
-Private, unreleased **0.1.0-rc.0** candidate. It includes confirmation, impact,
-and thruster; schema-1 recipes; play/live controls; seeded variation; bounded
+Private, unreleased **0.1.0-rc.0** candidate. It includes confirmation, impact, thruster, tactile click, gentle rejection,
+glass notification, whoosh and power-up; schema-1 recipes; play/live controls; seeded variation; bounded
 voices; buses and shared delay; native output taps; and explicit lifecycle APIs.
 Chromium is the initial browser gate. Maintainer listening acceptance for the
 unchanged sound definitions is recorded separately. Nothing has been published,
@@ -154,7 +154,7 @@ Concurrent starts share one promise. A host controls visibility/navigation polic
 the engine does not replay sounds or automatically resume them.
 
 Recipes contain no native nodes, callbacks, framework imports, or runtime
-dependencies. Only `audiobits/recipes` imports the curated confirmation, impact, and thruster data.
+dependencies. Only `audiobits/recipes` imports curated sound data.
 Default headroom checks do not guarantee safe peaks for arbitrary recipes,
 filter resonance, gains, or concurrency.
 
@@ -332,3 +332,12 @@ were not supplied; automated checks remain separate from that acceptance.
 
 `Bus.setDelay()` and `DelayOptions` are experimental and may change before 0.1.
 Shared delay is not a stable generalized effect API.
+
+## Curated sounds
+
+The eight exports live in `audiobits/recipes`: `confirmation`, `impact`, `thruster`,
+`tactileClick`, `gentleRejection`, `glassNotification`, `whoosh`, and `powerUp`.
+Intensity controls impact, click and power-up; brightness controls glass; size
+controls whoosh; throttle is live on thruster. Other sounds have no parameters.
+New sound definitions use only schema-1 sources, filters and envelopes. Their
+signal and resource properties are tested; listening acceptance is still pending.
