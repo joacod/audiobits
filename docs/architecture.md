@@ -1,14 +1,13 @@
 # Architecture design
 
-Status: Steps 01–03 implemented and accepted.
-Step 04 bus/native capabilities are implemented and accepted with automated
-evidence and maintainer manual verification.
-See [the roadmap](roadmap.md) for scope and [the development API](../packages/audiobits/README.md)
-for currently exported behavior.
+Canonical architecture for the private development package. The
+[package reference](../packages/audiobits/README.md) documents exact API limits;
+[recipe model](recipe-model.md) owns data semantics. Durable rationale belongs in
+[decisions](decisions/001-authoring-and-experimental-effects.md).
 
 ## Repository boundaries
 
-Target structure; directories are created when their implementation step begins:
+Repository responsibilities:
 
 ```text
 apps/www/                  Private Next.js documentation and demo workspace
@@ -17,12 +16,10 @@ packages/audiobits/
   src/compiler/            Internal execution plan and native graph construction
   src/runtime/             Engine, Sound, Voice, resource ownership
   src/recipes/             Curated recipes, separately exported
-  src/meta/                Versioned schema and compact metadata
   tests/                   Unit and Chromium audio checks
 examples/vanilla/          Private consumer using only public package exports
-skills/audiobits/          Consumer guidance, added after API verification
+  skill/                  Installed-version consumer guidance
 docs/                     Contributor design and roadmap
-openspec/                 Behavior contracts and scoped implementation changes
 ```
 
 One runtime package owns its version and public exports. Do not split schema,
@@ -33,9 +30,9 @@ controls, and visualization dependencies stay in `apps/www`.
 ## Execution boundary
 
 ```text
-JSON recipe → validate → immutable reusable definition
-                                          ↓ play: controls + seed → plan
-                                  fresh per-voice graph
+Recipe → validation / normalization → immutable reusable definition
+                                          ↓ play: controls + seed → execution plan
+                                  fresh runtime graph per voice
                                           ↓
                               voice output → bus → master
 ```
@@ -50,27 +47,27 @@ must include all audible inputs, seed, sample rate, channel configuration, and
 engine/schema semantics. Dynamic parameters and unbounded tails require explicit
 eligibility rules. No transparent optimizer is promised in the first release.
 
-## Proposed public surface
+## Public surface
 
-Names below include implemented Steps 02–03 APIs and later design targets.
-`voice.set()`, buses, shared delay, and narrow native taps are implemented in the development package.
+The listed operations are implemented. Shared delay remains experimental;
+a generalized effect composition API awaits real requirements.
 
-| Concept | Responsibility |
-| --- | --- |
-| `defineSound(data)` | Validate and return a deeply immutable recipe snapshot; no context |
-| `validateRecipe(unknown)` | Structured issues with code and data path; no audio allocation |
-| `createAudio(options)` | Create a lazy engine handle; no context until `start()` |
-| `audio.start()` | Create/resume the owned context in the current gesture path |
-| `audio.suspend()` | Invalidate pending activation, finalize owned voices/effects, and suspend |
-| `audio.sound(recipe)` | Return an engine-bound reusable definition after validation |
-| `sound.play(options)` | Synchronous voice creation when the engine is running |
-| `voice.set(parameters)` | Validate and smooth supported live controls |
-| `voice.stop()` | Release/fade once, then clean up owned sources and effects |
-| `voice.ended` | Promise that settles when owned resources are released |
-| `audio.stopAll({ tails })` | Release owned voices with allow/cut shared-tail policy |
-| `audio.bus(name, parent)` | Reuse/create a named bus after activation |
-| `audio.native` | Owned context/output with caller-owned native taps |
-| `audio.dispose()` | Idempotent shutdown including pending starts and owned graph |
+| Concept                    | Responsibility                                                            |
+| -------------------------- | ------------------------------------------------------------------------- |
+| `defineSound(data)`        | Validate and return a deeply immutable recipe snapshot; no context        |
+| `validateRecipe(unknown)`  | Structured issues with code and data path; no audio allocation            |
+| `createAudio(options)`     | Create a lazy engine handle; no context until `start()`                   |
+| `audio.start()`            | Create/resume the owned context in the current gesture path               |
+| `audio.suspend()`          | Invalidate pending activation, finalize owned voices/effects, and suspend |
+| `audio.sound(recipe)`      | Return an engine-bound reusable definition after validation               |
+| `sound.play(options)`      | Synchronous voice creation when the engine is running                     |
+| `voice.set(parameters)`    | Validate and smooth supported live controls                               |
+| `voice.stop()`             | Release/fade once, then clean up owned sources and effects                |
+| `voice.ended`              | Promise that settles when owned resources are released                    |
+| `audio.stopAll({ tails })` | Release owned voices with allow/cut shared-tail policy                    |
+| `audio.bus(name, parent)`  | Reuse/create a named bus after activation                                 |
+| `audio.native`             | Owned context/output with caller-owned native taps                        |
+| `audio.dispose()`          | Idempotent shutdown including pending starts and owned graph              |
 
 `audio.sound()` may run before start because it stores an immutable recipe snapshot. Calls to
 `play()` before successful start fail with a structured not-ready error; the
@@ -115,7 +112,7 @@ are bounded, but overlapping signals can still sum beyond full scale. Test the
 curated sounds at documented concurrency; do not call a compressor a guaranteed
 limiter or silently normalize every voice.
 
-Step 04 adds a tree of buses with one parent per bus, rejecting cycles and foreign
+The runtime uses a tree of buses with one parent per bus, rejecting cycles and foreign
 contexts. Gain and mute are separate stages. Effects explicitly belong either
 to a voice or a shared bus; their tails have bounded disposal semantics.
 
@@ -136,7 +133,22 @@ and TypeScript data types. Prefer build-time generation to a runtime schema
 dependency. Semantic validation handles timing, references, and resource budgets.
 Test generated artifacts for drift; reject unknown schema versions and fields.
 
-API declarations remain the source for the object API. Curated recipe metadata
-provides labels, descriptions, controls, and tags. The site need not generate its
+API declarations remain the source for the object API. Gallery metadata outside recipes provides titles, descriptions and presentation.
+Basic controls derive from parameter declarations. The site need not generate its
 entire interface from JSON Schema. Publish schema/capability metadata only for
 features actually shipped; migration metadata waits for a second schema version.
+
+## Parameters, variation and versioning
+
+Typed `defineSound()` authoring preserves parameter names through playback;
+`voice.set()` exposes live controls for precisely typed recipes. External JSON
+uses `validateRecipe(unknown)`; runtime validation still runs at trust boundaries.
+Play controls and seed resolve into the execution plan; live controls retarget
+supported native parameters with declared smoothing and no graph allocation.
+Seeded variation/noise repeats for the same inputs and sample rate, without
+promising native oscillator/filter sample identity across browsers.
+
+Schema version 1 is independent of package versioning. Contexts, buses, voices,
+spatial placement, UI, application state and host composition remain outside
+portable recipes. Once v1 is published or persisted, incompatible semantics
+require a new schema version. No placeholder migration framework is needed.

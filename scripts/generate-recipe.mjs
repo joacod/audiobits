@@ -60,6 +60,7 @@ const capabilities = {
     "suspend",
     "dispose",
   ],
+  experimentalRuntime: ["shared-delay"],
   browserGate: "Chromium",
   schemaNote:
     "Structural schema only; validateRecipe also enforces semantic and resource limits. Playback checks context sample rate.",

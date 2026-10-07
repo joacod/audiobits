@@ -1,16 +1,8 @@
 # Local development
 
-The workspace foundation, recipe playback, and Step 03 dynamic controls are
-implemented. Step 04 adds buses, shared delay, native analyser taps, and hide
-cleanup; maintainer manual acceptance is complete. [Step 04 verification](../openspec/changes/04-mixing-and-lifecycle/verification.md)
-records the automated routing/lifecycle gate. [Step 05 verification](../openspec/changes/05-gallery-and-docs/verification.md)
-records gallery/docs implementation, automated checks, and maintainer manual
-acceptance. [Step 03 verification](../openspec/changes/03-dynamic-sounds/verification.md)
-records automated checks and maintainer listening acceptance. See
-[Step 02 verification](../openspec/changes/02-recipe-playback/verification.md)
-for playback evidence and maintainer manual verification;
-[Step 01 verification](../openspec/changes/01-workspace-foundation/verification.md)
-retains foundation evidence.
+Use [architecture](architecture.md) for system boundaries, the
+[package reference](../packages/audiobits/README.md) for usage and
+[validation](validation.md) for evidence expectations.
 
 ## Setup
 
@@ -105,13 +97,8 @@ CI installs Chromium before either check. The runtime has zero runtime
 dependencies; all workspaces remain publication-guarded. See
 [release preparation](releases.md) for the aggregate gate and activation boundary.
 
-Formatting preserves the existing planning documents outside this step.
-Relative Markdown checks verify file targets, not remote links or heading
-anchors. Validate OpenSpec separately:
-
-```sh
-OPENSPEC_TELEMETRY=0 openspec validate --all --strict --no-interactive
-```
+Relative Markdown checks verify file targets, not remote links or heading anchors.
+Ordinary changes use the scripts above; no formal specification CLI is required.
 
 ## Independent delivery
 

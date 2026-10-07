@@ -1,8 +1,8 @@
 # Validation and acceptance design
 
-Status: audio and release checks remain planned. Foundation package and Chromium
-smoke evidence is recorded in [Step 01](../openspec/changes/01-workspace-foundation/verification.md).
-Each implementation change records its own executed evidence.
+Use existing unit, type, browser and packed-package checks. Historical acceptance
+is separate from new sound acceptance. Record meaningful results in the PR;
+a recurring evidence-document process is not required.
 
 ## Initial browser policy
 
@@ -17,14 +17,14 @@ compatibility is a separate post-core milestone.
 
 ## Checks by boundary
 
-| Boundary | Evidence |
-| --- | --- |
-| Pure recipe layer | Valid/invalid fixtures, unknown keys/versions, bounds, JSON round trip, immutable snapshot, stable issue paths |
-| Compiler | Parameter extrema, reference resolution, automation order, duration/release calculation, seeded choices |
-| Native signal | Chromium OfflineAudioContext: finite samples, non-silence, expected duration, energy regions, peak/headroom |
-| Live engine | Chromium AudioContext: gesture start, overlap, scheduled cancellation, stop/dispose, pending-start races, voice limits |
-| Site | Keyboard controls, error recovery, mute/stop, route cleanup, development/release labels, example typechecking |
-| Package | Built ESM exports, declarations, metadata, tree-shaking check, SSR-safe import, isolated tarball consumer |
+| Boundary          | Evidence                                                                                                               |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Pure recipe layer | Valid/invalid fixtures, unknown keys/versions, bounds, JSON round trip, immutable snapshot, stable issue paths         |
+| Compiler          | Parameter extrema, reference resolution, automation order, duration/release calculation, seeded choices                |
+| Native signal     | Chromium OfflineAudioContext: finite samples, non-silence, expected duration, energy regions, peak/headroom            |
+| Live engine       | Chromium AudioContext: gesture start, overlap, scheduled cancellation, stop/dispose, pending-start races, voice limits |
+| Site              | Keyboard controls, error recovery, mute/stop, route cleanup, development/release labels, example typechecking          |
+| Package           | Built ESM exports, declarations, metadata, tree-shaking check, SSR-safe import, isolated tarball consumer              |
 
 Offline rendering can test signal properties, but not autoplay, actual device
 interruption, page lifecycle, or live context cleanup. Mocks can test race logic,
@@ -32,8 +32,8 @@ but the corresponding public workflow also needs a real Chromium check.
 
 ## Initial measurable budgets
 
-These are proposed acceptance bounds; Step 02 verifies that they are appropriate
-for the actual implementation and records any justified adjustment before release.
+Use these property and resource bounds with documented gain and concurrency.
+They do not establish subjective quality.
 
 - All rendered samples are finite. Curated single-voice default peaks remain
   below -6 dBFS at the master; eight simultaneous finite core voices must stay
@@ -71,7 +71,7 @@ energy cannot establish pleasantness.
 Review all changed and new files, not just the tracked diff. Inspect prose,
 examples, comments, configuration, generated package files, and source maps for
 private paths, personal information, credentials, internal links, and unsupported
-claims. Check relative Markdown links and OpenSpec syntax. Preserve the license.
+claims. Check relative Markdown links. Preserve the license.
 
 Record the scope of review accurately: a local content review does not establish
 that remote Git history, hosted previews, or registry artifacts were inspected.

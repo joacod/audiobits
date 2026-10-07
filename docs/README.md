@@ -1,21 +1,23 @@
-# Design documents
+# Contributor documentation
 
-This directory contains contributor-facing design and planning material.
-It is not the API documentation for a released package. Start with the roadmap;
-implementation happens one selected OpenSpec change at a time.
+Start with [architecture](architecture.md) for system boundaries and
+[development](development.md) for local work. Ordinary changes need no formal
+specification. Architecture changes use the gate in [AGENTS.md](../AGENTS.md).
 
-| Document | Purpose |
-| --- | --- |
-| [Product scope](product.md) | Audience, core milestone, non-goals, naming status |
-| [Roadmap](roadmap.md) | Steps, dependencies, acceptance gates, deferred work |
-| [Architecture](architecture.md) | Runtime boundaries, object model, resource ownership |
-| [Recipe model](recipe-model.md) | Proposed data contract, timing, controls, validation |
-| [Recipe study](recipe-study.md) | Three JSON fixtures and ten-experience design pressure |
-| [Development](development.md) | Tool choices and local library/site feedback loop |
-| [Releases](releases.md) | Independent website/npm releases and stable documentation |
-| [Validation](validation.md) | Chromium-first tests, listening review, evidence limits |
-| [Website](website.md) | Gallery interaction, documentation structure, visual direction |
+| Document                                             | Role                                                |
+| ---------------------------------------------------- | --------------------------------------------------- |
+| [Architecture](architecture.md)                      | Canonical system boundaries and ownership           |
+| [Recipe model](recipe-model.md)                      | Canonical data semantics and versioning             |
+| [Package reference](../packages/audiobits/README.md) | Exact public API usage and limits                   |
+| [Product scope](product.md)                          | Audience and non-goals                              |
+| [Roadmap](roadmap.md)                                | Ordered priorities and deferred work                |
+| [Development](development.md)                        | Commands and local feedback loop                    |
+| [Validation](validation.md)                          | Automated properties, listening and evidence limits |
+| [Releases](releases.md)                              | Candidate rehearsal and independent activation      |
+| [Website](website.md)                                | Gallery and docs responsibilities                   |
+| [Recipe study](recipe-study.md)                      | Contrasting sound requirements and methodology      |
 
-The public front door is [the root README](../README.md). Repository contributor
-rules are in [AGENTS.md](../AGENTS.md). Initial planning verification is recorded
-with [Step 00](../openspec/changes/00-project-contracts/verification.md).
+The root README is onboarding; site docs are end-user guidance. Decision notes
+preserve material rationale without duplicating API reference. Old task lists,
+process configuration and evidence are kept in [history](history/README.md),
+outside the primary agent path. Current code/tests and canonical docs supersede them.

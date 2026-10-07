@@ -5,10 +5,10 @@ remain disabled. Local evidence does not establish production readiness.
 
 ## Two outputs from one repository
 
-| Output | Build input | Release action |
-| --- | --- | --- |
-| Documentation/demo site | Site and local library from the same checkout | Website deployment |
-| npm runtime | Validated archive of `packages/audiobits` | Explicit package publication |
+| Output                  | Build input                                   | Release action               |
+| ----------------------- | --------------------------------------------- | ---------------------------- |
+| Documentation/demo site | Site and local library from the same checkout | Website deployment           |
+| npm runtime             | Validated archive of `packages/audiobits`     | Explicit package publication |
 
 Root, site, and example workspaces stay `private: true`. Initially keep the
 library private too; make it publishable only in the explicitly approved first
@@ -37,10 +37,9 @@ deployment fails, retain its prior deployment and report the temporary mismatch.
 
 ## First core release gate
 
-The earliest candidate is the Step 03 core, after an explicit decision to use
-the reduced release scope described in [the roadmap](roadmap.md). Requirements:
+Release preparation verifies the implemented sound set and reasonable 0.1 API:
 
-- Three working sounds with documented controls and cleanup behavior.
+- Eight working sounds with documented controls and cleanup behavior.
 - Focused unit tests and Chromium runtime/browser checks pass.
 - Listening review confirms the shipped sounds and control transitions.
 - Clean tarball consumption verifies ESM imports, declarations, and browser use.
@@ -51,9 +50,9 @@ the reduced release scope described in [the roadmap](roadmap.md). Requirements:
 - Final npm identity, ownership, and naming decision are confirmed.
 - The exact artifact/version and publication action receive explicit approval.
 
-Do not require Firefox/WebKit/mobile acceptance or ten showcase sounds for this
-small release. Do not defer core ownership, disposal, validation, or failed-start
-handling merely because compatibility work is deferred.
+Run the final Chromium, Firefox and WebKit matrix before release. Listening and
+physical-device evidence remain separate. Never defer ownership, validation or
+failed-start handling because publication is disabled.
 
 ## Publication workflow
 
@@ -89,11 +88,11 @@ release failures do not require rebuilding unrelated website content.
 - [npm trusted publishing](https://docs.npmjs.com/trusted-publishers/)
 - [publint](https://publint.dev/)
 
-## Step 06 candidate preparation
+## Private candidate preparation
 
-The full accepted Steps 01–05 core is selected. The private candidate is
+Candidate scope follows the implemented runtime and curated sound set. The private candidate is
 `0.1.0-rc.0`; Changesets 3.0.3 applied the initial minor note in `rc` mode.
-It includes only three curated recipes, schema-1 oscillator/white-noise
+It includes curated recipes, schema-1 oscillator/white-noise
 sources and filters, seeded variation, play/live controls, bounded voices,
 buses/shared delay, explicit native interop and lifecycle APIs. Deferred
 features in the recipe study remain unavailable.
@@ -104,7 +103,6 @@ Run the preparation gate from the repository root under the pinned Node version:
 pnpm install --frozen-lockfile
 pnpm exec playwright install chromium
 pnpm release:prepare
-OPENSPEC_TELEMETRY=0 openspec validate --all --strict --no-interactive
 ```
 
 `release:prepare` runs lint, types, units, the full Chromium integration suite,
@@ -188,5 +186,6 @@ archive, and verify registry existence/integrity before retrying any ambiguous
 failure. Keep the previously stable site on failure. Published defects require
 new versions; website rollback changes only the hosting deployment.
 
-See [Step 06 evidence](../openspec/changes/06-core-release/verification.md) for
-executed checks, inherited listening acceptance and unresolved release gates.
+Current PR checks and ignored archive evidence identify actual candidate bytes.
+Foundation acceptance is historical; new sounds and exact candidate artifacts
+need listening review before release. Production inputs remain unresolved.

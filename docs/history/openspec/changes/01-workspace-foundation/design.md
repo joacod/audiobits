@@ -13,7 +13,7 @@ automatic npm publication, and unrelated ecosystem work are outside this step.
 
 ## Decisions
 
-Follow [the development design](../../../docs/development.md). Use Node 24 LTS
+Follow [the development design](../../../../development.md). Use Node 24 LTS
 and current compatible stable dependencies; pin exact direct versions. Confirm
 tsdown declarations, Next/Fumadocs, shadcn/Base UI, and Vitest/Playwright work
 together before locking. Record exact versions in configuration.

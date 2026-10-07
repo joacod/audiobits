@@ -13,8 +13,8 @@ automatic npm publication, and unrelated ecosystem work are outside this step.
 
 ## Decisions
 
-Use [the recipe contract](../../../docs/recipe-model.md) and
-[ownership design](../../../docs/architecture.md). This step accepts only
+Use [the recipe contract](../../../../recipe-model.md) and
+[ownership design](../../../../architecture.md). This step accepts only
 one-shot oscillator recipes with numeric values, numeric frequency automation,
 ADSR envelopes, and bounded filters. Reject unimplemented sustained, noise,
 mapping, variation, and parameter features rather than accepting unusable data.

@@ -1,6 +1,6 @@
 # Product scope
 
-Status: proposed design, 2026-10-06. No runtime behavior is implemented yet.
+The runtime foundation is implemented; the package is private and unreleased.
 
 ## Purpose
 
@@ -31,16 +31,13 @@ The package can be installed from a locally packed archive into a clean consumer
 These are joint gates: usable API, good sounds, correct lifecycle, and honest
 documentation. A pretty gallery or a passing mock suite alone is insufficient.
 
-## Scope after the core
+## Product iteration
 
-Add buses, shared effects, stronger lifecycle controls, a polished gallery,
-documentation, and a compact agent Skill. Grow toward 8–12 excellent sounds
-only where each adds a useful capability. The complete collection is not a
-prerequisite for an explicitly approved small core release.
-
-Chromium is the initial automated and listening target. Firefox, WebKit,
-Safari/iOS, and broader mobile testing form a later compatibility milestone.
-Until then, documentation states the limited validation scope clearly.
+Buses, lifecycle controls, a gallery, docs and an installed-version Skill exist.
+Prove the model with eight useful sounds and refine TypeScript usage before
+expanding the engine. Let sound behavior drive the showcase. Final automation
+includes Chromium, Firefox and WebKit; physical Safari/iOS, mobile listening and
+device interruption need separate evidence.
 
 ## Boundaries
 

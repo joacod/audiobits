@@ -1,10 +1,8 @@
 # Recipe model and runtime contract
 
-Status: draft schema v1. Step 02 implements the finite oscillator/filter subset
-and confirmation fixture; Step 03 adds controls, variation, noise, and sustained
-voices. [The development API](../packages/audiobits/README.md) is the executable
-contract; the Step 03 listening gate passed maintainer manual verification.
-Reconcile this contract with listening evidence before the first release.
+Canonical schema-1 semantics for the private candidate. Exact executable
+limits are in the [package reference](../packages/audiobits/README.md).
+The schema remains unreleased; authoring sketches are not capabilities.
 
 ## Data boundary
 
@@ -21,21 +19,21 @@ Do not create an empty migration framework before a real migration exists.
 
 ## Root shape
 
-| Field | Meaning |
-| --- | --- |
-| `schemaVersion` | Integer, initially `1` |
-| `kind` | `one-shot` or `sustained` |
-| `duration` | Required gate time in seconds for one-shot; forbidden for sustained |
-| `parameters` | Optional map of up to 16 named parameter declarations |
-| `layers` | Between 1 and 16 uniquely identified synthesis layers |
-| `effects` | Optional ordered per-voice effect list, initially filter only |
+| Field           | Meaning                                                             |
+| --------------- | ------------------------------------------------------------------- |
+| `schemaVersion` | Integer, initially `1`                                              |
+| `kind`          | `one-shot` or `sustained`                                           |
+| `duration`      | Required gate time in seconds for one-shot; forbidden for sustained |
+| `parameters`    | Optional map of up to 16 named parameter declarations               |
+| `layers`        | Between 1 and 16 uniquely identified synthesis layers               |
+| `effects`       | Optional ordered per-voice effect list, initially filter only       |
 
 A layer has an `id`, a `source`, `gainDb`, and an `envelope`. Optional layer
 effects process only that layer. All layer outputs sum before recipe effects.
 Maximum eight effects total across a recipe, not eight per layer.
 
 The first source is `{ type: "oscillator", waveform, frequency }`; waveforms
-are sine, triangle, sawtooth, and square. Step 03 adds `{ type: "noise", color:
+are sine, triangle, sawtooth, and square. The model supports `{ type: "noise", color:
 "white" }`. Filtered noise uses a layer filter rather than more source types.
 Use generated sample-rate-aware buffers; no audio-file fetch is needed.
 
@@ -66,17 +64,23 @@ stopped before onset without becoming audible.
 
 ## Values and controls
 
-Step 02 supports numeric values and frequency automation. Step 03 adds bounded
+Supported values include numeric values, frequency automation, bounded
 control mappings and seeded variation to supported targets. Use this finite
 grammar rather than arbitrary expressions. Frequencies support `Value`; layer gain
 supports only `PointValue`, while envelopes and filter Q remain numeric:
 
 ```ts
 // Abbreviated notation; generated declarations are exported by audiobits.
-type Mapping = { control: string; range: [number, number]; scale: "linear" | "exponential" };
+type Mapping = {
+  control: string;
+  range: [number, number];
+  scale: "linear" | "exponential";
+};
 type Variation = { random: [number, number] };
 type PointValue = number | Mapping | Variation;
-type Value = PointValue | { points: [number, PointValue][]; curve: "linear" | "exponential" };
+type Value =
+  | PointValue
+  | { points: [number, PointValue][]; curve: "linear" | "exponential" };
 ```
 
 A mapping normalizes a named control within its declared min/max and maps it to
@@ -109,7 +113,7 @@ fails with an ended-voice error.
 
 An explicit unsigned 32-bit seed at play time reproduces variation choices and
 noise generation for the same normalized recipe and sample rate. Normalize
-property traversal deterministically. Step 03 uses xorshift32 (shifts 13/17/5), mapping public seed zero internally
+property traversal deterministically. The implementation uses xorshift32 (shifts 13/17/5), mapping public seed zero internally
 to `0x6d2b79f5`, and rejects invalid seeds. Known-vector tests protect the stream.
 The [development API](../packages/audiobits/README.md) specifies traversal,
 per-layer noise streams, sample-rate bounds, and buffer ownership.
@@ -122,11 +126,11 @@ modulation, which is deferred.
 
 ## Effects
 
-Step 02 supports a lowpass/highpass/bandpass filter with frequency and Q.
+The model supports a lowpass/highpass/bandpass filter with frequency and Q.
 Q is bounded to `[0.1, 20]`. Saturation remains unimplemented; listening has not
 established a need for it. Do not ship placeholder descriptors for unsupported effects.
 
-Step 04 adds bus-level delay with bounded delay time, feedback, wet amount, and
+The experimental bus API supports shared delay with bounded delay time, feedback, wet amount, and
 tail cutoff. Shared effects are runtime bus configuration, not embedded context
 objects in recipe JSON. No convolution files, feedback graph DSL, or arbitrary
 routing nodes are required for the core.
@@ -146,6 +150,5 @@ exhaustion with a resource-limit issue. Detect cycles in JavaScript input before
 serialization and reject non-finite values before normalization.
 
 Valid schema v1 structures must also be supported by the current engine's
-capability metadata. Before v1 publication, each implementation step expands the
-draft descriptor only when its executor and tests land. Future designs in
+capability metadata. Before v1 publication, the draft descriptor expands only when its executor and tests land. Future designs in
 [the study](recipe-study.md) are not automatically accepted by the validator.

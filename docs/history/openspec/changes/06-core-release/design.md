@@ -13,7 +13,7 @@ automatic npm publication, and unrelated ecosystem work are outside this step.
 
 ## Decisions
 
-Use [the release design](../../../docs/releases.md). Default candidate includes
+Use [the release design](../../../../releases.md). Default candidate includes
 completed Steps 01–05. If early-core scope is explicitly selected, constrain
 every capability list, Skill example, and release note to Steps 01–03. Do not
 require ten sounds or other-browser validation.
