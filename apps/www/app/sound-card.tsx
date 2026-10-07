@@ -8,6 +8,7 @@ import type { SoundKind } from "../lib/gallery";
 
 export function SoundCard({
   kind,
+  ready,
   recipe,
   controls,
   playing,
@@ -21,6 +22,7 @@ export function SoundCard({
   onApply,
 }: {
   kind: SoundKind;
+  ready: boolean;
   recipe: Recipe;
   controls: Readonly<Record<string, number>>;
   playing?: string;
@@ -77,6 +79,7 @@ export function SoundCard({
             {parameterLabel(kind, name)}: {controls[name]?.toFixed(2)}
             <input
               aria-label={parameterLabel(kind, name)}
+              disabled={!ready}
               type="range"
               min={parameter.min}
               max={parameter.max}
