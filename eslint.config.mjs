@@ -5,6 +5,8 @@ import next from "eslint-config-next/core-web-vitals";
 export default [
   {
     ignores: [
+      // Vendored agent tools retain their upstream code and conventions.
+      "apps/www/.agents/skills/**",
       "**/node_modules/**",
       "**/dist/**",
       "**/.next/**",
