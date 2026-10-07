@@ -37,14 +37,14 @@ IDE before a concrete authoring need appears.
 
 ## Visual direction
 
-Use a restrained instrument-gallery aesthetic: neutral surfaces, strong readable
-type, one accent family, generous space around controls, and clear focus states.
+Use the approved sonic specimen book: warm paper, editorial headings, dark ink,
+ruled sound entries and a prominent real waveform.
 Visualization should reveal the sound's behavior. Avoid covering the page with
 unrelated motion or presenting a dense DAW mixer as the default experience.
 
 Base UI buttons and labelled native inputs supply controls. Fumadocs owns
-documentation navigation and MDX content. The existing theme tokens remain the
-visual authority; sound-specific labels and endpoint text live in the gallery
+documentation navigation and MDX content. The showcase design is recorded in [DESIGN.md](../apps/www/DESIGN.md);
+Fumadocs retains its own theme. Sound-specific labels and endpoint text live in the gallery
 registry rather than in serialized recipes.
 
 Drive visualizers from an analyser attached to the owned graph; do not route
@@ -67,7 +67,7 @@ React strict-mode mount/unmount and hot-reload behavior in the local workflow.
 ## Documentation information architecture
 
 Start with Quick start, Recipes, Playback and lifecycle, Parameters, then API
-reference. Add Buses/effects and Native interop only as those capabilities ship.
+reference. Add Buses/routing and Native interop only as those capabilities ship.
 Every example is checked against the public exports and the displayed version.
 Contributing/design material remains in repository `docs/`; do not publish the
 whole planning directory as end-user reference automatically.

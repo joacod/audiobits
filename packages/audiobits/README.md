@@ -82,7 +82,8 @@ limits. Agent guidance is included in [the AudioBits Skill](skill/SKILL.md).
 
 ## Supported data
 
-`defineSound(recipe)` accepts typed authored data, preserves literal parameter names and modes, validates and returns a deeply frozen `Recipe` snapshot.
+`defineSound(recipe)` accepts typed authored data, preserves recipe structure, literal parameter names and modes, validates and returns a deeply frozen `Recipe` snapshot.
+Runtime validation remains authoritative for exact schema validity.
 For external JSON, `validateRecipe(unknown)` returns `{ ok: true, recipe }` or
 `{ ok: false, issues }`; every issue has `code`, `path`, and `message`.
 Paths use JSON bracket notation, such as `$["layers"][0]["id"]`.
@@ -143,7 +144,7 @@ Gate duration excludes release. Filters receive a bounded 50 ms tail allowance;
 output fades to zero over the final 5 ms. Layer filters precede their envelopes.
 `stopAll()` releases managed voices according to their recipe envelopes.
 `stopAll({ tails: "cut" })` uses a 5 ms source/output fade. `sound.dispose()` immediately finalizes
-that sound's voices and noise buffers. `audio.suspend()` invalidates pending starts and finalizes all voices and shared effects before suspending.
+that sound's voices and noise buffers. `audio.suspend()` invalidates pending starts and finalizes all voices before suspending.
 Native suspension/interruption also finalizes voices when its state event arrives.
 `audio.dispose()` invalidates pending startup, finalizes voices immediately,
 disconnects master output, and closes the context once, even while suspended.
