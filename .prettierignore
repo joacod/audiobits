@@ -11,4 +11,3 @@ docs/history/openspec/
 
 # Preserve upstream formatting in vendored agent skills.
 apps/www/.agents/skills/
-
