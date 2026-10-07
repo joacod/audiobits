@@ -8,6 +8,14 @@ import {
   thruster,
 } from "../../packages/audiobits/src/recipes";
 
+async function waitForCleanup(ready: () => boolean) {
+  const deadline = performance.now() + 1000;
+  while (!ready()) {
+    require(performance.now() <
+      deadline, "Offline ended callbacks did not arrive");
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+}
 function require(condition: boolean, message: string) {
   if (!condition) throw new Error(message);
 }
@@ -39,6 +47,7 @@ async function signal(count: number, action?: "cancel") {
     if (i > 18000) tail = Math.max(tail, Math.abs(data[i]));
     if (i > 0) maxDelta = Math.max(maxDelta, Math.abs(data[i] - data[i - 1]));
   }
+  await waitForCleanup(() => finished === count);
   require(finished === count, "Natural resources did not finish");
   return { peak, energy, tail, onset, maxDelta, finished };
 }
@@ -659,6 +668,7 @@ async function capabilitySignal(recipe: unknown) {
     energy += data[i] ** 2;
     if (i > 48000 * 0.8) tail = Math.max(tail, Math.abs(data[i]));
   }
+  await waitForCleanup(() => finished === 1);
   require(finished === 1, "Advertised primitive did not clean up");
   return { energy, tail, finished };
 }
@@ -703,6 +713,7 @@ async function curatedSignal(
     if (i > rate * 1.5) tail = Math.max(tail, Math.abs(samples[i]));
     if (i) delta = Math.max(delta, Math.abs(samples[i] - samples[i - 1]));
   }
+  await waitForCleanup(() => finished === count);
   return { peak, energy, onset, tail, delta, finished };
 }
 Object.assign(globalThis, { curatedSignal });

@@ -1,3 +1,4 @@
+import { requireOfflineCheckpoints } from "./offline-capabilities";
 import { test, expect } from "@playwright/test";
 import { resolve } from "node:path";
 interface Measurements {
@@ -10,11 +11,16 @@ interface Measurements {
 }
 interface Checks {
   signal(count: number, action?: "cancel"): Promise<Measurements>;
-  stopSignal(): Promise<{ energy: number; late: number; delta: number }>;
+  stopSignal(): Promise<{
+    energy: number;
+    releaseEnergy: number;
+    late: number;
+    delta: number;
+  }>;
   lifecycle(): Promise<unknown>;
 }
 
-test("Native offline signal, overlap, cancellation and release", async ({
+test("Native offline signal, overlap and cancellation", async ({
   page,
   browser,
   browserName,
@@ -33,7 +39,6 @@ test("Native offline signal, overlap, cancellation and release", async ({
       single: await checks.signal(1),
       eight: await checks.signal(8),
       cancelled: await checks.signal(1, "cancel"),
-      stop: await checks.stopSignal(),
     };
   });
   console.log(JSON.stringify(output));
@@ -45,10 +50,25 @@ test("Native offline signal, overlap, cancellation and release", async ({
   expect(output.single.onset).toBe(0);
   expect(output.single.tail).toBeLessThan(1e-6);
   expect(output.cancelled.energy).toBe(0);
-  expect(output.stop.energy).toBeGreaterThan(0);
-  expect(output.stop.releaseEnergy).toBeGreaterThan(0.0001);
-  expect(output.stop.late).toBe(0);
-  expect(output.stop.delta).toBeLessThan(0.001);
+});
+
+test("native offline release during attack fades to silence", async ({
+  page,
+}) => {
+  await page.goto("http://127.0.0.1:4173");
+  await requireOfflineCheckpoints(page);
+  await page.addScriptTag({
+    path: resolve(
+      "node_modules/.cache/audiobits-audio-tests/audio-harness.iife.js",
+    ),
+  });
+  const output = await page.evaluate(() =>
+    (globalThis as unknown as { audioChecks: Checks }).audioChecks.stopSignal(),
+  );
+  expect(output.energy).toBeGreaterThan(0);
+  expect(output.releaseEnergy).toBeGreaterThan(0.0001);
+  expect(output.late).toBe(0);
+  expect(output.delta).toBeLessThan(0.001);
 });
 
 test("Native lifecycle and simulated failed activation retry", async ({

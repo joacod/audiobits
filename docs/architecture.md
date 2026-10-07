@@ -152,3 +152,13 @@ Schema version 1 is independent of package versioning. Contexts, buses, voices,
 spatial placement, UI, application state and host composition remain outside
 portable recipes. Once v1 is published or persisted, incompatible semantics
 require a new schema version. No placeholder migration framework is needed.
+
+## Linear automation compatibility
+
+Live bindings, release envelopes, bus gain/mute and shared-delay output gates
+track their linear schedules. When native `cancelAndHoldAtTime` is unavailable,
+cancel future events and reinsert the computed linear endpoint at the context
+time before scheduling the new ramp. This preserves the preceding ramp and
+avoids guessing from `AudioParam.value` during automation. The public API and
+recipe schema are unchanged; native caller-owned graphs remain outside this
+fallback. The standalone raw comparison follows the same linear truncation rule.

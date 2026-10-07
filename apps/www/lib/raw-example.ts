@@ -15,6 +15,15 @@ export function playRaw(
     seed > 0xffffffff
   )
     throw new Error("Invalid control or seed.");
+  function holdLinear(param: AudioParam, time: number, value: number) {
+    if (typeof param.cancelAndHoldAtTime === "function") {
+      param.cancelAndHoldAtTime(time);
+      param.setValueAtTime(value, time);
+    } else {
+      param.cancelScheduledValues(time);
+      param.linearRampToValueAtTime(value, time);
+    }
+  }
   const nodes: AudioNode[] = [];
   const sources: (OscillatorNode | AudioBufferSourceNode)[] = [];
   const envelopes: {
@@ -248,8 +257,7 @@ export function playRaw(
                   ),
                 );
           const current = binding.from + (binding.to - binding.from) * t;
-          binding.param.cancelAndHoldAtTime(now);
-          binding.param.setValueAtTime(current, now);
+          holdLinear(binding.param, now, current);
           binding.param.linearRampToValueAtTime(target, now + 0.04);
           Object.assign(binding, {
             from: current,
@@ -285,8 +293,7 @@ export function playRaw(
             0,
             Math.min(e.release, at + gate + e.release - now),
           );
-          e.param.cancelAndHoldAtTime(now);
-          e.param.setValueAtTime(value, now);
+          holdLinear(e.param, now, value);
           e.param.linearRampToValueAtTime(0, now + release);
           end = Math.max(end, now + release);
         }
@@ -294,8 +301,7 @@ export function playRaw(
         const fadeAt = at + lifetime - 0.005;
         const outputValue =
           now <= fadeAt ? 1 : Math.max(0, (at + lifetime - now) / 0.005);
-        output.gain.cancelAndHoldAtTime(now);
-        output.gain.setValueAtTime(outputValue, now);
+        holdLinear(output.gain, now, outputValue);
         output.gain.linearRampToValueAtTime(0, end);
         sources.forEach((source) => source.stop(end));
       },

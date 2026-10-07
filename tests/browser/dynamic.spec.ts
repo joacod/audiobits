@@ -1,3 +1,4 @@
+import { requireOfflineCheckpoints } from "./offline-capabilities";
 import { expect, test } from "@playwright/test";
 import { resolve } from "node:path";
 import type { Page } from "@playwright/test";
@@ -39,6 +40,7 @@ test("dynamic offline extrema, seeded replay, loop seams, rapid updates and rele
   browser,
 }) => {
   await harness(page);
+  await requireOfflineCheckpoints(page);
   const result = await page.evaluate(async () => {
     const helper = globalThis as unknown as Helpers;
     const output = [];

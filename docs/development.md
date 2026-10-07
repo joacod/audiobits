@@ -69,7 +69,9 @@ pnpm test:browser
 
 CI uses `playwright install --with-deps chromium firefox webkit` on Linux. The browser suite
 starts its own site on port 3100 and vanilla preview on port 4173. Neither port
-may already be occupied. Keep `NODE_ENV` unset for normal local commands; an
+may already be occupied. Linux CI starts PulseAudio with a clocked null sink
+so headless Firefox has an output device. The sink exercises native audio
+processing without establishing audible output or listening quality. Keep `NODE_ENV` unset for normal local commands; an
 unrelated value can interfere with Next.js. CI disables Next telemetry.
 
 ## Package verification
@@ -91,6 +93,11 @@ digest/evidence remain under ignored `node_modules/.cache/audiobits-release/`.
 
 Schema, types and capabilities are generated during library build. Use
 `pnpm build:lib` after descriptor or version edits; `pnpm test` detects drift.
+Offline checkpoint checks require native `OfflineAudioContext.suspend/resume`
+and skip explicitly when absent. Finite rendering, UI and live lifecycle checks
+remain enabled. Offline cleanup waits for ended callbacks after rendering; those
+callbacks never schedule audio.
+
 The broader `pnpm test:browser` suite supplies UI, native signal, resource and
 lifecycle regressions. Neither kind of automation establishes listening quality.
 CI installs all three engines before the browser matrix and Chromium package check. The runtime has zero runtime

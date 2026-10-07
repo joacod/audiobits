@@ -1,3 +1,4 @@
+import { requireOfflineCheckpoints } from "./offline-capabilities";
 import { expect, test } from "@playwright/test";
 import { resolve } from "node:path";
 
@@ -272,6 +273,7 @@ test("raw comparisons match managed dry signals, seeded noise, live smoothing an
   browser,
 }) => {
   await page.goto("http://127.0.0.1:4173");
+  await requireOfflineCheckpoints(page);
   await page.addScriptTag({
     path: resolve(
       "node_modules/.cache/audiobits-audio-tests/audio-harness.iife.js",
@@ -374,13 +376,15 @@ test("displayed host examples activate from a gesture, stop, and dispose their o
       await example.dispose();
     }, name);
   }
-  expect(
-    await page.evaluate(() =>
-      (
-        globalThis as unknown as { galleryContexts: AudioContext[] }
-      ).galleryContexts.map((context) => context.state),
-    ),
-  ).toEqual(Array(6).fill("closed"));
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        (
+          globalThis as unknown as { galleryContexts: AudioContext[] }
+        ).galleryContexts.map((context) => context.state),
+      ),
+    )
+    .toEqual(Array(6).fill("closed"));
 });
 
 test("navigation between sound slugs disposes the previous gallery session", async ({

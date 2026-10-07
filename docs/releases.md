@@ -206,3 +206,17 @@ packaged examples and three native Chromium host executions.
 Firefox execution, new-sound listening acceptance and physical-device review
 remain release follow-ups. No privacy permission, installed browser branding,
 publication guard or deployment guard was changed to obtain these results.
+
+The supplied Linux run for the initial refinement commit executed Firefox: 63
+matrix checks passed and 25 Firefox checks failed. Observed causes include absent
+offline checkpoint APIs and delayed offline ended callbacks; live contexts also
+remained suspended on the runner. The follow-up adds a clocked PulseAudio null
+sink, capability-based offline skips, bounded cleanup observation and managed
+linear-ramp fallback. A new hosted run is still required to verify the fix.
+
+Local follow-up verification passed 65 Chromium/WebKit checks with one
+Chromium-only autoplay skip, including native rendering and live cleanup with
+`cancelAndHoldAtTime` deliberately removed. Types, 47 units, lint and the packed
+consumer passed. Firefox still failed at launch on macOS; no Linux success is
+claimed for the repair. Offline checkpoint skips leave corresponding Firefox
+signal evidence unavailable even when its live/UI checks run.

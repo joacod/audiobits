@@ -1,3 +1,4 @@
+import { requireOfflineCheckpoints } from "./offline-capabilities";
 import { expect, test } from "@playwright/test";
 import { resolve } from "node:path";
 
@@ -19,6 +20,7 @@ test("native offline delay has bounded tails and an adapted running cut fades to
     };
   });
   await page.goto("http://127.0.0.1:4173");
+  await requireOfflineCheckpoints(page);
   await page.addScriptTag({
     path: resolve(
       "node_modules/.cache/audiobits-audio-tests/audio-harness.iife.js",

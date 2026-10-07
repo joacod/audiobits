@@ -21,5 +21,12 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm exec playwright install --with-deps chromium firefox webkit
+      - name: Start a clocked audio sink for headless Firefox
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pulseaudio
+          pulseaudio --start --exit-idle-time=-1
+          pactl load-module module-null-sink sink_name=audiobits_ci
+          pactl set-default-sink audiobits_ci
       - run: pnpm test:package
       - run: pnpm test:browser

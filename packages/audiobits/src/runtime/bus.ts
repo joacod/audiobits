@@ -1,3 +1,5 @@
+import { holdLinear, linearValue } from "./automation";
+import type { LinearRamp } from "./automation";
 import { AudioBitsError } from "../recipe/validate";
 
 /** @experimental Shared delay settings; not part of the stable 0.1 contract. */
@@ -37,6 +39,8 @@ export class OwnedBus implements Bus {
   readonly output: GainNode;
   parent: OwnedBus | null;
   disposed: boolean = false;
+  private gainRamp: LinearRamp | undefined;
+  private muteRamp: LinearRamp | undefined;
   private effect: DelayGraph | undefined;
   private retire: (() => void) | undefined;
   private settings: DelayOptions | null = null;
@@ -95,7 +99,14 @@ export class OwnedBus implements Bus {
     bounded(value, -60, 0);
     bounded(rampSeconds, 0, 10);
     const now = this.context.currentTime;
-    this.input.gain.cancelAndHoldAtTime(now);
+    const from = linearValue(this.gainRamp, now, this.input.gain.value);
+    holdLinear(this.input.gain, now, from);
+    this.gainRamp = {
+      start: now,
+      end: now + rampSeconds,
+      from,
+      to: 10 ** (value / 20),
+    };
     this.input.gain.linearRampToValueAtTime(
       10 ** (value / 20),
       now + rampSeconds,
@@ -106,7 +117,9 @@ export class OwnedBus implements Bus {
     if (typeof value !== "boolean")
       throw new AudioBitsError("invalid-option", "Mute must be boolean.");
     const now = this.context.currentTime;
-    this.output.gain.cancelAndHoldAtTime(now);
+    const from = linearValue(this.muteRamp, now, this.output.gain.value);
+    holdLinear(this.output.gain, now, from);
+    this.muteRamp = { start: now, end: now + 0.005, from, to: value ? 0 : 1 };
     this.output.gain.linearRampToValueAtTime(value ? 0 : 1, now + 0.005);
   }
   setDelay(options: DelayOptions | null): void {
@@ -181,10 +194,19 @@ export class OwnedBus implements Bus {
       delay.connect(wet);
       wet.connect(gate);
       gate.connect(this.output);
+      let gateRamp: LinearRamp | undefined;
       const schedule = (seconds: number, destroy: boolean) => {
         clearClock();
         const now = context.currentTime;
-        gate.gain.cancelAndHoldAtTime(now);
+        const from = linearValue(gateRamp, now, gate.gain.value);
+        holdLinear(gate.gain, now, from);
+        gateRamp = {
+          start: now + Math.max(0, seconds - 0.005),
+          end: now + seconds,
+          from: seconds > 0.005 ? 1 : from,
+          to: 0,
+          before: from,
+        };
         if (seconds > 0.005) gate.gain.setValueAtTime(1, now + seconds - 0.005);
         gate.gain.linearRampToValueAtTime(0, now + seconds);
         clock = context.createOscillator();
@@ -218,8 +240,11 @@ export class OwnedBus implements Bus {
         },
         wake: () => {
           clearClock();
-          gate.gain.cancelAndHoldAtTime(context.currentTime);
-          gate.gain.linearRampToValueAtTime(1, context.currentTime + 0.005);
+          const now = context.currentTime;
+          const from = linearValue(gateRamp, now, gate.gain.value);
+          holdLinear(gate.gain, now, from);
+          gateRamp = { start: now, end: now + 0.005, from, to: 1 };
+          gate.gain.linearRampToValueAtTime(1, now + 0.005);
         },
       };
     } catch (error) {
