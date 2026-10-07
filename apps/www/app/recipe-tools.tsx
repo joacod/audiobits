@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { memo, useMemo, useState } from "react";
 import { Button } from "@base-ui/react/button";
 import { validateRecipe } from "audiobits";
 import type { Recipe } from "audiobits";
 import { libraryExample, rawHost, sounds } from "../lib/gallery";
 import type { SoundKind } from "../lib/gallery";
 
-export function RecipeTools({
+export const RecipeTools = memo(function RecipeTools({
   kind,
   control,
   rawSource,
@@ -18,12 +18,15 @@ export function RecipeTools({
   kind: SoundKind;
   control: number;
   rawSource: string;
-  onApply(recipe: Recipe): void;
-  onSeed(seed: number | null): void;
-  onReset(): void;
+  onApply(kind: SoundKind, recipe: Recipe): void;
+  onSeed(kind: SoundKind, seed: number | null): void;
+  onReset(kind: SoundKind): void;
 }) {
   const [recipe, setRecipe] = useState(sounds[kind]);
-  const [draft, setDraft] = useState(JSON.stringify(sounds[kind], null, 2));
+  const [draft, setDraft] = useState(() =>
+    JSON.stringify(sounds[kind], null, 2),
+  );
+  const [open, setOpen] = useState(false);
   const [issues, setIssues] = useState<string[]>([]);
   const [seed, setSeed] = useState("42");
   const [copyState, setCopyState] = useState("");
@@ -33,8 +36,15 @@ export function RecipeTools({
     Number.isInteger(seedValue) &&
     seedValue >= 0 &&
     seedValue <= 0xffffffff;
-  const example = libraryExample(recipe, control, validSeed ? seedValue : 42);
-  const original = JSON.stringify(recipe) === JSON.stringify(sounds[kind]);
+  const exampleSeed = validSeed ? seedValue : 42;
+  const example = useMemo(
+    () => libraryExample(recipe, control, exampleSeed),
+    [recipe, control, exampleSeed],
+  );
+  const original = useMemo(
+    () => JSON.stringify(recipe) === JSON.stringify(sounds[kind]),
+    [recipe, kind],
+  );
   function apply() {
     if (new TextEncoder().encode(draft).byteLength > 32768) {
       setIssues(["$: Recipe text is limited to 32 KiB."]);
@@ -72,7 +82,7 @@ export function RecipeTools({
         ]);
         return;
       }
-      onApply(result.recipe);
+      onApply(kind, result.recipe);
       setRecipe(result.recipe);
       setIssues([]);
       setCopyState("Recipe applied. Play to hear the new definition.");
@@ -83,13 +93,13 @@ export function RecipeTools({
     }
   }
   function restore() {
-    onApply(sounds[kind]);
-    onReset();
+    onApply(kind, sounds[kind]);
+    onReset(kind);
     setRecipe(sounds[kind]);
     setDraft(JSON.stringify(sounds[kind], null, 2));
     setIssues([]);
     setSeed("42");
-    onSeed(42);
+    onSeed(kind, 42);
     setCopyState("Bundled recipe and defaults restored.");
   }
   async function copy(text: string) {
@@ -117,6 +127,7 @@ export function RecipeTools({
             setSeed(event.target.value);
             const value = Number(event.target.value);
             onSeed(
+              kind,
               event.target.value.trim() !== "" &&
                 Number.isInteger(value) &&
                 value >= 0 &&
@@ -136,71 +147,77 @@ export function RecipeTools({
       </Button>
       <Button onClick={restore}>Reset {kind}</Button>
       <p aria-live="polite">{copyState}</p>
-      <details>
+      <details onToggle={(event) => setOpen(event.currentTarget.open)}>
         <summary>Recipe &amp; code · {kind}</summary>
-        <label>
-          Recipe JSON (32 KiB maximum)
-          <textarea
-            aria-label={`${kind} recipe JSON`}
-            spellCheck={false}
-            value={draft}
-            onChange={(event) => setDraft(event.target.value)}
-          />
-        </label>
-        <div className="audio-controls">
-          <Button onClick={apply}>Apply {kind} recipe</Button>
-          <Button onClick={restore}>Restore {kind} recipe</Button>
-        </div>
-        {!!issues.length && (
-          <div role="alert">
-            <p>Not applied. The last valid recipe remains playable.</p>
-            <ul>
-              {issues.map((issue, i) => (
-                <li key={i}>{issue}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-        <h4>AudioBits · current configuration</h4>
-        <p>
-          The sound parameters and seed below match the next Play. Global mixer
-          settings are separate.
-        </p>
-        <pre>
-          <code>{example}</code>
-        </pre>
-        <h4>Raw Web Audio · bundled {kind}</h4>
-        <p>
-          Equivalent dry sound, seeded noise, live smoothing, release, and
-          cleanup for the bundled definition. Both examples use -12 dB master
-          gain. Shared delay and voice stealing are library features outside
-          this single-voice comparison.
-        </p>
-        {original ? (
+        {open && (
           <>
-            <Button
-              onClick={() =>
-                void copy(`${rawSource}\n${rawHost(kind, control, seedValue)}`)
-              }
-              disabled={!validSeed}
-            >
-              Copy raw {kind} example
-            </Button>
+            <label>
+              Recipe JSON (32 KiB maximum)
+              <textarea
+                aria-label={`${kind} recipe JSON`}
+                spellCheck={false}
+                value={draft}
+                onChange={(event) => setDraft(event.target.value)}
+              />
+            </label>
+            <div className="audio-controls">
+              <Button onClick={apply}>Apply {kind} recipe</Button>
+              <Button onClick={restore}>Restore {kind} recipe</Button>
+            </div>
+            {!!issues.length && (
+              <div role="alert">
+                <p>Not applied. The last valid recipe remains playable.</p>
+                <ul>
+                  {issues.map((issue, i) => (
+                    <li key={i}>{issue}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            <h4>AudioBits · current configuration</h4>
+            <p>
+              The sound parameters and seed below match the next Play. Global
+              mixer settings are separate.
+            </p>
             <pre>
-              <code>
-                {rawSource}
-                {"\n"}
-                {rawHost(kind, control, validSeed ? seedValue : 42)}
-              </code>
+              <code>{example}</code>
             </pre>
+            <h4>Raw Web Audio · bundled {kind}</h4>
+            <p>
+              Equivalent dry sound, seeded noise, live smoothing, release, and
+              cleanup for the bundled definition. Both examples use -12 dB
+              master gain. Shared delay and voice stealing are library features
+              outside this single-voice comparison.
+            </p>
+            {original ? (
+              <>
+                <Button
+                  onClick={() =>
+                    void copy(
+                      `${rawSource}\n${rawHost(kind, control, seedValue)}`,
+                    )
+                  }
+                  disabled={!validSeed}
+                >
+                  Copy raw {kind} example
+                </Button>
+                <pre>
+                  <code>
+                    {rawSource}
+                    {"\n"}
+                    {rawHost(kind, control, validSeed ? seedValue : 42)}
+                  </code>
+                </pre>
+              </>
+            ) : (
+              <p>
+                Restore the bundled recipe to view its raw comparison. Edited
+                recipes are represented by the current AudioBits example above.
+              </p>
+            )}
           </>
-        ) : (
-          <p>
-            Restore the bundled recipe to view its raw comparison. Edited
-            recipes are represented by the current AudioBits example above.
-          </p>
         )}
       </details>
     </div>
   );
-}
+});

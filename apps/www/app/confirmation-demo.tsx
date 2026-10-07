@@ -87,19 +87,32 @@ export function ConfirmationDemo({
       void engine.dispose().catch(() => {});
     };
   }, [stopAll]);
-  function applyRecipe(kind: SoundKind, recipe: Recipe) {
-    stopAll();
-    setError("");
-    const target =
-      kind === "confirmation"
-        ? sound
-        : kind === "impact"
-          ? impactSound
-          : thrusterSound;
-    const next = audio.current?.sound(recipe);
-    target.current?.dispose();
-    target.current = next ?? null;
-  }
+  const applyRecipe = useCallback(
+    (kind: SoundKind, recipe: Recipe) => {
+      stopAll();
+      setError("");
+      const target =
+        kind === "confirmation"
+          ? sound
+          : kind === "impact"
+            ? impactSound
+            : thrusterSound;
+      const next = audio.current?.sound(recipe);
+      target.current?.dispose();
+      target.current = next ?? null;
+    },
+    [stopAll],
+  );
+  const setSeed = useCallback((kind: SoundKind, seed: number | null) => {
+    seeds.current[kind] = seed;
+  }, []);
+  const resetControl = useCallback((kind: SoundKind) => {
+    if (kind === "impact") setIntensity(0.5);
+    if (kind === "thruster") {
+      throttleValue.current = 0.2;
+      setThrottle(0.2);
+    }
+  }, []);
   async function play(
     kind: "confirmation" | "impact" | "thruster" = "confirmation",
   ) {
@@ -270,13 +283,11 @@ export function ConfirmationDemo({
           </p>
           <RecipeTools
             kind="confirmation"
-            onReset={() => {}}
+            onReset={resetControl}
             control={0}
             rawSource={rawSource}
-            onSeed={(seed) => {
-              seeds.current.confirmation = seed;
-            }}
-            onApply={(recipe) => applyRecipe("confirmation", recipe)}
+            onSeed={setSeed}
+            onApply={applyRecipe}
           />
         </article>
       )}
@@ -306,13 +317,11 @@ export function ConfirmationDemo({
           <p aria-live="polite">Impact: {playing.impact ?? "ready"}</p>
           <RecipeTools
             kind="impact"
-            onReset={() => setIntensity(0.5)}
+            onReset={resetControl}
             control={intensity}
             rawSource={rawSource}
-            onSeed={(seed) => {
-              seeds.current.impact = seed;
-            }}
-            onApply={(recipe) => applyRecipe("impact", recipe)}
+            onSeed={setSeed}
+            onApply={applyRecipe}
           />
         </article>
       )}
@@ -363,16 +372,11 @@ export function ConfirmationDemo({
           <p data-testid="thruster-state">Thruster: {thrusterState}</p>
           <RecipeTools
             kind="thruster"
-            onReset={() => {
-              throttleValue.current = 0.2;
-              setThrottle(0.2);
-            }}
+            onReset={resetControl}
             control={throttle}
             rawSource={rawSource}
-            onSeed={(seed) => {
-              seeds.current.thruster = seed;
-            }}
-            onApply={(recipe) => applyRecipe("thruster", recipe)}
+            onSeed={setSeed}
+            onApply={applyRecipe}
           />
         </article>
       )}

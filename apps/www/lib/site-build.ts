@@ -14,6 +14,10 @@ export const siteBuild = documentationChannel(manifest, {
   releasedVersion: process.env.AUDIOBITS_RELEASED_VERSION,
   source: process.env.AUDIOBITS_DOCS_SOURCE,
 });
+const rawSource = readFileSync(
+  join(process.cwd(), "lib/raw-example.ts"),
+  "utf8",
+);
 export function rawExampleSource() {
-  return readFileSync(join(process.cwd(), "lib/raw-example.ts"), "utf8");
+  return rawSource;
 }
