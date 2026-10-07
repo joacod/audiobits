@@ -26,6 +26,7 @@ class Node {
   frequency = new Param();
   Q = new Param();
   pan = new Param();
+  delayTime = new Param();
   type = "";
   buffer: { data: Float32Array } | null = null;
   loop = false;
@@ -51,6 +52,7 @@ function setup(options = {}) {
     state: "suspended",
     destination: new Node(),
     createGain: vi.fn(make),
+    createDelay: vi.fn(make),
     createStereoPanner: vi.fn(make),
     createBiquadFilter: vi.fn(make),
     createBuffer: vi.fn((_channels: number, length: number) => {
@@ -181,7 +183,7 @@ it("creates independent graphs, schedules by context time and releases from curr
   expect(audio.counts).toEqual({ active: 0, retiring: 0 });
   expect(
     nodes
-      .filter((node) => node !== nodes[0])
+      .filter((node) => node !== nodes[0] && node !== nodes[1])
       .every((node) => node.disconnect.mock.calls.length > 0),
   ).toBe(true);
   await audio.dispose();
@@ -244,7 +246,7 @@ it("finishes partial graphs when native allocation fails", async () => {
   expect(() => audio.sound(confirmation).play()).toThrow(/allocation failed/);
   expect(audio.counts).toEqual({ active: 0, retiring: 0 });
   expect(
-    nodes.slice(1).every((node) => node.disconnect.mock.calls.length === 1),
+    nodes.slice(2).every((node) => node.disconnect.mock.calls.length === 1),
   ).toBe(true);
   await audio.dispose();
 });
@@ -258,13 +260,15 @@ it("rejects pending starts immediately on disposal, without native resolution", 
   await rejection;
 });
 it("recovers from partial master allocation and finalizes native interruption", async () => {
-  const { audio, context } = setup();
+  const { audio, context, nodes, sources } = setup();
   context.createGain.mockImplementationOnce(() => {
     throw new Error("allocation");
   });
   await expect(audio.start()).rejects.toMatchObject({ code: "start-failed" });
   await audio.start();
-  const voice = audio.sound(confirmation).play();
+  const bus = audio.bus("effects");
+  bus.setDelay({ seconds: 0.1, feedback: 0.5, wet: 0.3 });
+  const voice = audio.sound(confirmation).play({ bus });
   context.state = "interrupted";
   const handler = context.addEventListener.mock.calls[0] as unknown as [
     string,
@@ -274,6 +278,16 @@ it("recovers from partial master allocation and finalizes native interruption", 
   expect(audio.state).toBe("interrupted");
   await voice.ended;
   expect(audio.counts.active).toBe(0);
+  expect(sources.every((source) => source.onended === null)).toBe(true);
+  expect(
+    nodes.slice(4).every((node) => node.disconnect.mock.calls.length > 0),
+  ).toBe(true);
+  context.state = "running";
+  handler[1]();
+  await Promise.resolve();
+  expect(context.state).toBe("suspended");
+  await audio.start();
+  expect(audio.state).toBe("running");
   await audio.dispose();
 });
 it("normal stopAll retains reservations while release finishes, and mute ramps", async () => {
@@ -287,13 +301,13 @@ it("normal stopAll retains reservations while release finishes, and mute ramps",
   expect(b.state).toBe("stopping");
   expect(audio.counts).toEqual({ active: 2, retiring: 0 });
   audio.setMuted(true);
-  expect(nodes[0].gain.calls.at(-1)).toEqual([
+  expect(nodes[1].gain.calls.at(-1)).toEqual([
     "linear",
     0,
     context.currentTime + 0.005,
   ]);
   audio.setMuted(false);
-  expect(nodes[0].gain.calls.at(-1)?.[1]).toBeCloseTo(10 ** (-12 / 20));
+  expect(nodes[1].gain.calls.at(-1)?.[1]).toBeCloseTo(1);
   sources.forEach((source) => source.onended?.());
   await Promise.all([a.ended, b.ended]);
   await audio.dispose();
@@ -432,7 +446,7 @@ it("cleans noise graphs after buffer failure and rejects unsupported noise rates
   const sound = audio.sound(thruster);
   context.sampleRate = 384000;
   expect(() => sound.play()).toThrow(/Noise/);
-  expect(nodes).toHaveLength(1);
+  expect(nodes).toHaveLength(2);
   context.sampleRate = 48000;
   context.createBuffer.mockImplementationOnce(() => {
     throw new Error("buffer allocation");
@@ -440,7 +454,191 @@ it("cleans noise graphs after buffer failure and rejects unsupported noise rates
   expect(() => sound.play()).toThrow(/buffer allocation/);
   expect(audio.counts).toEqual({ active: 0, retiring: 0 });
   expect(
-    nodes.slice(1).every((node) => node.disconnect.mock.calls.length === 1),
+    nodes.slice(2).every((node) => node.disconnect.mock.calls.length === 1),
   ).toBe(true);
+  await audio.dispose();
+});
+
+it("routes by identity, rejects cycles/foreign buses atomically and disposes subtrees", async () => {
+  const { audio, nodes } = setup();
+  const other = setup();
+  await Promise.all([audio.start(), other.audio.start()]);
+  const a = audio.bus("a");
+  const b = audio.bus("b", a);
+  expect(audio.bus("a")).toBe(a);
+  const before = nodes.length;
+  expect(() => a.setParent(b)).toThrow(/cycle/);
+  expect(a.parent).toBe(audio.master);
+  expect(() => a.setParent(other.audio.master)).toThrow(/engine/);
+  expect(() =>
+    audio.sound(confirmation).play({ bus: other.audio.master }),
+  ).toThrow(/engine/);
+  expect(nodes).toHaveLength(before);
+  b.setParent(audio.master);
+  expect(b.parent).toBe(audio.master);
+  b.setParent(a);
+  const voice = audio.sound(thruster).play({ bus: b });
+  a.dispose();
+  a.dispose();
+  await voice.ended;
+  expect(() => b.setMuted(true)).toThrow(/disposed/);
+  expect(() => audio.master.dispose()).toThrow(/engine/);
+  expect(audio.bus("a")).not.toBe(a);
+  await Promise.all([audio.dispose(), other.audio.dispose()]);
+});
+it("keeps mute independent from gain automation and duplicate parent calls inert", async () => {
+  const { audio, nodes } = setup();
+  await audio.start();
+  const bus = audio.bus("mix");
+  const gain = nodes[2];
+  const mute = nodes[3];
+  bus.setGainDb(-6, 1);
+  const volume = [...gain.gain.calls];
+  bus.setMuted(true);
+  bus.setMuted(false);
+  expect(gain.gain.calls).toEqual(volume);
+  expect(mute.gain.calls.at(-1)).toEqual(["linear", 1, 1.005]);
+  const routes = mute.connect.mock.calls.length;
+  bus.setParent(audio.master);
+  expect(mute.connect).toHaveBeenCalledTimes(routes);
+  for (const call of [
+    () => bus.setGainDb(1),
+    () => bus.setGainDb(-6, NaN),
+    () => bus.setMuted(1 as unknown as boolean),
+  ])
+    expect(call).toThrow();
+  await audio.dispose();
+});
+it("validates delay replacements before allocation, bounds tails and cuts/reset resources", async () => {
+  const { audio, nodes, sources, context } = setup();
+  await audio.start();
+  const bus = audio.bus("fx");
+  bus.setDelay({ seconds: 2, feedback: 0.9, wet: 0.5 });
+  const baseline = nodes.length;
+  for (const options of [
+    { seconds: 0, feedback: 0.1, wet: 1 },
+    { seconds: 3, feedback: 0, wet: 0 },
+    { seconds: 1, feedback: 1, wet: 1 },
+    { seconds: 1, feedback: 0, wet: NaN },
+  ])
+    expect(() => bus.setDelay(options)).toThrow();
+  expect(nodes).toHaveLength(baseline);
+  const voice = audio.sound(confirmation).play({ bus });
+  sources.slice(0, 2).forEach((source) => source.onended?.());
+  await voice.ended;
+  const clock = sources.at(-1)!;
+  expect(clock.stop).toHaveBeenLastCalledWith(context.currentTime + 5);
+  clock.onended?.();
+  expect(
+    nodes.slice(4, 9).every((node) => node.disconnect.mock.calls.length > 0),
+  ).toBe(true);
+  audio.sound(thruster).play({ bus });
+  for (let i = 0; i < 100; i++) audio.stopAll({ tails: "cut" });
+  expect(
+    sources.filter((source) => source.onended !== null).length,
+  ).toBeLessThanOrEqual(3);
+  await audio.suspend();
+  expect(audio.counts.active).toBe(0);
+  expect(sources.every((source) => source.onended === null)).toBe(true);
+  await audio.dispose();
+  expect(nodes.every((node) => node.disconnect.mock.calls.length > 0)).toBe(
+    true,
+  );
+});
+it("supports zero-delay without feedback and cleans partial effect allocation", async () => {
+  const { audio, context, nodes } = setup();
+  await audio.start();
+  const bus = audio.bus("fx");
+  bus.setDelay({ seconds: 0, feedback: 0, wet: 1 });
+  const before = nodes.length;
+  context.createDelay.mockImplementationOnce(() => {
+    throw new Error("allocation");
+  });
+  expect(() => bus.setDelay({ seconds: 1, feedback: 0.5, wet: 1 })).toThrow(
+    /allocation/,
+  );
+  expect(nodes[before].disconnect).toHaveBeenCalledOnce();
+  bus.setDelay(null);
+  await audio.dispose();
+});
+it("invalidates blocked resume on suspension without waiting for native resolution", async () => {
+  const { audio, context } = setup();
+  let resolve!: () => void;
+  context.resume.mockImplementationOnce(
+    () =>
+      new Promise<void>((done) => {
+        resolve = done;
+      }),
+  );
+  const pending = audio.start();
+  const handled = expect(pending).rejects.toMatchObject({
+    code: "start-cancelled",
+  });
+  await audio.suspend();
+  await handled;
+  expect(audio.state).toBe("suspended");
+  context.state = "running";
+  resolve();
+  await Promise.resolve();
+  await Promise.resolve();
+  expect(context.state).toBe("suspended");
+  await audio.start();
+  expect(audio.state).toBe("running");
+  await audio.dispose();
+});
+it("native taps reject foreign contexts and duplicate destination routes before connecting", async () => {
+  const { audio, context } = setup();
+  expect(() => audio.native).toThrow(/start/);
+  await audio.start();
+  const tap = new Node();
+  Object.assign(tap, { context });
+  const nativeNode = tap as unknown as AudioNode;
+  expect(() =>
+    audio.native.connect(new Node() as unknown as AudioNode),
+  ).toThrow(/context/);
+  expect(() =>
+    audio.native.connect(context.destination as unknown as AudioNode),
+  ).toThrow(/destination/);
+  const remove = audio.native.connect(nativeNode);
+  expect(() => audio.native.connect(nativeNode)).toThrow(/already/);
+  remove();
+  remove();
+  audio.native.connect(nativeNode);
+  await audio.dispose();
+  expect(context.close).toHaveBeenCalledOnce();
+});
+
+it("cut keeps retirees separate from active capacity during mixed stress", async () => {
+  const { audio } = setup({ maxVoices: 2, maxVoicesPerSound: 2 });
+  await audio.start();
+  const a = audio.sound(thruster);
+  const b = audio.sound(confirmation);
+  for (let i = 0; i < 100; i++) {
+    a.play();
+    b.play();
+    audio.stopAll({ tails: "cut" });
+    expect(audio.counts.active).toBeLessThanOrEqual(2);
+    expect(audio.counts.retiring).toBeLessThanOrEqual(1);
+  }
+  await audio.dispose();
+});
+
+it("route replacement removes the old output exactly once and cannot extend an idle tail", async () => {
+  const { audio, nodes, sources, context } = setup();
+  await audio.start();
+  const first = audio.bus("first");
+  const second = audio.bus("second");
+  const child = audio.bus("child", first);
+  first.setDelay({ seconds: 0.1, feedback: 0.5, wet: 1 });
+  const voice = audio.sound(confirmation).play({ bus: child });
+  sources.slice(0, 2).forEach((source) => source.onended?.());
+  await voice.ended;
+  const clock = sources.at(-1)!;
+  const cutoff = [...clock.stop.mock.calls];
+  context.currentTime += 0.05;
+  child.setParent(second);
+  child.setParent(first);
+  expect(clock.stop.mock.calls).toEqual(cutoff);
+  expect(nodes[7].disconnect).toHaveBeenCalledWith(nodes[2]);
   await audio.dispose();
 });

@@ -27,3 +27,5 @@ export type {
   Voice,
   PlayOptions,
 } from "./runtime/engine";
+
+export type { Bus, DelayOptions } from "./runtime/bus";

@@ -2,8 +2,8 @@
 
 ## Context
 
-Step 03 core accepted. This is a proposed change; no implementation or validation is implied
-by the presence of these artifacts.
+Step 03 core accepted. Implementation and automated verification are recorded in [verification.md](verification.md);
+maintainer manual acceptance was confirmed on 2026-10-06.
 
 ## Goals / Non-Goals
 
@@ -13,7 +13,8 @@ automatic npm publication, and unrelated ecosystem work are outside this step.
 
 ## Decisions
 
-Use a single-parent bus tree rooted at master. Bus lookup reuses a live named bus.
+Use a single-parent bus tree rooted at master, with at most 32 live buses
+including master. Buses and native access require successful startup. Bus lookup reuses a live named bus.
 Reject cycles and cross-engine parents before mutation; route replacement is
 atomic and removes the old owned connection. Gain and mute have separate nodes,
 so muting does not destroy a volume ramp. Disposing a bus stops routed voices
@@ -22,9 +23,13 @@ engine disposal. Make name reuse after disposal explicit: a new lookup creates
 a fresh bus.
 
 Add an owned shared delay with seconds in [0, 2], feedback in [0, 0.9], and wet in
-[0, 1]. Reject updates outside bounds. Tails stop at -60 dB relative level or at a
-maximum 5 seconds, whichever is earlier; reset uses a short output fade before
-disconnect/recreation. Keep delay zero with feedback zero a supported dry/wet
+[0, 1]. Reject updates outside bounds. Delay is an additive wet send alongside unity dry output. Tails stop at the
+conservative -60 dB feedback-decay estimate (first echo plus repeats, including
+descendant tail allowance for a parent) or at a
+maximum 5 seconds, whichever is earlier; reset uses a 5 ms wet-output fade and at most one fading replacement.
+Cut detaches delay input immediately; fresh playback recreates retained settings.
+A disconnected oscillator sentinel uses the audio clock for final disconnection;
+suspension/interruption/disposal finalize it without waiting for clock progress. Keep delay zero with feedback zero a supported dry/wet
 case; reject zero delay with positive feedback to avoid an immediate feedback loop.
 
 Normal voice stop allows already emitted shared tails within that cap.

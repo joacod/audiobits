@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createAudio } from "audiobits";
-import type { AudioEngine, AudioState, Sound, Voice } from "audiobits";
+import type { AudioEngine, AudioState, Bus, Sound, Voice } from "audiobits";
 import { confirmation, impact, thruster } from "audiobits/recipes";
 
 export function ConfirmationDemo() {
@@ -12,6 +12,10 @@ export function ConfirmationDemo() {
   const thrusterSound = useRef<Sound | null>(null);
   const thrusterVoice = useRef<Voice | null>(null);
   const request = useRef(0);
+  const route = useRef<Bus | null>(null);
+  const [delay, setDelay] = useState(false);
+  const [volume, setVolume] = useState(0);
+  const volumeValue = useRef(0);
   const throttleValue = useRef(0.2);
   const [intensity, setIntensity] = useState(0.5);
   const [throttle, setThrottle] = useState(0.2);
@@ -27,9 +31,10 @@ export function ConfirmationDemo() {
   }, []);
   const stopAll = useCallback(() => {
     stopThruster();
-    audio.current?.stopAll();
+    audio.current?.stopAll({ tails: "cut" });
   }, [stopThruster]);
   useEffect(() => {
+    const requests = request;
     const engine = createAudio();
     audio.current = engine;
     sound.current = engine.sound(confirmation);
@@ -37,12 +42,17 @@ export function ConfirmationDemo() {
     thrusterSound.current = engine.sound(thruster);
     const unsubscribe = engine.subscribe(setState);
     const hide = () => {
-      if (document.hidden) stopAll();
+      if (document.hidden) {
+        stopAll();
+        void engine.suspend().catch(() => {});
+      }
     };
     document.addEventListener("visibilitychange", hide);
     return () => {
       document.removeEventListener("visibilitychange", hide);
+      requests.current++;
       unsubscribe();
+      route.current = null;
       audio.current = null;
       sound.current = null;
       impactSound.current = null;
@@ -61,7 +71,7 @@ export function ConfirmationDemo() {
         : kind === "impact"
           ? impactSound.current
           : thrusterSound.current;
-    if (!engine || !definition) return;
+    if (!engine || !definition || document.hidden) return;
     if (kind === "thruster" && thrusterVoice.current?.state === "active")
       return;
     const token = request.current;
@@ -69,10 +79,20 @@ export function ConfirmationDemo() {
     setError("");
     try {
       await engine.start();
-      if (audio.current !== engine || token !== request.current) return;
+      if (
+        audio.current !== engine ||
+        token !== request.current ||
+        document.hidden
+      )
+        return;
+      if (!route.current) {
+        route.current = engine.bus("effects");
+        route.current.setGainDb(volumeValue.current, 0.1);
+      }
       if (kind === "thruster") {
         if (thrusterVoice.current?.state === "active") return;
         const voice = definition.play({
+          bus: route.current,
           parameters: { throttle: throttleValue.current },
         });
         thrusterVoice.current = voice;
@@ -84,7 +104,10 @@ export function ConfirmationDemo() {
           }
         });
       } else
-        definition.play(kind === "impact" ? { parameters: { intensity } } : {});
+        definition.play({
+          bus: route.current,
+          ...(kind === "impact" ? { parameters: { intensity } } : {}),
+        });
     } catch (cause) {
       if (audio.current === engine && token === request.current) {
         if (kind === "thruster") setThrusterState("stopped");
@@ -111,7 +134,65 @@ export function ConfirmationDemo() {
           Mute
         </button>
         <button onClick={stopAll}>Stop all</button>
+        <button
+          aria-pressed={delay}
+          onClick={() => {
+            const engine = audio.current;
+            if (!engine || document.hidden) return;
+            const token = request.current;
+            void engine
+              .start()
+              .then(() => {
+                if (
+                  audio.current !== engine ||
+                  token !== request.current ||
+                  document.hidden
+                )
+                  return;
+                if (!route.current) {
+                  route.current = engine.bus("effects");
+                  route.current.setGainDb(volumeValue.current, 0.1);
+                }
+                const next = !delay;
+                route.current.setDelay(
+                  next ? { seconds: 0.18, feedback: 0.35, wet: 0.25 } : null,
+                );
+                setDelay(next);
+              })
+              .catch((cause: unknown) => {
+                if (audio.current === engine && token === request.current)
+                  setError(
+                    cause instanceof Error ? cause.message : "Delay failed.",
+                  );
+              });
+          }}
+        >
+          Shared delay
+        </button>
       </div>
+      <label>
+        Effects volume: {volume} dB
+        <input
+          aria-label="Effects volume"
+          type="range"
+          min="-60"
+          max="0"
+          step="1"
+          value={volume}
+          onChange={(event) => {
+            const value = Number(event.target.value);
+            volumeValue.current = value;
+            setVolume(value);
+            try {
+              route.current?.setGainDb(value, 0.1);
+            } catch (cause) {
+              setError(
+                cause instanceof Error ? cause.message : "Volume failed.",
+              );
+            }
+          }}
+        />
+      </label>
       <h3>Impact</h3>
       <p>
         A descending body and filtered noise transient. Intensity changes pitch,

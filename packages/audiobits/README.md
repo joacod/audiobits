@@ -81,9 +81,9 @@ The generated schema is available as `recipeSchema` or `audiobits/schema.json`.
 must be integers from 1–128; master gain must be -60–0 dB. `setMuted(boolean)`
 uses a separate mute setting and a 5 ms gain ramp.
 
-`sound.play({ at, gainDb, pan, parameters, seed })` creates fresh sources synchronously. `at` is
+`sound.play({ at, gainDb, pan, parameters, seed, bus })` creates fresh sources synchronously. `at` is
 absolute audio-context time, obtained by the host's own scheduling logic;
-this step intentionally exposes no native context accessor. Omit it for
+available after startup as `audio.native.context.currentTime`. Omit it for
 immediate playback. Past timestamps are rejected. Playback gain is -60–0 dB
 (default 0), pan is -1–1 (default 0). Future voices reserve capacity.
 
@@ -97,8 +97,9 @@ engine/per-sound limits; another steal finalizes the previous retiree first.
 
 Gate duration excludes release. Filters receive a bounded 50 ms tail allowance;
 output fades to zero over the final 5 ms. Layer filters precede their envelopes.
-`stopAll()` releases managed voices. `sound.dispose()` immediately finalizes
-that sound's voices and noise buffers. `audio.suspend()` finalizes all voices before suspending.
+`stopAll()` releases managed voices and allows bounded shared delay tails.
+`stopAll({ tails: "cut" })` uses a 5 ms source/output fade and resets shared delays. `sound.dispose()` immediately finalizes
+that sound's voices and noise buffers. `audio.suspend()` invalidates pending starts and finalizes all voices and shared effects before suspending.
 Native suspension/interruption also finalizes voices when its state event arrives.
 `audio.dispose()` invalidates pending startup, finalizes voices immediately,
 disconnects master output, and closes the context once, even while suspended.
@@ -180,10 +181,101 @@ rates fail with `noise-rate` before voice allocation. A layer retains at most
 buffer of that size. A recipe has at most 16 layers, and existing voice limits
 bound concurrent buffers. The thruster owns ten nodes and one buffer per voice;
 with its default eight-voice limit plus one retiree, sample storage is at most
-1728000 bytes at 48 kHz. The engine master is one additional node. These are
+1728000 bytes at 48 kHz. The engine master owns two additional nodes for independent gain and mute. These are
 owned sample-storage bounds, not measurements of all browser memory.
 
 Control updates allocate no new audio nodes or buffers. Finishing a voice clears
 its buffer-source references and disconnects owned nodes, including cancellation
 before onset, stealing, sound disposal, and engine teardown. Browser-internal
 reclamation timing remains outside the library's control.
+
+## Buses and shared delay
+
+After `await audio.start()`, `audio.master` is the root bus. `audio.bus(name,
+parent = audio.master)` creates a named bus or reuses the live bus with that
+name; use `setParent()` to move an existing bus. Names contain 1–64 characters
+and cannot be blank. At most 32 buses, including master, may be live. Routes
+form a single-parent tree; invalid, disposed, foreign-engine, and cyclic
+parents fail before changing the previous connection. Reassigning the same
+parent does not create another route. `sound.play({ bus })` defaults to master
+and rejects foreign/disposed buses before voice allocation or stealing.
+
+`bus.setGainDb(value, rampSeconds = 0.005)` accepts -60–0 dB and 0–10 seconds.
+It holds the current native value before ramping. `bus.setMuted(boolean)` uses
+an independent 5 ms stage, preserving volume automation. `audio.setMuted()`
+controls master mute, including a setting made before startup.
+
+```ts
+// In a gesture handler, after activating this engine:
+await audio.start();
+const effects = audio.bus("effects");
+effects.setGainDb(-6, 0.1);
+effects.setDelay({ seconds: 0.18, feedback: 0.35, wet: 0.25 });
+const voice = sound.play({ bus: effects });
+voice.stop(); // Emitted delay energy decays within its cap.
+audio.stopAll({ tails: "cut" }); // Fade/reset all owned shared tails.
+effects.dispose(); // Finalize voices, descendant buses, and shared effects.
+await audio.dispose();
+```
+
+Delay is a shared additive send: dry output remains at unity and `wet` adds
+0–1 times the delayed signal. Delay time accepts 0–2 seconds and feedback
+0–0.9. Zero delay requires zero feedback. Settings are copied and validated
+before graph replacement; `setDelay(null)` removes the effect. Replacement
+fades the previous wet output over 5 ms. Each bus retains at most one fading
+replacement; another reset finalizes the previous retiree first.
+
+When the last managed input ends, output fades to zero at the conservative
+-60 dB feedback-decay estimate or five seconds, whichever is earlier.
+The estimate counts the first echo plus repeats; parent buses include their
+children's tail allowance, still capped at five seconds. An audio-clock
+sentinel disconnects the effect at cutoff. Fresh playback reconstructs a
+finished/reset delay with its retained settings. Suspended/interrupted/closed
+cleanup and disposal disconnect immediately without waiting for clock events.
+A bus owns two base nodes, five per live delay, at most one tail sentinel,
+and at most one fading old delay with its sentinel. Delay storage belongs to
+native Web Audio; these node bounds do not measure browser heap use.
+
+Non-master bus disposal is idempotent and stops routed voices recursively.
+A later lookup of that name creates a fresh bus. `master.dispose()` fails;
+dispose the engine to release master. Engine disposal removes all owned
+output and closes its context, even while suspended or starting.
+
+## Native analyser and caller ownership
+
+`audio.native` is available after startup and exposes the owned `context`,
+master `output`, and `connect(node)` tap helper. The helper rejects foreign
+contexts, duplicate taps, the output itself, and the context destination.
+It returns an idempotent detach function. Master already connects to the
+speaker destination. Leave an analyser's output unconnected to avoid a second
+audible path. The vanilla example reads peak levels with a host animation
+frame, cancels that frame, detaches the tap, and disconnects its analyser
+before engine teardown.
+
+```ts
+await audio.start();
+const native = audio.native;
+const analyser = native.context.createAnalyser();
+const detach = native.connect(analyser);
+const samples = new Float32Array(analyser.fftSize);
+analyser.getFloatTimeDomainData(samples);
+// Host teardown:
+detach();
+analyser.disconnect();
+await audio.dispose();
+```
+
+Caller-created nodes, sources, connections, and animation listeners are
+caller-owned. Stop unmanaged sources explicitly: `stopAll()` cannot stop them.
+Direct native graph operations remain the caller's responsibility and cannot
+be serialized as recipes. Closing the engine context invalidates these native
+nodes; retained native handles do not transfer ownership back to the engine.
+
+The site and vanilla demo invalidate pending Play actions, cut managed tails,
+and suspend on hide. Returning does not resume; a fresh gesture starts audio.
+Late activation after suspension is cancelled and cannot replay an old request.
+The engine also clears owned voices/effects on native interruption; automatic
+native recovery is suspended until a fresh `start()` request. Physical OS
+interruption still requires manual evidence. Step 04 passed maintainer manual
+verification on 2026-10-06. Browser/device details and individual observations
+were not supplied; automated checks remain separate from that acceptance.

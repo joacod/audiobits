@@ -7,7 +7,9 @@ documentation and demo site in one monorepo. Read [the roadmap](docs/roadmap.md)
 and the selected OpenSpec change before implementation. The repository has a
 workspace foundation and a three-sound development preview. Step 02 playback
 and manual listening passed; Step 03 dynamic controls are implemented with
-automated evidence and maintainer manual acceptance. Later APIs remain proposed. Use the
+automated evidence and maintainer manual acceptance. Step 04 routing/lifecycle APIs are implemented with automated evidence and
+maintainer manual acceptance;
+Steps 05–06 remain proposed. Use the
 roadmap and each change's verification note for current status.
 
 - Work on the explicitly selected step. Do not automatically start the next.
