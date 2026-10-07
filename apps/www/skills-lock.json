@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "ui-design-token-refactor": {
+      "source": "joacod/skills",
+      "sourceType": "github",
+      "skillPath": "skills/ui-design-token-refactor/SKILL.md",
+      "computedHash": "6b51b2c18bba0b760e0c9b2404202164e2594bdaa6dd7d1454409a7cc5c8784f"
+    }
+  }
+}
