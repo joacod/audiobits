@@ -1,10 +1,23 @@
 import { expect, test } from "@playwright/test";
 import { resolve } from "node:path";
 
-test("native delay has bounded tails and running cut fades to silence at both rates", async ({
+test("native offline delay has bounded tails and an adapted running cut fades to silence", async ({
   page,
   browser,
 }) => {
+  // Reproduce delayed main-thread delivery while native offline audio renders.
+  // The fixture must still perform the cut at its audio-clock checkpoint.
+  await page.addInitScript(() => {
+    const render = OfflineAudioContext.prototype.startRendering;
+    OfflineAudioContext.prototype.startRendering = function () {
+      const rendering = render.call(this);
+      const until = performance.now() + 50;
+      while (performance.now() < until) {
+        /* Busy host thread. */
+      }
+      return rendering;
+    };
+  });
   await page.goto("http://127.0.0.1:4173");
   await page.addScriptTag({
     path: resolve(
@@ -16,7 +29,14 @@ test("native delay has bounded tails and running cut fades to silence at both ra
       mixingSignal(
         rate: number,
         cut: boolean,
-      ): Promise<{ tailEnergy: number; latePeak: number; peak: number }>;
+      ): Promise<{
+        rate: number;
+        tailEnergy: number;
+        latePeak: number;
+        peak: number;
+        cutAt: number | null;
+        fadeEnergy: number;
+      }>;
     };
     const result = [];
     for (const rate of [44100, 48000]) {
@@ -29,8 +49,18 @@ test("native delay has bounded tails and running cut fades to silence at both ra
     expect(results[i].peak).toBeGreaterThan(0.01);
     expect(results[i].peak).toBeLessThan(1);
     expect(results[i].latePeak).toBe(0);
-    if (i % 2) expect(results[i].tailEnergy).toBe(0);
-    else expect(results[i].tailEnergy).toBeGreaterThan(0.001);
+    if (i % 2) {
+      // Native offline suspension quantizes the requested checkpoint to a
+      // render quantum; assert the actual cut stayed within one 128-frame block.
+      expect(Math.abs(results[i].cutAt! - 0.4)).toBeLessThanOrEqual(
+        128 / results[i].rate,
+      );
+      expect(results[i].fadeEnergy).toBeGreaterThan(0);
+      expect(results[i].tailEnergy).toBe(0);
+    } else {
+      expect(results[i].cutAt).toBeNull();
+      expect(results[i].tailEnergy).toBeGreaterThan(0.001);
+    }
   }
   console.log(
     `Mixing signal Chromium ${browser.version()}: ${JSON.stringify(results)}`,

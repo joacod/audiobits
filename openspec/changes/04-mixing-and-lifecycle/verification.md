@@ -143,3 +143,15 @@ archive or start Step 05 automatically.
 | Verification | `packages/audiobits/tests/engine.test.ts`, `tests/browser/audio-harness.ts`, `tests/browser/mixing.spec.ts`, `scripts/test-package.mjs` |
 | Development documentation | `packages/audiobits/README.md`, `apps/www/content/docs/index.mdx`, `docs/architecture.md`, `docs/development.md`, `docs/roadmap.md`, `AGENTS.md` |
 | Step 04 records | `design.md`, `tasks.md`, `verification.md` in this change |
+
+## Offline fixture evidence correction
+
+The shared-delay signal fixture's original `onended`-driven cut checkpoint was
+not deterministic: the main-thread callback could arrive after offline rendering
+advanced. The [Step 05 CI follow-up](../05-gallery-and-docs/verification.md#ci-delay-fixture-follow-up)
+records the reproduction and corrected fixture. Native offline rendering now
+pauses at audio-clock checkpoints; a test-only running-state adapter selects the
+5 ms cut-fade branch while paused. The signal remains native, but running-state
+selection is simulated. Historical sample results above remain observations
+from their original local run, not proof of a reliable callback timing gate.
+Runtime APIs and maintainer manual acceptance are unchanged.

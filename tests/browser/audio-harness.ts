@@ -416,39 +416,68 @@ Object.assign(globalThis, { dynamicSignal, dynamicLifecycle });
 async function mixingSignal(rate: number, cut: boolean) {
   const { OwnedBus } = await import("../../packages/audiobits/src/runtime/bus");
   const context = new OfflineAudioContext(1, rate * 7, rate);
+  // Offline rendering must pause before a main-thread operation. Source
+  // onended delivery can lag the render thread and is not a scheduling clock.
+  // Only the state used by cut() is adapted: test its running fade branch while
+  // native offline nodes are paused at a deterministic audio-clock position.
+  let runningCut = false;
+  const busContext = new Proxy(context, {
+    get(target, key) {
+      if (key === "state" && runningCut) return "running";
+      const value = Reflect.get(target, key, target);
+      return typeof value === "function" ? value.bind(target) : value;
+    },
+  });
   const bus = new OwnedBus(
     "master",
-    context as unknown as AudioContext,
+    busContext as unknown as AudioContext,
     {},
     null,
     () => {},
     -12,
   );
   bus.setDelay({ seconds: 0.2, feedback: 0.9, wet: 0.5 });
-  createGraph(context, bus.input, compile(confirmation), 0.05, 0, 0, () =>
-    bus.tail(),
-  );
+  const plan = compile(confirmation);
+  const at = 0.05;
+  createGraph(context, bus.input, plan, at, 0, 0, () => {});
+  const pauses = [
+    context.suspend(at + plan.lifetime).then(() => {
+      bus.tail();
+      return context.resume();
+    }),
+  ];
+  let cutAt: number | null = null;
   if (cut) {
-    const trigger = context.createOscillator();
-    trigger.onended = () => {
-      bus.cut();
-      trigger.disconnect();
-    };
-    trigger.start();
-    trigger.stop(0.4);
+    pauses.push(
+      context.suspend(0.4).then(() => {
+        cutAt = context.currentTime;
+        runningCut = true;
+        try {
+          bus.cut();
+        } finally {
+          runningCut = false;
+        }
+        return context.resume();
+      }),
+    );
   }
-  const data = (await context.startRendering()).getChannelData(0);
-  let tailEnergy = 0,
+  const rendering = context.startRendering();
+  await Promise.all(pauses);
+  const data = (await rendering).getChannelData(0);
+  let fadeEnergy = 0,
+    tailEnergy = 0,
     latePeak = 0,
     peak = 0;
   for (let i = 0; i < data.length; i++) {
     require(Number.isFinite(data[i]), "Nonfinite delay output");
     peak = Math.max(peak, Math.abs(data[i]));
+    if (cutAt !== null && i > rate * cutAt && i < rate * (cutAt + 0.005))
+      fadeEnergy += data[i] ** 2;
     if (i > rate * 0.5 && i < rate) tailEnergy += data[i] ** 2;
     if (i > rate * 6) latePeak = Math.max(latePeak, Math.abs(data[i]));
   }
   bus.destroy();
-  return { rate, cut, tailEnergy, latePeak, peak };
+  return { rate, cut, cutAt, fadeEnergy, tailEnergy, latePeak, peak };
 }
 async function mixingLifecycle() {
   const context = new AudioContext();

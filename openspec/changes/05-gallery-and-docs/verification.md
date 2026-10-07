@@ -177,3 +177,34 @@ Stop at this change's review boundary; do not start Step 06 automatically.
   `tests/browser/audio-harness.ts`, `foundation.spec.ts`, and `gallery.spec.ts`.
 - Project records: `AGENTS.md`, `docs/development.md`, `docs/roadmap.md`,
   `docs/website.md`, and this change's design, tasks, and verification.
+
+## CI delay-fixture follow-up
+
+The supplied CI log for commit `29cdaa7` used Ubuntu and pinned Node 24.21.0
+with Chromium 153.0.8010.12. It reports 24 browser checks passing and the
+shared-delay cut signal check failing on both attempts. This is evidence from
+provided CI output, not a separately fetched or subsequently green run.
+
+The old fixture invoked cut from a source's main-thread `onended` callback.
+Offline rendering could advance before that callback was delivered. A local
+250 ms busy-thread reproduction retained tail energy 0.4907506777059492 instead
+of cutting it and also missed the natural-tail cap checkpoint. The correction
+pauses the native offline renderer at explicit audio-clock checkpoints for
+natural-tail scheduling and cut. During cut only, a test-only context adapter
+reports running state so the runtime's 5 ms fade branch executes while rendering
+is paused. Audio nodes, automation, and sample generation remain native; the
+running-state selection is simulated. This replaces the old fixture's claim of
+an entirely native running-context cut operation. Runtime behavior is unchanged.
+
+The regression deliberately delays the host thread by 50 ms. It checks actual
+cut time within one 128-frame render quantum of 0.4 seconds, positive energy
+during the 5 ms fade, exact silence in the subsequent tail window, and the
+unchanged natural-tail cap. Local cuts occurred at 0.4005442176870748 seconds at
+44.1 kHz and 0.4 seconds at 48 kHz; cut tail energy and late peaks were zero.
+
+`node scripts/build-audio-tests.mjs` and `pnpm lint` passed. The focused command
+`pnpm exec playwright test --config node_modules/.cache/step05-browser.config.mjs --grep 'adapted running cut' --repeat-each=10`
+passed all ten repetitions using the previously documented isolated ports and
+available local Node 24.2.0. These are 40 native renders, with the running-state
+adapter explicitly identified above. The corrected full CI run remains pending.
+No library, gallery, dependency, workflow, or Step 06 change accompanies this fix.
