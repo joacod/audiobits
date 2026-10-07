@@ -1,15 +1,17 @@
 {
   "name": "audiobits",
-  "version": "0.0.0",
+  "version": "0.1.0-rc.0",
   "private": true,
-  "description": "Procedural browser audio library (unreleased recipe playback preview).",
+  "description": "Procedural browser audio: versioned recipes, live controls, managed voices and buses (unreleased candidate).",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
   "files": [
     "dist",
     "LICENSE",
-    "README.md"
+    "README.md",
+    "CHANGELOG.md",
+    "skill"
   ],
   "exports": {
     ".": {
@@ -20,7 +22,8 @@
       "types": "./dist/recipes/index.d.ts",
       "import": "./dist/recipes/index.js"
     },
-    "./schema.json": "./dist/schema.json"
+    "./schema.json": "./dist/schema.json",
+    "./capabilities.json": "./dist/capabilities.json"
   },
   "types": "./dist/index.d.ts",
   "scripts": {

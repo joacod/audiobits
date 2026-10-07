@@ -1,0 +1,42 @@
+name: Prepare npm candidate
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: audiobits-npm-release
+  cancel-in-progress: false
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm release:prepare
+      - uses: actions/upload-artifact@v4
+        with:
+          name: reviewed-npm-candidate
+          path: node_modules/.cache/audiobits-release/
+          if-no-files-found: error
+          include-hidden-files: true
+  publish:
+    # Activation requires a separately approved change and protected environment.
+    if: ${{ false }}
+    needs: prepare
+    runs-on: ubuntu-latest
+    environment: npm-production
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - run: |
+          echo "Publication disabled: confirm identity, ownership, bootstrap and exact archive approval."
+          exit 1

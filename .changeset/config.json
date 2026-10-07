@@ -1,0 +1,12 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config/schema.json",
+  "changelog": ["@changesets/cli/changelog", null],
+  "commit": false,
+  "fixed": [],
+  "linked": [],
+  "access": "public",
+  "baseBranch": "main",
+  "updateInternalDependencies": "patch",
+  "ignore": ["@audiobits/www", "@audiobits/vanilla"],
+  "privatePackages": { "version": true, "tag": false }
+}

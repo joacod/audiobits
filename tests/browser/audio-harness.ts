@@ -624,3 +624,42 @@ async function comparisonSignal(
   return { difference, energy, latePeak };
 }
 Object.assign(globalThis, { comparisonSignal });
+
+async function capabilitySignal(recipe: unknown) {
+  const { defineSound } =
+    await import("../../packages/audiobits/src/recipe/validate");
+  const definition = defineSound(recipe);
+  const context = new OfflineAudioContext(1, 48000, 48000);
+  let finished = 0;
+  const graph = createGraph(
+    context,
+    context.destination,
+    compile(definition, {}, 42),
+    0.02,
+    -12,
+    0,
+    () => {
+      finished++;
+    },
+  );
+  const stopped =
+    definition.kind === "sustained"
+      ? context.suspend(0.3).then(() => {
+          graph.stop();
+          return context.resume();
+        })
+      : Promise.resolve();
+  const rendering = context.startRendering();
+  await stopped;
+  const data = (await rendering).getChannelData(0);
+  let energy = 0,
+    tail = 0;
+  for (let i = 0; i < data.length; i++) {
+    require(Number.isFinite(data[i]), "Nonfinite advertised primitive");
+    energy += data[i] ** 2;
+    if (i > 48000 * 0.8) tail = Math.max(tail, Math.abs(data[i]));
+  }
+  require(finished === 1, "Advertised primitive did not clean up");
+  return { energy, tail, finished };
+}
+Object.assign(globalThis, { capabilitySignal });

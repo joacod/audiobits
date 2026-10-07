@@ -1,3 +1,4 @@
+import { PackageChannel } from "../../package-channel";
 import { notFound } from "next/navigation";
 import {
   DocsBody,
@@ -22,7 +23,7 @@ export default async function Page({
       <DocsTitle>{page.data.title}</DocsTitle>
       <DocsDescription>{page.data.description}</DocsDescription>
       <DocsBody>
-        <Content components={defaultMdxComponents} />
+        <Content components={{ ...defaultMdxComponents, PackageChannel }} />
       </DocsBody>
     </DocsPage>
   );

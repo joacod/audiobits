@@ -5,7 +5,9 @@ recipe playback implemented with automated evidence and maintainer manual
 verification. Step 03 is implemented with automated evidence and maintainer
 manual verification. Step 04 is implemented with automated evidence and
 maintainer manual acceptance. Step 05 gallery and documentation are implemented
-with local automated evidence and maintainer manual acceptance.
+with local automated evidence and maintainer manual acceptance. Step 06 release
+preparation is implemented with local evidence; candidate acceptance and
+production activation remain pending.
 
 Read [AGENTS.md](../AGENTS.md) before implementation. Every numbered step is an
 OpenSpec change with its own proposal, design, and tasks. Runtime changes also
@@ -74,6 +76,8 @@ records dynamic controls and maintainer listening acceptance. [Step 04 evidence]
 records routing and lifecycle checks and maintainer manual acceptance.
 Step 05 implementation and automated checks are recorded in
 [its verification note](../openspec/changes/05-gallery-and-docs/verification.md);
-its maintainer listening review is accepted. Step 06 remains unimplemented.
+its maintainer listening review is accepted. [Step 06 verification](../openspec/changes/06-core-release/verification.md) records
+the private candidate, local rehearsal and unresolved activation gates. Step 06
+awaits candidate acceptance; npm publication and deployment remain disabled.
 At each gate, record exact commands and outcomes, browser/version where relevant,
 listening evidence, and unresolved limitations in that change's verification note.

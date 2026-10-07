@@ -3,7 +3,12 @@ title: API reference
 description: Public development exports and resource limits.
 ---
 
-Development API · unreleased 0.0.0. Imports use public package exports.
+<PackageChannel />
+
+Imports use public package exports. `audiobits/schema.json` supplies structural
+recipe JSON Schema; `audiobits/capabilities.json` supplies this package version's
+shipped primitives and browser gate. Semantic limits still require
+`validateRecipe`; sample-rate constraints are checked at playback.
 
 | Export                                                        | Responsibility                                                     |
 | ------------------------------------------------------------- | ------------------------------------------------------------------ |

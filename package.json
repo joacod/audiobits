@@ -16,9 +16,12 @@
     "format": "prettier --write .",
     "test": "node scripts/generate-recipe.mjs --check && vitest run",
     "test:browser": "pnpm build && node scripts/build-audio-tests.mjs && playwright test",
-    "test:package": "pnpm build:lib && node scripts/test-package.mjs"
+    "test:package": "pnpm build:lib && node scripts/test-package.mjs",
+    "changeset": "changeset",
+    "release:prepare": "pnpm lint && pnpm typecheck && pnpm test && pnpm test:browser && pnpm test:package"
   },
   "devDependencies": {
+    "@changesets/cli": "3.0.3",
     "@eslint/js": "9.39.5",
     "@playwright/test": "1.63.0",
     "@types/node": "24.19.1",

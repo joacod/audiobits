@@ -10,7 +10,9 @@ export function GalleryPage({ selected }: { selected?: SoundKind }) {
       <nav aria-label="Main navigation">
         <Link href="/">AudioBits</Link>
         <Link href="/sounds">Sounds</Link>
-        <Link href="/docs">Development docs</Link>
+        <Link href="/docs">
+          {siteBuild.channel === "Stable" ? "Docs" : "Development docs"}
+        </Link>
       </nav>
       <p className="eyebrow">
         {siteBuild.channel} · {siteBuild.version} · {siteBuild.source}
@@ -30,8 +32,9 @@ export function GalleryPage({ selected }: { selected?: SoundKind }) {
       />
       <footer>
         <p>
-          Development APIs, consumed locally through public package exports. No
-          npm release is available.
+          {siteBuild.channel === "Stable"
+            ? `Release-aligned documentation for AudioBits ${siteBuild.version}.`
+            : "Development APIs, consumed locally through public package exports. This build does not establish an npm release."}
         </p>
         <Link href="/docs">Read the quick start</Link>
       </footer>

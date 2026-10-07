@@ -1,0 +1,30 @@
+{
+  "packageVersion": "0.1.0-rc.0",
+  "schemaVersion": 1,
+  "status": "unreleased",
+  "recipe": {
+    "kinds": ["one-shot", "sustained"],
+    "sources": ["oscillator", "noise"],
+    "waveforms": ["sine", "triangle", "sawtooth", "square"],
+    "noiseColors": ["white"],
+    "filters": ["lowpass", "highpass", "bandpass"],
+    "parameterModes": ["play", "live"],
+    "mappingScales": ["linear", "exponential"],
+    "automationCurves": ["linear", "exponential"],
+    "values": ["number", "mapping", "seeded-variation", "frequency-automation"]
+  },
+  "curatedRecipes": ["confirmation", "impact", "thruster"],
+  "runtime": [
+    "gesture-start",
+    "bounded-voices",
+    "live-controls",
+    "seeded-replay",
+    "buses",
+    "shared-delay",
+    "native-output-tap",
+    "suspend",
+    "dispose"
+  ],
+  "browserGate": "Chromium",
+  "schemaNote": "Structural schema only; validateRecipe also enforces semantic and resource limits. Playback checks context sample rate."
+}

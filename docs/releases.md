@@ -1,6 +1,7 @@
 # Independent site and library releases
 
-Status: release design, not configured automation or publication authorization.
+Status: private candidate preparation is configured; publication and deployment
+remain disabled. Local evidence does not establish production readiness.
 
 ## Two outputs from one repository
 
@@ -87,3 +88,105 @@ release failures do not require rebuilding unrelated website content.
 - [Changesets](https://github.com/changesets/changesets)
 - [npm trusted publishing](https://docs.npmjs.com/trusted-publishers/)
 - [publint](https://publint.dev/)
+
+## Step 06 candidate preparation
+
+The full accepted Steps 01–05 core is selected. The private candidate is
+`0.1.0-rc.0`; Changesets 3.0.3 applied the initial minor note in `rc` mode.
+It includes only three curated recipes, schema-1 oscillator/white-noise
+sources and filters, seeded variation, play/live controls, bounded voices,
+buses/shared delay, explicit native interop and lifecycle APIs. Deferred
+features in the recipe study remain unavailable.
+
+Run the preparation gate from the repository root under the pinned Node version:
+
+```sh
+pnpm install --frozen-lockfile
+pnpm exec playwright install chromium
+pnpm release:prepare
+OPENSPEC_TELEMETRY=0 openspec validate --all --strict --no-interactive
+```
+
+`release:prepare` runs lint, types, units, the full Chromium integration suite,
+and the isolated packed-package check. `pnpm test:package` is also a focused
+rehearsal: strict publint, a complete archive allowlist/content review, offline
+consumer install, Node imports without browser globals, declaration resolution,
+metadata versions, packaged Markdown examples, unused-import tree-shaking, and
+native Chromium playback/Stop/disposal of the exact quick start and Skill host.
+It starts an ephemeral loopback server and requires the installed Chromium binary.
+No registry authentication, registry write or hosting account is used.
+
+On success the focused check retains the candidate archive and `evidence.json`
+in ignored `node_modules/.cache/audiobits-release/`. Evidence identifies the
+archive SHA-256, bytes, version, file inventory, source commit, dirty-source flag,
+Node and Chromium versions, and results. A dirty source commit is a baseline,
+not the candidate's complete source identity; the archive digest identifies the
+actual reviewed bytes. Recreate and review after any shipped-file change. Local
+artifacts and diagnostics must not enter Git.
+
+The generated `audiobits/capabilities.json` derives recipe enums from the schema
+descriptor and version/status from the manifest. `pnpm test` rejects metadata
+or schema drift. Runtime capability inventory is deliberately compact and
+reviewed against focused API tests; it is not inferred from roadmap prose.
+The schema describes structure; `validateRecipe` also checks semantic and
+resource constraints. The archive deliberately ships its Skill, controlled
+sound reference, package README, and Changesets changelog.
+
+### Separate workflow contracts
+
+[The npm candidate workflow](../.github/workflows/npm-candidate.yml) is manually
+invoked, serialized in its own concurrency group, runs the full preparation
+gate, and uploads the reviewed archive/evidence. Its publication job is
+unconditionally disabled and fails closed if its guard alone is removed.
+It names the future `npm-production` environment and limits OIDC permission to
+that disabled job. The environment name does not establish configured reviewers
+or npm ownership. No publish command or production token is present.
+
+[The site candidate workflow](../.github/workflows/site-candidate.yml) is
+independently invoked and serialized. It prepares development site output
+without changing library versions. Its deployment job is likewise disabled;
+provider commands, account configuration and protected `site-production`
+reviewers remain release-time inputs. A Next build artifact needs provider
+packaging before deployment; uploading it does not establish deployability.
+Neither workflow invokes the other. A failed gate uploads no success candidate
+and reaches no production job. These are local-reviewed contracts, not evidence
+of a successful hosted run.
+
+Default site builds label the private candidate Unreleased. After separately
+approved package activation, previews still label local output Development.
+A stable build additionally requires all of:
+
+- `AUDIOBITS_DOCS_CHANNEL=stable`.
+- A non-private package with a nonzero stable version (no prerelease suffix).
+- `AUDIOBITS_RELEASED_VERSION` matching the package version, supplied only after
+  successful registry verification of the approved artifact.
+- `AUDIOBITS_DOCS_SOURCE` containing the reviewed full source commit SHA.
+
+Incorrect channel values, private/prerelease candidates, mismatched versions,
+and missing source identity fail the site build. These inputs are release
+attestations; the build does not query npm or prove publication itself. Channel
+and version labels on every API page derive from the same build metadata.
+For stable docs-only corrections, retain the confirmed package version and build
+from the release-aligned source line. Do not promote stable docs on a failed
+package publication. If site deployment fails, retain the previous deployment
+and report the mismatch; never republish npm to retry a site operation.
+
+### Remaining activation inputs
+
+Before an actual release, confirm the final npm identifier, name availability,
+owner and first-package bootstrap method. Then configure required reviewers and
+allowed source refs for each production environment and confirm the selected
+hosting provider. Prefer npm trusted publishing where the confirmed bootstrap
+flow supports it; recheck [npm's current instructions](https://docs.npmjs.com/trusted-publishers/)
+at activation. No ownership or hosted URL is assumed by this candidate.
+
+Obtain approval for the exact digest/version, separately transition out of
+Changesets prerelease mode and make only the runtime publishable, then rerun
+and review the resulting stable archive. An approved RC digest does not identify
+those newly changed stable bytes. Configure publication to consume the approved
+archive, and verify registry existence/integrity before retrying any ambiguous
+failure. Keep the previously stable site on failure. Published defects require
+new versions; website rollback changes only the hosting deployment.
+
+See [Step 06 evidence](../openspec/changes/06-core-release/verification.md) for
+executed checks, inherited listening acceptance and unresolved release gates.
