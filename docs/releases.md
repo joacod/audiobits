@@ -190,33 +190,30 @@ Current PR checks and ignored archive evidence identify actual candidate bytes.
 Foundation acceptance is historical; new sounds and exact candidate artifacts
 need listening review before release. Production inputs remain unresolved.
 
-### Current local verification gap
+### Hosted validation and remaining gaps
 
-The 2026-10-07 candidate run used pinned Node 24.21.0, pnpm 12.9.1 and
-Playwright 1.63.0. Lint, types, 47 units, production builds, 30 Chromium and
-29 WebKit checks passed. The Chromium-specific autoplay check was intentionally
-skipped in the two other projects. Firefox failed before page creation with
-`Could not find profile folder`; changing its temporary directory did not help.
-This matches the [reported macOS 27 launch issue](https://github.com/microsoft/playwright/issues/42768).
-The Linux CI matrix is configured but has not been observed. The aggregate
-`release:prepare` gate therefore remains unpassed. The separate packed-consumer
-rehearsal passed, including all eight exports, installed authoring types, six
-packaged examples and three native Chromium host executions.
+The 2026-10-07 [Linux CI repair run](https://github.com/joacod/audiobits/actions/runs/37678294832)
+passed lint, typechecking, 47 unit tests, production builds, the packed-consumer
+rehearsal and 94 Chromium/Firefox/WebKit browser checks. Eight checks skipped
+explicitly: six Firefox offline-checkpoint cases and two Chromium-only autoplay
+checks. Firefox finite rendering, live automation fallback, resource cleanup and
+public gallery workflows passed. Offline checkpoint signal coverage remains
+unavailable where the native APIs are absent.
 
-Firefox execution, new-sound listening acceptance and physical-device review
-remain release follow-ups. No privacy permission, installed browser branding,
-publication guard or deployment guard was changed to obtain these results.
+Repeated Linux execution reproduced a packed-host failure with nonzero output
+but an audio clock stalled at 11.6 ms. The null sink's default two-second buffering
+was unsuitable for live audio checks. Both CI workflows now use `norewinds=1`,
+which bounds its buffering to 50 ms. Signal, cleanup assertions and timeouts
+remain intact; live fallback coverage is independent of offline capability skips.
 
-The supplied Linux run for the initial refinement commit executed Firefox: 63
-matrix checks passed and 25 Firefox checks failed. Observed causes include absent
-offline checkpoint APIs and delayed offline ended callbacks; live contexts also
-remained suspended on the runner. The follow-up adds a clocked PulseAudio null
-sink, capability-based offline skips, bounded cleanup observation and managed
-linear-ramp fallback. A new hosted run is still required to verify the fix.
+The checks used Node 24.21.0, pnpm 12.9.1 and Playwright 1.63.0. The isolated
+archive rehearsal checks eight exports, installed authoring types, six packaged
+examples and three native Chromium hosts. Current PR checks and ignored archive
+evidence identify the exact candidate; the aggregate `release:prepare` invocation
+is recorded separately from individual CI commands.
 
-Local follow-up verification passed 65 Chromium/WebKit checks with one
-Chromium-only autoplay skip, including native rendering and live cleanup with
-`cancelAndHoldAtTime` deliberately removed. Types, 47 units, lint and the packed
-consumer passed. Firefox still failed at launch on macOS; no Linux success is
-claimed for the repair. Offline checkpoint skips leave corresponding Firefox
-signal evidence unavailable even when its live/UI checks run.
+Local Firefox still fails before page creation with `Could not find profile folder`,
+matching the [reported macOS 27 launch issue](https://github.com/microsoft/playwright/issues/42768).
+Linux engine automation does not establish physical Safari/iOS or mobile support.
+New-sound listening acceptance and physical-device review remain release
+follow-ups. Publication and deployment guards remain disabled.
