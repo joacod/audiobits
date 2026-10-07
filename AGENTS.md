@@ -9,7 +9,8 @@ workspace foundation and a three-sound development preview. Step 02 playback
 and manual listening passed; Step 03 dynamic controls are implemented with
 automated evidence and maintainer manual acceptance. Step 04 routing/lifecycle APIs are implemented with automated evidence and
 maintainer manual acceptance;
-Steps 05–06 remain proposed. Use the
+Step 05 gallery/docs are implemented with local automated evidence and
+maintainer manual acceptance; Step 06 remains proposed. Use the
 roadmap and each change's verification note for current status.
 
 - Work on the explicitly selected step. Do not automatically start the next.

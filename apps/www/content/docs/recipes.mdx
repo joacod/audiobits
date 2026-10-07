@@ -1,0 +1,62 @@
+---
+title: Recipes
+description: Define a reusable sound with bounded versioned JSON data.
+---
+
+Development API · unreleased 0.0.0. A recipe is data, not a native graph or code.
+`defineSound()` throws on invalid data and returns a deeply frozen snapshot.
+`validateRecipe()` returns path-specific issues without throwing for invalid input.
+Both work without browser globals.
+
+```ts
+import { defineSound, validateRecipe } from "audiobits";
+const input: unknown = {
+  schemaVersion: 1,
+  kind: "one-shot",
+  duration: 0.15,
+  layers: [
+    {
+      id: "tone",
+      source: { type: "oscillator", waveform: "sine", frequency: 660 },
+      gainDb: -18,
+      envelope: { attack: 0.004, decay: 0.08, sustain: 0.1, release: 0.04 },
+    },
+  ],
+};
+const result = validateRecipe(input);
+if (result.ok) {
+  const recipe = defineSound(result.recipe);
+  console.log(recipe.kind);
+} else {
+  for (const issue of result.issues) console.error(issue.path, issue.message);
+}
+```
+
+## Supported subset
+
+Schema version 1 supports one-shot gates up to 60 seconds or sustained playback
+without `duration`, 1–16 layers with unique IDs, four oscillator waveforms, white
+noise, fixed ADSR envelopes, frequency automation, and lowpass/highpass/bandpass
+filters. Layer gains are -60–0 dB; frequencies are 20–20000 Hz and must be below
+the context's Nyquist frequency at play time. Filters are limited to eight across
+the recipe; frequency automation to 128 points. Gain automation, expression
+strings, file fetches, and sequencing are unsupported.
+
+Validation rejects unknown fields and versions, non-finite numbers, accessors,
+cycles, depth beyond 16, more than 10000 visited values, and invalid parameter
+references. Diagnostics are capped at 100. See [Parameters](/docs/parameters)
+for mappings and live controls. The exported `recipeSchema` and
+`audiobits/schema.json` describe the current draft subset.
+
+## Gallery editor
+
+Each card accepts at most 32 KiB of JSON and shows the first ten validation
+issues. Apply explicitly; invalid input preserves the last valid playable
+sound. Applying a valid definition stops current playback and disposes the old
+sound. Play again to hear the new definition.
+
+Keep the card's playback kind and its primary parameter's range, default, and
+mode. Additional parameters use their declared defaults. Restore and Reset return to the
+bundled recipe, seed 42, and primary control defaults.
+Raw comparisons apply only to bundled definitions. Edited recipes still have a
+copyable AudioBits example containing the entire accepted JSON.

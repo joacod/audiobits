@@ -1,0 +1,40 @@
+---
+title: Native interop
+description: Read an analyser from the owned output without a second speaker route.
+---
+
+Development API · unreleased 0.0.0. Native access requires startup. The engine
+already connects master output to the destination; keep a tap's output
+unconnected to avoid duplicate audible routing.
+
+```ts
+import { createAudio } from "audiobits";
+const audio = createAudio();
+let detach: (() => void) | undefined;
+let analyser: AnalyserNode | undefined;
+export async function attachFromGesture() {
+  await audio.start();
+  const native = audio.native;
+  analyser = native.context.createAnalyser();
+  detach = native.connect(analyser);
+  const samples = new Float32Array(analyser.fftSize);
+  analyser.getFloatTimeDomainData(samples);
+  return samples;
+}
+export async function dispose() {
+  detach?.();
+  analyser?.disconnect();
+  await audio.dispose();
+}
+```
+
+Call this single attachment helper once per engine. The tap helper rejects
+foreign contexts, duplicate taps, the output itself, and destination connections.
+Detach is idempotent. A continuous host visualizer must also cancel its animation
+frame and pause updates when hidden or reduced motion is requested.
+
+Caller-created nodes, sources, and events remain caller-owned. Stop unmanaged
+sources explicitly; `stopAll()` covers only managed voices. Dispose or disconnect
+your nodes before engine teardown. Native graphs are not serializable recipes.
+The vanilla workspace demonstrates a continuous analyser readout; the gallery
+uses textual playing-state feedback without an additional visualization library.

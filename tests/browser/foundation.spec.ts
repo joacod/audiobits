@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("site uses public exports and keyboard-operated Base UI control", async ({
+test("site uses public exports and keyboard-operated Base UI playback", async ({
   page,
   browser,
 }) => {
@@ -12,27 +12,19 @@ test("site uses public exports and keyboard-operated Base UI control", async ({
     page.getByRole("heading", { name: "AudioBits", exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByText("Unreleased · Workspace foundation"),
+    page.getByText("Unreleased · 0.0.0 · Local workspace package"),
   ).toBeVisible();
-  await expect(page.getByTestId("workspace-status")).toHaveText(
-    "AudioBits workspace ready",
-  );
-  await page.getByRole("link", { name: "Development docs" }).focus();
-  await page.keyboard.press("Tab");
-  const details = page.getByRole("button", { name: "Workspace details" });
-  await expect(details).toBeFocused();
+  const play = page.getByRole("button", { name: "Play confirmation" });
+  await play.focus();
   await page.keyboard.press("Enter");
-  await expect(details).toHaveAttribute("aria-expanded", "true");
-  await expect(page.locator("#workspace-details")).toBeVisible();
-  await page.keyboard.press("Space");
-  await expect(page.locator("#workspace-details")).toBeHidden();
+  await expect(page.getByRole("status")).toHaveText("Audio: running");
   expect(errors).toEqual([]);
 });
 
 test("Fumadocs renders development MDX", async ({ page }) => {
   await page.goto("http://127.0.0.1:3100/docs");
   await expect(
-    page.getByRole("heading", { name: "Workspace foundation", exact: true }),
+    page.getByRole("heading", { name: "Quick start", exact: true }),
   ).toBeVisible();
   await expect(
     page.getByText("AudioBits is unreleased.", { exact: false }),

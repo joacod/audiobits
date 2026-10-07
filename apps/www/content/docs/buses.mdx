@@ -1,0 +1,48 @@
+---
+title: Buses and effects
+description: Route voices through named buses and bounded shared delay.
+---
+
+Development API · unreleased 0.0.0. Buses form a single-parent tree rooted at
+master. Create them after startup. Gain and mute have separate stages.
+
+```ts
+import { createAudio } from "audiobits";
+import { confirmation } from "audiobits/recipes";
+const audio = createAudio();
+const sound = audio.sound(confirmation);
+export async function playFromGesture() {
+  await audio.start();
+  const effects = audio.bus("effects");
+  effects.setGainDb(-6, 0.1);
+  effects.setDelay({ seconds: 0.18, feedback: 0.35, wet: 0.25 });
+  sound.play({ bus: effects, seed: 42 });
+}
+export function stop() {
+  audio.stopAll({ tails: "cut" });
+}
+export async function dispose() {
+  await audio.dispose();
+}
+```
+
+`audio.bus(name, parent = audio.master)` reuses a live named bus. Use
+`setParent()` to move it. Cycles and foreign/disposed buses are rejected.
+`setGainDb()` accepts -60–0 dB and ramps of 0–10 seconds (default 5 ms).
+`setMuted()` ramps independently over 5 ms. Master defaults to -12 dB.
+
+## Shared delay
+
+Delay is an additive wet send: dry output remains at unity. Time is 0–2 seconds,
+feedback 0–0.9, and wet 0–1. Positive feedback requires positive time. Invalid
+updates preserve the previous effect; `setDelay(null)` removes it. Replacements
+fade the old wet output over 5 ms with at most one retiring effect per bus.
+
+When managed input ends, tails use a conservative feedback estimate capped at
+five seconds. Stop with `{ tails: "cut" }` to fade/reset them. New playback
+reconstructs a reset delay with its retained settings. Suspension and disposal
+finalize without waiting for clock progress.
+
+Non-master bus disposal recursively finalizes routed voices and descendants.
+Dispose master through the engine. No shared effects or native nodes are stored
+inside recipe JSON. The gallery's mixer is separate from copied sound examples.

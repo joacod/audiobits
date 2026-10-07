@@ -1,0 +1,39 @@
+---
+title: API reference
+description: Public development exports and resource limits.
+---
+
+Development API · unreleased 0.0.0. Imports use public package exports.
+
+| Export                                                        | Responsibility                                                     |
+| ------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `createAudio(options?)`                                       | Own an engine; defaults: 32 voices, eight per sound, -12 dB master |
+| `defineSound(input)`                                          | Validate and freeze recipe data; throws `AudioBitsError`           |
+| `validateRecipe(input)`                                       | Return a recipe or bounded path-specific issues                    |
+| `recipeSchema`                                                | Draft version 1 JSON schema                                        |
+| `AudioBitsError`                                              | Error with `code` and validation `issues`                          |
+| `confirmation`, `impact`, `thruster` from `audiobits/recipes` | Curated recipe definitions                                         |
+
+Public types include `Recipe`, its layer/source/envelope/filter/value and
+parameter types, `ValidationResult`, `RecipeIssue`, `AudioEngine`, `AudioOptions`,
+`AudioState`, `Sound`, `Voice`, `PlayOptions`, `Bus`, and `DelayOptions`.
+
+## Playback options
+
+`sound.play({ at, gainDb, pan, parameters, seed, bus })` uses absolute context
+time for `at`; omit it for immediate play. Past times are rejected. Gain is
+-60–0 dB, pan is -1–1, and seed is an unsigned 32-bit integer. Future voices
+reserve capacity. Invalid options fail before stealing or graph allocation.
+
+Engine and per-sound limits are integers from 1–128. Oldest-voice stealing uses a
+5 ms output fade with at most one extra retiring voice. `audio.counts` separates
+reservations from retirees. At most 32 buses, including master, may be live.
+
+## Guides
+
+[Recipes](/docs/recipes), [Lifecycle](/docs/lifecycle),
+[Parameters](/docs/parameters), [Buses](/docs/buses), and
+[Native interop](/docs/native) explain the contracts and cleanup paths.
+
+Defaults provide headroom for the curated sounds; arbitrary recipes, resonance,
+or concurrency require application-specific signal and listening checks.

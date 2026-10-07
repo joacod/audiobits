@@ -2,37 +2,165 @@
 @import "fumadocs-ui/css/neutral.css";
 @import "fumadocs-ui/css/preset.css";
 
+:root {
+  --instrument-accent: #13765a;
+}
 body {
   margin: 0;
 }
 .foundation {
-  max-width: 48rem;
-  margin: 4rem auto;
-  padding: 0 1.5rem;
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+.foundation nav {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  padding-bottom: 2rem;
 }
 .foundation h1 {
-  font-size: 2.5rem;
+  font-size: clamp(2.5rem, 7vw, 4.5rem);
   font-weight: 650;
+  letter-spacing: -0.04em;
+}
+.foundation h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-top: 2rem;
+}
+.foundation h3 {
+  font-size: 1.5rem;
+  font-weight: 650;
+}
+.foundation h4 {
+  font-weight: 650;
+  margin-top: 1rem;
 }
 .foundation p {
   margin: 1rem 0;
 }
+.foundation .intro {
+  font-size: 1.4rem;
+}
 .foundation a {
   text-decoration: underline;
+  text-underline-offset: 4px;
 }
 .foundation button {
-  padding: 0.5rem 1rem;
+  padding: 0.6rem 1rem;
   border: 1px solid currentColor;
   border-radius: 0.5rem;
   cursor: pointer;
+  margin: 0.25rem 0.5rem 0.25rem 0;
+  min-height: 44px;
+}
+.foundation button:hover,
+.foundation button[aria-pressed="true"] {
+  background: var(--instrument-accent);
+  color: white;
+}
+.foundation button:disabled {
+  opacity: 0.55;
+  cursor: default;
 }
 .foundation :focus-visible {
-  outline: 2px solid #2563eb;
+  outline: 3px solid var(--instrument-accent);
   outline-offset: 4px;
 }
-
+.foundation label {
+  display: block;
+  margin: 1rem 0;
+}
+.foundation input[type="range"] {
+  display: block;
+  width: min(100%, 24rem);
+  height: 44px;
+  accent-color: var(--instrument-accent);
+}
+.foundation input[type="number"] {
+  display: block;
+  padding: 0.5rem;
+  border: 1px solid currentColor;
+  border-radius: 0.25rem;
+  max-width: 100%;
+}
 .audio-controls {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
+}
+.sound-card {
+  border: 1px solid var(--color-fd-border);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  margin-top: 2rem;
+  background: var(--color-fd-card);
+}
+.eyebrow {
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.recipe-tools summary {
+  cursor: pointer;
+  padding: 1rem 0;
+  min-height: 44px;
+}
+.recipe-tools textarea {
+  width: 100%;
+  min-height: 18rem;
+  padding: 0.75rem;
+  border: 1px solid currentColor;
+  font-family: monospace;
+  font-size: 0.85rem;
+}
+.recipe-tools pre {
+  max-height: 28rem;
+  max-width: 100%;
+  overflow: auto;
+  padding: 1rem;
+  background: var(--color-fd-secondary);
+  border-radius: 0.5rem;
+  font-size: 0.8rem;
+}
+.recipe-tools ul {
+  list-style: disc;
+  padding-left: 1.5rem;
+  overflow-wrap: anywhere;
+}
+.foundation [role="alert"] {
+  border-left: 3px solid currentColor;
+  padding-left: 1rem;
+}
+.foundation footer {
+  border-top: 1px solid var(--color-fd-border);
+  margin-top: 3rem;
+  padding-top: 1rem;
+}
+@media (max-width: 480px) {
+  .foundation {
+    padding: 1.25rem 1rem;
+  }
+  .sound-card {
+    padding: 1rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .foundation *,
+  .foundation *::before,
+  .foundation *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.gallery-mixer {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding: 0.75rem 0;
+  background: var(--color-fd-background);
+  border-bottom: 1px solid var(--color-fd-border);
 }
