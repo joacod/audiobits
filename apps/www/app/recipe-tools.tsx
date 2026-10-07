@@ -22,7 +22,7 @@ export const RecipeTools = memo(function RecipeTools({
   onSeed(kind: SoundKind, seed: number | null): void;
   onReset(kind: SoundKind): void;
 }) {
-  const [recipe, setRecipe] = useState(sounds[kind]);
+  const [recipe, setRecipe] = useState<Recipe>(sounds[kind]);
   const [draft, setDraft] = useState(() =>
     JSON.stringify(sounds[kind], null, 2),
   );

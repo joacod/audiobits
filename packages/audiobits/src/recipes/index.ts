@@ -1,8 +1,8 @@
 import { defineSound } from "../recipe/validate";
-import type { Recipe } from "../recipe/generated";
+import type { OneShotRecipe, SustainedRecipe } from "../recipe/generated";
 
 /** Development fixture; human listening acceptance is recorded separately. */
-export const confirmation: Recipe = defineSound({
+export const confirmation: Omit<OneShotRecipe, "parameters"> = defineSound({
   schemaVersion: 1,
   kind: "one-shot",
   duration: 0.18,
@@ -34,7 +34,16 @@ export const confirmation: Recipe = defineSound({
 });
 
 /** Development fixture; listening acceptance is recorded separately. */
-export const impact: Recipe = defineSound({
+export const impact: Omit<OneShotRecipe, "parameters"> & {
+  readonly parameters: {
+    readonly intensity: {
+      readonly min: 0;
+      readonly max: 1;
+      readonly default: 0.5;
+      readonly mode: "play";
+    };
+  };
+} = defineSound({
   schemaVersion: 1,
   kind: "one-shot",
   duration: 0.22,
@@ -78,7 +87,17 @@ export const impact: Recipe = defineSound({
 });
 
 /** Development fixture; listening acceptance is recorded separately. */
-export const thruster: Recipe = defineSound({
+export const thruster: Omit<SustainedRecipe, "parameters"> & {
+  readonly parameters: {
+    readonly throttle: {
+      readonly min: 0;
+      readonly max: 1;
+      readonly default: 0.2;
+      readonly mode: "live";
+      readonly smoothing: 0.04;
+    };
+  };
+} = defineSound({
   schemaVersion: 1,
   kind: "sustained",
   parameters: {

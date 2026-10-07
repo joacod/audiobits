@@ -29,3 +29,6 @@ Returning requires another gesture. Detach and disconnect caller-owned taps.
 No recipe strings are executable. Do not invent sequencing, spatial audio,
 extra recipe effects, caches, worklets, framework adapters, or broader browser
 support from the candidate. Shared delay is a bus API, not a recipe effect.
+
+`Bus.setDelay()` and `DelayOptions` are experimental and may change before 0.1.
+Shared delay is not a stable generalized effect API.

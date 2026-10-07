@@ -24,7 +24,7 @@ export async function teardown() {
 ```
 
 The host must invalidate pending `startFromGesture()` work on hide/unmount;
-[Quick start](/docs) demonstrates that pattern. `start()` must be called directly
+Track a request counter and check it again after awaiting activation. `start()` must be called directly
 in a user gesture. Construction is silent; playback before successful activation
 fails without queuing. Blocked resume times out after two wall-clock seconds,
 with a retryable `start-failed` error. Concurrent starts share a promise.

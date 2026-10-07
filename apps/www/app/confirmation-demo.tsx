@@ -63,9 +63,9 @@ export function ConfirmationDemo({
     const requests = request;
     const engine = createAudio();
     audio.current = engine;
-    sound.current = engine.sound(confirmation);
-    impactSound.current = engine.sound(impact);
-    thrusterSound.current = engine.sound(thruster);
+    sound.current = engine.sound(confirmation as Recipe);
+    impactSound.current = engine.sound(impact as Recipe);
+    thrusterSound.current = engine.sound(thruster as Recipe);
     const unsubscribe = engine.subscribe(setState);
     const hide = () => {
       if (document.hidden) {

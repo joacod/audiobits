@@ -21,33 +21,15 @@ import { confirmation } from "audiobits/recipes";
 
 const audio = createAudio();
 const sound = audio.sound(confirmation);
-let request = 0;
 export async function play() {
-  const token = ++request;
   await audio.start();
-  if (token === request && !document.hidden) sound.play({ seed: 42 });
-}
-export function stop() {
-  request++;
-  audio.stopAll({ tails: "cut" });
-}
-function hide() {
-  if (document.hidden) {
-    stop();
-    void audio.suspend().catch(console.error);
-  }
-}
-document.addEventListener("visibilitychange", hide);
-export async function dispose() {
-  stop();
-  document.removeEventListener("visibilitychange", hide);
-  await audio.dispose();
+  sound.play();
 }
 ```
 
-Bind `play()` and `stop()` to your host controls. Call `dispose()` on navigation or
-unmount. Returning from a hidden page requires a new Play action. The gallery
-never plays on load, hover, or navigation.
+Bind `play()` to your button click and surface failures with
+`void play().catch(showError)`. For hiding, SPA navigation, suspension and disposal,
+see [Production lifecycle](/docs/lifecycle). The gallery never plays on load.
 
 ## Next
 

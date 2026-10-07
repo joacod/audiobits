@@ -1,5 +1,6 @@
 import { AudioBitsError } from "../recipe/validate";
 
+/** @experimental Shared delay settings; not part of the stable 0.1 contract. */
 export interface DelayOptions {
   readonly seconds: number;
   readonly feedback: number;
@@ -11,6 +12,7 @@ export interface Bus {
   setParent(parent: Bus): void;
   setGainDb(value: number, rampSeconds?: number): void;
   setMuted(value: boolean): void;
+  /** @experimental May change before 0.1; shared-effect composition is deferred. */
   setDelay(options: DelayOptions | null): void;
   dispose(): void;
 }

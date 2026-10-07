@@ -197,7 +197,7 @@ try {
       examples.push({ name, file, index, code: match[1] });
     }
   }
-  assert.equal(examples.length, 5, "Review any new documentation example");
+  assert.equal(examples.length, 6, "Review any new documentation example");
   run(
     process.execPath,
     [

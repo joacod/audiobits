@@ -21,6 +21,30 @@ import { confirmation } from "audiobits/recipes";
 
 const audio = createAudio();
 const sound = audio.sound(confirmation);
+export async function play() {
+  await audio.start();
+  sound.play();
+}
+export function stop() {
+  audio.stopAll({ tails: "cut" });
+}
+export async function dispose() {
+  await audio.dispose();
+}
+```
+
+Bind `play()` to a button click (`void play().catch(showError)`).
+
+## Production lifecycle
+
+For an SPA, invalidate pending activation when hiding or unmounting; suspend on
+hide and dispose on navigation. Returning requires a fresh Play gesture.
+
+```ts
+import { createAudio } from "audiobits";
+import { confirmation } from "audiobits/recipes";
+const audio = createAudio();
+const sound = audio.sound(confirmation);
 let request = 0;
 export async function play() {
   const token = ++request;
@@ -45,8 +69,6 @@ export async function dispose() {
 }
 ```
 
-Bind `play()` and `stop()` to host controls. Call `dispose()` on navigation or
-unmount. Returning from a hidden page requires a fresh Play action.
 `createAudio()` and `audio.sound()` create no context. A failed start reports
 `AudioBitsError` with a retryable `start-failed` code. A blocked resume times out
 after two wall-clock seconds; the context stays owned for gesture retry. Play
@@ -59,8 +81,8 @@ limits. Agent guidance is included in [the AudioBits Skill](skill/SKILL.md).
 
 ## Supported data
 
-`defineSound(unknown)` validates and returns a deeply frozen `Recipe` snapshot.
-`validateRecipe(unknown)` returns `{ ok: true, recipe }` or
+`defineSound(recipe)` preserves literal parameter names and modes, validates and returns a deeply frozen `Recipe` snapshot.
+For external JSON, `validateRecipe(unknown)` returns `{ ok: true, recipe }` or
 `{ ok: false, issues }`; every issue has `code`, `path`, and `message`.
 Paths use JSON bracket notation, such as `$["layers"][0]["id"]`.
 `AudioBitsError` carries `code` and `issues`; errors during validation use
@@ -307,3 +329,6 @@ native recovery is suspended until a fresh `start()` request. Physical OS
 interruption still requires manual evidence. Step 04 passed maintainer manual
 verification on 2026-10-06. Browser/device details and individual observations
 were not supplied; automated checks remain separate from that acceptance.
+
+`Bus.setDelay()` and `DelayOptions` are experimental and may change before 0.1.
+Shared delay is not a stable generalized effect API.

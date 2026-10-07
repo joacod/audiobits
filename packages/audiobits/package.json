@@ -29,7 +29,7 @@
   "scripts": {
     "build": "node ../../scripts/generate-recipe.mjs && tsdown && node ../../scripts/copy-schema.mjs",
     "dev": "tsdown --watch",
-    "typecheck": "tsc -p tsconfig.json"
+    "typecheck": "tsc -p tsconfig.json && tsc -p tests/tsconfig.types.json"
   },
   "devDependencies": {
     "tsdown": "0.23.0"
