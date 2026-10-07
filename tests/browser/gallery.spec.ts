@@ -449,11 +449,33 @@ test("all eight demos use parameter metadata and edited controls without allocat
   page,
 }) => {
   await instrument(page);
-  await page.goto("http://127.0.0.1:3100/sounds");
-  await expect(page.locator("article.sound-card")).toHaveCount(8);
-  await page
-    .getByRole("slider", { name: "Brightness", exact: true })
-    .fill("0.9");
+  // Hold hydration to verify that server-rendered sliders cannot lose early edits.
+  let hydrate!: () => void;
+  const hydration = new Promise<void>((resolve) => {
+    hydrate = resolve;
+  });
+  await page.route("**/_next/static/**/*.js", async (route) => {
+    await hydration;
+    await route.continue();
+  });
+  const brightness = page.getByRole("slider", {
+    name: "Brightness",
+    exact: true,
+  });
+  try {
+    await page.goto("http://127.0.0.1:3100/sounds", { waitUntil: "commit" });
+    await expect(page.locator("article.sound-card")).toHaveCount(8);
+    await expect(brightness).toBeDisabled();
+    await expect(
+      page.getByRole("slider", { name: "Effects volume" }),
+    ).toBeDisabled();
+  } finally {
+    hydrate();
+  }
+  await brightness.fill("0.9");
+  await expect(page.locator("#glass-notification label").first()).toContainText(
+    "Brightness: 0.90",
+  );
   await page
     .getByRole("button", {
       name: "Copy glass-notification example",

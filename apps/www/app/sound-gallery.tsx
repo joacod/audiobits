@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import Link from "next/link";
 import { Button } from "@base-ui/react/button";
 import { SoundCard } from "./sound-card";
@@ -21,6 +27,8 @@ const defaults = () =>
   Object.fromEntries(
     soundKinds.map((kind) => [kind, parametersFor(sounds[kind])]),
   ) as Record<SoundKind, Record<string, number>>;
+
+const subscribeHydration = () => () => {};
 
 export function SoundGallery({
   rawSource,
@@ -52,6 +60,11 @@ export function SoundGallery({
   const [state, setState] = useState<AudioState>("idle");
   const [error, setError] = useState("");
   const [muted, setMuted] = useState(false);
+  const ready = useSyncExternalStore(
+    subscribeHydration,
+    () => true,
+    () => false,
+  );
 
   const stopAll = useCallback(() => {
     request.current++;
@@ -216,6 +229,7 @@ export function SoundGallery({
           Effects volume: {volume} dB
           <input
             aria-label="Effects volume"
+            disabled={!ready}
             type="range"
             min="-60"
             max="0"
@@ -247,6 +261,7 @@ export function SoundGallery({
       {home && (
         <SoundCard
           kind="impact"
+          ready={ready}
           recipe={recipes["impact"]}
           controls={controls["impact"]}
           playing={playing["impact"]}
@@ -287,6 +302,7 @@ export function SoundGallery({
       ).map((kind) => (
         <SoundCard
           key={kind}
+          ready={ready}
           kind={kind}
           recipe={recipes[kind]}
           controls={controls[kind]}
