@@ -1,16 +1,19 @@
-# Recipe authoring and experimental bus effects
+# Recipe authoring and bus scope for 0.1
 
-Inline `defineSound()` authoring preserves parameter names and modes through
-`audio.sound()`, `sound.play()`, and `voice.set()`. Play accepts all declared
-parameters; set accepts live parameters only. Broad `Recipe` values and unknown
-JSON retain runtime validation and dynamic controls. Typed authoring rejects
-unknown input at compile time; external data uses `validateRecipe()` or the
-validated `audio.sound(unknown)` boundary. The authoring overload still
-runs the same validator and returns a frozen snapshot; types never establish
-semantic validity. No schema or serialization change is required.
+Inline `defineSound()` authoring preserves recipe structure, literal parameter
+names and play/live modes through `audio.sound()`, `sound.play()` and
+`voice.set()`. Play accepts declared parameters; set accepts live parameters
+only. Broad `Recipe` values and unknown JSON retain runtime validation and
+dynamic controls. Runtime validation remains authoritative for exact schema
+validity, including unknown fields and semantic constraints. The authoring
+overload runs the same validator and returns a frozen snapshot. No schema or
+serialization change is required.
 
-Shared delay remains useful for existing demos and ownership tests, but
-`Bus.setDelay()` and `DelayOptions` are experimental and may change before 0.1.
-Gain, mute, and routing remain fundamental bus operations. A generalized effects
-API waits for multiple real sound requirements. Native interop currently covers
-output/analyser taps; arbitrary graph ownership is outside this contract.
+Before the initial release, shared delay and its public settings type were
+removed. Gain, mute, parenting and routing are fundamental bus operations;
+an effect-specific setter would encourage an unearned family of methods.
+The unused delay graph, tail clocks and reconstruction logic were removed with
+it. A generalized effects API waits for multiple real sound requirements.
+Native interop covers output/analyser taps; arbitrary graph ownership is outside
+this contract. The package remains private and unreleased, with no persisted
+consumer compatibility requirement for these removed APIs.

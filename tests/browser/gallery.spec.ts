@@ -237,7 +237,7 @@ test("documentation routes and links render the shipped development API", async 
     ["recipes", "Recipes"],
     ["lifecycle", "Playback and lifecycle"],
     ["parameters", "Parameters"],
-    ["buses", "Buses and effects"],
+    ["buses", "Buses and routing"],
     ["native", "Native interop"],
     ["api", "API reference"],
   ]) {
@@ -571,4 +571,53 @@ test("showcase uses native output, bounded seeded variation and simple current c
     () => (globalThis as unknown as { copiedExample: string }).copiedExample,
   );
   expect(JSON.parse(copied).schemaVersion).toBe(1);
+});
+
+test("homepage morphing keeps one engine and disposes it on docs navigation", async ({
+  page,
+}) => {
+  await instrument(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("http://127.0.0.1:3100");
+  const play = page.getByRole("button", { name: "Play impact", exact: true });
+  const bounds = await play.boundingBox();
+  expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(844);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await page
+    .getByRole("slider", { name: "Intensity", exact: true })
+    .fill("0.83");
+  await expect(page.locator(".flagship-code pre")).toContainText(
+    "intensity: 0.83",
+  );
+  await play.click();
+  await page
+    .getByRole("button", { name: "Start thruster", exact: true })
+    .click();
+  expect(
+    await page.evaluate(
+      () =>
+        (globalThis as unknown as { galleryContexts: AudioContext[] })
+          .galleryContexts.length,
+    ),
+  ).toBe(1);
+  await page
+    .getByRole("navigation", { name: "Main navigation" })
+    .getByRole("link", { name: "Development docs" })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "Quick start", exact: true }),
+  ).toBeVisible();
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          (globalThis as unknown as { galleryContexts: AudioContext[] })
+            .galleryContexts[0].state,
+      ),
+    )
+    .toBe("closed");
 });

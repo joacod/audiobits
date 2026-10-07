@@ -1,0 +1,282 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-07T21:16:23.367353+00:00",
+  "title": "Design System: AudioBits showcase",
+  "extensions": {
+    "colorMeta": {
+      "paper": {
+        "role": "neutral",
+        "displayName": "Warm paper",
+        "tonalRamp": [
+          "oklch(15% 0.0137 92.98)",
+          "oklch(27% 0.0137 92.98)",
+          "oklch(38% 0.0137 92.98)",
+          "oklch(50% 0.0137 92.98)",
+          "oklch(61% 0.0137 92.98)",
+          "oklch(73% 0.0137 92.98)",
+          "oklch(84% 0.0137 92.98)",
+          "oklch(95% 0.0137 92.98)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Green ink",
+        "tonalRamp": [
+          "oklch(15% 0.0350 166.20)",
+          "oklch(27% 0.0350 166.20)",
+          "oklch(38% 0.0350 166.20)",
+          "oklch(50% 0.0350 166.20)",
+          "oklch(61% 0.0350 166.20)",
+          "oklch(73% 0.0350 166.20)",
+          "oklch(84% 0.0350 166.20)",
+          "oklch(95% 0.0350 166.20)"
+        ]
+      },
+      "quiet": {
+        "role": "neutral",
+        "displayName": "Quiet green",
+        "tonalRamp": [
+          "oklch(15% 0.0254 153.56)",
+          "oklch(27% 0.0254 153.56)",
+          "oklch(38% 0.0254 153.56)",
+          "oklch(50% 0.0254 153.56)",
+          "oklch(61% 0.0254 153.56)",
+          "oklch(73% 0.0254 153.56)",
+          "oklch(84% 0.0254 153.56)",
+          "oklch(95% 0.0254 153.56)"
+        ]
+      },
+      "rule": {
+        "role": "neutral",
+        "displayName": "Sage rule",
+        "tonalRamp": [
+          "oklch(15% 0.0218 134.12)",
+          "oklch(27% 0.0218 134.12)",
+          "oklch(38% 0.0218 134.12)",
+          "oklch(50% 0.0218 134.12)",
+          "oklch(61% 0.0218 134.12)",
+          "oklch(73% 0.0218 134.12)",
+          "oklch(84% 0.0218 134.12)",
+          "oklch(95% 0.0218 134.12)"
+        ]
+      },
+      "accent": {
+        "role": "primary",
+        "displayName": "Brass",
+        "tonalRamp": [
+          "oklch(15% 0.1247 87.02)",
+          "oklch(27% 0.1247 87.02)",
+          "oklch(38% 0.1247 87.02)",
+          "oklch(50% 0.1247 87.02)",
+          "oklch(61% 0.1247 87.02)",
+          "oklch(73% 0.1247 87.02)",
+          "oklch(84% 0.1247 87.02)",
+          "oklch(95% 0.1247 87.02)"
+        ]
+      },
+      "signal": {
+        "role": "primary",
+        "displayName": "Pale signal brass",
+        "tonalRamp": [
+          "oklch(15% 0.1009 88.69)",
+          "oklch(27% 0.1009 88.69)",
+          "oklch(38% 0.1009 88.69)",
+          "oklch(50% 0.1009 88.69)",
+          "oklch(61% 0.1009 88.69)",
+          "oklch(73% 0.1009 88.69)",
+          "oklch(84% 0.1009 88.69)",
+          "oklch(95% 0.1009 88.69)"
+        ]
+      },
+      "code": {
+        "role": "neutral",
+        "displayName": "Code paper",
+        "tonalRamp": [
+          "oklch(15% 0.0148 98.30)",
+          "oklch(27% 0.0148 98.30)",
+          "oklch(38% 0.0148 98.30)",
+          "oklch(50% 0.0148 98.30)",
+          "oklch(61% 0.0148 98.30)",
+          "oklch(73% 0.0148 98.30)",
+          "oklch(84% 0.0148 98.30)",
+          "oklch(95% 0.0148 98.30)"
+        ]
+      },
+      "focus": {
+        "role": "neutral",
+        "displayName": "Dark ochre",
+        "tonalRamp": [
+          "oklch(15% 0.0957 87.44)",
+          "oklch(27% 0.0957 87.44)",
+          "oklch(38% 0.0957 87.44)",
+          "oklch(50% 0.0957 87.44)",
+          "oklch(61% 0.0957 87.44)",
+          "oklch(73% 0.0957 87.44)",
+          "oklch(84% 0.0957 87.44)",
+          "oklch(95% 0.0957 87.44)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Page headings."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Section headings."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Sound specimen headings."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Explanation and general content."
+      },
+      "button": {
+        "displayName": "Button",
+        "purpose": "Playback and ordinary actions."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Control labels with tabular values."
+      },
+      "code": {
+        "displayName": "Code",
+        "purpose": "Inspectable integration snippets."
+      }
+    },
+    "shadows": [],
+    "motion": [
+      {
+        "name": "control-state",
+        "value": "160ms ease-out",
+        "purpose": "Background and border-color transitions; removed for reduced motion."
+      },
+      {
+        "name": "play-spark",
+        "value": "360ms; progress * (2 - progress)",
+        "purpose": "Eight-ray response to intentional Play input; absent during reduced motion and hidden documents."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "mobile",
+        "value": "760px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Play",
+      "kind": "button",
+      "refersTo": "button-play",
+      "description": "Brass playback action with native focus and disabled states.",
+      "html": "<button class=\"ds-play\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 14 14\" aria-hidden=\"true\"><path d=\"M3 1.5 12 7 3 12.5Z\" fill=\"currentColor\"/></svg>Play impact</button>",
+      "css": ".ds-play{font-family:Arial,sans-serif;color:var(--ink, #243c32);display:inline-flex;align-items:center;justify-content:center;gap:.6rem;min-height:44px;padding:.5rem .9rem;border-radius:4px;font-size:.875rem;line-height:1.3;cursor:pointer;transition:background 160ms ease-out,border-color 160ms ease-out;background:var(--accent, #e0b856);border:1px solid transparent;font-weight:600}.ds-play:enabled:hover{background:var(--signal, #ecce82)}.ds-play:focus-visible{outline:3px solid var(--focus, #715600);outline-offset:4px;}.ds-play:disabled{opacity:.5;cursor:default}@media(prefers-reduced-motion:reduce){.ds-play{transition:none}}"
+    },
+    {
+      "name": "Secondary action",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Ordinary action; the brass variant also represents a pressed state.",
+      "html": "<button class=\"ds-secondary\">Stop all</button>",
+      "css": ".ds-secondary{font-family:Arial,sans-serif;color:var(--ink, #243c32);display:inline-flex;align-items:center;justify-content:center;gap:.6rem;min-height:44px;padding:.5rem .9rem;border-radius:4px;font-size:.875rem;line-height:1.3;cursor:pointer;transition:background 160ms ease-out,border-color 160ms ease-out;background:transparent;border:1px solid var(--rule, #b8c1b3)}.ds-secondary:enabled:hover{background:var(--code, #e8e6db);border-color:var(--ink, #243c32)}.ds-secondary[aria-pressed=\"true\"]{background:var(--accent, #e0b856);border-color:transparent;font-weight:600}.ds-secondary[aria-pressed=\"true\"]:enabled:hover{background:var(--signal, #ecce82)}.ds-secondary:focus-visible{outline:3px solid var(--focus, #715600);outline-offset:4px;}.ds-secondary:disabled{opacity:.5;cursor:default}@media(prefers-reduced-motion:reduce){.ds-secondary{transition:none}}"
+    },
+    {
+      "name": "Seed field",
+      "kind": "input",
+      "refersTo": "input-number",
+      "description": "Native numeric field with tabular values.",
+      "html": "<label class=\"ds-seed\">Seed <input type=\"number\" value=\"42\" aria-label=\"Seed\"/></label>",
+      "css": ".ds-seed{font-family:Arial,sans-serif;color:var(--ink, #243c32);display:block;font-size:.9rem}.ds-seed input{font-family:Arial,sans-serif;color:var(--ink, #243c32);font-variant-numeric:tabular-nums;width:8rem;max-width:100%;min-height:44px;border:1px solid var(--rule, #b8c1b3);border-radius:4px;padding:.4rem .6rem;background:var(--paper, #f3f0e6);caret-color:var(--ink, #243c32)}.ds-seed input:focus-visible{outline:3px solid var(--focus, #715600);outline-offset:4px;}"
+    },
+    {
+      "name": "Recipe editor",
+      "kind": "input",
+      "refersTo": "recipe-editor",
+      "description": "Plain editable recipe data, with native scrolling.",
+      "html": "<label class=\"ds-editor\">Recipe JSON<textarea aria-label=\"Recipe JSON\">{\n  \"schemaVersion\": 1\n}</textarea></label>",
+      "css": ".ds-editor{font-family:Arial,sans-serif;color:var(--ink, #243c32);display:block;font-size:.9rem}.ds-editor textarea{display:block;width:100%;min-height:18rem;padding:.75rem;border:1px solid var(--rule, #b8c1b3);border-radius:4px;background:var(--paper, #f3f0e6);color:var(--ink, #243c32);caret-color:var(--ink, #243c32);font-family:monospace;font-size:.85rem;font-variant-numeric:tabular-nums;scrollbar-color:var(--quiet, #536257) var(--paper, #f3f0e6)}.ds-editor textarea:focus-visible{outline:3px solid var(--focus, #715600);outline-offset:4px;}"
+    },
+    {
+      "name": "Masthead",
+      "kind": "nav",
+      "description": "Wrapping wordmark and reference links, with a separate mobile wordmark row.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Main navigation\"><a class=\"ds-wordmark\" href=\"#\">AudioBits <svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M12 1v22M1 12h22M4 4l16 16M4 20 20 4\" stroke=\"currentColor\" stroke-width=\"2\"/></svg></a><a href=\"#sounds\">Sounds</a><a href=\"#docs\">Development docs</a></nav>",
+      "css": ".ds-nav{font-family:Arial,sans-serif;color:var(--ink, #243c32);display:flex;gap:2rem;align-items:center;padding:1rem 0;border-bottom:1px solid var(--ink, #243c32)}.ds-nav a{color:inherit;display:inline-flex;min-height:44px;align-items:center;font-size:.9rem;text-decoration:none}.ds-nav a:hover{text-decoration-thickness:2px}.ds-nav a:focus-visible{outline:3px solid var(--focus, #715600);outline-offset:4px;}.ds-nav .ds-wordmark{margin-right:auto;font-size:1.4rem;font-weight:700;letter-spacing:-.035em;gap:.75rem}@media(max-width:760px){.ds-nav{gap:1rem;flex-wrap:wrap}.ds-nav .ds-wordmark{flex-basis:100%}.ds-nav a{min-height:32px}}"
+    },
+    {
+      "name": "Specimen entry",
+      "kind": "card",
+      "refersTo": "specimen-entry",
+      "description": "Flat, ruled sound entry; preview shows its material and type.",
+      "html": "<article class=\"ds-specimen\"><div><h3>Impact</h3><p>A hit with character.</p></div><p>Recipe and controls occupy this column.</p></article>",
+      "css": ".ds-specimen{font-family:Arial,sans-serif;color:var(--ink, #243c32);display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:3rem;padding:2.5rem 0;border-top:1px solid var(--rule, #b8c1b3);background:var(--paper, #f3f0e6)}.ds-specimen h3{font-family:Fraunces,Georgia,serif;font-weight:450;font-size:2.5rem;line-height:1.15;letter-spacing:-.02em;margin:0}.ds-specimen p{font-size:.9rem;line-height:1.55}@media(max-width:760px){.ds-specimen{grid-template-columns:minmax(0,1fr);gap:1.5rem;padding:2rem 0}.ds-specimen h3{font-size:2rem}}"
+    },
+    {
+      "name": "Output scope",
+      "kind": "custom",
+      "refersTo": "output-scope",
+      "description": "Static material preview of the measured-output band; live app uses analyser data.",
+      "html": "<figure class=\"ds-scope\"><figcaption>Play to see the generated signal</figcaption><svg class=\"ds-baseline\" viewBox=\"0 0 900 128\" role=\"img\" aria-label=\"Idle baseline\"><path d=\"M0 64H900\" stroke=\"currentColor\" fill=\"none\"/></svg></figure>",
+      "css": ".ds-scope{font-family:Arial,sans-serif;background:var(--ink, #243c32);color:var(--paper, #f3f0e6);margin:0;padding:1.25rem 1.5rem}.ds-scope figcaption{font-size:.75rem}.ds-baseline{display:block;width:100%;height:clamp(5rem,12vw,10rem);color:var(--signal, #ecce82);margin-top:.75rem}@media(max-width:760px){.ds-scope{padding:.75rem}.ds-scope figcaption{font-size:.7rem}.ds-baseline{height:3rem;margin-top:.5rem}}"
+    },
+    {
+      "name": "Code panel",
+      "kind": "custom",
+      "refersTo": "code-panel",
+      "description": "Plain code on a slightly darker paper tone.",
+      "html": "<pre class=\"ds-code\"><code>const hit = audio.sound(impact);\nhit.play({ parameters: { intensity: 0.80 } });</code></pre>",
+      "css": ".ds-code{background:var(--code, #e8e6db);color:var(--ink, #243c32);font-family:monospace;padding:1.25rem;max-width:100%;overflow:auto;font-size:.8rem;line-height:1.7;border-radius:4px;scrollbar-color:var(--quiet, #536257) var(--code, #e8e6db);scrollbar-width:thin}"
+    },
+    {
+      "name": "Sound parameter",
+      "kind": "input",
+      "description": "Native labelled range with tabular value and timing explanation.",
+      "html": "<label class=\"ds-range\">Intensity: 0.80<input type=\"range\" min=\"0\" max=\"1\" step=\"0.01\" value=\"0.8\" aria-label=\"Intensity\"/><span>Applies on the next Play</span></label>",
+      "css": ".ds-range{font-family:Arial,sans-serif;color:var(--ink, #243c32);display:block;margin:1rem 0;font-size:.9rem;font-variant-numeric:tabular-nums}.ds-range input{display:block;width:100%;max-width:28rem;height:44px;accent-color:var(--ink, #243c32);cursor:pointer}.ds-range input:focus-visible{outline:3px solid var(--focus, #715600);outline-offset:4px;}.ds-range span{display:block;margin-top:.5rem;font-size:.75rem;color:var(--quiet, #536257)}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Sonic specimen book",
+    "overview": "The sonic specimen book treats browser audio as something to hear, change and inspect. Warm paper, dark green ink and self-hosted Fraunces headings give the showcase a tactile editorial character; ordinary HTML controls keep the instrument precise.\n\nRuled entries and restrained code panels carry the system across the home, collection and individual sound pages. Signal is living content derived from native audio output, and brass marks the controls that initiate playback or hold a pressed state. The separate Fumadocs reference experience keeps its own styling.",
+    "keyCharacteristics": [
+      "Warm paper and green ink, with brass for playback and pressed controls.",
+      "Serif headings above practical sans-serif controls and monospace code.",
+      "Ruled specimens and flat surfaces instead of floating cards.",
+      "Measured waveform and a bounded Play response; no idle decorative motion."
+    ],
+    "rules": [
+      {
+        "name": "The Brass State Rule",
+        "body": "Use brass for Play and pressed controls; keep ordinary actions on paper with a fine rule.",
+        "section": "colors"
+      },
+      {
+        "name": "The Specimen Heading Rule",
+        "body": "Use Fraunces for sound and section headings, sans-serif for controls and explanation, and monospace for code.",
+        "section": "typography"
+      },
+      {
+        "name": "The Ruled Surface Rule",
+        "body": "Separate specimens with fine rules and tonal surfaces; do not add floating-card shadows.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do keep Play, parameter labels and visible playback status ahead of recipe disclosures.",
+      "Do use the paper, ink and brass roles consistently across showcase routes.",
+      "Do collapse specimen columns at the established mobile breakpoint and retain usable code overflow.",
+      "Do label native controls, retain visible focus, and respect reduced motion.",
+      "Do use real audio output for the waveform and a silent idle baseline."
+    ],
+    "donts": [
+      "Don't introduce neon, glass, SaaS gradients, noisy effects or a DAW interface.",
+      "Don't turn a specimen entry into a floating rounded card.",
+      "Don't replace waveform data with a decorative looping signal.",
+      "Don't apply the showcase stylesheet as a redesign of the separate Fumadocs reference experience."
+    ]
+  }
+}

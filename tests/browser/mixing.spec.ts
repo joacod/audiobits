@@ -2,7 +2,7 @@ import { requireOfflineCheckpoints } from "./offline-capabilities";
 import { expect, test } from "@playwright/test";
 import { resolve } from "node:path";
 
-test("native offline delay has bounded tails and an adapted running cut fades to silence", async ({
+test("native offline bus gain and mute fade to silence", async ({
   page,
   browser,
 }) => {
@@ -68,7 +68,7 @@ test("native offline delay has bounded tails and an adapted running cut fades to
     `Mixing signal ${browser.browserType().name()} ${browser.version()}: ${JSON.stringify(results)}`,
   );
 });
-test("native combined routing/effects stress returns to bus and engine baselines", async ({
+test("native combined routing stress returns to bus and engine baselines", async ({
   page,
 }) => {
   await page.goto("http://127.0.0.1:4173");
@@ -194,22 +194,17 @@ for (const target of ["site", "vanilla"] as const) {
       )
       .toBe(2);
   });
-  test(`${target} shared delay control, mute and cut Stop all use public routing`, async ({
+  test(`${target} gain, mute and cut Stop all use public routing`, async ({
     page,
   }) => {
     await page.goto(
       target === "site" ? "http://127.0.0.1:3100" : "http://127.0.0.1:4173",
     );
-    const delay = page.getByRole("button", { name: "Shared delay" });
-    await delay.click();
-    await expect(delay).toHaveAttribute("aria-pressed", "true");
     await page.getByRole("button", { name: "Play impact" }).click();
     await page.getByRole("slider", { name: /Effects volume/ }).fill("-6");
     await page.getByRole("button", { name: "Mute", exact: true }).click();
     await page.getByRole("button", { name: "Mute", exact: true }).click();
     await page.getByRole("button", { name: "Stop all" }).click();
-    await delay.click();
-    await expect(delay).toHaveAttribute("aria-pressed", "false");
     if (target === "vanilla")
       await expect(page.locator("#level")).toContainText("Output peak:");
     if (target === "site")

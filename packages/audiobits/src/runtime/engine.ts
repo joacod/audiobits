@@ -175,7 +175,6 @@ export function createEngine(
     if (native !== "running" && state !== "starting") wantsRunning = false;
     if (native !== "running") {
       finalize();
-      for (const bus of buses.values()) bus.clear();
     }
     if (state !== "starting")
       emit(
@@ -192,22 +191,6 @@ export function createEngine(
     for (let cursor: OwnedBus | null = bus; cursor; cursor = cursor.parent)
       if (cursor === ancestor) return true;
     return false;
-  }
-  function childTail(bus: OwnedBus): number {
-    let longest = 0;
-    for (const child of buses.values())
-      if (child.parent === bus)
-        longest = Math.max(
-          longest,
-          Math.min(5, child.tailSeconds + childTail(child)),
-        );
-    return longest;
-  }
-  function refreshRoutes() {
-    for (const bus of buses.values()) {
-      if (voices.some((record) => within(record.bus, bus))) bus.prepare();
-      else bus.tail(childTail(bus));
-    }
   }
   function removeBus(bus: OwnedBus) {
     for (const record of [...voices])
@@ -325,17 +308,9 @@ export function createEngine(
             record.graph?.finish();
             const index = voices.indexOf(record);
             if (index !== -1) voices.splice(index, 1);
-            if (state !== "disposed" && context?.state === "running") {
-              for (const bus of buses.values()) {
-                if (!voices.some((v) => within(v.bus, bus)))
-                  bus.tail(childTail(bus));
-              }
-            }
             resolveEnded();
           },
         };
-        for (let bus: OwnedBus | null = route; bus; bus = bus.parent)
-          bus.prepare();
         voices.push(record);
         try {
           record.graph = createGraph(
@@ -406,7 +381,6 @@ export function createEngine(
             null,
             removeBus,
             20 * Math.log10(level),
-            refreshRoutes,
           );
           root.output.gain.value = muted ? 0 : 1;
           master = root;
@@ -514,7 +488,6 @@ export function createEngine(
       terminal();
       if (token !== generation) return;
       finalize();
-      for (const bus of buses.values()) bus.clear();
       if (context) {
         await context.suspend();
         syncNative();
@@ -547,15 +520,7 @@ export function createEngine(
           "invalid-option",
           "At most 32 buses including master.",
         );
-      const bus = new OwnedBus(
-        name,
-        context!,
-        owner,
-        parent,
-        removeBus,
-        0,
-        refreshRoutes,
-      );
+      const bus = new OwnedBus(name, context!, owner, parent, removeBus, 0);
       buses.set(name, bus);
       return bus;
     },
@@ -609,7 +574,6 @@ export function createEngine(
         } else record.voice.stop();
         if (context?.state !== "running") record.finish();
       }
-      if (options.tails === "cut") for (const bus of buses.values()) bus.cut();
     },
     setMuted(value) {
       terminal();

@@ -6,7 +6,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: `AudioBits — ${siteBuild.channel}`,
-  description: `Procedural browser audio. Three-sound gallery and ${siteBuild.channel.toLowerCase()} documentation.`,
+  description: `Procedural browser audio. Eight-sound gallery and ${siteBuild.channel.toLowerCase()} documentation.`,
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

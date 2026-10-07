@@ -18,6 +18,5 @@ specification. Architecture changes use the gate in [AGENTS.md](../AGENTS.md).
 | [Recipe study](recipe-study.md)                      | Contrasting sound requirements and methodology      |
 
 The root README is onboarding; site docs are end-user guidance. Decision notes
-preserve material rationale without duplicating API reference. Old task lists,
-process configuration and evidence are kept in [history](history/README.md),
-outside the primary agent path. Current code/tests and canonical docs supersede them.
+preserve material rationale without duplicating API reference. Early process material remains in Git history; the
+[historical note](history/README.md) preserves the evidence boundary.

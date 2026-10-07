@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { drawWaveform, drawIdle } from "../lib/waveform-painter";
 import type { AudioEngine } from "audiobits";
 
 /** A caller-owned tap: frame timing displays output, never schedules audio. */
@@ -20,11 +21,8 @@ export function OutputScope({
     const clear = () => {
       paint.clearRect(0, 0, surface.width, surface.height);
       paint.strokeStyle = color;
-      paint.lineWidth = 1.5;
-      paint.beginPath();
-      paint.moveTo(0, surface.height / 2);
-      paint.lineTo(surface.width, surface.height / 2);
-      paint.stroke();
+      paint.fillStyle = color;
+      drawIdle(paint, surface.width, surface.height);
       surface.dataset.peak = "0";
     };
     clear();
@@ -44,20 +42,7 @@ export function OutputScope({
       analyser.getFloatTimeDomainData(samples);
       paint.clearRect(0, 0, surface.width, surface.height);
       paint.strokeStyle = color;
-      paint.lineWidth = 1.5;
-      paint.beginPath();
-      let peak = 0;
-      for (let i = 0; i < samples.length; i++) {
-        peak = Math.max(peak, Math.abs(samples[i]));
-        const x = (i / (samples.length - 1)) * surface.width;
-        // Display gain only: the native graph and audible level are unchanged.
-        const y =
-          (0.5 - Math.max(-1, Math.min(1, samples[i] * 16)) * 0.42) *
-          surface.height;
-        if (i === 0) paint.moveTo(x, y);
-        else paint.lineTo(x, y);
-      }
-      paint.stroke();
+      const peak = drawWaveform(paint, surface.width, surface.height, samples);
       surface.dataset.peak = String(peak);
       frame = requestAnimationFrame(draw);
     };

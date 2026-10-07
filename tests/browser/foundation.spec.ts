@@ -9,7 +9,7 @@ test("site uses public exports and keyboard-operated Base UI playback", async ({
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("http://127.0.0.1:3100");
   await expect(
-    page.getByRole("heading", { name: "AudioBits", exact: true }),
+    page.getByRole("heading", { name: "Sound as code.", exact: true }),
   ).toBeVisible();
   await expect(
     page.getByText("Unreleased · 0.1.0-rc.0 · Local workspace package"),
@@ -31,7 +31,7 @@ test("Fumadocs renders development MDX", async ({ page }) => {
   ).toBeVisible();
 });
 
-test("vanilla consumer displays the built package export", async ({ page }) => {
+test("vanilla consumer displays the lazy public engine", async ({ page }) => {
   await page.goto("http://127.0.0.1:4173");
-  await expect(page.locator("#status")).toHaveText("AudioBits workspace ready");
+  await expect(page.locator("#status")).toHaveText("AudioBits: idle");
 });

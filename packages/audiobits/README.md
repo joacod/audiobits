@@ -2,7 +2,7 @@
 
 Private, unreleased **0.1.0-rc.0** candidate. It includes confirmation, impact, thruster, tactile click, gentle rejection,
 glass notification, whoosh and power-up; schema-1 recipes; play/live controls; seeded variation; bounded
-voices; buses and shared delay; native output taps; and explicit lifecycle APIs.
+voices; bus gain, mute and routing; native output taps; and explicit lifecycle APIs.
 Chromium, Firefox and Playwright WebKit are the automated candidate matrix.
 Physical Safari/iOS and mobile devices are not verified. Maintainer listening acceptance for the
 unchanged sound definitions is recorded separately. Nothing has been published,
@@ -82,7 +82,8 @@ limits. Agent guidance is included in [the AudioBits Skill](skill/SKILL.md).
 
 ## Supported data
 
-`defineSound(recipe)` accepts typed authored data, preserves literal parameter names and modes, validates and returns a deeply frozen `Recipe` snapshot.
+`defineSound(recipe)` accepts typed authored data, preserves recipe structure, literal parameter names and modes, validates and returns a deeply frozen `Recipe` snapshot.
+Runtime validation remains authoritative for exact schema validity.
 For external JSON, `validateRecipe(unknown)` returns `{ ok: true, recipe }` or
 `{ ok: false, issues }`; every issue has `code`, `path`, and `message`.
 Paths use JSON bracket notation, such as `$["layers"][0]["id"]`.
@@ -141,9 +142,9 @@ engine/per-sound limits; another steal finalizes the previous retiree first.
 
 Gate duration excludes release. Filters receive a bounded 50 ms tail allowance;
 output fades to zero over the final 5 ms. Layer filters precede their envelopes.
-`stopAll()` releases managed voices and allows bounded shared delay tails.
-`stopAll({ tails: "cut" })` uses a 5 ms source/output fade and resets shared delays. `sound.dispose()` immediately finalizes
-that sound's voices and noise buffers. `audio.suspend()` invalidates pending starts and finalizes all voices and shared effects before suspending.
+`stopAll()` releases managed voices according to their recipe envelopes.
+`stopAll({ tails: "cut" })` uses a 5 ms source/output fade. `sound.dispose()` immediately finalizes
+that sound's voices and noise buffers. `audio.suspend()` invalidates pending starts and finalizes all voices before suspending.
 Native suspension/interruption also finalizes voices when its state event arrives.
 `audio.dispose()` invalidates pending startup, finalizes voices immediately,
 disconnects master output, and closes the context once, even while suspended.
@@ -233,7 +234,7 @@ its buffer-source references and disconnects owned nodes, including cancellation
 before onset, stealing, sound disposal, and engine teardown. Browser-internal
 reclamation timing remains outside the library's control.
 
-## Buses and shared delay
+## Buses and routing
 
 After `await audio.start()`, `audio.master` is the root bus. `audio.bus(name,
 parent = audio.master)` creates a named bus or reuses the live bus with that
@@ -258,31 +259,15 @@ const sound = audio.sound(confirmation);
 await audio.start();
 const effects = audio.bus("effects");
 effects.setGainDb(-6, 0.1);
-effects.setDelay({ seconds: 0.18, feedback: 0.35, wet: 0.25 });
 const voice = sound.play({ bus: effects });
-voice.stop(); // Emitted delay energy decays within its cap.
-audio.stopAll({ tails: "cut" }); // Fade/reset all owned shared tails.
-effects.dispose(); // Finalize voices, descendant buses, and shared effects.
+voice.stop(); // Release this voice.
+audio.stopAll({ tails: "cut" }); // Fade managed voices over 5 ms.
+effects.dispose(); // Finalize routed voices and descendant buses.
 await audio.dispose();
 ```
 
-Delay is a shared additive send: dry output remains at unity and `wet` adds
-0–1 times the delayed signal. Delay time accepts 0–2 seconds and feedback
-0–0.9. Zero delay requires zero feedback. Settings are copied and validated
-before graph replacement; `setDelay(null)` removes the effect. Replacement
-fades the previous wet output over 5 ms. Each bus retains at most one fading
-replacement; another reset finalizes the previous retiree first.
-
-When the last managed input ends, output fades to zero at the conservative
--60 dB feedback-decay estimate or five seconds, whichever is earlier.
-The estimate counts the first echo plus repeats; parent buses include their
-children's tail allowance, still capped at five seconds. An audio-clock
-sentinel disconnects the effect at cutoff. Fresh playback reconstructs a
-finished/reset delay with its retained settings. Suspended/interrupted/closed
-cleanup and disposal disconnect immediately without waiting for clock events.
-A bus owns two base nodes, five per live delay, at most one tail sentinel,
-and at most one fading old delay with its sentinel. Delay storage belongs to
-native Web Audio; these node bounds do not measure browser heap use.
+Each bus owns two gain nodes. Suspension and disposal finalize voices
+without waiting for audio-clock progress.
 
 Non-master bus disposal is idempotent and stops routed voices recursively.
 A later lookup of that name creates a fresh bus. `master.dispose()` fails;
@@ -331,8 +316,8 @@ interruption still requires manual evidence. Step 04 passed maintainer manual
 verification on 2026-10-06. Browser/device details and individual observations
 were not supplied; automated checks remain separate from that acceptance.
 
-`Bus.setDelay()` and `DelayOptions` are experimental and may change before 0.1.
-Shared delay is not a stable generalized effect API.
+Buses provide gain, mute, and routing. Shared effects are deferred until
+multiple real sound requirements justify an API.
 
 ## Curated sounds
 

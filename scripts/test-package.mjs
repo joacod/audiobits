@@ -85,7 +85,7 @@ try {
   );
   await writeFile(
     join(consumer, "index.ts"),
-    'import { workspaceStatus, createAudio, defineSound, validateRecipe } from "audiobits"; import { confirmation, impact, thruster } from "audiobits/recipes"; const status: string = workspaceStatus; const audio = createAudio(); const recipe = defineSound(confirmation); audio.sound(recipe); const dynamic = () => { const voice = audio.sound(thruster).play({ seed: 42, parameters: { throttle: 0.2 } }); voice.set({ throttle: 1 }); const bus = audio.bus("effects"); bus.setDelay({ seconds: 0.2, feedback: 0.5, wet: 0.3 }); bus.setGainDb(-6, 0.1); bus.setMuted(true); bus.setParent(audio.master); audio.sound(impact).play({ bus }); const analyser = audio.native.context.createAnalyser(); const detach = audio.native.connect(analyser); detach(); analyser.disconnect(); audio.stopAll({ tails: "cut" }); bus.dispose(); const seed: number = voice.seed; audio.sound(impact).play({ parameters: { intensity: 1 }, seed }); voice.stop(); }; void dynamic; console.log(status, validateRecipe(recipe)); void audio.dispose();\n',
+    'import { createAudio, defineSound, validateRecipe } from "audiobits"; import { confirmation, impact, thruster } from "audiobits/recipes"; const audio = createAudio(); const recipe = defineSound(confirmation); audio.sound(recipe); const dynamic = () => { const voice = audio.sound(thruster).play({ seed: 42, parameters: { throttle: 0.2 } }); voice.set({ throttle: 1 }); const bus = audio.bus("effects"); bus.setGainDb(-6, 0.1); bus.setMuted(true); bus.setParent(audio.master); audio.sound(impact).play({ bus }); const analyser = audio.native.context.createAnalyser(); const detach = audio.native.connect(analyser); detach(); analyser.disconnect(); audio.stopAll({ tails: "cut" }); bus.dispose(); const seed: number = voice.seed; audio.sound(impact).play({ parameters: { intensity: 1 }, seed }); voice.stop(); }; void dynamic; console.log(validateRecipe(recipe)); void audio.dispose();\n',
   );
   await writeFile(
     join(consumer, "authoring.types.ts"),
@@ -119,7 +119,7 @@ try {
     import assert from 'node:assert/strict';
     assert.equal(typeof window, 'undefined');
     assert.equal(typeof AudioContext, 'undefined');
-    const { workspaceStatus, createAudio, defineSound, validateRecipe } = await import('audiobits');
+    const { createAudio, defineSound, validateRecipe } = await import('audiobits');
     const recipes = await import('audiobits/recipes');
     const { default: schema } = await import('audiobits/schema.json', { with: { type: 'json' } });
     const { default: capabilities } = await import('audiobits/capabilities.json', { with: { type: 'json' } });
@@ -130,7 +130,9 @@ try {
     for (const recipe of Object.values(recipes)) audio.sound(defineSound(recipe));
     assert.equal(audio.state, 'idle');
     await audio.dispose();
-    assert.equal(workspaceStatus, 'AudioBits workspace ready');
+    assert.equal(typeof createAudio, 'function');
+    assert.equal(typeof defineSound, 'function');
+    assert.equal(typeof validateRecipe, 'function');
     assert.ok(import.meta.resolve('audiobits').startsWith(new URL('./node_modules/', import.meta.url).href));
     console.log('Isolated Node import and exported value passed.');
   `,
