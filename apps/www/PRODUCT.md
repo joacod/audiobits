@@ -37,8 +37,10 @@ neon, glass, SaaS gradients, noisy effects and a DAW interface. Sound leads.
 ## Evidence on Hand
 
 Public exports, recipe metadata, browser signal/lifecycle checks and copyable
-examples. Automated evidence does not establish listening quality. Human listening
-and physical device acceptance are pending for the current eight sounds.
+examples. Automated evidence does not establish listening quality. The maintainer
+reported manual sound-quality acceptance for the current eight sounds on 2026-10-07.
+Devices and detailed listening coverage were not specified. Physical device
+acceptance remains pending.
 
 ## Product Principles
 

@@ -47,8 +47,9 @@ one bounded motion and strict active-state clarity respectively, not their cloth
 ## RISK / UNRESOLVED
 
 Editorial form can hide the sound if code/editor density wins. Keep Play and morph
-controls ahead of disclosures. Human listening and physical-device evidence remain
-pending. Release installation must show unreleased status and stay gated.
+controls ahead of disclosures. The maintainer reported sound-quality acceptance
+on 2026-10-07; physical-device evidence remains pending. Release installation must
+show unreleased status and stay gated.
 
 ## Direction contract
 

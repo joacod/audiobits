@@ -187,8 +187,11 @@ failure. Keep the previously stable site on failure. Published defects require
 new versions; website rollback changes only the hosting deployment.
 
 Current PR checks and ignored archive evidence identify actual candidate bytes.
-Foundation acceptance is historical; new sounds and exact candidate artifacts
-need listening review before release. Production inputs remain unresolved.
+The maintainer reported manual sound-quality acceptance for the current eight
+sounds on 2026-10-07. This is human-reported listening evidence; output devices,
+parameter/seed coverage and physical browser details were not specified. No tuning
+changes were requested. Exact release-artifact approval and production inputs
+remain unresolved.
 
 ### Hosted validation and remaining gaps
 
@@ -215,5 +218,6 @@ is recorded separately from individual CI commands.
 Local Firefox still fails before page creation with `Could not find profile folder`,
 matching the [reported macOS 27 launch issue](https://github.com/microsoft/playwright/issues/42768).
 Linux engine automation does not establish physical Safari/iOS or mobile support.
-New-sound listening acceptance and physical-device review remain release
-follow-ups. Publication and deployment guards remain disabled.
+Sound-quality listening acceptance is recorded above. Physical-device review and
+exact release-artifact approval remain follow-ups. Publication and deployment
+guards remain disabled.
