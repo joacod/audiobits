@@ -2,7 +2,7 @@
 
 Call `play()` directly from a gesture. Surface rejected promises, bind Stop,
 and call `dispose()` when the host unmounts. See the package reference for
-bus limits, delay caps and caller-owned native nodes.
+bus limits and caller-owned native nodes.
 
 ```ts
 import { createAudio } from "audiobits";
@@ -18,7 +18,6 @@ export async function play() {
   if (token !== request || document.hidden) return;
   const effects = audio.bus("effects");
   effects.setGainDb(-6, 0.1);
-  effects.setDelay({ seconds: 0.18, feedback: 0.35, wet: 0.25 });
   voice?.stop();
   voice = sound.play({ bus: effects, parameters: { throttle: 0.2 }, seed: 42 });
 }
@@ -45,6 +44,6 @@ export async function dispose() {
 ```
 
 `voice.parameters` reports requested values, not current smoothed native values.
-Stop cuts shared tails here; use default `stopAll()` when bounded delay decay
-is desired. Routes and voices belong to this engine. Recipe data remains portable;
+Stop uses a 5 ms voice fade here; default `stopAll()` follows each voice's
+recipe release. Routes and voices belong to this engine. Recipe data remains portable;
 the live graph and native connections are not serializable.

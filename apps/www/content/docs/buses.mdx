@@ -1,6 +1,6 @@
 ---
-title: Buses and effects
-description: Route voices through named buses and bounded shared delay.
+title: Buses and routing
+description: Route voices through named buses with independent gain and mute.
 ---
 
 <PackageChannel />
@@ -17,7 +17,6 @@ export async function playFromGesture() {
   await audio.start();
   const effects = audio.bus("effects");
   effects.setGainDb(-6, 0.1);
-  effects.setDelay({ seconds: 0.18, feedback: 0.35, wet: 0.25 });
   sound.play({ bus: effects, seed: 42 });
 }
 export function stop() {
@@ -33,21 +32,11 @@ export async function dispose() {
 `setGainDb()` accepts -60–0 dB and ramps of 0–10 seconds (default 5 ms).
 `setMuted()` ramps independently over 5 ms. Master defaults to -12 dB.
 
-## Shared delay
-
-Delay is an additive wet send: dry output remains at unity. Time is 0–2 seconds,
-feedback 0–0.9, and wet 0–1. Positive feedback requires positive time. Invalid
-updates preserve the previous effect; `setDelay(null)` removes it. Replacements
-fade the old wet output over 5 ms with at most one retiring effect per bus.
-
-When managed input ends, tails use a conservative feedback estimate capped at
-five seconds. Stop with `{ tails: "cut" }` to fade/reset them. New playback
-reconstructs a reset delay with its retained settings. Suspension and disposal
-finalize without waiting for clock progress.
+## Ownership
 
 Non-master bus disposal recursively finalizes routed voices and descendants.
-Dispose master through the engine. No shared effects or native nodes are stored
-inside recipe JSON. The gallery's mixer is separate from copied sound examples.
+Dispose master through the engine. Native nodes and routing stay outside recipe
+JSON. The gallery's mixer is separate from copied sound examples.
 
-`Bus.setDelay()` and `DelayOptions` are experimental and may change before 0.1.
-Shared delay is not a stable generalized effect API.
+Buses provide gain, mute, and routing. Shared effects are deferred until multiple
+real sound requirements justify an API.

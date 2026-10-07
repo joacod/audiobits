@@ -49,25 +49,25 @@ eligibility rules. No transparent optimizer is promised in the first release.
 
 ## Public surface
 
-The listed operations are implemented. Shared delay remains experimental;
-a generalized effect composition API awaits real requirements.
+The listed operations are implemented. Buses provide gain, mute, and routing;
+a shared effect API awaits multiple real requirements.
 
-| Concept                    | Responsibility                                                            |
-| -------------------------- | ------------------------------------------------------------------------- |
-| `defineSound(data)`        | Validate and return a deeply immutable recipe snapshot; no context        |
-| `validateRecipe(unknown)`  | Structured issues with code and data path; no audio allocation            |
-| `createAudio(options)`     | Create a lazy engine handle; no context until `start()`                   |
-| `audio.start()`            | Create/resume the owned context in the current gesture path               |
-| `audio.suspend()`          | Invalidate pending activation, finalize owned voices/effects, and suspend |
-| `audio.sound(recipe)`      | Return an engine-bound reusable definition after validation               |
-| `sound.play(options)`      | Synchronous voice creation when the engine is running                     |
-| `voice.set(parameters)`    | Validate and smooth supported live controls                               |
-| `voice.stop()`             | Release/fade once, then clean up owned sources and effects                |
-| `voice.ended`              | Promise that settles when owned resources are released                    |
-| `audio.stopAll({ tails })` | Release owned voices with allow/cut shared-tail policy                    |
-| `audio.bus(name, parent)`  | Reuse/create a named bus after activation                                 |
-| `audio.native`             | Owned context/output with caller-owned native taps                        |
-| `audio.dispose()`          | Idempotent shutdown including pending starts and owned graph              |
+| Concept                    | Responsibility                                                     |
+| -------------------------- | ------------------------------------------------------------------ |
+| `defineSound(data)`        | Validate and return a deeply immutable recipe snapshot; no context |
+| `validateRecipe(unknown)`  | Structured issues with code and data path; no audio allocation     |
+| `createAudio(options)`     | Create a lazy engine handle; no context until `start()`            |
+| `audio.start()`            | Create/resume the owned context in the current gesture path        |
+| `audio.suspend()`          | Invalidate pending activation, finalize owned voices, and suspend  |
+| `audio.sound(recipe)`      | Return an engine-bound reusable definition after validation        |
+| `sound.play(options)`      | Synchronous voice creation when the engine is running              |
+| `voice.set(parameters)`    | Validate and smooth supported live controls                        |
+| `voice.stop()`             | Release/fade once, then clean up owned sources and effects         |
+| `voice.ended`              | Promise that settles when owned resources are released             |
+| `audio.stopAll({ tails })` | Release owned voices with recipe release or 5 ms fade              |
+| `audio.bus(name, parent)`  | Reuse/create a named bus after activation                          |
+| `audio.native`             | Owned context/output with caller-owned native taps                 |
+| `audio.dispose()`          | Idempotent shutdown including pending starts and owned graph       |
 
 `audio.sound()` may run before start because it stores an immutable recipe snapshot. Calls to
 `play()` before successful start fail with a structured not-ready error; the
@@ -113,8 +113,8 @@ curated sounds at documented concurrency; do not call a compressor a guaranteed
 limiter or silently normalize every voice.
 
 The runtime uses a tree of buses with one parent per bus, rejecting cycles and foreign
-contexts. Gain and mute are separate stages. Effects explicitly belong either
-to a voice or a shared bus; their tails have bounded disposal semantics.
+contexts. Gain and mute are separate stages; a bus owns two gain nodes. Shared
+effects are deferred.
 
 ## Native interop
 
@@ -155,7 +155,7 @@ require a new schema version. No placeholder migration framework is needed.
 
 ## Linear automation compatibility
 
-Live bindings, release envelopes, bus gain/mute and shared-delay output gates
+Live bindings, release envelopes, bus gain/mute
 track their linear schedules. When native `cancelAndHoldAtTime` is unavailable,
 cancel future events and reinsert the computed linear endpoint at the context
 time before scheduling the new ramp. This preserves the preceding ramp and

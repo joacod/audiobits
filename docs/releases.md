@@ -94,7 +94,7 @@ Candidate scope follows the implemented runtime and curated sound set. The priva
 `0.1.0-rc.0`; Changesets 3.0.3 applied the initial minor note in `rc` mode.
 It includes curated recipes, schema-1 oscillator/white-noise
 sources and filters, seeded variation, play/live controls, bounded voices,
-buses/shared delay, explicit native interop and lifecycle APIs. Deferred
+bus gain/mute/routing, explicit native interop and lifecycle APIs. Deferred
 features in the recipe study remain unavailable.
 
 Run the preparation gate from the repository root under the pinned Node version:

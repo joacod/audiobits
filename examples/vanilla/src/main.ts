@@ -1,10 +1,10 @@
-import { createAudio, workspaceStatus } from "audiobits";
+import { createAudio } from "audiobits";
 import { confirmation, impact, thruster } from "audiobits/recipes";
 
 const status = document.querySelector<HTMLParagraphElement>("#status");
 if (!status) throw new Error("Missing consumer status element");
-status.textContent = workspaceStatus;
 const audio = createAudio();
+status.textContent = `AudioBits: ${audio.state}`;
 const sound = audio.sound(confirmation);
 const impactSound = audio.sound(impact);
 const thrusterSound = audio.sound(thruster);
@@ -171,22 +171,6 @@ window.addEventListener(
   },
   { once: true },
 );
-
-document.querySelector("#delay")!.addEventListener("click", () => {
-  const token = request;
-  void audio
-    .start()
-    .then(() => {
-      if (!mounted || document.hidden || token !== request) return;
-      const button = document.querySelector<HTMLButtonElement>("#delay")!;
-      const enabled = button.getAttribute("aria-pressed") !== "true";
-      routing().setDelay(
-        enabled ? { seconds: 0.18, feedback: 0.35, wet: 0.25 } : null,
-      );
-      button.setAttribute("aria-pressed", String(enabled));
-    })
-    .catch(showError);
-});
 
 document
   .querySelector<HTMLInputElement>("#volume")!

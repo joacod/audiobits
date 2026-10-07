@@ -421,55 +421,38 @@ async function dynamicLifecycle() {
 }
 Object.assign(globalThis, { dynamicSignal, dynamicLifecycle });
 
-// Offline signal checks use native delay nodes; they do not establish listening quality.
+// Native offline bus gain/mute checks are measurable signal evidence.
 async function mixingSignal(rate: number, cut: boolean) {
   const { OwnedBus } = await import("../../packages/audiobits/src/runtime/bus");
-  const context = new OfflineAudioContext(1, rate * 7, rate);
-  // Offline rendering must pause before a main-thread operation. Source
-  // onended delivery can lag the render thread and is not a scheduling clock.
-  // Only the state used by cut() is adapted: test its running fade branch while
-  // native offline nodes are paused at a deterministic audio-clock position.
-  let runningCut = false;
-  const busContext = new Proxy(context, {
-    get(target, key) {
-      if (key === "state" && runningCut) return "running";
-      const value = Reflect.get(target, key, target);
-      return typeof value === "function" ? value.bind(target) : value;
-    },
-  });
+  const context = new OfflineAudioContext(1, rate * 2, rate);
   const bus = new OwnedBus(
     "master",
-    busContext as unknown as AudioContext,
+    context as unknown as AudioContext,
     {},
     null,
     () => {},
     -12,
   );
-  bus.setDelay({ seconds: 0.2, feedback: 0.9, wet: 0.5 });
-  const plan = compile(confirmation);
-  const at = 0.05;
-  createGraph(context, bus.input, plan, at, 0, 0, () => {});
+  const source = context.createOscillator();
+  source.connect(bus.input);
+  source.start(0.05);
+  source.stop(1);
+  let cutAt: number | null = null;
   const pauses = [
-    context.suspend(at + plan.lifetime).then(() => {
-      bus.tail();
+    context.suspend(0.1).then(() => {
+      bus.setGainDb(-18, 0.6);
       return context.resume();
     }),
   ];
-  let cutAt: number | null = null;
-  if (cut) {
+  if (cut)
     pauses.push(
       context.suspend(0.4).then(() => {
         cutAt = context.currentTime;
-        runningCut = true;
-        try {
-          bus.cut();
-        } finally {
-          runningCut = false;
-        }
+        bus.setGainDb(-6, 0.2);
+        bus.setMuted(true);
         return context.resume();
       }),
     );
-  }
   const rendering = context.startRendering();
   await Promise.all(pauses);
   const data = (await rendering).getChannelData(0);
@@ -478,13 +461,14 @@ async function mixingSignal(rate: number, cut: boolean) {
     latePeak = 0,
     peak = 0;
   for (let i = 0; i < data.length; i++) {
-    require(Number.isFinite(data[i]), "Nonfinite delay output");
+    require(Number.isFinite(data[i]), "Nonfinite bus output");
     peak = Math.max(peak, Math.abs(data[i]));
     if (cutAt !== null && i > rate * cutAt && i < rate * (cutAt + 0.005))
       fadeEnergy += data[i] ** 2;
     if (i > rate * 0.5 && i < rate) tailEnergy += data[i] ** 2;
-    if (i > rate * 6) latePeak = Math.max(latePeak, Math.abs(data[i]));
+    if (i > rate * 1.1) latePeak = Math.max(latePeak, Math.abs(data[i]));
   }
+  source.disconnect();
   bus.destroy();
   return { rate, cut, cutAt, fadeEnergy, tailEnergy, latePeak, peak };
 }
@@ -523,7 +507,6 @@ async function mixingLifecycle() {
   await audio.start();
   const parent = audio.bus("effects");
   const child = audio.bus("child", parent);
-  parent.setDelay({ seconds: 0.08, feedback: 0.5, wet: 0.3 });
   const analyser = context.createAnalyser();
   const remove = audio.native.connect(analyser);
   const sound = audio.sound(thruster);

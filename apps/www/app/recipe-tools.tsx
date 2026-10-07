@@ -210,8 +210,8 @@ export const RecipeTools = memo(function RecipeTools({
                 <p>
                   Equivalent dry sound, seeded noise, live smoothing, release,
                   and cleanup for the bundled definition. Both examples use -12
-                  dB master gain. Shared delay and voice stealing are library
-                  features outside this single-voice comparison.
+                  dB master gain. Voice stealing is outside this single-voice
+                  comparison.
                 </p>
                 {original ? (
                   <>

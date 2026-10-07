@@ -21,7 +21,7 @@ shipped primitives and browser gate. Semantic limits still require
 
 Public types include `Recipe`, its layer/source/envelope/filter/value and
 parameter types, `ValidationResult`, `RecipeIssue`, `AudioEngine`, `AudioOptions`,
-`AudioState`, `Sound`, `Voice`, `PlayOptions`, `Bus`, and `DelayOptions`.
+`AudioState`, `Sound`, `Voice`, `PlayOptions`, and `Bus`.
 
 ## Playback options
 
@@ -43,5 +43,5 @@ reservations from retirees. At most 32 buses, including master, may be live.
 Defaults provide headroom for the curated sounds; arbitrary recipes, resonance,
 or concurrency require application-specific signal and listening checks.
 
-`Bus.setDelay()` and `DelayOptions` are experimental and may change before 0.1.
-Shared delay is not a stable generalized effect API.
+Buses provide gain, mute, and routing. Shared effects are deferred until
+multiple real sound requirements justify an API.

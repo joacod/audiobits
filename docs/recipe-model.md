@@ -130,9 +130,8 @@ The model supports a lowpass/highpass/bandpass filter with frequency and Q.
 Q is bounded to `[0.1, 20]`. Saturation remains unimplemented; listening has not
 established a need for it. Do not ship placeholder descriptors for unsupported effects.
 
-The experimental bus API supports shared delay with bounded delay time, feedback, wet amount, and
-tail cutoff. Shared effects are runtime bus configuration, not embedded context
-objects in recipe JSON. No convolution files, feedback graph DSL, or arbitrary
+Shared effects are deferred; bus gain, mute and routing remain runtime
+configuration outside recipe JSON. No convolution files, feedback graph DSL, or arbitrary
 routing nodes are required for the core.
 
 ## Canonical generation and validation

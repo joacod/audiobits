@@ -51,7 +51,6 @@ export function ConfirmationDemo({
   const [playing, setPlaying] = useState<Partial<Record<SoundKind, string>>>(
     {},
   );
-  const [delay, setDelay] = useState(false);
   const [volume, setVolume] = useState(0);
   const volumeValue = useRef(0);
   const [started, setStarted] = useState<AudioEngine | null>(null);
@@ -220,41 +219,6 @@ export function ConfirmationDemo({
             Mute
           </Button>
           <Button onClick={stopAll}>Stop all</Button>
-          <Button
-            aria-pressed={delay}
-            onClick={() => {
-              const engine = audio.current;
-              if (!engine || document.hidden) return;
-              const token = request.current;
-              void engine
-                .start()
-                .then(() => {
-                  if (
-                    audio.current !== engine ||
-                    token !== request.current ||
-                    document.hidden
-                  )
-                    return;
-                  if (!route.current) {
-                    route.current = engine.bus("effects");
-                    route.current.setGainDb(volumeValue.current, 0.1);
-                  }
-                  const next = !delay;
-                  route.current.setDelay(
-                    next ? { seconds: 0.18, feedback: 0.35, wet: 0.25 } : null,
-                  );
-                  setDelay(next);
-                })
-                .catch((cause: unknown) => {
-                  if (audio.current === engine && token === request.current)
-                    setError(
-                      cause instanceof Error ? cause.message : "Delay failed.",
-                    );
-                });
-            }}
-          >
-            Shared delay
-          </Button>
         </div>
         <label>
           Effects volume: {volume} dB

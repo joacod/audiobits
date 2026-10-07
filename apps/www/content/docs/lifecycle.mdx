@@ -35,9 +35,9 @@ with a retryable `start-failed` error. Concurrent starts share a promise.
 `voice.ended` resolves after cleanup. States are `active`, `stopping`, `retiring`,
 and `ended`; repeated stops do not extend lifetime. `sound.dispose()` finalizes
 that sound's voices immediately. `audio.stopAll()` releases managed voices and
-allows bounded shared tails; `{ tails: "cut" }` fades and resets shared delays.
+follows their recipe release; `{ tails: "cut" }` uses a 5 ms voice fade.
 
-`suspend()` invalidates pending starts and finalizes owned voices/effects before
+`suspend()` invalidates pending starts and finalizes owned voices before
 suspending. Native interruption or closure also clears managed resources.
 `dispose()` is terminal and idempotent: it invalidates activation, disconnects
 owned nodes, and closes the context even while suspended. Caller-created sources

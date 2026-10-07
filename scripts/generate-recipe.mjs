@@ -64,12 +64,11 @@ const capabilities = {
     "live-controls",
     "seeded-replay",
     "buses",
-    "shared-delay",
     "native-output-tap",
     "suspend",
     "dispose",
   ],
-  experimentalRuntime: ["shared-delay"],
+  experimentalRuntime: [],
   browserGate: "Chromium",
   browserMatrix: ["Chromium", "Firefox", "WebKit"],
   schemaNote:
