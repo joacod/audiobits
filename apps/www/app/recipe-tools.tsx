@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { memo, useMemo, useState } from "react";
 import { Button } from "@base-ui/react/button";
 import { validateRecipe } from "audiobits";
@@ -9,6 +10,7 @@ import {
   rawHost,
   sounds,
   hasRawComparison,
+  quickExample,
 } from "../lib/gallery";
 import type { SoundKind } from "../lib/gallery";
 
@@ -132,12 +134,45 @@ export const RecipeTools = memo(function RecipeTools({
       <Button disabled={!validSeed} onClick={() => void copy(example)}>
         Copy {kind} example
       </Button>
+      <Button
+        onClick={() => {
+          const next = Math.floor(Math.random() * 0x100000000);
+          setSeed(String(next));
+          onSeed(kind, next);
+          setCopyState("New seed chosen. Play to hear this variation.");
+        }}
+      >
+        Randomize {kind}
+      </Button>
+      <Button onClick={() => void copy(JSON.stringify(recipe, null, 2))}>
+        Copy {kind} recipe
+      </Button>
       <Button onClick={restore}>Reset {kind}</Button>
       <p aria-live="polite">{copyState}</p>
       <details onToggle={(event) => setOpen(event.currentTarget.open)}>
         <summary>Recipe &amp; code · {kind}</summary>
         {open && (
           <>
+            {original && (
+              <div className="quick-code">
+                <h4>Start with a sound</h4>
+                <pre>
+                  <code>{quickExample(kind, controls, exampleSeed)}</code>
+                </pre>
+                <Button
+                  disabled={!validSeed}
+                  onClick={() =>
+                    void copy(quickExample(kind, controls, exampleSeed))
+                  }
+                >
+                  Copy simple {kind} code
+                </Button>
+                <p>
+                  For visibility, SPA navigation, suspension and disposal, see{" "}
+                  <Link href="/docs/lifecycle">Production lifecycle</Link>.
+                </p>
+              </div>
+            )}
             <label>
               Recipe JSON (32 KiB maximum)
               <textarea
@@ -161,7 +196,7 @@ export const RecipeTools = memo(function RecipeTools({
                 </ul>
               </div>
             )}
-            <h4>AudioBits · current configuration</h4>
+            <h4>Production lifecycle · current configuration</h4>
             <p>
               The sound parameters and seed below match the next Play. Global
               mixer settings are separate.

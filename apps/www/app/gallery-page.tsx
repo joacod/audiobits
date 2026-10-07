@@ -16,10 +16,11 @@ export function GalleryPage({ selected }: { selected?: SoundKind }) {
       </nav>
       <header className="gallery-intro">
         <h1>{selected ? soundInfo[selected].title : "AudioBits"}</h1>
-        <p className="intro">
-          Procedural sound for interactive web experiences.
+        <p className="intro">Sound as code. Make it yours.</p>
+        <p>
+          Eight browser-native sounds. Change their character, inspect the
+          recipe, and bring one into your app.
         </p>
-        <p>Small JSON definitions. Fresh voices. No audio downloads.</p>
         <p className="gallery-channel">
           {siteBuild.channel} · {siteBuild.version} · {siteBuild.source}
         </p>

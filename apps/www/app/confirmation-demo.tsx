@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Button } from "@base-ui/react/button";
+import { OutputScope } from "./output-scope";
 import { RecipeTools } from "./recipe-tools";
 import {
   soundInfo,
@@ -10,6 +11,7 @@ import {
   sounds,
   parametersFor,
   parameterLabel,
+  parameterEndpoints,
 } from "../lib/gallery";
 import type { SoundKind } from "../lib/gallery";
 import { createAudio } from "audiobits";
@@ -52,6 +54,7 @@ export function ConfirmationDemo({
   const [delay, setDelay] = useState(false);
   const [volume, setVolume] = useState(0);
   const volumeValue = useRef(0);
+  const [started, setStarted] = useState<AudioEngine | null>(null);
   const [state, setState] = useState<AudioState>("idle");
   const [error, setError] = useState("");
   const [muted, setMuted] = useState(false);
@@ -164,6 +167,7 @@ export function ConfirmationDemo({
         route.current = engine.bus("effects");
         route.current.setGainDb(volumeValue.current, 0.1);
       }
+      setStarted(engine);
       const voice = definition.play({
         seed,
         bus: route.current,
@@ -197,7 +201,9 @@ export function ConfirmationDemo({
   }
   return (
     <section aria-labelledby="gallery-heading">
-      <h2 id="gallery-heading">Procedural sound gallery</h2>
+      <h2 id="gallery-heading" className={selected ? "sr-only" : undefined}>
+        Procedural sound gallery
+      </h2>
       <p>
         Browse silently. Play a sound, adjust it, then copy your configuration.
       </p>
@@ -276,6 +282,25 @@ export function ConfirmationDemo({
         <p role="status">Audio: {state}</p>
         {error && <p role="alert">{error}</p>}
       </div>
+      <OutputScope
+        engine={started}
+        active={Object.values(playing).some(
+          (value) => value === "running" || value === "playing",
+        )}
+      />
+      {!selected && (
+        <nav className="sound-index" aria-label="Sound collection">
+          {soundKinds.map((kind) => (
+            <Link
+              href={`#${kind}`}
+              aria-label={`Jump to ${soundInfo[kind].title}`}
+              key={kind}
+            >
+              {soundInfo[kind].title}
+            </Link>
+          ))}
+        </nav>
+      )}
       {(selected ? [selected] : soundKinds).map((kind) => {
         const recipe = recipes[kind];
         const info = soundInfo[kind];
@@ -305,6 +330,18 @@ export function ConfirmationDemo({
                         updateControl(kind, name, Number(event.target.value))
                       }
                     />
+                    {parameterEndpoints(kind, name) && (
+                      <span className="morph-endpoints" aria-hidden="true">
+                        {parameterEndpoints(kind, name)?.map((endpoint) => (
+                          <span key={endpoint}>{endpoint}</span>
+                        ))}
+                      </span>
+                    )}
+                    <span className="control-mode">
+                      {parameter.mode === "live"
+                        ? "Changes this voice while it plays"
+                        : "Applies on the next Play"}
+                    </span>
                   </label>
                 ),
               )}

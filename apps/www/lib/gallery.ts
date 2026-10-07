@@ -14,6 +14,7 @@ import type { Recipe } from "audiobits";
 // Presentation belongs to the gallery, independently of portable recipe data.
 export const demos = {
   confirmation: {
+    exportName: "confirmation",
     recipe: confirmation,
     title: "Confirmation",
     description: "A soft upward chime for a completed action.",
@@ -22,6 +23,7 @@ export const demos = {
     endpoints: {},
   },
   impact: {
+    exportName: "impact",
     recipe: impact,
     title: "Impact",
     description:
@@ -31,6 +33,7 @@ export const demos = {
     endpoints: { intensity: ["Soft", "Hard"] },
   },
   thruster: {
+    exportName: "thruster",
     recipe: thruster,
     title: "Thruster",
     description:
@@ -40,6 +43,7 @@ export const demos = {
     endpoints: { throttle: ["Idle", "Full thrust"] },
   },
   "tactile-click": {
+    exportName: "tactileClick",
     recipe: tactileClick,
     title: "Tactile click",
     description: "A tiny rounded contact with a restrained noise texture.",
@@ -48,6 +52,7 @@ export const demos = {
     endpoints: { intensity: ["Light", "Firm"] },
   },
   "gentle-rejection": {
+    exportName: "gentleRejection",
     recipe: gentleRejection,
     title: "Gentle rejection",
     description: "Two soft descending tones for an unavailable action.",
@@ -56,6 +61,7 @@ export const demos = {
     endpoints: {},
   },
   "glass-notification": {
+    exportName: "glassNotification",
     recipe: glassNotification,
     title: "Glass notification",
     description:
@@ -65,6 +71,7 @@ export const demos = {
     endpoints: { brightness: ["Warm", "Brilliant"] },
   },
   whoosh: {
+    exportName: "whoosh",
     recipe: whoosh,
     title: "Whoosh",
     description:
@@ -74,6 +81,7 @@ export const demos = {
     endpoints: { size: ["Small", "Huge"] },
   },
   "power-up": {
+    exportName: "powerUp",
     recipe: powerUp,
     title: "Power-up",
     description: "A rising triangle and sine halo that gather energy together.",
@@ -213,6 +221,25 @@ export async function dispose() {
   document.removeEventListener("visibilitychange", hide);
   raw?.dispose();
   await context?.close();
+}
+`;
+}
+
+export function quickExample(
+  kind: SoundKind,
+  controls: Readonly<Record<string, number>>,
+  seed: number,
+) {
+  return `import { createAudio } from "audiobits";
+import { ${demos[kind].exportName} } from "audiobits/recipes";
+
+const audio = createAudio();
+const sound = audio.sound(${demos[kind].exportName});
+
+// Bind directly to a button click; surface a failed start and allow retry.
+export async function play() {
+  await audio.start();
+  sound.play({ parameters: ${JSON.stringify(controls)}, seed: ${seed} });
 }
 `;
 }

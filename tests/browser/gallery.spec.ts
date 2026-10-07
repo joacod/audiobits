@@ -513,3 +513,58 @@ test("all eight demos use parameter metadata and edited controls without allocat
     page.getByRole("slider", { name: "Detail", exact: true }),
   ).toHaveCount(0);
 });
+
+test("showcase uses native output, bounded seeded variation and simple current code", async ({
+  page,
+}) => {
+  await instrument(page);
+  await page.goto("http://127.0.0.1:3100/sounds/thruster");
+  const scope = page.getByRole("img", {
+    name: "Live output waveform; animation pauses for reduced motion",
+  });
+  await expect(scope).toHaveAttribute("data-peak", "0");
+  await expect(
+    page.getByText("Changes this voice while it plays"),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Start thruster", exact: true })
+    .click();
+  await page.getByRole("slider", { name: "Throttle", exact: true }).fill("1");
+  await expect
+    .poll(async () => Number(await scope.getAttribute("data-peak")))
+    .toBeGreaterThan(0);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(scope).toHaveAttribute("data-peak", "0");
+  await page.getByRole("button", { name: "Stop all", exact: true }).click();
+  await expect(scope).toHaveAttribute("data-peak", "0");
+  await page.goto("http://127.0.0.1:3100/sounds/whoosh");
+  await page.getByRole("slider", { name: "Size", exact: true }).fill("0.9");
+  await expect(page.getByText("Applies on the next Play")).toBeVisible();
+  await page
+    .getByRole("button", { name: "Randomize whoosh", exact: true })
+    .click();
+  const seed = Number(
+    await page
+      .getByRole("spinbutton", { name: "whoosh seed", exact: true })
+      .inputValue(),
+  );
+  expect(seed).toBeGreaterThanOrEqual(0);
+  expect(seed).toBeLessThanOrEqual(0xffffffff);
+  await page.locator("#whoosh summary").click();
+  await page
+    .getByRole("button", { name: "Copy simple whoosh code", exact: true })
+    .click();
+  let copied = await page.evaluate(
+    () => (globalThis as unknown as { copiedExample: string }).copiedExample,
+  );
+  expect(copied).toContain('import { whoosh } from "audiobits/recipes"');
+  expect(copied).toContain('"size":0.9');
+  expect(copied).toContain(`seed: ${seed}`);
+  await page
+    .getByRole("button", { name: "Copy whoosh recipe", exact: true })
+    .click();
+  copied = await page.evaluate(
+    () => (globalThis as unknown as { copiedExample: string }).copiedExample,
+  );
+  expect(JSON.parse(copied).schemaVersion).toBe(1);
+});

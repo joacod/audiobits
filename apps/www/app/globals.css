@@ -330,3 +330,55 @@
     margin: var(--instrument-space-2) 0;
   }
 }
+
+@layer components {
+  .foundation .output-scope {
+    margin: var(--instrument-space-4) 0;
+    padding: var(--instrument-space-3) 0;
+    border-block: var(--instrument-border-width) solid var(--color-fd-border);
+  }
+  .foundation .output-scope figcaption {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--instrument-space-4);
+    flex-wrap: wrap;
+    font-size: var(--instrument-text-small);
+  }
+  .foundation .output-scope canvas {
+    display: block;
+    width: 100%;
+    height: 4rem;
+    color: var(--instrument-color-action);
+    margin-top: var(--instrument-space-4);
+  }
+  .foundation .sound-index {
+    gap: var(--instrument-space-3) var(--instrument-space-6);
+    font-size: 0.9rem;
+    padding-bottom: var(--instrument-space-8);
+  }
+  .foundation .sound-index a:first-child {
+    font-weight: inherit;
+    font-size: inherit;
+  }
+  .foundation .sound-card {
+    scroll-margin-top: 9rem;
+  }
+  .foundation .morph-endpoints {
+    display: flex;
+    justify-content: space-between;
+    font-size: var(--instrument-text-small);
+    margin-top: var(--instrument-space-1);
+  }
+  .foundation .control-mode {
+    display: block;
+    font-size: var(--instrument-text-small);
+    margin-top: var(--instrument-space-2);
+    color: var(--color-fd-muted-foreground);
+  }
+  .foundation .quick-code {
+    margin-bottom: var(--instrument-space-6);
+  }
+  .foundation .quick-code p {
+    font-size: var(--instrument-text-small);
+  }
+}

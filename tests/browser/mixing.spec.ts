@@ -213,7 +213,7 @@ for (const target of ["site", "vanilla"] as const) {
     if (target === "site")
       await expect(
         page
-          .getByRole("region", { name: "Three-sound development preview" })
+          .getByRole("region", { name: "Procedural sound gallery" })
           .getByRole("alert"),
       ).toHaveCount(0);
     else await expect(page.getByRole("alert")).toBeEmpty();
