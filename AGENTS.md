@@ -5,7 +5,8 @@
 AudioBits is a browser-native procedural audio library with a separate public
 documentation and demo site in one monorepo. Read [the roadmap](docs/roadmap.md)
 and the selected OpenSpec change before implementation. The repository has a
-workspace foundation and minimal site. Audio APIs remain proposed; use the
+workspace foundation, minimal site, and Step 02 one-shot playback preview.
+The playback and manual listening checks passed; later APIs remain proposed. Use the
 roadmap and each change's verification note for current status.
 
 - Work on the explicitly selected step. Do not automatically start the next.
@@ -14,6 +15,19 @@ roadmap and each change's verification note for current status.
 - Planning approval does not authorize runtime implementation or publication.
 - Ask before destructive changes, commits, branches, pushes, PRs, deployments,
   npm publication, or outbound messages unless already explicitly authorized.
+
+## Main README during implementation
+
+- Until all implementation steps are complete, keep the root `README.md` limited
+  to the project name, a brief description, unreleased status, and license.
+- Do not add usage examples, installation instructions, feature lists,
+  documentation navigation, planning details, step status, verification evidence,
+  or localhost links to the root README during this period.
+- Keep implementation documentation in the relevant package README, `docs/`,
+  or OpenSpec change. Runtime documentation requirements do not authorize
+  expanding the root README.
+- After implementation is complete, expand the root README only when explicitly
+  requested as a separate documentation task.
 
 ## Public repository hygiene
 

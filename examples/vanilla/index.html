@@ -8,8 +8,13 @@
   <body>
     <main>
       <h1>AudioBits vanilla consumer</h1>
-      <p>Unreleased. Audio playback is not implemented yet.</p>
+      <p>Unreleased recipe playback preview.</p>
       <p id="status"></p>
+      <button id="play">Play confirmation</button>
+      <button id="mute" aria-pressed="false">Mute</button>
+      <button id="stop">Stop all</button>
+      <p id="audio-state" role="status">Audio: idle</p>
+      <p id="audio-error" role="alert"></p>
     </main>
     <script type="module" src="/src/main.ts"></script>
   </body>

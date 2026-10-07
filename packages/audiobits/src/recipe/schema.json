@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$ref": "#/$defs/Recipe",
+  "$defs": {
+    "Frequency": {
+      "anyOf": [
+        { "type": "number", "minimum": 20, "maximum": 20000 },
+        {
+          "type": "object",
+          "properties": {
+            "points": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "prefixItems": [
+                  { "type": "number", "minimum": 0, "maximum": 60 },
+                  { "type": "number", "minimum": 20, "maximum": 20000 }
+                ],
+                "minItems": 2,
+                "maxItems": 2
+              },
+              "minItems": 1,
+              "maxItems": 128
+            },
+            "curve": { "enum": ["linear", "exponential"] }
+          },
+          "required": ["points", "curve"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "Envelope": {
+      "type": "object",
+      "properties": {
+        "attack": { "type": "number", "minimum": 0, "maximum": 10 },
+        "decay": { "type": "number", "minimum": 0, "maximum": 10 },
+        "sustain": { "type": "number", "minimum": 0, "maximum": 1 },
+        "release": { "type": "number", "minimum": 0.005, "maximum": 10 }
+      },
+      "required": ["attack", "decay", "sustain", "release"],
+      "additionalProperties": false
+    },
+    "Filter": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "filter" },
+        "filter": { "enum": ["lowpass", "highpass", "bandpass"] },
+        "frequency": { "type": "number", "minimum": 20, "maximum": 20000 },
+        "q": { "type": "number", "minimum": 0.1, "maximum": 20 }
+      },
+      "required": ["type", "filter", "frequency", "q"],
+      "additionalProperties": false
+    },
+    "Source": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "oscillator" },
+        "waveform": { "enum": ["sine", "triangle", "sawtooth", "square"] },
+        "frequency": { "$ref": "#/$defs/Frequency" }
+      },
+      "required": ["type", "waveform", "frequency"],
+      "additionalProperties": false
+    },
+    "Layer": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "source": { "$ref": "#/$defs/Source" },
+        "gainDb": { "type": "number", "minimum": -60, "maximum": 0 },
+        "envelope": { "$ref": "#/$defs/Envelope" },
+        "effects": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Filter" },
+          "minItems": 0,
+          "maxItems": 8
+        }
+      },
+      "required": ["id", "source", "gainDb", "envelope"],
+      "additionalProperties": false
+    },
+    "Recipe": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "one-shot" },
+        "duration": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 60,
+          "exclusiveMinimum": 0
+        },
+        "layers": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Layer" },
+          "minItems": 1,
+          "maxItems": 16
+        },
+        "effects": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Filter" },
+          "minItems": 0,
+          "maxItems": 8
+        }
+      },
+      "required": ["schemaVersion", "kind", "duration", "layers"],
+      "additionalProperties": false
+    }
+  }
+}

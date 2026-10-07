@@ -2,7 +2,7 @@
   "name": "audiobits",
   "version": "0.0.0",
   "private": true,
-  "description": "Procedural browser audio library (unreleased workspace foundation).",
+  "description": "Procedural browser audio library (unreleased recipe playback preview).",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
@@ -15,11 +15,16 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    }
+    },
+    "./recipes": {
+      "types": "./dist/recipes/index.d.ts",
+      "import": "./dist/recipes/index.js"
+    },
+    "./schema.json": "./dist/schema.json"
   },
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "tsdown",
+    "build": "node ../../scripts/generate-recipe.mjs && tsdown && node ../../scripts/copy-schema.mjs",
     "dev": "tsdown --watch",
     "typecheck": "tsc -p tsconfig.json"
   },

@@ -1,6 +1,8 @@
 # Architecture design
 
-Status: proposed implementation baseline. See [the roadmap](roadmap.md) for scope.
+Status: Steps 01–02 implemented; later capabilities below remain proposed.
+See [the roadmap](roadmap.md) for scope and [the development API](../packages/audiobits/README.md)
+for currently exported behavior.
 
 ## Repository boundaries
 
@@ -48,7 +50,8 @@ eligibility rules. No transparent optimizer is promised in the first release.
 
 ## Proposed public surface
 
-Names below are design targets, not implemented APIs:
+Names below include implemented Step 02 APIs and later design targets.
+`voice.set()` remains Step 03 work; bus/native APIs remain Step 04 work.
 
 | Concept | Responsibility |
 | --- | --- |

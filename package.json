@@ -14,8 +14,8 @@
     "typecheck": "pnpm build:lib && pnpm --filter @audiobits/www generate && pnpm -r typecheck",
     "lint": "eslint . && prettier --check . && node scripts/check-doc-links.mjs",
     "format": "prettier --write .",
-    "test": "vitest run",
-    "test:browser": "pnpm build && playwright test",
+    "test": "node scripts/generate-recipe.mjs --check && vitest run",
+    "test:browser": "pnpm build && node scripts/build-audio-tests.mjs && playwright test",
     "test:package": "pnpm build:lib && node scripts/test-package.mjs"
   },
   "devDependencies": {

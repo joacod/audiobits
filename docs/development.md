@@ -1,8 +1,10 @@
 # Local development
 
-The Step 01 workspace foundation is implemented. Audio APIs and playback remain
-planned. See [Step 01 verification](../openspec/changes/01-workspace-foundation/verification.md)
-for executed checks and limitations.
+The workspace foundation and Step 02 recipe playback are implemented. See
+[Step 02 verification](../openspec/changes/02-recipe-playback/verification.md)
+for playback evidence and maintainer manual verification;
+[Step 01 verification](../openspec/changes/01-workspace-foundation/verification.md)
+retains foundation evidence.
 
 ## Setup
 
@@ -44,18 +46,18 @@ pnpm --filter @audiobits/vanilla dev
 
 ## Root commands
 
-| Command             | Behavior                                                     |
-| ------------------- | ------------------------------------------------------------ |
-| `pnpm dev`          | Initial library build, library watch, and site server        |
-| `pnpm build:lib`    | Library ESM and declarations                                 |
-| `pnpm build:site`   | Library build followed by site build                         |
-| `pnpm build`        | Library, site, and vanilla production builds                 |
-| `pnpm typecheck`    | Build library, generate site types, check all workspaces     |
-| `pnpm lint`         | ESLint, formatting, and relative Markdown file-target checks |
-| `pnpm format`       | Format in-scope source/configuration/onboarding files        |
-| `pnpm test`         | Supervisor failure and shutdown tests                        |
-| `pnpm test:package` | Build, lint, pack, isolated install/import/typecheck         |
-| `pnpm test:browser` | Production builds and Chromium site/MDX/vanilla smoke checks |
+| Command             | Behavior                                                         |
+| ------------------- | ---------------------------------------------------------------- |
+| `pnpm dev`          | Initial library build, library watch, and site server            |
+| `pnpm build:lib`    | Library ESM and declarations                                     |
+| `pnpm build:site`   | Library build followed by site build                             |
+| `pnpm build`        | Library, site, and vanilla production builds                     |
+| `pnpm typecheck`    | Build library, generate site types, check all workspaces         |
+| `pnpm lint`         | ESLint, formatting, and relative Markdown file-target checks     |
+| `pnpm format`       | Format in-scope source/configuration/onboarding files            |
+| `pnpm test`         | Supervisor and pure recipe/runtime tests; schema drift check     |
+| `pnpm test:package` | Build, lint, pack, isolated install/import/typecheck             |
+| `pnpm test:browser` | Production builds, Chromium audio signal/lifecycle and UI checks |
 
 For browser checks, install the browser matching the pinned Playwright version:
 
@@ -72,15 +74,20 @@ unrelated value can interfere with Next.js. CI disables Next telemetry.
 ## Package verification
 
 `pnpm test:package` validates the built ESM/declaration exports with publint,
-inspects a five-file archive allowlist, and installs that archive into a fresh
+inspects the ten-file archive allowlist (metadata/license/README plus seven
+build files), and installs that archive into a fresh
 system temporary directory using npm offline with install scripts disabled.
 The Node import and TypeScript NodeNext check use only the installed package
 for library resolution. Workspace source and browser globals are not required.
 The temporary consumer is removed afterward.
 
-The package currently exports only `workspaceStatus`. This proves the build
-boundary; it does not establish audio behavior. The runtime has zero runtime
-dependencies. The root, site, example, and runtime are all publication-guarded.
+The isolated consumer imports validation, the lazy engine, and the separately
+exported confirmation without browser globals. Structural schema and recipe
+types are generated from `scripts/recipe-descriptor.mjs` during library build.
+Use `pnpm build:lib` after descriptor edits; `pnpm test` detects generation drift.
+This package check establishes consumption and pure import behavior. Audio
+signal/lifecycle evidence comes from `pnpm test:browser`. The runtime has zero
+runtime dependencies. The root, site, example, and runtime are all publication-guarded.
 
 Formatting preserves the existing planning documents outside this step.
 Relative Markdown checks verify file targets, not remote links or heading

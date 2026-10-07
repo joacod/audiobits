@@ -30,3 +30,9 @@ body {
   outline: 2px solid #2563eb;
   outline-offset: 4px;
 }
+
+.audio-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
