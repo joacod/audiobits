@@ -2,8 +2,8 @@
 
 ## Context
 
-Normally Steps 01–05 accepted. An explicitly selected early-core scope may depend on Steps 01–03 only, with no claims about unimplemented later capabilities. This is a proposed change; no implementation or validation is implied
-by the presence of these artifacts.
+Normally Steps 01–05 accepted. An explicitly selected early-core scope may depend on Steps 01–03 only, with no claims about unimplemented later capabilities. The full Steps 01–05 candidate is now implemented for local review; actual
+checks and remaining activation gates are recorded in [verification](verification.md).
 
 ## Goals / Non-Goals
 
@@ -60,3 +60,23 @@ Recover published defects with a new version rather than overwriting artifacts.
 The npm owner/final identifier, hosting provider, and protected production
 environment are selected only when an actual release/deployment is requested.
 Release readiness can be verified locally without them; keep activation disabled.
+
+## Implemented preparation decisions
+
+Changesets 3.0.3 versions the private runtime in `rc` mode; the initial minor
+note yields `0.1.0-rc.0`. Root/site/example workspaces remain private and ignored.
+Package allowlisting deliberately includes its README, changelog, Skill and
+control reference alongside ESM, declarations, schema and generated capabilities.
+No runtime APIs or recipe definitions changed.
+
+The local package rehearsal retains ignored archive/digest evidence, installs
+that archive offline in an isolated consumer, typechecks its exact Markdown
+fences, compares unused-import output with a baseline, and runs the quick start
+and Skill host through native Chromium signal/Stop/disposal checks.
+
+Manual npm/site preparation workflows are independent, serialized and read-only.
+Their future production jobs name separate environments, are unconditionally
+disabled, and contain only a failing activation message. Reviewer protection,
+OIDC binding, bootstrap and provider packaging are unresolved activation inputs.
+Stable channel selection fails for private/prerelease packages or absent matching
+released-version/source attestations; default builds remain development/unreleased.

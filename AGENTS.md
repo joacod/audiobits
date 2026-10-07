@@ -10,7 +10,9 @@ and manual listening passed; Step 03 dynamic controls are implemented with
 automated evidence and maintainer manual acceptance. Step 04 routing/lifecycle APIs are implemented with automated evidence and
 maintainer manual acceptance;
 Step 05 gallery/docs are implemented with local automated evidence and
-maintainer manual acceptance; Step 06 remains proposed. Use the
+maintainer manual acceptance; Step 06 release preparation is implemented with
+local automated evidence and awaits candidate acceptance. Publication and
+deployment remain disabled. Use the
 roadmap and each change's verification note for current status.
 
 - Work on the explicitly selected step. Do not automatically start the next.

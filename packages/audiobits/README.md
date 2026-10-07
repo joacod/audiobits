@@ -1,40 +1,61 @@
 # AudioBits
 
-Unreleased procedural browser audio library. The private development package
-supports one-shot and sustained oscillator/noise recipes, seeded variation,
-and managed live controls. Chromium automation is the initial browser evidence.
-Confirmation passed the Step 02 maintainer listening review; the Step 03
-three-sound listening gate also passed maintainer manual verification. Browser
-and output-device details for that manual review were not supplied. Nothing has been published.
+Private, unreleased **0.1.0-rc.0** candidate. It includes confirmation, impact,
+and thruster; schema-1 recipes; play/live controls; seeded variation; bounded
+voices; buses and shared delay; native output taps; and explicit lifecycle APIs.
+Chromium is the initial browser gate. Maintainer listening acceptance for the
+unchanged sound definitions is recorded separately. Nothing has been published,
+and the final npm identifier and ownership remain unconfirmed.
 
-## Play from a gesture
+## Try the candidate locally
+
+Install the reviewed archive into your own private consumer with
+`npm install /path/to/audiobits-0.1.0-rc.0.tgz`. This is a local file install,
+not an instruction to install an existing registry package. Use a browser
+bundler and call `play()` directly from a gesture handler. Surface rejection
+with `void play().catch(showError)` and retry from a fresh gesture.
 
 ```ts
 import { createAudio } from "audiobits";
 import { confirmation } from "audiobits/recipes";
 
-const audio = createAudio(); // No context is created here.
-const sound = audio.sound(confirmation); // Pure validation and snapshot.
-
-playButton.addEventListener("click", () => {
-  void audio
-    .start()
-    .then(() => sound.play())
-    .catch(showError);
-});
-stopButton.addEventListener("click", () => audio.stopAll());
-window.addEventListener("pagehide", () => {
-  void audio.dispose();
-});
+const audio = createAudio();
+const sound = audio.sound(confirmation);
+let request = 0;
+export async function play() {
+  const token = ++request;
+  await audio.start();
+  if (token === request && !document.hidden) sound.play({ seed: 42 });
+}
+export function stop() {
+  request++;
+  audio.stopAll({ tails: "cut" });
+}
+function hide() {
+  if (document.hidden) {
+    stop();
+    void audio.suspend().catch(console.error);
+  }
+}
+document.addEventListener("visibilitychange", hide);
+export async function dispose() {
+  stop();
+  document.removeEventListener("visibilitychange", hide);
+  await audio.dispose();
+}
 ```
 
-`playButton`, `stopButton`, and `showError` belong to the host application.
-The site and vanilla workspace provide typechecked examples with teardown.
-Call `start()` synchronously in a gesture handler, then await it before playing.
-A failed start reports `AudioBitsError` with a retryable `start-failed` code.
-A resume that remains blocked times out after two wall-clock seconds; the
-context stays owned for gesture retry. This deadline does not schedule audio.
-Play before activation fails with `not-ready`; no input is queued.
+Bind `play()` and `stop()` to host controls. Call `dispose()` on navigation or
+unmount. Returning from a hidden page requires a fresh Play action.
+`createAudio()` and `audio.sound()` create no context. A failed start reports
+`AudioBitsError` with a retryable `start-failed` code. A blocked resume times out
+after two wall-clock seconds; the context stays owned for gesture retry. Play
+before activation fails with `not-ready`; no input is queued.
+
+The archive exports `audiobits/schema.json` and `audiobits/capabilities.json`.
+The latter identifies candidate version, shipped primitives and Chromium gate;
+the schema is structural, while `validateRecipe` enforces additional semantic
+limits. Agent guidance is included in [the AudioBits Skill](skill/SKILL.md).
 
 ## Supported data
 
@@ -46,7 +67,7 @@ Paths use JSON bracket notation, such as `$["layers"][0]["id"]`.
 `invalid-recipe`. The input must be plain JSON data without accessors or cycles.
 Unknown fields and versions are rejected. Validation is browser-independent.
 
-Draft schema version 1 currently supports:
+Candidate schema version 1 supports:
 
 - One-shot gates in `(0, 60]` seconds or sustained playback until Stop, with
   1–16 uniquely identified layers. Sustained recipes forbid `duration`.
@@ -206,6 +227,10 @@ an independent 5 ms stage, preserving volume automation. `audio.setMuted()`
 controls master mute, including a setting made before startup.
 
 ```ts
+import { createAudio } from "audiobits";
+import { confirmation } from "audiobits/recipes";
+const audio = createAudio();
+const sound = audio.sound(confirmation);
 // In a gesture handler, after activating this engine:
 await audio.start();
 const effects = audio.bus("effects");
@@ -253,6 +278,9 @@ frame, cancels that frame, detaches the tap, and disconnects its analyser
 before engine teardown.
 
 ```ts
+import { createAudio } from "audiobits";
+const audio = createAudio();
+// Execute in a gesture handler.
 await audio.start();
 const native = audio.native;
 const analyser = native.context.createAnalyser();

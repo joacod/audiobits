@@ -1,3 +1,4 @@
+import capabilities from "audiobits/capabilities.json" with { type: "json" };
 import { confirmation, impact, thruster } from "audiobits/recipes";
 import type { Recipe } from "audiobits";
 
@@ -31,7 +32,7 @@ export function parametersFor(recipe: Recipe, control: number) {
 export function libraryExample(recipe: Recipe, control: number, seed: number) {
   return `import { createAudio, defineSound } from "audiobits";
 
-// AudioBits 0.0.0 · local development API · unreleased
+// AudioBits ${capabilities.packageVersion} · package API
 const recipe = defineSound(${JSON.stringify(recipe, null, 2)});
 const audio = createAudio();
 const sound = audio.sound(recipe);

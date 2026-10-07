@@ -12,7 +12,7 @@ test("site uses public exports and keyboard-operated Base UI playback", async ({
     page.getByRole("heading", { name: "AudioBits", exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByText("Unreleased · 0.0.0 · Local workspace package"),
+    page.getByText("Unreleased · 0.1.0-rc.0 · Local workspace package"),
   ).toBeVisible();
   const play = page.getByRole("button", { name: "Play confirmation" });
   await play.focus();

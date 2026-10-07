@@ -35,6 +35,7 @@ test("all documentation fences and current gallery/raw examples typecheck throug
   const options: ts.CompilerOptions = {
     strict: true,
     noEmit: true,
+    resolveJsonModule: true,
     skipLibCheck: true,
     target: ts.ScriptTarget.ES2022,
     module: ts.ModuleKind.ESNext,

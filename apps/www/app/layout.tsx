@@ -1,12 +1,12 @@
+import { siteBuild } from "../lib/site-build";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { RootProvider } from "fumadocs-ui/provider/next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "AudioBits — Unreleased",
-  description:
-    "Procedural browser audio. Unreleased three-sound gallery and development documentation.",
+  title: `AudioBits — ${siteBuild.channel}`,
+  description: `Procedural browser audio. Three-sound gallery and ${siteBuild.channel.toLowerCase()} documentation.`,
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

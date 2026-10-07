@@ -53,18 +53,20 @@ pnpm --filter @audiobits/vanilla dev
 
 ## Root commands
 
-| Command             | Behavior                                                         |
-| ------------------- | ---------------------------------------------------------------- |
-| `pnpm dev`          | Initial library build, library watch, and site server            |
-| `pnpm build:lib`    | Library ESM and declarations                                     |
-| `pnpm build:site`   | Library build followed by site build                             |
-| `pnpm build`        | Library, site, and vanilla production builds                     |
-| `pnpm typecheck`    | Build library, generate site types, check all workspaces         |
-| `pnpm lint`         | ESLint, formatting, and relative Markdown file-target checks     |
-| `pnpm format`       | Format in-scope source/configuration/onboarding files            |
-| `pnpm test`         | Supervisor and pure recipe/runtime tests; schema drift check     |
-| `pnpm test:package` | Build, lint, pack, isolated install/import/typecheck             |
-| `pnpm test:browser` | Production builds, Chromium audio signal/lifecycle and UI checks |
+| Command                | Behavior                                                             |
+| ---------------------- | -------------------------------------------------------------------- |
+| `pnpm dev`             | Initial library build, library watch, and site server                |
+| `pnpm build:lib`       | Library ESM and declarations                                         |
+| `pnpm build:site`      | Library build followed by site build                                 |
+| `pnpm build`           | Library, site, and vanilla production builds                         |
+| `pnpm typecheck`       | Build library, generate site types, check all workspaces             |
+| `pnpm lint`            | ESLint, formatting, and relative Markdown file-target checks         |
+| `pnpm format`          | Format in-scope source/configuration/onboarding files                |
+| `pnpm test`            | Supervisor, recipe/runtime/release checks; schema/metadata drift     |
+| `pnpm test:package`    | Build, pack, isolated types/imports, tree-shaking and Chromium hosts |
+| `pnpm test:browser`    | Production builds, Chromium audio signal/lifecycle and UI checks     |
+| `pnpm release:prepare` | Lint, types, units, browser suite and isolated candidate rehearsal   |
+| `pnpm changeset`       | Record a scoped runtime version note                                 |
 
 For browser checks, install the browser matching the pinned Playwright version:
 
@@ -80,23 +82,28 @@ unrelated value can interfere with Next.js. CI disables Next telemetry.
 
 ## Package verification
 
-`pnpm test:package` validates the built ESM/declaration exports with publint,
-inspects the ten-file archive allowlist (metadata/license/README plus seven
-build files), and installs that archive into a fresh
+`pnpm test:package` requires the Chromium binary matching pinned Playwright.
+It validates built ESM/declaration exports with strict publint, checks the
+14-file allowlist (runtime/declarations, schema/capabilities, manifest, license,
+README, changelog and Skill/reference), and installs that archive into a fresh
 system temporary directory using npm offline with install scripts disabled.
-The Node import and TypeScript NodeNext check use only the installed package
-for library resolution. Workspace source and browser globals are not required.
-The temporary consumer is removed afterward.
+Node imports and TypeScript NodeNext checks resolve only the installed package.
+They require no workspace source or browser globals.
 
-The isolated consumer imports validation, the lazy engine, and the separately
-exported confirmation, impact, and thruster without browser globals. It also
-typechecks seeded play, live updates, bus routing/delay, cut tails, and native
-analyser cleanup through installed declarations. Structural schema and recipe
-types are generated from `scripts/recipe-descriptor.mjs` during library build.
-Use `pnpm build:lib` after descriptor edits; `pnpm test` detects generation drift.
-This package check establishes consumption and pure import behavior. Audio
-signal/lifecycle evidence comes from `pnpm test:browser`. The runtime has zero
-runtime dependencies. The root, site, example, and runtime are all publication-guarded.
+All packaged README/Skill TypeScript examples typecheck. The exact quick-start
+and controlled sound hosts execute in Chromium from an ephemeral loopback server,
+covering silent load, gesture activation, finite nonzero signal, Stop and context
+closure. An unused public runtime import fully tree-shakes against a baseline.
+The temporary consumer is removed afterward; successful candidate archive and
+digest/evidence remain under ignored `node_modules/.cache/audiobits-release/`.
+
+Schema, types and capabilities are generated during library build. Use
+`pnpm build:lib` after descriptor or version edits; `pnpm test` detects drift.
+The broader `pnpm test:browser` suite supplies UI, native signal, resource and
+lifecycle regressions. Neither kind of automation establishes listening quality.
+CI installs Chromium before either check. The runtime has zero runtime
+dependencies; all workspaces remain publication-guarded. See
+[release preparation](releases.md) for the aggregate gate and activation boundary.
 
 Formatting preserves the existing planning documents outside this step.
 Relative Markdown checks verify file targets, not remote links or heading
