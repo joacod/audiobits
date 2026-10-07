@@ -72,7 +72,7 @@ test("dynamic offline extrema, seeded replay, loop seams, rapid updates and rele
     return output;
   });
   console.log(
-    `Dynamic signal Chromium ${browser.version()}: ${JSON.stringify(result)}`,
+    `Dynamic signal ${browser.browserType().name()} ${browser.version()}: ${JSON.stringify(result)}`,
   );
   for (const signal of result) {
     expect(signal.peak).toBeGreaterThan(0.001);

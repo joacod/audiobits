@@ -23,7 +23,7 @@ Windows process-tree termination has not been verified.
 
 The site uses Next.js with webpack, Fumadocs MDX, Tailwind, and Base UI
 buttons with labelled native controls. webpack is the verified path for this foundation; Turbopack's MDX
-worker failed in the validation environment. The three-sound gallery and recipe editor use the existing stack; optional
+worker failed in the validation environment. The eight-sound gallery and recipe editor use the existing stack; optional
 visualization libraries are not required. Changesets remain release work.
 
 ## Local package edits
@@ -56,18 +56,18 @@ pnpm --filter @audiobits/vanilla dev
 | `pnpm format`          | Format in-scope source/configuration/onboarding files                |
 | `pnpm test`            | Supervisor, recipe/runtime/release checks; schema/metadata drift     |
 | `pnpm test:package`    | Build, pack, isolated types/imports, tree-shaking and Chromium hosts |
-| `pnpm test:browser`    | Production builds, Chromium audio signal/lifecycle and UI checks     |
+| `pnpm test:browser`    | Production builds, three-engine audio signal/lifecycle and UI checks |
 | `pnpm release:prepare` | Lint, types, units, browser suite and isolated candidate rehearsal   |
 | `pnpm changeset`       | Record a scoped runtime version note                                 |
 
 For browser checks, install the browser matching the pinned Playwright version:
 
 ```sh
-pnpm exec playwright install chromium
+pnpm exec playwright install chromium firefox webkit
 pnpm test:browser
 ```
 
-CI uses `playwright install --with-deps chromium` on Linux. The browser suite
+CI uses `playwright install --with-deps chromium firefox webkit` on Linux. The browser suite
 starts its own site on port 3100 and vanilla preview on port 4173. Neither port
 may already be occupied. Keep `NODE_ENV` unset for normal local commands; an
 unrelated value can interfere with Next.js. CI disables Next telemetry.
@@ -82,7 +82,7 @@ system temporary directory using npm offline with install scripts disabled.
 Node imports and TypeScript NodeNext checks resolve only the installed package.
 They require no workspace source or browser globals.
 
-All packaged README/Skill TypeScript examples typecheck. The exact quick-start
+All packaged README/Skill TypeScript examples typecheck. The exact quick-start, production lifecycle
 and controlled sound hosts execute in Chromium from an ephemeral loopback server,
 covering silent load, gesture activation, finite nonzero signal, Stop and context
 closure. An unused public runtime import fully tree-shakes against a baseline.
@@ -93,7 +93,7 @@ Schema, types and capabilities are generated during library build. Use
 `pnpm build:lib` after descriptor or version edits; `pnpm test` detects drift.
 The broader `pnpm test:browser` suite supplies UI, native signal, resource and
 lifecycle regressions. Neither kind of automation establishes listening quality.
-CI installs Chromium before either check. The runtime has zero runtime
+CI installs all three engines before the browser matrix and Chromium package check. The runtime has zero runtime
 dependencies; all workspaces remain publication-guarded. See
 [release preparation](releases.md) for the aggregate gate and activation boundary.
 
@@ -110,7 +110,7 @@ separate and label development documentation distinctly from a stable release.
 
 ## Gallery examples
 
-The gallery at `/sounds` and its three stable sound routes keep one engine per
+The gallery at `/sounds` and its eight sound routes keep one engine per
 mounted session. The mixer remains visible while scrolling. Reset restores the
 bundled recipe, primary controls, and seed 42. JSON Apply reports validation
 issues and preserves last-valid playback; applying valid data stops current

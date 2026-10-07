@@ -1,6 +1,6 @@
 import { OwnedBus } from "./bus";
 import type { Bus } from "./bus";
-import { defineSound, AudioBitsError } from "../recipe/validate";
+import { validateRecipe, AudioBitsError } from "../recipe/validate";
 import type { Recipe } from "../recipe/generated";
 import {
   controlsFor,
@@ -222,7 +222,14 @@ export function createEngine(
   function bindSound(input: unknown): Sound;
   function bindSound(input: unknown): Sound {
     terminal();
-    const recipe = defineSound(input);
+    const result = validateRecipe(input);
+    if (!result.ok)
+      throw new AudioBitsError(
+        "invalid-recipe",
+        "Recipe validation failed.",
+        result.issues,
+      );
+    const recipe = result.recipe;
 
     let disposed = false;
     const sound: Sound = {

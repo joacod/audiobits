@@ -4,31 +4,31 @@ Use existing unit, type, browser and packed-package checks. Historical acceptanc
 is separate from new sound acceptance. Record meaningful results in the PR;
 a recurring evidence-document process is not required.
 
-## Initial browser policy
+## Browser policy
 
-Use Playwright Chromium as the only initial automated browser project. Record
-the pinned Playwright version and actual browser version with failures and
-release evidence. Chromium-first narrows coverage; it does not justify a claim
-that Firefox, Safari, WebKit, or mobile are supported.
+Playwright projects cover Chromium, Firefox and WebKit for the release candidate.
+Record the pinned Playwright version and actual engine versions with failures
+and release evidence. WebKit automation is not physical Safari/iOS evidence.
+Listening, background interruptions and device changes need separate review.
 
-Do not add workarounds for hypothetical browser differences. Design lifecycle
-states explicitly and fix behavior observed in the initial target. Broader
-compatibility is a separate post-core milestone.
+Fix observed differences rather than adding hypothetical workarounds. Compare
+signal properties within each engine; native sample identity across engines is
+not guaranteed. Chromium remains the isolated packed-consumer browser gate.
 
 ## Checks by boundary
 
-| Boundary          | Evidence                                                                                                               |
-| ----------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| Pure recipe layer | Valid/invalid fixtures, unknown keys/versions, bounds, JSON round trip, immutable snapshot, stable issue paths         |
-| Compiler          | Parameter extrema, reference resolution, automation order, duration/release calculation, seeded choices                |
-| Native signal     | Chromium OfflineAudioContext: finite samples, non-silence, expected duration, energy regions, peak/headroom            |
-| Live engine       | Chromium AudioContext: gesture start, overlap, scheduled cancellation, stop/dispose, pending-start races, voice limits |
-| Site              | Keyboard controls, error recovery, mute/stop, route cleanup, development/release labels, example typechecking          |
-| Package           | Built ESM exports, declarations, metadata, tree-shaking check, SSR-safe import, isolated tarball consumer              |
+| Boundary          | Evidence                                                                                                             |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Pure recipe layer | Valid/invalid fixtures, unknown keys/versions, bounds, JSON round trip, immutable snapshot, stable issue paths       |
+| Compiler          | Parameter extrema, reference resolution, automation order, duration/release calculation, seeded choices              |
+| Native signal     | Matrix OfflineAudioContext: finite samples, non-silence, expected duration, energy regions, peak/headroom            |
+| Live engine       | Matrix AudioContext: gesture start, overlap, scheduled cancellation, stop/dispose, pending-start races, voice limits |
+| Site              | Keyboard controls, error recovery, mute/stop, route cleanup, development/release labels, example typechecking        |
+| Package           | Built ESM exports, declarations, metadata, tree-shaking check, SSR-safe import, isolated tarball consumer            |
 
 Offline rendering can test signal properties, but not autoplay, actual device
 interruption, page lifecycle, or live context cleanup. Mocks can test race logic,
-but the corresponding public workflow also needs a real Chromium check.
+but the corresponding public workflow also needs a real browser check.
 
 ## Initial measurable budgets
 
@@ -76,10 +76,8 @@ claims. Check relative Markdown links. Preserve the license.
 Record the scope of review accurately: a local content review does not establish
 that remote Git history, hosted previews, or registry artifacts were inspected.
 
-## Later compatibility work
+## Real-device follow-up
 
-After core acceptance, run the same browser suite against Firefox and WebKit,
-then perform real Safari/iOS and mobile listening/lifecycle checks. Specifically
-exercise backgrounding, interruption, device changes, and repeated user activation.
-Label automation separately from real-device evidence and expand support claims
-only to the validated scope.
+After engine automation, perform real Safari/iOS and mobile listening/lifecycle
+checks. Exercise backgrounding, interruption, device changes and repeated user
+activation. Expand support claims only to the validated scope.

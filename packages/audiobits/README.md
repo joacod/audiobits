@@ -3,7 +3,8 @@
 Private, unreleased **0.1.0-rc.0** candidate. It includes confirmation, impact, thruster, tactile click, gentle rejection,
 glass notification, whoosh and power-up; schema-1 recipes; play/live controls; seeded variation; bounded
 voices; buses and shared delay; native output taps; and explicit lifecycle APIs.
-Chromium is the initial browser gate. Maintainer listening acceptance for the
+Chromium, Firefox and Playwright WebKit are the automated candidate matrix.
+Physical Safari/iOS and mobile devices are not verified. Maintainer listening acceptance for the
 unchanged sound definitions is recorded separately. Nothing has been published,
 and the final npm identifier and ownership remain unconfirmed.
 
@@ -75,13 +76,13 @@ after two wall-clock seconds; the context stays owned for gesture retry. Play
 before activation fails with `not-ready`; no input is queued.
 
 The archive exports `audiobits/schema.json` and `audiobits/capabilities.json`.
-The latter identifies candidate version, shipped primitives and Chromium gate;
+The latter identifies candidate version, shipped primitives, initial Chromium gate and candidate browser matrix;
 the schema is structural, while `validateRecipe` enforces additional semantic
 limits. Agent guidance is included in [the AudioBits Skill](skill/SKILL.md).
 
 ## Supported data
 
-`defineSound(recipe)` preserves literal parameter names and modes, validates and returns a deeply frozen `Recipe` snapshot.
+`defineSound(recipe)` accepts typed authored data, preserves literal parameter names and modes, validates and returns a deeply frozen `Recipe` snapshot.
 For external JSON, `validateRecipe(unknown)` returns `{ ok: true, recipe }` or
 `{ ok: false, issues }`; every issue has `code`, `path`, and `message`.
 Paths use JSON bracket notation, such as `$["layers"][0]["id"]`.

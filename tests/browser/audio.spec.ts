@@ -14,11 +14,12 @@ interface Checks {
   lifecycle(): Promise<unknown>;
 }
 
-test("Chromium offline signal, overlap, cancellation and release", async ({
+test("Native offline signal, overlap, cancellation and release", async ({
   page,
   browser,
+  browserName,
 }) => {
-  console.log(`Audio checks: Chromium ${browser.version()}`);
+  console.log(`Audio checks: ${browserName} ${browser.version()}`);
   await page.goto("http://127.0.0.1:4173");
   await page.addScriptTag({
     path: resolve(
@@ -50,7 +51,7 @@ test("Chromium offline signal, overlap, cancellation and release", async ({
   expect(output.stop.delta).toBeLessThan(0.001);
 });
 
-test("Chromium native lifecycle and simulated failed activation retry", async ({
+test("Native lifecycle and simulated failed activation retry", async ({
   page,
 }) => {
   await page.goto("http://127.0.0.1:4173");
@@ -137,7 +138,13 @@ test("vanilla gesture and controls work with built public exports", async ({
   await expect(page.locator("#audio-error")).toBeEmpty();
 });
 
-test("actual Chromium autoplay block times out and retries from a gesture", async () => {
+test("actual Chromium autoplay block times out and retries from a gesture", async ({
+  browserName,
+}) => {
+  test.skip(
+    browserName !== "chromium",
+    "Chromium-specific autoplay launch policy",
+  );
   const { chromium } = await import("@playwright/test");
   const { readFile } = await import("node:fs/promises");
   const browser = await chromium.launch({

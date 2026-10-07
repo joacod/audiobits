@@ -43,3 +43,8 @@ if (result.ok)
   audio.sound(result.recipe).play({ parameters: { hostControl: 0.5 } });
 const broad: Recipe = authored;
 audio.sound(broad).play({ parameters: { dynamic: 0.5 } });
+
+// @ts-expect-error External data must be validated before typed authoring
+defineSound(external);
+// @ts-expect-error Invalid schema is rejected at the authoring boundary
+defineSound({ schemaVersion: 2, kind: "one-shot", layers: [] });

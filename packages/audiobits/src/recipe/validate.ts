@@ -371,7 +371,6 @@ export class AudioBitsError extends Error {
   }
 }
 export function defineSound<const R extends Recipe>(input: R): R;
-export function defineSound(input: unknown): Recipe;
 export function defineSound(input: unknown): Recipe {
   const result = validateRecipe(input);
   if (!result.ok)

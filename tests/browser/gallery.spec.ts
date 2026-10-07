@@ -311,7 +311,7 @@ test("raw comparisons match managed dry signals, seeded noise, live smoothing an
     expect(result.latePeak).toBe(0);
   }
   console.log(
-    `Raw comparison Chromium ${browser.version()}: ${results.length} scenarios; max difference ${Math.max(...results.map((r) => r.difference))}`,
+    `Raw comparison ${browser.browserType().name()} ${browser.version()}: ${results.length} scenarios; max difference ${Math.max(...results.map((r) => r.difference))}`,
   );
 });
 

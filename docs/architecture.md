@@ -16,7 +16,7 @@ packages/audiobits/
   src/compiler/            Internal execution plan and native graph construction
   src/runtime/             Engine, Sound, Voice, resource ownership
   src/recipes/             Curated recipes, separately exported
-  tests/                   Unit and Chromium audio checks
+  tests/                   Unit and browser-matrix audio checks
 examples/vanilla/          Private consumer using only public package exports
   skill/                  Installed-version consumer guidance
 docs/                     Contributor design and roadmap

@@ -3,7 +3,8 @@
 The gallery uses a demo registry outside recipes and controls derived from accepted
 parameter declarations. One engine owns the mounted session. Selected raw comparisons
 cover the original trio; new sounds use the same bounded recipe editor and lifecycle.
-Optional visualization integrations are not installed dependencies.
+A caller-owned analyser displays live output with reduced-motion handling.
+No visualization dependency or extra audio context is required.
 
 ## First interaction
 
@@ -41,11 +42,10 @@ type, one accent family, generous space around controls, and clear focus states.
 Visualization should reveal the sound's behavior. Avoid covering the page with
 unrelated motion or presenting a dense DAW mixer as the default experience.
 
-shadcn/ui with Base UI supplies common controls. Fumadocs owns documentation
-navigation and MDX content. Consider audiocn meters/waveforms after verifying
-they accept the engine's output without another context or microphone request.
-React Bits is optional for a small number of purposeful presentation treatments.
-Review dependency cost and license notices for copied components before import.
+Base UI buttons and labelled native inputs supply controls. Fumadocs owns
+documentation navigation and MDX content. The existing theme tokens remain the
+visual authority; sound-specific labels and endpoint text live in the gallery
+registry rather than in serialized recipes.
 
 Drive visualizers from an analyser attached to the owned graph; do not route
 duplicate audio to the destination. Keep animation-frame updates out of React
@@ -82,5 +82,5 @@ supported simply because they appear in a planning document.
 A visitor can discover a sound, play it, hear a meaningful control change,
 stop it, and copy a working example without reading the architecture. Check
 Chromium desktop plus a narrow viewport; this layout check is not mobile-browser
-compatibility certification. The first gallery can ship with the three core
-sounds; additional recipes require their own listening acceptance.
+compatibility certification. The eight bundled sounds have automated signal
+checks; the five new definitions require their own listening acceptance.

@@ -40,7 +40,7 @@ deployment fails, retain its prior deployment and report the temporary mismatch.
 Release preparation verifies the implemented sound set and reasonable 0.1 API:
 
 - Eight working sounds with documented controls and cleanup behavior.
-- Focused unit tests and Chromium runtime/browser checks pass.
+- Focused unit tests and Chromium/Firefox/WebKit runtime/browser checks pass.
 - Listening review confirms the shipped sounds and control transitions.
 - Clean tarball consumption verifies ESM imports, declarations, and browser use.
 - Node import/recipe validation works without browser globals or side effects.
@@ -101,16 +101,16 @@ Run the preparation gate from the repository root under the pinned Node version:
 
 ```sh
 pnpm install --frozen-lockfile
-pnpm exec playwright install chromium
+pnpm exec playwright install chromium firefox webkit
 pnpm release:prepare
 ```
 
-`release:prepare` runs lint, types, units, the full Chromium integration suite,
+`release:prepare` runs lint, types, units, the Chromium/Firefox/WebKit integration suite,
 and the isolated packed-package check. `pnpm test:package` is also a focused
 rehearsal: strict publint, a complete archive allowlist/content review, offline
 consumer install, Node imports without browser globals, declaration resolution,
 metadata versions, packaged Markdown examples, unused-import tree-shaking, and
-native Chromium playback/Stop/disposal of the exact quick start and Skill host.
+native Chromium playback/Stop/disposal of the exact quick start, production lifecycle and Skill host.
 It starts an ephemeral loopback server and requires the installed Chromium binary.
 No registry authentication, registry write or hosting account is used.
 
@@ -189,3 +189,20 @@ new versions; website rollback changes only the hosting deployment.
 Current PR checks and ignored archive evidence identify actual candidate bytes.
 Foundation acceptance is historical; new sounds and exact candidate artifacts
 need listening review before release. Production inputs remain unresolved.
+
+### Current local verification gap
+
+The 2026-10-07 candidate run used pinned Node 24.21.0, pnpm 12.9.1 and
+Playwright 1.63.0. Lint, types, 47 units, production builds, 30 Chromium and
+29 WebKit checks passed. The Chromium-specific autoplay check was intentionally
+skipped in the two other projects. Firefox failed before page creation with
+`Could not find profile folder`; changing its temporary directory did not help.
+This matches the [reported macOS 27 launch issue](https://github.com/microsoft/playwright/issues/42768).
+The Linux CI matrix is configured but has not been observed. The aggregate
+`release:prepare` gate therefore remains unpassed. The separate packed-consumer
+rehearsal passed, including all eight exports, installed authoring types, six
+packaged examples and three native Chromium host executions.
+
+Firefox execution, new-sound listening acceptance and physical-device review
+remain release follow-ups. No privacy permission, installed browser branding,
+publication guard or deployment guard was changed to obtain these results.

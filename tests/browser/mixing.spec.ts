@@ -63,7 +63,7 @@ test("native offline delay has bounded tails and an adapted running cut fades to
     }
   }
   console.log(
-    `Mixing signal Chromium ${browser.version()}: ${JSON.stringify(results)}`,
+    `Mixing signal ${browser.browserType().name()} ${browser.version()}: ${JSON.stringify(results)}`,
   );
 });
 test("native combined routing/effects stress returns to bus and engine baselines", async ({

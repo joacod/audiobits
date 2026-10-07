@@ -19,7 +19,7 @@ can inspect and validate that data without generating arbitrary Web Audio code.
 
 ## First working core
 
-The core milestone is three convincing experiences: a refined confirmation,
+The foundation milestone established three experiences: a refined confirmation,
 an impact controlled by intensity, and a sustained thruster controlled by
 throttle. Each has a small public API example and a Chromium demonstration.
 
@@ -34,8 +34,8 @@ documentation. A pretty gallery or a passing mock suite alone is insufficient.
 ## Product iteration
 
 Buses, lifecycle controls, a gallery, docs and an installed-version Skill exist.
-Prove the model with eight useful sounds and refine TypeScript usage before
-expanding the engine. Let sound behavior drive the showcase. Final automation
+Eight bundled sounds now use the same primitives and recipe-aware TypeScript
+API. Review their listening quality before expanding the engine. Let sound behavior drive the showcase. Final automation
 includes Chromium, Firefox and WebKit; physical Safari/iOS, mobile listening and
 device interruption need separate evidence.
 

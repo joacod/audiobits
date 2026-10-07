@@ -8,7 +8,8 @@ description: Integrate AudioBits procedural sounds into a browser application, i
 This guide ships with the private 0.1.0-rc.0 candidate. Confirm the installed
 package version and read `audiobits/capabilities.json` and
 `audiobits/schema.json` before choosing primitives. Candidate metadata describes
-shipped behavior, not registry availability. Chromium is the current browser gate.
+shipped behavior, not registry availability. Chromium, Firefox and Playwright WebKit form the automated candidate matrix.
+Physical Safari/iOS and mobile-device support is not established.
 
 Use public imports from `audiobits` and `audiobits/recipes`. Create engines and
 sounds without browser activation, then invoke `start()` synchronously inside

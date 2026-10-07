@@ -18,6 +18,10 @@ test("all documentation fences and current gallery/raw examples typecheck throug
     for (const match of text.matchAll(/```ts\n([\s\S]*?)```/g))
       snippets.push(match[1]);
   }
+  for (const match of readFileSync("README.md", "utf8").matchAll(
+    /```ts\n([\s\S]*?)```/g,
+  ))
+    snippets.push(match[1]);
   const raw = readFileSync("apps/www/lib/raw-example.ts", "utf8");
   for (const kind of Object.keys(sounds) as (keyof typeof sounds)[]) {
     for (const control of [0, 0.5, 1]) {

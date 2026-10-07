@@ -87,6 +87,12 @@ try {
     join(consumer, "index.ts"),
     'import { workspaceStatus, createAudio, defineSound, validateRecipe } from "audiobits"; import { confirmation, impact, thruster } from "audiobits/recipes"; const status: string = workspaceStatus; const audio = createAudio(); const recipe = defineSound(confirmation); audio.sound(recipe); const dynamic = () => { const voice = audio.sound(thruster).play({ seed: 42, parameters: { throttle: 0.2 } }); voice.set({ throttle: 1 }); const bus = audio.bus("effects"); bus.setDelay({ seconds: 0.2, feedback: 0.5, wet: 0.3 }); bus.setGainDb(-6, 0.1); bus.setMuted(true); bus.setParent(audio.master); audio.sound(impact).play({ bus }); const analyser = audio.native.context.createAnalyser(); const detach = audio.native.connect(analyser); detach(); analyser.disconnect(); audio.stopAll({ tails: "cut" }); bus.dispose(); const seed: number = voice.seed; audio.sound(impact).play({ parameters: { intensity: 1 }, seed }); voice.stop(); }; void dynamic; console.log(status, validateRecipe(recipe)); void audio.dispose();\n',
   );
+  await writeFile(
+    join(consumer, "authoring.types.ts"),
+    (await readFile("packages/audiobits/tests/authoring.types.ts", "utf8"))
+      .replaceAll("../src/recipes/index", "audiobits/recipes")
+      .replaceAll("../src/index", "audiobits"),
+  );
   run(
     process.execPath,
     [
@@ -100,6 +106,7 @@ try {
       "--target",
       "ES2022",
       "index.ts",
+      "authoring.types.ts",
     ],
     consumer,
   );
@@ -113,13 +120,14 @@ try {
     assert.equal(typeof window, 'undefined');
     assert.equal(typeof AudioContext, 'undefined');
     const { workspaceStatus, createAudio, defineSound, validateRecipe } = await import('audiobits');
-    const { confirmation, impact, thruster } = await import('audiobits/recipes');
+    const recipes = await import('audiobits/recipes');
     const { default: schema } = await import('audiobits/schema.json', { with: { type: 'json' } });
     const { default: capabilities } = await import('audiobits/capabilities.json', { with: { type: 'json' } });
+    assert.deepEqual(Object.keys(recipes).sort(), capabilities.curatedRecipes.toSorted());
     assert.equal(capabilities.schemaVersion, schema.$defs.OneShotRecipe.properties.schemaVersion.const);
-    for (const recipe of [confirmation, impact, thruster]) assert.ok(validateRecipe(recipe).ok);
+    for (const recipe of Object.values(recipes)) assert.ok(validateRecipe(recipe).ok);
     const audio = createAudio();
-    for (const recipe of [confirmation, impact, thruster]) audio.sound(defineSound(recipe));
+    for (const recipe of Object.values(recipes)) audio.sound(defineSound(recipe));
     assert.equal(audio.state, 'idle');
     await audio.dispose();
     assert.equal(workspaceStatus, 'AudioBits workspace ready');
@@ -245,7 +253,7 @@ try {
   evidence.treeShaking = true;
   // Execute exact packaged host examples, adding only caller-owned signal probes.
   for (const example of examples.filter(
-    ({ file, index }) => file !== "README.md" || index === 0,
+    ({ file, index }) => file !== "README.md" || index <= 1,
   )) {
     await writeFile(
       join(consumer, `${example.name}-browser.ts`),
@@ -304,7 +312,7 @@ Object.assign(globalThis, { probe });`,
     browser = await chromium.launch();
     evidence.chromium = browser.version();
     for (const example of examples.filter(
-      ({ file, index }) => file !== "README.md" || index === 0,
+      ({ file, index }) => file !== "README.md" || index <= 1,
     )) {
       const page = await browser.newPage();
       const errors = [];
