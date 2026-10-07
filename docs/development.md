@@ -87,7 +87,11 @@ They require no workspace source or browser globals.
 All packaged README/Skill TypeScript examples typecheck. The exact quick-start, production lifecycle
 and controlled sound hosts execute in Chromium from an ephemeral loopback server,
 covering silent load, gesture activation, finite nonzero signal, Stop and context
-closure. An unused public runtime import fully tree-shakes against a baseline.
+closure. The test-owned analyser attaches on the running notification before
+the example schedules playback; bounded in-page observation survives delayed
+automation reads. Failure diagnostics include the example, audio clock, engine
+state and voice counts. Stop polls for silence and zero owned voices rather than
+assuming a fixed wall-clock delay. An unused public runtime import fully tree-shakes against a baseline.
 The temporary consumer is removed afterward; successful candidate archive and
 digest/evidence remain under ignored `node_modules/.cache/audiobits-release/`.
 
