@@ -22,6 +22,45 @@ async function instrument(page: import("@playwright/test").Page) {
   });
 }
 
+test("recipe disclosures defer contents and preserve drafts across close and reopen", async ({
+  page,
+}) => {
+  await instrument(page);
+  await page.goto("http://127.0.0.1:3100/sounds");
+  await expect(page.locator(".recipe-tools textarea")).toHaveCount(0);
+  await expect(page.locator(".recipe-tools pre")).toHaveCount(0);
+  const summary = page.locator("#impact summary");
+  const editor = page.getByRole("textbox", { name: "impact recipe JSON" });
+  await summary.click();
+  await expect(editor).toBeVisible();
+  await editor.fill("{");
+  await page
+    .getByRole("button", { name: "Apply impact recipe", exact: true })
+    .click();
+  await expect(page.locator("#impact [role=alert]")).toContainText(
+    "Not applied",
+  );
+  await summary.click();
+  await expect(page.locator(".recipe-tools textarea")).toHaveCount(0);
+  await summary.click();
+  await expect(editor).toHaveValue("{");
+  await expect(page.locator("#impact [role=alert]")).toContainText(
+    "Not applied",
+  );
+  await summary.click();
+  await page.getByRole("button", { name: "Reset impact", exact: true }).click();
+  await summary.click();
+  await expect(editor).not.toHaveValue("{");
+  await expect(page.locator("#impact [role=alert]")).toHaveCount(0);
+  expect(
+    await page.evaluate(
+      () =>
+        (globalThis as unknown as { galleryContexts: unknown[] })
+          .galleryContexts.length,
+    ),
+  ).toBe(0);
+});
+
 test("gallery editing preserves last valid sound; copied values, seeds and restoration follow controls", async ({
   page,
 }) => {
