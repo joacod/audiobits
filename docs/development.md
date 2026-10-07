@@ -3,7 +3,9 @@
 The workspace foundation, recipe playback, and Step 03 dynamic controls are
 implemented. Step 04 adds buses, shared delay, native analyser taps, and hide
 cleanup; maintainer manual acceptance is complete. [Step 04 verification](../openspec/changes/04-mixing-and-lifecycle/verification.md)
-records the automated routing/lifecycle gate. [Step 03 verification](../openspec/changes/03-dynamic-sounds/verification.md)
+records the automated routing/lifecycle gate. [Step 05 verification](../openspec/changes/05-gallery-and-docs/verification.md)
+records gallery/docs implementation, automated checks, and maintainer manual
+acceptance. [Step 03 verification](../openspec/changes/03-dynamic-sounds/verification.md)
 records automated checks and maintainer listening acceptance. See
 [Step 02 verification](../openspec/changes/02-recipe-playback/verification.md)
 for playback evidence and maintainer manual verification;
@@ -27,15 +29,16 @@ prevents site startup. A child failure stops the other process and returns a
 failure status; Ctrl+C stops both and their process groups on macOS/Linux.
 Windows process-tree termination has not been verified.
 
-The site uses Next.js with webpack, Fumadocs MDX, Tailwind, and a small Base UI
-control. webpack is the verified path for this foundation; Turbopack's MDX
-worker failed in the validation environment. shadcn presentation components,
-Changesets, and gallery design are deferred until a step uses them.
+The site uses Next.js with webpack, Fumadocs MDX, Tailwind, and Base UI
+buttons with labelled native controls. webpack is the verified path for this foundation; Turbopack's MDX
+worker failed in the validation environment. The three-sound gallery and recipe editor use the existing stack; optional
+visualization libraries are not required. Changesets remain release work.
 
 ## Local package edits
 
-Edit `packages/audiobits/src/index.ts` while `pnpm dev` runs. After tsdown emits
-the change, reload the page to see the updated `workspaceStatus` value. The site
+Edit a bundled definition in `packages/audiobits/src/recipes/index.ts` while
+`pnpm dev` runs. After tsdown emits the change, reload `/sounds`, open that
+sound's Recipe & code disclosure, and inspect the updated JSON before Play. The site
 uses `transpilePackages` and imports `audiobits` through its public exports,
 which point to `dist`; it never aliases library source. A refresh is the
 supported verification path; state-preserving hot updates are not promised.
@@ -110,3 +113,18 @@ The site consumes the local runtime without a version bump or npm publication.
 provider, deployment credentials, npm workflow, or publication target is enabled.
 Future delivery must keep [site deployment and npm releases](releases.md)
 separate and label development documentation distinctly from a stable release.
+
+## Gallery examples
+
+The gallery at `/sounds` and its three stable sound routes keep one engine per
+mounted session. The mixer remains visible while scrolling. Reset restores the
+bundled recipe, primary controls, and seed 42. JSON Apply reports validation
+issues and preserves last-valid playback; applying valid data stops current
+voices. No JavaScript text is evaluated.
+
+`pnpm test` typechecks every TypeScript docs fence and generated examples across
+control/seed extrema through public exports. `pnpm test:browser` bundles the
+exact displayed host examples, then exercises activation, Stop, and disposal
+alongside signal equivalence and the gallery UI. Generated inputs/bundles and
+browser artifacts stay under ignored directories. This evidence is distinct
+from the maintainer-reported listening acceptance.

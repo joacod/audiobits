@@ -416,39 +416,68 @@ Object.assign(globalThis, { dynamicSignal, dynamicLifecycle });
 async function mixingSignal(rate: number, cut: boolean) {
   const { OwnedBus } = await import("../../packages/audiobits/src/runtime/bus");
   const context = new OfflineAudioContext(1, rate * 7, rate);
+  // Offline rendering must pause before a main-thread operation. Source
+  // onended delivery can lag the render thread and is not a scheduling clock.
+  // Only the state used by cut() is adapted: test its running fade branch while
+  // native offline nodes are paused at a deterministic audio-clock position.
+  let runningCut = false;
+  const busContext = new Proxy(context, {
+    get(target, key) {
+      if (key === "state" && runningCut) return "running";
+      const value = Reflect.get(target, key, target);
+      return typeof value === "function" ? value.bind(target) : value;
+    },
+  });
   const bus = new OwnedBus(
     "master",
-    context as unknown as AudioContext,
+    busContext as unknown as AudioContext,
     {},
     null,
     () => {},
     -12,
   );
   bus.setDelay({ seconds: 0.2, feedback: 0.9, wet: 0.5 });
-  createGraph(context, bus.input, compile(confirmation), 0.05, 0, 0, () =>
-    bus.tail(),
-  );
+  const plan = compile(confirmation);
+  const at = 0.05;
+  createGraph(context, bus.input, plan, at, 0, 0, () => {});
+  const pauses = [
+    context.suspend(at + plan.lifetime).then(() => {
+      bus.tail();
+      return context.resume();
+    }),
+  ];
+  let cutAt: number | null = null;
   if (cut) {
-    const trigger = context.createOscillator();
-    trigger.onended = () => {
-      bus.cut();
-      trigger.disconnect();
-    };
-    trigger.start();
-    trigger.stop(0.4);
+    pauses.push(
+      context.suspend(0.4).then(() => {
+        cutAt = context.currentTime;
+        runningCut = true;
+        try {
+          bus.cut();
+        } finally {
+          runningCut = false;
+        }
+        return context.resume();
+      }),
+    );
   }
-  const data = (await context.startRendering()).getChannelData(0);
-  let tailEnergy = 0,
+  const rendering = context.startRendering();
+  await Promise.all(pauses);
+  const data = (await rendering).getChannelData(0);
+  let fadeEnergy = 0,
+    tailEnergy = 0,
     latePeak = 0,
     peak = 0;
   for (let i = 0; i < data.length; i++) {
     require(Number.isFinite(data[i]), "Nonfinite delay output");
     peak = Math.max(peak, Math.abs(data[i]));
+    if (cutAt !== null && i > rate * cutAt && i < rate * (cutAt + 0.005))
+      fadeEnergy += data[i] ** 2;
     if (i > rate * 0.5 && i < rate) tailEnergy += data[i] ** 2;
     if (i > rate * 6) latePeak = Math.max(latePeak, Math.abs(data[i]));
   }
   bus.destroy();
-  return { rate, cut, tailEnergy, latePeak, peak };
+  return { rate, cut, cutAt, fadeEnergy, tailEnergy, latePeak, peak };
 }
 async function mixingLifecycle() {
   const context = new AudioContext();
@@ -513,3 +542,85 @@ async function mixingLifecycle() {
   return { peakNodes, finalNodes: live.size, state: audio.state };
 }
 Object.assign(globalThis, { mixingSignal, mixingLifecycle });
+
+// Comparison source is the exact standalone module displayed by the gallery.
+async function comparisonSignal(
+  rate: number,
+  kind: "confirmation" | "impact" | "thruster",
+  control: number,
+  seed: number,
+  action: "natural" | "early" | "live" | "cancel" = "natural",
+) {
+  const { playRaw } = await import("../../apps/www/lib/raw-example");
+  async function render(raw: boolean) {
+    const context = new OfflineAudioContext(1, rate * 2, rate);
+    const recipe = { confirmation, impact, thruster }[kind];
+    const graph = raw
+      ? playRaw(context, kind, control, seed, 0.05)
+      : createGraph(
+          context,
+          context.destination,
+          compile(
+            recipe,
+            kind === "confirmation"
+              ? {}
+              : { [kind === "impact" ? "intensity" : "throttle"]: control },
+            seed,
+          ),
+          0.05,
+          -12,
+          0,
+          () => {},
+        );
+    if (action === "cancel") graph.stop();
+    const pauses: Promise<void>[] = [];
+    if (action === "early")
+      pauses.push(
+        context.suspend(0.07).then(() => {
+          graph.stop();
+          return context.resume();
+        }),
+      );
+    else if (kind === "thruster" && action !== "cancel") {
+      if (action === "live")
+        for (const [time, value] of [
+          [0.3, 1],
+          [0.32, 0],
+          [0.34, 0.75],
+          [0.6, 0.2],
+        ])
+          pauses.push(
+            context.suspend(time).then(() => {
+              if ("setThrottle" in graph) graph.setThrottle(value);
+              else graph.set({ throttle: value });
+              return context.resume();
+            }),
+          );
+      pauses.push(
+        context.suspend(1.2).then(() => {
+          graph.stop();
+          return context.resume();
+        }),
+      );
+    }
+    const rendering = context.startRendering();
+    await Promise.all(pauses);
+    const data = (await rendering).getChannelData(0);
+    if ("ended" in graph) await graph.ended;
+    return data;
+  }
+  const managed = await render(false),
+    raw = await render(true);
+  let difference = 0,
+    energy = 0,
+    latePeak = 0;
+  for (let i = 0; i < managed.length; i++) {
+    require(Number.isFinite(raw[i]) &&
+      Number.isFinite(managed[i]), "Nonfinite comparison");
+    difference = Math.max(difference, Math.abs(managed[i] - raw[i]));
+    energy += raw[i] ** 2;
+    if (i > rate * 1.6) latePeak = Math.max(latePeak, Math.abs(raw[i]));
+  }
+  return { difference, energy, latePeak };
+}
+Object.assign(globalThis, { comparisonSignal });

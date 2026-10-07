@@ -1,0 +1,52 @@
+---
+title: Playback and lifecycle
+description: Own definitions, voices, activation, interruption, and cleanup.
+---
+
+Development API · unreleased 0.0.0. A `Sound` is reusable; every `play()` creates a
+new `Voice` with fresh sources. Keep the voice for live updates and Stop.
+
+```ts
+import { createAudio } from "audiobits";
+import { thruster } from "audiobits/recipes";
+const audio = createAudio();
+const sound = audio.sound(thruster);
+export async function startFromGesture() {
+  await audio.start();
+  const voice = sound.play({ parameters: { throttle: 0.2 }, seed: 42 });
+  return voice;
+}
+export async function teardown() {
+  await audio.dispose();
+}
+```
+
+The host must invalidate pending `startFromGesture()` work on hide/unmount;
+[Quick start](/docs) demonstrates that pattern. `start()` must be called directly
+in a user gesture. Construction is silent; playback before successful activation
+fails without queuing. Blocked resume times out after two wall-clock seconds,
+with a retryable `start-failed` error. Concurrent starts share a promise.
+
+## Stop and disposal
+
+`voice.stop()` cancels before onset or releases from the current envelope.
+`voice.ended` resolves after cleanup. States are `active`, `stopping`, `retiring`,
+and `ended`; repeated stops do not extend lifetime. `sound.dispose()` finalizes
+that sound's voices immediately. `audio.stopAll()` releases managed voices and
+allows bounded shared tails; `{ tails: "cut" }` fades and resets shared delays.
+
+`suspend()` invalidates pending starts and finalizes owned voices/effects before
+suspending. Native interruption or closure also clears managed resources.
+`dispose()` is terminal and idempotent: it invalidates activation, disconnects
+owned nodes, and closes the context even while suspended. Caller-created sources
+need their own cleanup.
+
+## Host policy
+
+Stop with cut tails and suspend on page hide. Dispose on navigation/unmount.
+Never automatically restart on return. Unsubscribe listeners and remove host
+events on teardown. The gallery follows this policy and retains one shared
+engine per mounted gallery session.
+
+Audio state is `idle`, `starting`, `running`, `suspended`, `interrupted`, `closed`,
+or `disposed`. `subscribe(listener)` returns an unsubscribe function.

@@ -1,11 +1,36 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { Button } from "@base-ui/react/button";
+import { RecipeTools } from "./recipe-tools";
+import { soundInfo } from "../lib/gallery";
+import type { SoundKind } from "../lib/gallery";
 import { createAudio } from "audiobits";
-import type { AudioEngine, AudioState, Bus, Sound, Voice } from "audiobits";
+import type {
+  AudioEngine,
+  AudioState,
+  Bus,
+  Sound,
+  Voice,
+  Recipe,
+} from "audiobits";
 import { confirmation, impact, thruster } from "audiobits/recipes";
 
-export function ConfirmationDemo() {
+export function ConfirmationDemo({
+  rawSource,
+  selected,
+}: {
+  rawSource: string;
+  selected?: SoundKind;
+}) {
+  const lastFinite = useRef<Partial<Record<SoundKind, Voice>>>({});
+  const seeds = useRef<Record<SoundKind, number | null>>({
+    confirmation: 42,
+    impact: 42,
+    thruster: 42,
+  });
+  const [playing, setPlaying] = useState<Record<string, string>>({});
   const audio = useRef<AudioEngine | null>(null);
   const sound = useRef<Sound | null>(null);
   const impactSound = useRef<Sound | null>(null);
@@ -32,6 +57,7 @@ export function ConfirmationDemo() {
   const stopAll = useCallback(() => {
     stopThruster();
     audio.current?.stopAll({ tails: "cut" });
+    setPlaying({});
   }, [stopThruster]);
   useEffect(() => {
     const requests = request;
@@ -61,6 +87,19 @@ export function ConfirmationDemo() {
       void engine.dispose().catch(() => {});
     };
   }, [stopAll]);
+  function applyRecipe(kind: SoundKind, recipe: Recipe) {
+    stopAll();
+    setError("");
+    const target =
+      kind === "confirmation"
+        ? sound
+        : kind === "impact"
+          ? impactSound
+          : thrusterSound;
+    const next = audio.current?.sound(recipe);
+    target.current?.dispose();
+    target.current = next ?? null;
+  }
   async function play(
     kind: "confirmation" | "impact" | "thruster" = "confirmation",
   ) {
@@ -72,11 +111,17 @@ export function ConfirmationDemo() {
           ? impactSound.current
           : thrusterSound.current;
     if (!engine || !definition || document.hidden) return;
+    const seed = seeds.current[kind];
+    if (seed === null) {
+      setError("Enter a valid seed before Play.");
+      return;
+    }
     if (kind === "thruster" && thrusterVoice.current?.state === "active")
       return;
     const token = request.current;
     if (kind === "thruster") setThrusterState("starting");
     setError("");
+    setPlaying((value) => ({ ...value, [kind]: "starting" }));
     try {
       await engine.start();
       if (
@@ -92,6 +137,7 @@ export function ConfirmationDemo() {
       if (kind === "thruster") {
         if (thrusterVoice.current?.state === "active") return;
         const voice = definition.play({
+          seed,
           bus: route.current,
           parameters: { throttle: throttleValue.current },
         });
@@ -103,16 +149,29 @@ export function ConfirmationDemo() {
             setThrusterState("stopped");
           }
         });
-      } else
-        definition.play({
+      } else {
+        const voice = definition.play({
+          seed,
           bus: route.current,
           ...(kind === "impact" ? { parameters: { intensity } } : {}),
         });
+        lastFinite.current[kind] = voice;
+        setPlaying((value) => ({ ...value, [kind]: "playing" }));
+        void voice.ended.then(() => {
+          if (
+            audio.current === engine &&
+            lastFinite.current[kind] === voice &&
+            token === request.current
+          )
+            setPlaying((value) => ({ ...value, [kind]: "ready" }));
+        });
+      }
     } catch (cause) {
       if (audio.current === engine && token === request.current) {
         if (kind === "thruster") setThrusterState("stopped");
+        setPlaying((value) => ({ ...value, [kind]: "retry Play" }));
         setError(
-          cause instanceof Error ? cause.message : "Audio failed. Retry Play.",
+          `${cause instanceof Error ? cause.message : "Audio failed."} Retry Play.`,
         );
       }
     }
@@ -120,137 +179,203 @@ export function ConfirmationDemo() {
   return (
     <section aria-labelledby="confirmation-heading">
       <h2 id="confirmation-heading">Three-sound development preview</h2>
-      <p>Two soft sine layers with a gentle upward movement.</p>
-      <div className="audio-controls">
-        <button onClick={() => void play()}>Play confirmation</button>
-        <button
-          aria-pressed={muted}
-          onClick={() => {
-            const next = !muted;
-            audio.current?.setMuted(next);
-            setMuted(next);
-          }}
-        >
-          Mute
-        </button>
-        <button onClick={stopAll}>Stop all</button>
-        <button
-          aria-pressed={delay}
-          onClick={() => {
-            const engine = audio.current;
-            if (!engine || document.hidden) return;
-            const token = request.current;
-            void engine
-              .start()
-              .then(() => {
-                if (
-                  audio.current !== engine ||
-                  token !== request.current ||
-                  document.hidden
-                )
-                  return;
-                if (!route.current) {
-                  route.current = engine.bus("effects");
-                  route.current.setGainDb(volumeValue.current, 0.1);
-                }
-                const next = !delay;
-                route.current.setDelay(
-                  next ? { seconds: 0.18, feedback: 0.35, wet: 0.25 } : null,
-                );
-                setDelay(next);
-              })
-              .catch((cause: unknown) => {
-                if (audio.current === engine && token === request.current)
-                  setError(
-                    cause instanceof Error ? cause.message : "Delay failed.",
-                  );
-              });
-          }}
-        >
-          Shared delay
-        </button>
-      </div>
-      <label>
-        Effects volume: {volume} dB
-        <input
-          aria-label="Effects volume"
-          type="range"
-          min="-60"
-          max="0"
-          step="1"
-          value={volume}
-          onChange={(event) => {
-            const value = Number(event.target.value);
-            volumeValue.current = value;
-            setVolume(value);
-            try {
-              route.current?.setGainDb(value, 0.1);
-            } catch (cause) {
-              setError(
-                cause instanceof Error ? cause.message : "Volume failed.",
-              );
-            }
-          }}
-        />
-      </label>
-      <h3>Impact</h3>
       <p>
-        A descending body and filtered noise transient. Intensity changes pitch,
-        brightness, and level.
+        Browse silently. Play a sound, adjust it, then copy your configuration.
       </p>
-      <label>
-        Intensity: {intensity.toFixed(2)}
-        <input
-          aria-label="Intensity"
-          type="range"
-          min="0"
-          max="1"
-          step="0.01"
-          value={intensity}
-          onChange={(event) => setIntensity(Number(event.target.value))}
-        />
-      </label>
-      <button onClick={() => void play("impact")}>Play impact</button>
-      <h3>Thruster</h3>
-      <p>Start once, adjust throttle while it runs, then release with Stop.</p>
-      <label>
-        Throttle: {throttle.toFixed(2)}
-        <input
-          aria-label="Throttle"
-          type="range"
-          min="0"
-          max="1"
-          step="0.01"
-          value={throttle}
-          onChange={(event) => {
-            const value = Number(event.target.value);
-            throttleValue.current = value;
-            setThrottle(value);
-            try {
-              if (thrusterVoice.current?.state === "active")
-                thrusterVoice.current.set({ throttle: value });
-            } catch (cause) {
-              setError(
-                cause instanceof Error
-                  ? cause.message
-                  : "Control update failed.",
-              );
-            }
-          }}
-        />
-      </label>
-      <div className="audio-controls">
-        <button
-          disabled={thrusterState !== "stopped"}
-          onClick={() => void play("thruster")}
-        >
-          Start thruster
-        </button>
-        <button onClick={stopThruster}>Stop thruster</button>
+      <div className="gallery-mixer">
+        <div className="audio-controls">
+          <Button
+            aria-pressed={muted}
+            onClick={() => {
+              const next = !muted;
+              audio.current?.setMuted(next);
+              setMuted(next);
+            }}
+          >
+            Mute
+          </Button>
+          <Button onClick={stopAll}>Stop all</Button>
+          <Button
+            aria-pressed={delay}
+            onClick={() => {
+              const engine = audio.current;
+              if (!engine || document.hidden) return;
+              const token = request.current;
+              void engine
+                .start()
+                .then(() => {
+                  if (
+                    audio.current !== engine ||
+                    token !== request.current ||
+                    document.hidden
+                  )
+                    return;
+                  if (!route.current) {
+                    route.current = engine.bus("effects");
+                    route.current.setGainDb(volumeValue.current, 0.1);
+                  }
+                  const next = !delay;
+                  route.current.setDelay(
+                    next ? { seconds: 0.18, feedback: 0.35, wet: 0.25 } : null,
+                  );
+                  setDelay(next);
+                })
+                .catch((cause: unknown) => {
+                  if (audio.current === engine && token === request.current)
+                    setError(
+                      cause instanceof Error ? cause.message : "Delay failed.",
+                    );
+                });
+            }}
+          >
+            Shared delay
+          </Button>
+        </div>
+        <label>
+          Effects volume: {volume} dB
+          <input
+            aria-label="Effects volume"
+            type="range"
+            min="-60"
+            max="0"
+            step="1"
+            value={volume}
+            onChange={(event) => {
+              const value = Number(event.target.value);
+              volumeValue.current = value;
+              setVolume(value);
+              try {
+                route.current?.setGainDb(value, 0.1);
+              } catch (cause) {
+                setError(
+                  cause instanceof Error ? cause.message : "Volume failed.",
+                );
+              }
+            }}
+          />
+        </label>
+        <p role="status">Audio: {state}</p>
+        {error && <p role="alert">{error}</p>}
       </div>
-      <p data-testid="thruster-state">Thruster: {thrusterState}</p>
-      <p role="status">Audio: {state}</p>
-      {error && <p role="alert">{error}</p>}
+      {(!selected || selected === "confirmation") && (
+        <article className="sound-card" id="confirmation">
+          <p className="eyebrow">{soundInfo.confirmation.use}</p>
+          <h3>
+            <Link href="/sounds/confirmation">Confirmation</Link>
+          </h3>
+          <p>{soundInfo.confirmation.description}</p>
+          <Button onClick={() => void play()}>Play confirmation</Button>
+          <p aria-live="polite">
+            Confirmation: {playing.confirmation ?? "ready"}
+          </p>
+          <RecipeTools
+            kind="confirmation"
+            onReset={() => {}}
+            control={0}
+            rawSource={rawSource}
+            onSeed={(seed) => {
+              seeds.current.confirmation = seed;
+            }}
+            onApply={(recipe) => applyRecipe("confirmation", recipe)}
+          />
+        </article>
+      )}
+      {(!selected || selected === "impact") && (
+        <article className="sound-card" id="impact">
+          <p className="eyebrow">{soundInfo.impact.use}</p>
+          <h3>
+            <Link href="/sounds/impact">Impact</Link>
+          </h3>
+          <p>
+            A descending body and filtered noise transient. Intensity changes
+            pitch, brightness, and level.
+          </p>
+          <label>
+            Intensity: {intensity.toFixed(2)}
+            <input
+              aria-label="Intensity"
+              type="range"
+              min="0"
+              max="1"
+              step="0.01"
+              value={intensity}
+              onChange={(event) => setIntensity(Number(event.target.value))}
+            />
+          </label>
+          <Button onClick={() => void play("impact")}>Play impact</Button>
+          <p aria-live="polite">Impact: {playing.impact ?? "ready"}</p>
+          <RecipeTools
+            kind="impact"
+            onReset={() => setIntensity(0.5)}
+            control={intensity}
+            rawSource={rawSource}
+            onSeed={(seed) => {
+              seeds.current.impact = seed;
+            }}
+            onApply={(recipe) => applyRecipe("impact", recipe)}
+          />
+        </article>
+      )}
+      {(!selected || selected === "thruster") && (
+        <article className="sound-card" id="thruster">
+          <p className="eyebrow">{soundInfo.thruster.use}</p>
+          <h3>
+            <Link href="/sounds/thruster">Thruster</Link>
+          </h3>
+          <p>
+            Start once, adjust throttle while it runs, then release with Stop.
+          </p>
+          <label>
+            Throttle: {throttle.toFixed(2)}
+            <input
+              aria-label="Throttle"
+              type="range"
+              min="0"
+              max="1"
+              step="0.01"
+              value={throttle}
+              onChange={(event) => {
+                const value = Number(event.target.value);
+                throttleValue.current = value;
+                setThrottle(value);
+                try {
+                  if (thrusterVoice.current?.state === "active")
+                    thrusterVoice.current.set({ throttle: value });
+                } catch (cause) {
+                  setError(
+                    cause instanceof Error
+                      ? cause.message
+                      : "Control update failed.",
+                  );
+                }
+              }}
+            />
+          </label>
+          <div className="audio-controls">
+            <Button
+              disabled={thrusterState !== "stopped"}
+              onClick={() => void play("thruster")}
+            >
+              Start thruster
+            </Button>
+            <Button onClick={stopThruster}>Stop thruster</Button>
+          </div>
+          <p data-testid="thruster-state">Thruster: {thrusterState}</p>
+          <RecipeTools
+            kind="thruster"
+            onReset={() => {
+              throttleValue.current = 0.2;
+              setThrottle(0.2);
+            }}
+            control={throttle}
+            rawSource={rawSource}
+            onSeed={(seed) => {
+              seeds.current.thruster = seed;
+            }}
+            onApply={(recipe) => applyRecipe("thruster", recipe)}
+          />
+        </article>
+      )}
     </section>
   );
 }

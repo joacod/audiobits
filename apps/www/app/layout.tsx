@@ -5,7 +5,8 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "AudioBits — Unreleased",
-  description: "Procedural browser audio. Workspace foundation preview.",
+  description:
+    "Procedural browser audio. Unreleased three-sound gallery and development documentation.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

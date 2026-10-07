@@ -1,0 +1,50 @@
+---
+title: Parameters
+description: Change play-only controls, smooth live updates, and reproduce seeds.
+---
+
+Development API · unreleased 0.0.0. Impact's `intensity` is play-only; thruster's
+`throttle` is live. Both range from 0 to 1. Defaults are 0.5 and 0.2 respectively.
+
+```ts
+import { createAudio } from "audiobits";
+import { impact, thruster } from "audiobits/recipes";
+const audio = createAudio();
+const hit = audio.sound(impact);
+const motor = audio.sound(thruster);
+export async function playFromGesture() {
+  await audio.start();
+  hit.play({ parameters: { intensity: 0.8 }, seed: 42 });
+  const voice = motor.play({ parameters: { throttle: 0.2 }, seed: 42 });
+  voice.set({ throttle: 0.75 });
+  voice.stop();
+  await voice.ended;
+}
+export async function dispose() {
+  await audio.dispose();
+}
+```
+
+Omitted controls use defaults. Up to 16 parameters declare `min`, `max`,
+`default`, and `mode`. Live declarations include smoothing of 0.005–1 seconds.
+Mappings target source frequency, filter frequency, or layer gain, with linear
+or exponential control-to-target conversion. Live targets ramp linearly from
+their current value over smoothing time. Layer gain ramps in linear amplitude;
+the envelope remains independent. Automation points use play-only controls.
+
+`voice.set()` validates all keys before any update. Unknown names, invalid
+numbers, out-of-range values, and play-only updates fail atomically. Updates
+after Stop or completion fail with `ended-voice`. `voice.parameters` is a frozen
+snapshot of requested values, not a readback of the current smoothed value.
+
+## Seeded replay
+
+Seeds are unsigned 32-bit integers, including zero. Playback without an explicit
+seed selects one and exposes it on `voice.seed`. The same normalized recipe,
+controls, seed, and sample rate reproduce variation and generated noise. This
+does not promise identical oscillator/filter samples across browsers or sample
+rates. Noise uses one bounded mono second per layer with a 20 ms loop crossfade;
+live controls reuse sources and buffers.
+
+The gallery uses seed 42 initially. Its copy action captures the next Play's
+parameters and seed; changing a seed does not retrigger an active voice.

@@ -1,15 +1,18 @@
 ---
-title: Workspace foundation
-description: Development preview of the unreleased AudioBits package.
+title: Quick start
+description: Play a procedural sound from a user gesture with the local development package.
 ---
 
-AudioBits is unreleased. The development workspace supports a small recipe
-playback core: finite and sustained oscillator/noise sounds, seeded variation,
-live controls, frequency automation, ADSR envelopes, and bounded filters.
-The three-sound preview passed maintainer manual verification. Browser and
-output-device details for that review were not supplied.
+AudioBits is unreleased. These pages describe version 0.0.0 from the local
+workspace, not an npm release. Build the library before the site using
+`pnpm build:lib`, or run `pnpm dev` from the repository root for the watch loop.
+The site and vanilla example consume public package exports.
 
-## Start with a gesture
+## Play a confirmation
+
+Create the engine and definition without allocating browser audio. Call `play()`
+directly from your button's click handler and report rejected promises to the user.
+Retry a failed start with a fresh Play gesture.
 
 ```ts
 import { createAudio } from "audiobits";
@@ -17,75 +20,44 @@ import { confirmation } from "audiobits/recipes";
 
 const audio = createAudio();
 const sound = audio.sound(confirmation);
-
-// Inside the application's Play handler:
-await audio.start();
-const voice = sound.play();
-// On Stop: voice.stop(). On unmount: await audio.dispose().
+let request = 0;
+export async function play() {
+  const token = ++request;
+  await audio.start();
+  if (token === request && !document.hidden) sound.play({ seed: 42 });
+}
+export function stop() {
+  request++;
+  audio.stopAll({ tails: "cut" });
+}
+function hide() {
+  if (document.hidden) {
+    stop();
+    void audio.suspend().catch(console.error);
+  }
+}
+document.addEventListener("visibilitychange", hide);
+export async function dispose() {
+  stop();
+  document.removeEventListener("visibilitychange", hide);
+  await audio.dispose();
+}
 ```
 
-Construction and validation do not allocate browser audio. Start synchronously
-in the gesture handler before awaiting; playback before successful activation
-fails without queueing. A failed start can be retried with a new Play action.
-Each play owns fresh sources. Dispose the engine when leaving its host view.
+Bind `play()` and `stop()` to your host controls. Call `dispose()` on navigation or
+unmount. Returning from a hidden page requires a new Play action. The gallery
+never plays on load, hover, or navigation.
 
-The home page provides Play, mute, Stop all, state, and error controls. Nothing
-plays on page load. Signal and lifecycle checks run in Chromium; automated
-checks do not establish listening quality or other-browser support.
+## Next
 
-The website and vanilla example consume built public package exports.
-No npm publication is needed to test a local library edit. Named buses, shared
-delay, and native analyser taps are now development APIs. A polished gallery
-remains later work; Step 04 passed maintainer manual verification on 2026-10-06.
-Browser/device details and individual observations were not supplied.
+- [Listen and adjust](/sounds) the three bundled sounds.
+- [Recipes](/docs/recipes): validated JSON and supported fields.
+- [Playback and lifecycle](/docs/lifecycle): sound versus voice, Stop, and teardown.
+- [Parameters](/docs/parameters): controls, smoothing, and seeded replay.
+- [Buses and effects](/docs/buses): shared routing, volume, and delay tails.
+- [Native interop](/docs/native): caller-owned analyser taps.
+- [API reference](/docs/api): public exports and limits.
 
-## One continuous thruster
-
-```ts
-import { createAudio } from "audiobits";
-import { impact, thruster } from "audiobits/recipes";
-
-const audio = createAudio();
-const hit = audio.sound(impact);
-const engine = audio.sound(thruster);
-// In the application's gesture handler:
-await audio.start();
-hit.play({ parameters: { intensity: 0.8 }, seed: 42 });
-const voice = engine.play({ parameters: { throttle: 0.2 }, seed: 42 });
-voice.set({ throttle: 1 });
-voice.stop();
-await voice.ended;
-await audio.dispose();
-```
-
-Start the thruster once and retain its voice for slider updates. Invalid or
-play-only updates fail atomically. Seeded choices and noise replay at the same
-sample rate; voices expose `seed` and a frozen `parameters` snapshot. Noise uses
-one mono one-second buffer per layer, with a 20 ms loop crossfade and no cache.
-Live updates reuse nodes and buffers. The demos stop on page hide and dispose
-on teardown; they never start automatically.
-
-## Shared routing and tails
-
-```ts
-await audio.start();
-const effects = audio.bus("effects");
-effects.setGainDb(-6, 0.1);
-effects.setDelay({ seconds: 0.18, feedback: 0.35, wet: 0.25 });
-sound.play({ bus: effects });
-audio.stopAll({ tails: "cut" });
-// On teardown: effects.dispose(), then await audio.dispose().
-```
-
-Buses have one parent, independent volume/mute stages, and recursive disposal.
-Delay adds wet output to the dry route. Feedback is bounded to 0–0.9, time to
-0–2 seconds, and wet to 0–1; positive feedback requires positive delay.
-`stopAll()` allows bounded shared tails by default. The demo's Stop all cuts
-and resets them with a short fade. Master is disposed through the engine.
-
-The vanilla consumer demonstrates `audio.native.connect(analyser)`, reads
-levels without another destination connection, and cleans up its animation
-and native node. Caller sources are outside managed voice ownership.
-Both demos stop with cut tails and suspend on hide, invalidate pending starts,
-and require a fresh gesture after returning. Native interruption automation
-and physical operating-system interruption are separate evidence categories.
+Chromium is the initial automated browser gate. Previous core listening reviews
+were accepted by the maintainer; automated signals do not establish audible
+quality, and these pages make no Safari, Firefox, or mobile-browser support claim.

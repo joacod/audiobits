@@ -1,7 +1,9 @@
 # Website and documentation design
 
-Status: planned product experience. Step 01 builds only a minimal shell; Step 02
-adds a functional sound demo; Step 05 applies the full presentation design.
+Status: Step 05 implements the three-sound gallery, bounded recipe editor,
+current examples, and Fumadocs guides with local automated evidence. Gallery
+listening acceptance was confirmed by the maintainer on 2026-10-06. The optional visualization integrations
+below remain design considerations, not installed components.
 
 ## First interaction
 
