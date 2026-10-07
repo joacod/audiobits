@@ -2,7 +2,14 @@ import { readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import ts from "typescript";
 import { expect, test } from "vitest";
-import { libraryExample, rawHost, sounds } from "../apps/www/lib/gallery";
+import {
+  libraryExample,
+  rawHost,
+  sounds,
+  hasRawComparison,
+  quickExample,
+  parametersFor,
+} from "../apps/www/lib/gallery";
 
 test("all documentation fences and current gallery/raw examples typecheck through public exports", () => {
   const snippets: string[] = [];
@@ -11,12 +18,20 @@ test("all documentation fences and current gallery/raw examples typecheck throug
     for (const match of text.matchAll(/```ts\n([\s\S]*?)```/g))
       snippets.push(match[1]);
   }
+  for (const match of readFileSync("README.md", "utf8").matchAll(
+    /```ts\n([\s\S]*?)```/g,
+  ))
+    snippets.push(match[1]);
   const raw = readFileSync("apps/www/lib/raw-example.ts", "utf8");
   for (const kind of Object.keys(sounds) as (keyof typeof sounds)[]) {
     for (const control of [0, 0.5, 1]) {
       for (const seed of [0, 42, 0xffffffff]) {
         snippets.push(libraryExample(sounds[kind], control, seed));
-        snippets.push(raw + rawHost(kind, control, seed));
+        snippets.push(
+          quickExample(kind, parametersFor(sounds[kind], control), seed),
+        );
+        if (hasRawComparison(kind))
+          snippets.push(raw + rawHost(kind, control, seed));
       }
     }
   }

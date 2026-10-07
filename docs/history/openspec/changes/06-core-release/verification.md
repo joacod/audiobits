@@ -147,7 +147,7 @@ required reviewers/allowed refs, OIDC binding, hosting provider/account and
 provider artifact packaging. The reviewed RC is not a stable npm release.
 Changing version/private state creates new candidate bytes requiring another
 review and separately authorized publication/deployment. Failure handling and
-stable docs-only operation are specified in [release preparation](../../../docs/releases.md).
+stable docs-only operation are specified in [release preparation](../../../../releases.md).
 
 ## Changed files and public review
 

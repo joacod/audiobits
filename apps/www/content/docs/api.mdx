@@ -10,14 +10,14 @@ recipe JSON Schema; `audiobits/capabilities.json` supplies this package version'
 shipped primitives and browser gate. Semantic limits still require
 `validateRecipe`; sample-rate constraints are checked at playback.
 
-| Export                                                        | Responsibility                                                     |
-| ------------------------------------------------------------- | ------------------------------------------------------------------ |
-| `createAudio(options?)`                                       | Own an engine; defaults: 32 voices, eight per sound, -12 dB master |
-| `defineSound(input)`                                          | Validate and freeze recipe data; throws `AudioBitsError`           |
-| `validateRecipe(input)`                                       | Return a recipe or bounded path-specific issues                    |
-| `recipeSchema`                                                | Draft version 1 JSON schema                                        |
-| `AudioBitsError`                                              | Error with `code` and validation `issues`                          |
-| `confirmation`, `impact`, `thruster` from `audiobits/recipes` | Curated recipe definitions                                         |
+| Export                                                        | Responsibility                                                         |
+| ------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `createAudio(options?)`                                       | Own an engine; defaults: 32 voices, eight per sound, -12 dB master     |
+| `defineSound(input)`                                          | Author typed recipe data; validate and freeze; throws `AudioBitsError` |
+| `validateRecipe(input)`                                       | Return a recipe or bounded path-specific issues                        |
+| `recipeSchema`                                                | Draft version 1 JSON schema                                            |
+| `AudioBitsError`                                              | Error with `code` and validation `issues`                              |
+| `confirmation`, `impact`, `thruster` from `audiobits/recipes` | Curated recipe definitions                                             |
 
 Public types include `Recipe`, its layer/source/envelope/filter/value and
 parameter types, `ValidationResult`, `RecipeIssue`, `AudioEngine`, `AudioOptions`,
@@ -42,3 +42,6 @@ reservations from retirees. At most 32 buses, including master, may be live.
 
 Defaults provide headroom for the curated sounds; arbitrary recipes, resonance,
 or concurrency require application-specific signal and listening checks.
+
+`Bus.setDelay()` and `DelayOptions` are experimental and may change before 0.1.
+Shared delay is not a stable generalized effect API.

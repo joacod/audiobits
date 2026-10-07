@@ -1,3 +1,4 @@
+import { requireOfflineCheckpoints } from "./offline-capabilities";
 import { expect, test } from "@playwright/test";
 import { resolve } from "node:path";
 
@@ -73,7 +74,9 @@ test("gallery editing preserves last valid sound; copied values, seeds and resto
           .galleryContexts.length,
     ),
   ).toBe(0);
-  await page.getByRole("slider", { name: "Intensity" }).fill("0.83");
+  await page
+    .getByRole("slider", { name: "Intensity", exact: true })
+    .fill("0.83");
   await page.getByRole("spinbutton", { name: "impact seed" }).fill("7");
   await page
     .getByRole("button", { name: "Copy impact example", exact: true })
@@ -138,9 +141,9 @@ test("gallery editing preserves last valid sound; copied values, seeds and resto
     page.getByRole("button", { name: "Copy raw impact example", exact: true }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Reset impact", exact: true }).click();
-  await expect(page.getByRole("slider", { name: "Intensity" })).toHaveValue(
-    "0.5",
-  );
+  await expect(
+    page.getByRole("slider", { name: "Intensity", exact: true }),
+  ).toHaveValue("0.5");
   await page.getByRole("spinbutton", { name: "impact seed" }).fill("-1");
   await expect(
     page.getByRole("button", { name: "Copy impact example", exact: true }),
@@ -270,6 +273,7 @@ test("raw comparisons match managed dry signals, seeded noise, live smoothing an
   browser,
 }) => {
   await page.goto("http://127.0.0.1:4173");
+  await requireOfflineCheckpoints(page);
   await page.addScriptTag({
     path: resolve(
       "node_modules/.cache/audiobits-audio-tests/audio-harness.iife.js",
@@ -309,7 +313,7 @@ test("raw comparisons match managed dry signals, seeded noise, live smoothing an
     expect(result.latePeak).toBe(0);
   }
   console.log(
-    `Raw comparison Chromium ${browser.version()}: ${results.length} scenarios; max difference ${Math.max(...results.map((r) => r.difference))}`,
+    `Raw comparison ${browser.browserType().name()} ${browser.version()}: ${results.length} scenarios; max difference ${Math.max(...results.map((r) => r.difference))}`,
   );
 });
 
@@ -372,13 +376,15 @@ test("displayed host examples activate from a gesture, stop, and dispose their o
       await example.dispose();
     }, name);
   }
-  expect(
-    await page.evaluate(() =>
-      (
-        globalThis as unknown as { galleryContexts: AudioContext[] }
-      ).galleryContexts.map((context) => context.state),
-    ),
-  ).toEqual(Array(6).fill("closed"));
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        (
+          globalThis as unknown as { galleryContexts: AudioContext[] }
+        ).galleryContexts.map((context) => context.state),
+      ),
+    )
+    .toEqual(Array(6).fill("closed"));
 });
 
 test("navigation between sound slugs disposes the previous gallery session", async ({
@@ -437,4 +443,132 @@ test("failed gallery activation identifies Retry Play and recovers with a fresh 
   await play.click();
   await expect(page.getByRole("status")).toHaveText("Audio: running");
   await expect(page.locator(".gallery-mixer [role=alert]")).toHaveCount(0);
+});
+
+test("all eight demos use parameter metadata and edited controls without allocating audio on load", async ({
+  page,
+}) => {
+  await instrument(page);
+  await page.goto("http://127.0.0.1:3100/sounds");
+  await expect(page.locator("article.sound-card")).toHaveCount(8);
+  await page
+    .getByRole("slider", { name: "Brightness", exact: true })
+    .fill("0.9");
+  await page
+    .getByRole("button", {
+      name: "Copy glass-notification example",
+      exact: true,
+    })
+    .click();
+  expect(
+    await page.evaluate(
+      () => (globalThis as unknown as { copiedExample: string }).copiedExample,
+    ),
+  ).toContain('"brightness":0.9');
+  expect(
+    await page.evaluate(
+      () =>
+        (globalThis as unknown as { galleryContexts: unknown[] })
+          .galleryContexts.length,
+    ),
+  ).toBe(0);
+  await page.locator("#whoosh summary").click();
+  const editor = page.getByRole("textbox", { name: "whoosh recipe JSON" });
+  const recipe = JSON.parse(await editor.inputValue());
+  recipe.parameters.size = { min: -1, max: 2, default: 0.5, mode: "play" };
+  recipe.parameters.detail = { min: 10, max: 20, default: 15, mode: "play" };
+  await editor.fill(JSON.stringify(recipe));
+  await page
+    .getByRole("button", { name: "Apply whoosh recipe", exact: true })
+    .click();
+  const size = page.getByRole("slider", { name: "Size", exact: true });
+  await expect(size).toHaveAttribute("min", "-1");
+  await expect(size).toHaveAttribute("max", "2");
+  await expect(
+    page.getByRole("slider", { name: "Detail", exact: true }),
+  ).toHaveValue("15");
+  await size.fill("1.7");
+  await page.getByRole("button", { name: "Play whoosh", exact: true }).click();
+  await expect(page.getByRole("status")).toHaveText("Audio: running");
+  await page
+    .getByRole("button", { name: "Copy whoosh example", exact: true })
+    .click();
+  const copied = await page.evaluate(
+    () => (globalThis as unknown as { copiedExample: string }).copiedExample,
+  );
+  expect(copied).toContain('"size":1.7');
+  expect(copied).toContain('"detail":15');
+  for (const kind of [
+    "tactile-click",
+    "gentle-rejection",
+    "glass-notification",
+    "power-up",
+  ]) {
+    await page
+      .getByRole("button", { name: `Play ${kind}`, exact: true })
+      .click();
+  }
+  await expect(page.locator(".gallery-mixer > [role=alert]")).toHaveCount(0);
+  await page
+    .getByRole("button", { name: "Restore whoosh recipe", exact: true })
+    .click();
+  await expect(size).toHaveAttribute("min", "0");
+  await expect(
+    page.getByRole("slider", { name: "Detail", exact: true }),
+  ).toHaveCount(0);
+});
+
+test("showcase uses native output, bounded seeded variation and simple current code", async ({
+  page,
+}) => {
+  await instrument(page);
+  await page.goto("http://127.0.0.1:3100/sounds/thruster");
+  const scope = page.getByRole("img", {
+    name: "Live output waveform; animation pauses for reduced motion",
+  });
+  await expect(scope).toHaveAttribute("data-peak", "0");
+  await expect(
+    page.getByText("Changes this voice while it plays"),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Start thruster", exact: true })
+    .click();
+  await page.getByRole("slider", { name: "Throttle", exact: true }).fill("1");
+  await expect
+    .poll(async () => Number(await scope.getAttribute("data-peak")))
+    .toBeGreaterThan(0);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(scope).toHaveAttribute("data-peak", "0");
+  await page.getByRole("button", { name: "Stop all", exact: true }).click();
+  await expect(scope).toHaveAttribute("data-peak", "0");
+  await page.goto("http://127.0.0.1:3100/sounds/whoosh");
+  await page.getByRole("slider", { name: "Size", exact: true }).fill("0.9");
+  await expect(page.getByText("Applies on the next Play")).toBeVisible();
+  await page
+    .getByRole("button", { name: "Randomize whoosh", exact: true })
+    .click();
+  const seed = Number(
+    await page
+      .getByRole("spinbutton", { name: "whoosh seed", exact: true })
+      .inputValue(),
+  );
+  expect(seed).toBeGreaterThanOrEqual(0);
+  expect(seed).toBeLessThanOrEqual(0xffffffff);
+  await page.locator("#whoosh summary").click();
+  await page
+    .getByRole("button", { name: "Copy simple whoosh code", exact: true })
+    .click();
+  let copied = await page.evaluate(
+    () => (globalThis as unknown as { copiedExample: string }).copiedExample,
+  );
+  expect(copied).toContain('import { whoosh } from "audiobits/recipes"');
+  expect(copied).toContain('"size":0.9');
+  expect(copied).toContain(`seed: ${seed}`);
+  await page
+    .getByRole("button", { name: "Copy whoosh recipe", exact: true })
+    .click();
+  copied = await page.evaluate(
+    () => (globalThis as unknown as { copiedExample: string }).copiedExample,
+  );
+  expect(JSON.parse(copied).schemaVersion).toBe(1);
 });

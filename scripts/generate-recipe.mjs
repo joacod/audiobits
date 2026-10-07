@@ -48,7 +48,16 @@ const capabilities = {
     automationCurves: definitions.Value.anyOf[1].properties.curve.enum,
     values: ["number", "mapping", "seeded-variation", "frequency-automation"],
   },
-  curatedRecipes: ["confirmation", "impact", "thruster"],
+  curatedRecipes: [
+    "confirmation",
+    "impact",
+    "thruster",
+    "tactileClick",
+    "gentleRejection",
+    "glassNotification",
+    "whoosh",
+    "powerUp",
+  ],
   runtime: [
     "gesture-start",
     "bounded-voices",
@@ -60,7 +69,9 @@ const capabilities = {
     "suspend",
     "dispose",
   ],
+  experimentalRuntime: ["shared-delay"],
   browserGate: "Chromium",
+  browserMatrix: ["Chromium", "Firefox", "WebKit"],
   schemaNote:
     "Structural schema only; validateRecipe also enforces semantic and resource limits. Playback checks context sample rate.",
 };

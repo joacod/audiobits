@@ -26,6 +26,8 @@ export type {
   Sound,
   Voice,
   PlayOptions,
+  RecipeControls,
+  LiveControls,
 } from "./runtime/engine";
 
 export type { Bus, DelayOptions } from "./runtime/bus";

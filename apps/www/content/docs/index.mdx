@@ -21,37 +21,19 @@ import { confirmation } from "audiobits/recipes";
 
 const audio = createAudio();
 const sound = audio.sound(confirmation);
-let request = 0;
 export async function play() {
-  const token = ++request;
   await audio.start();
-  if (token === request && !document.hidden) sound.play({ seed: 42 });
-}
-export function stop() {
-  request++;
-  audio.stopAll({ tails: "cut" });
-}
-function hide() {
-  if (document.hidden) {
-    stop();
-    void audio.suspend().catch(console.error);
-  }
-}
-document.addEventListener("visibilitychange", hide);
-export async function dispose() {
-  stop();
-  document.removeEventListener("visibilitychange", hide);
-  await audio.dispose();
+  sound.play();
 }
 ```
 
-Bind `play()` and `stop()` to your host controls. Call `dispose()` on navigation or
-unmount. Returning from a hidden page requires a new Play action. The gallery
-never plays on load, hover, or navigation.
+Bind `play()` to your button click and surface failures with
+`void play().catch(showError)`. For hiding, SPA navigation, suspension and disposal,
+see [Production lifecycle](/docs/lifecycle). The gallery never plays on load.
 
 ## Next
 
-- [Listen and adjust](/sounds) the three bundled sounds.
+- [Listen and adjust](/sounds) the eight bundled sounds.
 - [Recipes](/docs/recipes): validated JSON and supported fields.
 - [Playback and lifecycle](/docs/lifecycle): sound versus voice, Stop, and teardown.
 - [Parameters](/docs/parameters): controls, smoothing, and seeded replay.
@@ -59,6 +41,6 @@ never plays on load, hover, or navigation.
 - [Native interop](/docs/native): caller-owned analyser taps.
 - [API reference](/docs/api): public exports and limits.
 
-Chromium is the initial automated browser gate. Previous core listening reviews
+Chromium, Firefox and Playwright WebKit form the automated candidate matrix. Previous core listening reviews
 were accepted by the maintainer; automated signals do not establish audible
-quality, and these pages make no Safari, Firefox, or mobile-browser support claim.
+quality. Physical Safari/iOS and mobile devices remain unverified.

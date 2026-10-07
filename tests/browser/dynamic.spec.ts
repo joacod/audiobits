@@ -1,3 +1,4 @@
+import { requireOfflineCheckpoints } from "./offline-capabilities";
 import { expect, test } from "@playwright/test";
 import { resolve } from "node:path";
 import type { Page } from "@playwright/test";
@@ -39,6 +40,7 @@ test("dynamic offline extrema, seeded replay, loop seams, rapid updates and rele
   browser,
 }) => {
   await harness(page);
+  await requireOfflineCheckpoints(page);
   const result = await page.evaluate(async () => {
     const helper = globalThis as unknown as Helpers;
     const output = [];
@@ -72,7 +74,7 @@ test("dynamic offline extrema, seeded replay, loop seams, rapid updates and rele
     return output;
   });
   console.log(
-    `Dynamic signal Chromium ${browser.version()}: ${JSON.stringify(result)}`,
+    `Dynamic signal ${browser.browserType().name()} ${browser.version()}: ${JSON.stringify(result)}`,
   );
   for (const signal of result) {
     expect(signal.peak).toBeGreaterThan(0.001);
@@ -142,7 +144,9 @@ for (const target of ["site", "vanilla"] as const) {
     await page.goto(
       target === "site" ? "http://127.0.0.1:3100" : "http://127.0.0.1:4173",
     );
-    await page.getByRole("slider", { name: "Intensity" }).fill("1");
+    await page
+      .getByRole("slider", { name: "Intensity", exact: true })
+      .fill("1");
     for (let i = 0; i < 3; i++)
       await page.getByRole("button", { name: "Play impact" }).click();
     await page.getByRole("button", { name: "Start thruster" }).click();
@@ -174,7 +178,7 @@ for (const target of ["site", "vanilla"] as const) {
     if (target === "site")
       await expect(
         page
-          .getByRole("region", { name: "Three-sound development preview" })
+          .getByRole("region", { name: "Procedural sound gallery" })
           .getByRole("alert"),
       ).toHaveCount(0);
     else await expect(page.getByRole("alert")).toBeEmpty();

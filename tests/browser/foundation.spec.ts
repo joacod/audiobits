@@ -4,7 +4,7 @@ test("site uses public exports and keyboard-operated Base UI playback", async ({
   page,
   browser,
 }) => {
-  console.log(`Chromium ${browser.version()}`);
+  console.log(`${browser.browserType().name()} ${browser.version()}`);
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("http://127.0.0.1:3100");

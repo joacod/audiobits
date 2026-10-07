@@ -8,7 +8,7 @@ const audio = createAudio();
 const sound = audio.sound(confirmation);
 const impactSound = audio.sound(impact);
 const thrusterSound = audio.sound(thruster);
-let thrusterVoice: import("audiobits").Voice | undefined;
+let thrusterVoice: import("audiobits").Voice<typeof thruster> | undefined;
 let request = 0;
 let routed: import("audiobits").Bus | undefined;
 let removeAnalyser: (() => void) | undefined;

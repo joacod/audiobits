@@ -1,3 +1,4 @@
+import { requireOfflineCheckpoints } from "./offline-capabilities";
 import { test, expect } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -5,17 +6,18 @@ import { resolve } from "node:path";
 const metadata = JSON.parse(
   readFileSync("packages/audiobits/src/recipe/capabilities.json", "utf8"),
 );
-test("all advertised source, waveform, filter and playback variants execute natively", async ({
-  page,
-}) => {
-  await page.goto("http://127.0.0.1:4173");
-  await page.addScriptTag({
-    path: resolve(
-      "node_modules/.cache/audiobits-audio-tests/audio-harness.iife.js",
-    ),
-  });
-  let renders = 0;
-  for (const kind of metadata.recipe.kinds) {
+for (const kind of metadata.recipe.kinds)
+  test(`advertised ${kind} source, waveform and filter variants execute natively`, async ({
+    page,
+  }) => {
+    await page.goto("http://127.0.0.1:4173");
+    if (kind === "sustained") await requireOfflineCheckpoints(page);
+    await page.addScriptTag({
+      path: resolve(
+        "node_modules/.cache/audiobits-audio-tests/audio-harness.iife.js",
+      ),
+    });
+    let renders = 0;
     for (const source of metadata.recipe.sources) {
       for (const variant of source === "oscillator"
         ? metadata.recipe.waveforms
@@ -63,8 +65,7 @@ test("all advertised source, waveform, filter and playback variants execute nati
         }
       }
     }
-  }
-  console.log(
-    `Advertised primitive coverage: ${renders} native 48 kHz renders.`,
-  );
-});
+    console.log(
+      `Advertised primitive coverage: ${renders} native 48 kHz renders.`,
+    );
+  });

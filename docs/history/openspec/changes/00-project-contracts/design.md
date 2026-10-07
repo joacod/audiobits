@@ -19,12 +19,12 @@ account, registering a package/domain, or publishing anything.
 
 - Use the installed OpenSpec 1.14.0 `spec-driven` workflow. Initialize without
   machine-specific assistant integrations; AGENTS.md provides portable guidance.
-- Keep [the roadmap](../../../docs/roadmap.md) as the step index. Each change owns
+- Keep [the roadmap](../../../../roadmap.md) as the step index. Each change owns
   its tasks and behavioral scenarios; avoid a second competing task checklist.
-- Put shared detailed designs in [architecture](../../../docs/architecture.md),
-  [recipes](../../../docs/recipe-model.md), [development](../../../docs/development.md),
-  [release](../../../docs/releases.md), [validation](../../../docs/validation.md),
-  and [website](../../../docs/website.md) documents. Changes link to them.
+- Put shared detailed designs in [architecture](../../../../architecture.md),
+  [recipes](../../../../recipe-model.md), [development](../../../../development.md),
+  [release](../../../../releases.md), [validation](../../../../validation.md),
+  and [website](../../../../website.md) documents. Changes link to them.
 - Keep the ten-experience study separate from the three-sound implementation gate.
 - Keep runtime changes unimplemented and unarchived until their acceptance passes.
 

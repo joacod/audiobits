@@ -15,7 +15,7 @@ automatic npm publication, and unrelated ecosystem work are outside this step.
 ## Decisions
 
 Extend the existing descriptor only when executor support lands. Follow the
-bounded value grammar in [recipe-model](../../../docs/recipe-model.md), keeping
+bounded value grammar in [recipe-model](../../../../recipe-model.md), keeping
 play-only mappings distinct from live mappings. Validate range extrema, not just
 defaults. Live controls drive direct targets with parameter-declared smoothing;
 automation point mappings can reference only play-only controls.

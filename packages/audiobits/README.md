@@ -1,9 +1,10 @@
 # AudioBits
 
-Private, unreleased **0.1.0-rc.0** candidate. It includes confirmation, impact,
-and thruster; schema-1 recipes; play/live controls; seeded variation; bounded
+Private, unreleased **0.1.0-rc.0** candidate. It includes confirmation, impact, thruster, tactile click, gentle rejection,
+glass notification, whoosh and power-up; schema-1 recipes; play/live controls; seeded variation; bounded
 voices; buses and shared delay; native output taps; and explicit lifecycle APIs.
-Chromium is the initial browser gate. Maintainer listening acceptance for the
+Chromium, Firefox and Playwright WebKit are the automated candidate matrix.
+Physical Safari/iOS and mobile devices are not verified. Maintainer listening acceptance for the
 unchanged sound definitions is recorded separately. Nothing has been published,
 and the final npm identifier and ownership remain unconfirmed.
 
@@ -19,6 +20,30 @@ with `void play().catch(showError)` and retry from a fresh gesture.
 import { createAudio } from "audiobits";
 import { confirmation } from "audiobits/recipes";
 
+const audio = createAudio();
+const sound = audio.sound(confirmation);
+export async function play() {
+  await audio.start();
+  sound.play();
+}
+export function stop() {
+  audio.stopAll({ tails: "cut" });
+}
+export async function dispose() {
+  await audio.dispose();
+}
+```
+
+Bind `play()` to a button click (`void play().catch(showError)`).
+
+## Production lifecycle
+
+For an SPA, invalidate pending activation when hiding or unmounting; suspend on
+hide and dispose on navigation. Returning requires a fresh Play gesture.
+
+```ts
+import { createAudio } from "audiobits";
+import { confirmation } from "audiobits/recipes";
 const audio = createAudio();
 const sound = audio.sound(confirmation);
 let request = 0;
@@ -45,22 +70,20 @@ export async function dispose() {
 }
 ```
 
-Bind `play()` and `stop()` to host controls. Call `dispose()` on navigation or
-unmount. Returning from a hidden page requires a fresh Play action.
 `createAudio()` and `audio.sound()` create no context. A failed start reports
 `AudioBitsError` with a retryable `start-failed` code. A blocked resume times out
 after two wall-clock seconds; the context stays owned for gesture retry. Play
 before activation fails with `not-ready`; no input is queued.
 
 The archive exports `audiobits/schema.json` and `audiobits/capabilities.json`.
-The latter identifies candidate version, shipped primitives and Chromium gate;
+The latter identifies candidate version, shipped primitives, initial Chromium gate and candidate browser matrix;
 the schema is structural, while `validateRecipe` enforces additional semantic
 limits. Agent guidance is included in [the AudioBits Skill](skill/SKILL.md).
 
 ## Supported data
 
-`defineSound(unknown)` validates and returns a deeply frozen `Recipe` snapshot.
-`validateRecipe(unknown)` returns `{ ok: true, recipe }` or
+`defineSound(recipe)` accepts typed authored data, preserves literal parameter names and modes, validates and returns a deeply frozen `Recipe` snapshot.
+For external JSON, `validateRecipe(unknown)` returns `{ ok: true, recipe }` or
 `{ ok: false, issues }`; every issue has `code`, `path`, and `message`.
 Paths use JSON bracket notation, such as `$["layers"][0]["id"]`.
 `AudioBitsError` carries `code` and `issues`; errors during validation use
@@ -132,7 +155,7 @@ Concurrent starts share one promise. A host controls visibility/navigation polic
 the engine does not replay sounds or automatically resume them.
 
 Recipes contain no native nodes, callbacks, framework imports, or runtime
-dependencies. Only `audiobits/recipes` imports the curated confirmation, impact, and thruster data.
+dependencies. Only `audiobits/recipes` imports curated sound data.
 Default headroom checks do not guarantee safe peaks for arbitrary recipes,
 filter resonance, gains, or concurrency.
 
@@ -307,3 +330,15 @@ native recovery is suspended until a fresh `start()` request. Physical OS
 interruption still requires manual evidence. Step 04 passed maintainer manual
 verification on 2026-10-06. Browser/device details and individual observations
 were not supplied; automated checks remain separate from that acceptance.
+
+`Bus.setDelay()` and `DelayOptions` are experimental and may change before 0.1.
+Shared delay is not a stable generalized effect API.
+
+## Curated sounds
+
+The eight exports live in `audiobits/recipes`: `confirmation`, `impact`, `thruster`,
+`tactileClick`, `gentleRejection`, `glassNotification`, `whoosh`, and `powerUp`.
+Intensity controls impact, click and power-up; brightness controls glass; size
+controls whoosh; throttle is live on thruster. Other sounds have no parameters.
+New sound definitions use only schema-1 sources, filters and envelopes. Their
+signal and resource properties are tested; listening acceptance is still pending.

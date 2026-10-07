@@ -8,6 +8,14 @@ import {
   thruster,
 } from "../../packages/audiobits/src/recipes";
 
+async function waitForCleanup(ready: () => boolean) {
+  const deadline = performance.now() + 1000;
+  while (!ready()) {
+    require(performance.now() <
+      deadline, "Offline ended callbacks did not arrive");
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+}
 function require(condition: boolean, message: string) {
   if (!condition) throw new Error(message);
 }
@@ -39,6 +47,7 @@ async function signal(count: number, action?: "cancel") {
     if (i > 18000) tail = Math.max(tail, Math.abs(data[i]));
     if (i > 0) maxDelta = Math.max(maxDelta, Math.abs(data[i] - data[i - 1]));
   }
+  await waitForCleanup(() => finished === count);
   require(finished === count, "Natural resources did not finish");
   return { peak, energy, tail, onset, maxDelta, finished };
 }
@@ -659,7 +668,52 @@ async function capabilitySignal(recipe: unknown) {
     energy += data[i] ** 2;
     if (i > 48000 * 0.8) tail = Math.max(tail, Math.abs(data[i]));
   }
+  await waitForCleanup(() => finished === 1);
   require(finished === 1, "Advertised primitive did not clean up");
   return { energy, tail, finished };
 }
 Object.assign(globalThis, { capabilitySignal });
+
+async function curatedSignal(
+  recipe: import("../../packages/audiobits/src/recipe/generated").Recipe,
+  rate: number,
+  values: Record<string, number>,
+  count = 1,
+  cancel = false,
+) {
+  const context = new OfflineAudioContext(1, rate * 2, rate);
+  const plan = compile(recipe, values, 42);
+  let finished = 0;
+  const graphs = Array.from({ length: count }, (_, i) =>
+    createGraph(
+      context,
+      context.destination,
+      plan,
+      0.05 + i * 0.008,
+      -12,
+      0,
+      () => {
+        finished++;
+      },
+    ),
+  );
+  if (cancel) graphs.forEach((graph) => graph.stop());
+  const buffer = await context.startRendering();
+  const samples = buffer.getChannelData(0);
+  let peak = 0,
+    energy = 0,
+    tail = 0,
+    onset = 0,
+    delta = 0;
+  for (let i = 0; i < samples.length; i++) {
+    require(Number.isFinite(samples[i]), "Nonfinite curated output");
+    peak = Math.max(peak, Math.abs(samples[i]));
+    energy += samples[i] ** 2;
+    if (i < rate * 0.05) onset = Math.max(onset, Math.abs(samples[i]));
+    if (i > rate * 1.5) tail = Math.max(tail, Math.abs(samples[i]));
+    if (i) delta = Math.max(delta, Math.abs(samples[i] - samples[i - 1]));
+  }
+  await waitForCleanup(() => finished === count);
+  return { peak, energy, onset, tail, delta, finished };
+}
+Object.assign(globalThis, { curatedSignal });

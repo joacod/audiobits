@@ -12,7 +12,7 @@ automatic npm publication, and unrelated ecosystem work are outside this step.
 
 ## Decisions
 
-Follow [the website design](../../../docs/website.md). Use custom gallery layouts
+Follow [the website design](../../../../website.md). Use custom gallery layouts
 with Fumadocs for documentation routes, sharing theme tokens and navigation.
 Keep Next server rendering for static content and client islands for interactive
 audio. The library remains framework independent.
@@ -31,7 +31,7 @@ Start with the accepted core sounds. Expand the collection only when each recipe
 adds useful coverage and passes listening review; ten sounds are a direction,
 not a release blocker. Record any deferred recipe needs in a future change.
 
-Version/channel labels follow [the release design](../../../docs/releases.md).
+Version/channel labels follow [the release design](../../../../releases.md).
 Local/preview site builds use the local package. Stable docs must align with
 published behavior. Keep contributor plans out of normal API navigation.
 

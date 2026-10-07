@@ -1,3 +1,4 @@
+import { holdLinear } from "../runtime/automation";
 import { AudioBitsError } from "../recipe/validate";
 import type { Value, Mapping } from "../recipe/generated";
 import { mapControl, noiseData, checkNoiseRate } from "./values";
@@ -268,8 +269,7 @@ export function createGraph(
           const declaration = plan.recipe.parameters![binding.mapping.control];
           const smoothing =
             declaration.mode === "live" ? declaration.smoothing : 0;
-          binding.param.cancelAndHoldAtTime(now);
-          binding.param.setValueAtTime(current, now);
+          holdLinear(binding.param, now, current);
           binding.param.linearRampToValueAtTime(target, now + smoothing);
           Object.assign(binding, {
             start: now,
@@ -309,8 +309,7 @@ export function createGraph(
               )
             : envelopeAt(layer, plan.duration, now - at);
           releases.set(param, { at: now, value, duration: release });
-          param.cancelAndHoldAtTime(now);
-          param.setValueAtTime(value, now);
+          holdLinear(param, now, value);
           param.linearRampToValueAtTime(0, now + release);
           end = Math.max(end, now + release);
         }
@@ -329,8 +328,7 @@ export function createGraph(
                     Math.max(outputFade.duration, Number.EPSILON),
               );
         outputFade = { at: now, value: outputValue, duration: end - now };
-        output.gain.cancelAndHoldAtTime(now);
-        output.gain.setValueAtTime(outputValue, now);
+        holdLinear(output.gain, now, outputValue);
         output.gain.linearRampToValueAtTime(0, end);
         for (const source of sources) source.stop(end);
       },

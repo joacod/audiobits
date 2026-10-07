@@ -1,3 +1,4 @@
+import { requireOfflineCheckpoints } from "./offline-capabilities";
 import { expect, test } from "@playwright/test";
 import { resolve } from "node:path";
 
@@ -19,6 +20,7 @@ test("native offline delay has bounded tails and an adapted running cut fades to
     };
   });
   await page.goto("http://127.0.0.1:4173");
+  await requireOfflineCheckpoints(page);
   await page.addScriptTag({
     path: resolve(
       "node_modules/.cache/audiobits-audio-tests/audio-harness.iife.js",
@@ -63,7 +65,7 @@ test("native offline delay has bounded tails and an adapted running cut fades to
     }
   }
   console.log(
-    `Mixing signal Chromium ${browser.version()}: ${JSON.stringify(results)}`,
+    `Mixing signal ${browser.browserType().name()} ${browser.version()}: ${JSON.stringify(results)}`,
   );
 });
 test("native combined routing/effects stress returns to bus and engine baselines", async ({
@@ -213,7 +215,7 @@ for (const target of ["site", "vanilla"] as const) {
     if (target === "site")
       await expect(
         page
-          .getByRole("region", { name: "Three-sound development preview" })
+          .getByRole("region", { name: "Procedural sound gallery" })
           .getByRole("alert"),
       ).toHaveCount(0);
     else await expect(page.getByRole("alert")).toBeEmpty();

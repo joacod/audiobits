@@ -1,6 +1,6 @@
 import { OwnedBus } from "./bus";
 import type { Bus } from "./bus";
-import { defineSound, AudioBitsError } from "../recipe/validate";
+import { validateRecipe, AudioBitsError } from "../recipe/validate";
 import type { Recipe } from "../recipe/generated";
 import {
   controlsFor,
@@ -25,25 +25,54 @@ export interface AudioOptions {
   readonly maxVoicesPerSound?: number;
   readonly masterGainDb?: number;
 }
-export interface PlayOptions {
+type RecipeParameters<R extends Recipe> = "parameters" extends keyof R
+  ? NonNullable<R["parameters"]>
+  : never;
+type NamedControls<K extends PropertyKey> = [K] extends [never]
+  ? Readonly<Record<string, never>>
+  : string extends K
+    ? Controls
+    : Readonly<Partial<Record<K, number>>>;
+export type RecipeControls<R extends Recipe = Recipe> = [
+  RecipeParameters<R>,
+] extends [never]
+  ? Readonly<Record<string, never>>
+  : NamedControls<keyof RecipeParameters<R>>;
+export type LiveControls<R extends Recipe = Recipe> = [
+  RecipeParameters<R>,
+] extends [never]
+  ? Readonly<Record<string, never>>
+  : string extends keyof RecipeParameters<R>
+    ? Controls
+    : NamedControls<
+        {
+          [K in keyof RecipeParameters<R>]: RecipeParameters<R>[K] extends {
+            readonly mode: "live";
+          }
+            ? K
+            : never;
+        }[keyof RecipeParameters<R>]
+      >;
+
+export interface PlayOptions<R extends Recipe = Recipe> {
   readonly at?: number;
   readonly gainDb?: number;
   readonly pan?: number;
-  readonly parameters?: Controls;
+  readonly parameters?: RecipeControls<R>;
   readonly seed?: number;
   readonly bus?: Bus;
 }
-export interface Voice {
+export interface Voice<R extends Recipe = Recipe> {
   readonly ended: Promise<void>;
   readonly seed: number;
-  readonly parameters: Controls;
-  set(parameters: Controls): void;
+  readonly parameters: RecipeControls<R>;
+  set(parameters: LiveControls<R>): void;
   readonly state: "active" | "stopping" | "retiring" | "ended";
   stop(): void;
 }
-export interface Sound {
-  readonly recipe: Recipe;
-  play(options?: PlayOptions): Voice;
+export interface Sound<R extends Recipe = Recipe> {
+  readonly recipe: R;
+  play(options?: PlayOptions<R>): Voice<R>;
   dispose(): void;
 }
 export interface AudioEngine {
@@ -51,6 +80,7 @@ export interface AudioEngine {
   readonly counts: { readonly active: number; readonly retiring: number };
   start(): Promise<void>;
   suspend(): Promise<void>;
+  sound<const R extends Recipe>(input: R): Sound<R>;
   sound(input: unknown): Sound;
   readonly master: Bus;
   bus(name: string, parent?: Bus): Bus;
@@ -187,6 +217,150 @@ export function createEngine(
         child.destroy();
         buses.delete(child.name);
       }
+  }
+  function bindSound<const R extends Recipe>(input: R): Sound<R>;
+  function bindSound(input: unknown): Sound;
+  function bindSound(input: unknown): Sound {
+    terminal();
+    const result = validateRecipe(input);
+    if (!result.ok)
+      throw new AudioBitsError(
+        "invalid-recipe",
+        "Recipe validation failed.",
+        result.issues,
+      );
+    const recipe = result.recipe;
+
+    let disposed = false;
+    const sound: Sound = {
+      recipe,
+      play(playOptions = {}) {
+        terminal();
+        if (disposed)
+          throw new AudioBitsError("disposed", "Sound has been disposed.");
+        if (state !== "running" || context?.state !== "running" || !master)
+          throw new AudioBitsError(
+            "not-ready",
+            "Call start() from a user gesture before playing.",
+          );
+        const route = playOptions.bus ?? master;
+        if (!(route instanceof OwnedBus) || route.owner !== owner)
+          throw new AudioBitsError(
+            "invalid-route",
+            "Bus must belong to this engine.",
+          );
+        route.assert();
+        const now = context.currentTime;
+        const at = playOptions.at ?? now;
+        range(at, now, Number.MAX_SAFE_INTEGER, "at");
+        const gainDb = range(playOptions.gainDb ?? 0, -60, 0, "gainDb");
+        const pan = range(playOptions.pan ?? 0, -1, 1, "pan");
+        let parameters = controlsFor(recipe, playOptions.parameters);
+        const seed = validateSeed(
+          playOptions.seed === undefined
+            ? Math.floor(Math.random() * 0x100000000)
+            : playOptions.seed,
+        );
+        const plan = compile(recipe, parameters, seed);
+        checkNyquist(plan, context.sampleRate);
+        // Reserved future starts count as active. At most one global retiree,
+        // which also guarantees at most one retiree for any individual sound.
+        const active = () =>
+          voices.filter(
+            (record) =>
+              record.status === "active" || record.status === "stopping",
+          );
+        const own = active().filter((record) => record.sound === sound);
+        const victim =
+          own.length >= perSound
+            ? own[0]
+            : active().length >= maxVoices
+              ? active()[0]
+              : undefined;
+        if (victim) {
+          for (const record of [...voices])
+            if (record.status === "retiring") record.finish();
+          victim.status = "retiring";
+          victim.graph?.stop(0.005);
+        }
+        let resolveEnded!: () => void;
+        const ended = new Promise<void>((resolve) => {
+          resolveEnded = resolve;
+        });
+        const record: RecordVoice = {
+          sound,
+          bus: route,
+          status: "active",
+          graph: undefined,
+          voice: {
+            ended,
+            seed,
+            get parameters() {
+              return parameters;
+            },
+            set(update) {
+              if (record.status !== "active" || context?.state !== "running")
+                throw new AudioBitsError(
+                  "ended-voice",
+                  "Voice is no longer active.",
+                );
+              const validated = validateControls(recipe, update, true);
+              const next = Object.freeze({ ...parameters, ...validated });
+              record.graph!.set(next);
+              parameters = next;
+            },
+            get state() {
+              return record.status;
+            },
+            stop() {
+              if (record.status !== "active") return;
+              record.status = "stopping";
+              if (context?.state !== "running") record.finish();
+              else record.graph?.stop();
+            },
+          },
+          finish() {
+            if (record.status === "ended") return;
+            record.status = "ended";
+            record.graph?.finish();
+            const index = voices.indexOf(record);
+            if (index !== -1) voices.splice(index, 1);
+            if (state !== "disposed" && context?.state === "running") {
+              for (const bus of buses.values()) {
+                if (!voices.some((v) => within(v.bus, bus)))
+                  bus.tail(childTail(bus));
+              }
+            }
+            resolveEnded();
+          },
+        };
+        for (let bus: OwnedBus | null = route; bus; bus = bus.parent)
+          bus.prepare();
+        voices.push(record);
+        try {
+          record.graph = createGraph(
+            context,
+            route.input,
+            plan,
+            at,
+            gainDb,
+            pan,
+            record.finish,
+          );
+        } catch (error) {
+          record.finish();
+          throw error;
+        }
+        return record.voice;
+      },
+      dispose() {
+        if (disposed) return;
+        disposed = true;
+        for (const record of [...voices])
+          if (record.sound === sound) record.finish();
+      },
+    };
+    return sound;
   }
   const audio: AudioEngine = {
     get state() {
@@ -346,141 +520,7 @@ export function createEngine(
         syncNative();
       }
     },
-    sound(input) {
-      terminal();
-      const recipe = defineSound(input);
-
-      let disposed = false;
-      const sound: Sound = {
-        recipe,
-        play(playOptions = {}) {
-          terminal();
-          if (disposed)
-            throw new AudioBitsError("disposed", "Sound has been disposed.");
-          if (state !== "running" || context?.state !== "running" || !master)
-            throw new AudioBitsError(
-              "not-ready",
-              "Call start() from a user gesture before playing.",
-            );
-          const route = playOptions.bus ?? master;
-          if (!(route instanceof OwnedBus) || route.owner !== owner)
-            throw new AudioBitsError(
-              "invalid-route",
-              "Bus must belong to this engine.",
-            );
-          route.assert();
-          const now = context.currentTime;
-          const at = playOptions.at ?? now;
-          range(at, now, Number.MAX_SAFE_INTEGER, "at");
-          const gainDb = range(playOptions.gainDb ?? 0, -60, 0, "gainDb");
-          const pan = range(playOptions.pan ?? 0, -1, 1, "pan");
-          let parameters = controlsFor(recipe, playOptions.parameters);
-          const seed = validateSeed(
-            playOptions.seed === undefined
-              ? Math.floor(Math.random() * 0x100000000)
-              : playOptions.seed,
-          );
-          const plan = compile(recipe, parameters, seed);
-          checkNyquist(plan, context.sampleRate);
-          // Reserved future starts count as active. At most one global retiree,
-          // which also guarantees at most one retiree for any individual sound.
-          const active = () =>
-            voices.filter(
-              (record) =>
-                record.status === "active" || record.status === "stopping",
-            );
-          const own = active().filter((record) => record.sound === sound);
-          const victim =
-            own.length >= perSound
-              ? own[0]
-              : active().length >= maxVoices
-                ? active()[0]
-                : undefined;
-          if (victim) {
-            for (const record of [...voices])
-              if (record.status === "retiring") record.finish();
-            victim.status = "retiring";
-            victim.graph?.stop(0.005);
-          }
-          let resolveEnded!: () => void;
-          const ended = new Promise<void>((resolve) => {
-            resolveEnded = resolve;
-          });
-          const record: RecordVoice = {
-            sound,
-            bus: route,
-            status: "active",
-            graph: undefined,
-            voice: {
-              ended,
-              seed,
-              get parameters() {
-                return parameters;
-              },
-              set(update) {
-                if (record.status !== "active" || context?.state !== "running")
-                  throw new AudioBitsError(
-                    "ended-voice",
-                    "Voice is no longer active.",
-                  );
-                const validated = validateControls(recipe, update, true);
-                const next = Object.freeze({ ...parameters, ...validated });
-                record.graph!.set(next);
-                parameters = next;
-              },
-              get state() {
-                return record.status;
-              },
-              stop() {
-                if (record.status !== "active") return;
-                record.status = "stopping";
-                if (context?.state !== "running") record.finish();
-                else record.graph?.stop();
-              },
-            },
-            finish() {
-              if (record.status === "ended") return;
-              record.status = "ended";
-              record.graph?.finish();
-              const index = voices.indexOf(record);
-              if (index !== -1) voices.splice(index, 1);
-              if (state !== "disposed" && context?.state === "running") {
-                for (const bus of buses.values()) {
-                  if (!voices.some((v) => within(v.bus, bus)))
-                    bus.tail(childTail(bus));
-                }
-              }
-              resolveEnded();
-            },
-          };
-          for (let bus: OwnedBus | null = route; bus; bus = bus.parent)
-            bus.prepare();
-          voices.push(record);
-          try {
-            record.graph = createGraph(
-              context,
-              route.input,
-              plan,
-              at,
-              gainDb,
-              pan,
-              record.finish,
-            );
-          } catch (error) {
-            record.finish();
-            throw error;
-          }
-          return record.voice;
-        },
-        dispose() {
-          if (disposed) return;
-          disposed = true;
-          for (const record of [...voices])
-            if (record.sound === sound) record.finish();
-        },
-      };
-      return sound;
-    },
+    sound: bindSound,
     get master() {
       terminal();
       if (!activated || !master)

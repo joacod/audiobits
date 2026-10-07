@@ -19,7 +19,15 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm exec playwright install --with-deps chromium firefox webkit
+      - name: Start a clocked audio sink for headless Firefox
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pulseaudio
+          pulseaudio --start --exit-idle-time=-1
+          # The default null sink permits two-second buffers; keep its clock responsive.
+          pactl load-module module-null-sink sink_name=audiobits_ci norewinds=1
+          pactl set-default-sink audiobits_ci
       - run: pnpm release:prepare
       - uses: actions/upload-artifact@v4
         with:

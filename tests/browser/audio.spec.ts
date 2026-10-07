@@ -1,3 +1,4 @@
+import { requireOfflineCheckpoints } from "./offline-capabilities";
 import { test, expect } from "@playwright/test";
 import { resolve } from "node:path";
 interface Measurements {
@@ -10,15 +11,21 @@ interface Measurements {
 }
 interface Checks {
   signal(count: number, action?: "cancel"): Promise<Measurements>;
-  stopSignal(): Promise<{ energy: number; late: number; delta: number }>;
+  stopSignal(): Promise<{
+    energy: number;
+    releaseEnergy: number;
+    late: number;
+    delta: number;
+  }>;
   lifecycle(): Promise<unknown>;
 }
 
-test("Chromium offline signal, overlap, cancellation and release", async ({
+test("Native offline signal, overlap and cancellation", async ({
   page,
   browser,
+  browserName,
 }) => {
-  console.log(`Audio checks: Chromium ${browser.version()}`);
+  console.log(`Audio checks: ${browserName} ${browser.version()}`);
   await page.goto("http://127.0.0.1:4173");
   await page.addScriptTag({
     path: resolve(
@@ -32,7 +39,6 @@ test("Chromium offline signal, overlap, cancellation and release", async ({
       single: await checks.signal(1),
       eight: await checks.signal(8),
       cancelled: await checks.signal(1, "cancel"),
-      stop: await checks.stopSignal(),
     };
   });
   console.log(JSON.stringify(output));
@@ -44,13 +50,28 @@ test("Chromium offline signal, overlap, cancellation and release", async ({
   expect(output.single.onset).toBe(0);
   expect(output.single.tail).toBeLessThan(1e-6);
   expect(output.cancelled.energy).toBe(0);
-  expect(output.stop.energy).toBeGreaterThan(0);
-  expect(output.stop.releaseEnergy).toBeGreaterThan(0.0001);
-  expect(output.stop.late).toBe(0);
-  expect(output.stop.delta).toBeLessThan(0.001);
 });
 
-test("Chromium native lifecycle and simulated failed activation retry", async ({
+test("native offline release during attack fades to silence", async ({
+  page,
+}) => {
+  await page.goto("http://127.0.0.1:4173");
+  await requireOfflineCheckpoints(page);
+  await page.addScriptTag({
+    path: resolve(
+      "node_modules/.cache/audiobits-audio-tests/audio-harness.iife.js",
+    ),
+  });
+  const output = await page.evaluate(() =>
+    (globalThis as unknown as { audioChecks: Checks }).audioChecks.stopSignal(),
+  );
+  expect(output.energy).toBeGreaterThan(0);
+  expect(output.releaseEnergy).toBeGreaterThan(0.0001);
+  expect(output.late).toBe(0);
+  expect(output.delta).toBeLessThan(0.001);
+});
+
+test("Native lifecycle and simulated failed activation retry", async ({
   page,
 }) => {
   await page.goto("http://127.0.0.1:4173");
@@ -137,7 +158,13 @@ test("vanilla gesture and controls work with built public exports", async ({
   await expect(page.locator("#audio-error")).toBeEmpty();
 });
 
-test("actual Chromium autoplay block times out and retries from a gesture", async () => {
+test("actual Chromium autoplay block times out and retries from a gesture", async ({
+  browserName,
+}) => {
+  test.skip(
+    browserName !== "chromium",
+    "Chromium-specific autoplay launch policy",
+  );
   const { chromium } = await import("@playwright/test");
   const { readFile } = await import("node:fs/promises");
   const browser = await chromium.launch({

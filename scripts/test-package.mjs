@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { createServer } from "node:http";
 import { createRequire } from "node:module";
-import { chromium } from "@playwright/test";
+import { chromium, expect } from "@playwright/test";
 import { execFileSync } from "node:child_process";
 import {
   mkdtemp,
@@ -87,6 +87,12 @@ try {
     join(consumer, "index.ts"),
     'import { workspaceStatus, createAudio, defineSound, validateRecipe } from "audiobits"; import { confirmation, impact, thruster } from "audiobits/recipes"; const status: string = workspaceStatus; const audio = createAudio(); const recipe = defineSound(confirmation); audio.sound(recipe); const dynamic = () => { const voice = audio.sound(thruster).play({ seed: 42, parameters: { throttle: 0.2 } }); voice.set({ throttle: 1 }); const bus = audio.bus("effects"); bus.setDelay({ seconds: 0.2, feedback: 0.5, wet: 0.3 }); bus.setGainDb(-6, 0.1); bus.setMuted(true); bus.setParent(audio.master); audio.sound(impact).play({ bus }); const analyser = audio.native.context.createAnalyser(); const detach = audio.native.connect(analyser); detach(); analyser.disconnect(); audio.stopAll({ tails: "cut" }); bus.dispose(); const seed: number = voice.seed; audio.sound(impact).play({ parameters: { intensity: 1 }, seed }); voice.stop(); }; void dynamic; console.log(status, validateRecipe(recipe)); void audio.dispose();\n',
   );
+  await writeFile(
+    join(consumer, "authoring.types.ts"),
+    (await readFile("packages/audiobits/tests/authoring.types.ts", "utf8"))
+      .replaceAll("../src/recipes/index", "audiobits/recipes")
+      .replaceAll("../src/index", "audiobits"),
+  );
   run(
     process.execPath,
     [
@@ -100,6 +106,7 @@ try {
       "--target",
       "ES2022",
       "index.ts",
+      "authoring.types.ts",
     ],
     consumer,
   );
@@ -113,13 +120,14 @@ try {
     assert.equal(typeof window, 'undefined');
     assert.equal(typeof AudioContext, 'undefined');
     const { workspaceStatus, createAudio, defineSound, validateRecipe } = await import('audiobits');
-    const { confirmation, impact, thruster } = await import('audiobits/recipes');
+    const recipes = await import('audiobits/recipes');
     const { default: schema } = await import('audiobits/schema.json', { with: { type: 'json' } });
     const { default: capabilities } = await import('audiobits/capabilities.json', { with: { type: 'json' } });
+    assert.deepEqual(Object.keys(recipes).sort(), capabilities.curatedRecipes.toSorted());
     assert.equal(capabilities.schemaVersion, schema.$defs.OneShotRecipe.properties.schemaVersion.const);
-    for (const recipe of [confirmation, impact, thruster]) assert.ok(validateRecipe(recipe).ok);
+    for (const recipe of Object.values(recipes)) assert.ok(validateRecipe(recipe).ok);
     const audio = createAudio();
-    for (const recipe of [confirmation, impact, thruster]) audio.sound(defineSound(recipe));
+    for (const recipe of Object.values(recipes)) audio.sound(defineSound(recipe));
     assert.equal(audio.state, 'idle');
     await audio.dispose();
     assert.equal(workspaceStatus, 'AudioBits workspace ready');
@@ -197,7 +205,7 @@ try {
       examples.push({ name, file, index, code: match[1] });
     }
   }
-  assert.equal(examples.length, 5, "Review any new documentation example");
+  assert.equal(examples.length, 6, "Review any new documentation example");
   run(
     process.execPath,
     [
@@ -245,7 +253,7 @@ try {
   evidence.treeShaking = true;
   // Execute exact packaged host examples, adding only caller-owned signal probes.
   for (const example of examples.filter(
-    ({ file, index }) => file !== "README.md" || index === 0,
+    ({ file, index }) => file !== "README.md" || index <= 1,
   )) {
     await writeFile(
       join(consumer, `${example.name}-browser.ts`),
@@ -253,10 +261,33 @@ try {
 let context: AudioContext | undefined;
 let analyser: AnalyserNode | undefined;
 let detach: (() => void) | undefined;
+let signal: Promise<{ peak: number; samples: number; startTime: number; endTime: number }> | undefined;
+async function observeSignal() {
+  // This runs synchronously on the running notification, before the example's
+  // awaited start() schedules its voice. Sampling stays in the page, independent
+  // of automation protocol round trips.
+  probe.measure();
+  const startTime = context!.currentTime;
+  const deadline = performance.now() + 2000;
+  let peak = 0;
+  let samples = 0;
+  do {
+    peak = Math.max(peak, probe.measure());
+    samples++;
+    if (!Number.isFinite(peak) || peak > 0) break;
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  } while (performance.now() < deadline);
+  return { peak, samples, startTime, endTime: context!.currentTime };
+}
+const unsubscribe = audio.subscribe((state) => {
+  if (state === "running" && !signal) signal = observeSignal();
+});
 const probe = {
   play,
   stop,
-  async dispose() { detach?.(); analyser?.disconnect(); await dispose(); },
+  async dispose() { unsubscribe(); detach?.(); analyser?.disconnect(); await dispose(); },
+  get signal() { return signal; },
+  get contextTime() { return context?.currentTime; },
   measure() {
     context ??= audio.native.context;
     analyser ??= context.createAnalyser();
@@ -304,7 +335,7 @@ Object.assign(globalThis, { probe });`,
     browser = await chromium.launch();
     evidence.chromium = browser.version();
     for (const example of examples.filter(
-      ({ file, index }) => file !== "README.md" || index === 0,
+      ({ file, index }) => file !== "README.md" || index <= 1,
     )) {
       const page = await browser.newPage();
       const errors = [];
@@ -339,26 +370,64 @@ Object.assign(globalThis, { probe });`,
       await page.click("#play");
       await page.evaluate(() => globalThis.playing);
       assert.equal(await page.evaluate(() => globalThis.contextCount), 1);
-      const peak = await page.evaluate(async () => {
-        let peak = 0;
-        for (let i = 0; i < 20; i++) {
-          peak = Math.max(peak, globalThis.probe.measure());
-          await new Promise((resolve) => setTimeout(resolve, 15));
-        }
-        globalThis.probe.setThrottle?.(0.8);
-        return peak;
+      if (example.file === "README.md") {
+        // Retrieve after finite voices finish: later automation reads must still
+        // see the captured playback signal, rather than just current silence.
+        await expect
+          .poll(() => page.evaluate(() => globalThis.probe.counts), {
+            timeout: 2000,
+            message: `Finite host did not finish: ${example.name}`,
+          })
+          .toEqual({ active: 0, retiring: 0 })
+          .catch(async (error) => {
+            console.error("Finite host diagnostics", {
+              example: example.name,
+              ...(await page.evaluate(async () => ({
+                signal: await globalThis.probe.signal,
+                state: globalThis.probe.state,
+                contextState: globalThis.probe.contextState,
+                contextTime: globalThis.probe.contextTime,
+                counts: globalThis.probe.counts,
+              }))),
+              errors,
+            });
+            throw error;
+          });
+      }
+      const signal = await page.evaluate(() => globalThis.probe.signal);
+      const diagnostics = await page.evaluate(() => ({
+        state: globalThis.probe.state,
+        contextState: globalThis.probe.contextState,
+        contextTime: globalThis.probe.contextTime,
+        counts: globalThis.probe.counts,
+      }));
+      const diagnostic = JSON.stringify({
+        example: example.name,
+        file: example.file,
+        index: example.index,
+        signal,
+        ...diagnostics,
       });
       assert.ok(
-        Number.isFinite(peak) && peak > 0,
-        "Native signal must be nonzero and finite",
+        signal && Number.isFinite(signal.peak) && signal.peak > 0,
+        `Native signal must be nonzero and finite: ${diagnostic}`,
       );
+      const peak = signal.peak;
+      await page.evaluate(() => globalThis.probe.setThrottle?.(0.8));
       await page.click("#stop");
-      await page.waitForTimeout(400);
-      assert.equal(
-        await page.evaluate(() => globalThis.probe.measure()),
-        0,
-        "Stop must clear signal/tails",
-      );
+      await expect
+        .poll(
+          () =>
+            page.evaluate(() => ({
+              peak: globalThis.probe.measure(),
+              counts: globalThis.probe.counts,
+            })),
+          {
+            timeout: 2000,
+            message: `Stop must clear signal/tails: ${diagnostic}`,
+          },
+        )
+        .toEqual({ peak: 0, counts: { active: 0, retiring: 0 } });
       assert.deepEqual(await page.evaluate(() => globalThis.probe.counts), {
         active: 0,
         retiring: 0,
@@ -378,6 +447,7 @@ Object.assign(globalThis, { probe });`,
         file: example.file,
         index: example.index,
         peak,
+        observation: signal,
         silentLoad: true,
         closed: true,
       });

@@ -5,10 +5,10 @@ remain disabled. Local evidence does not establish production readiness.
 
 ## Two outputs from one repository
 
-| Output | Build input | Release action |
-| --- | --- | --- |
-| Documentation/demo site | Site and local library from the same checkout | Website deployment |
-| npm runtime | Validated archive of `packages/audiobits` | Explicit package publication |
+| Output                  | Build input                                   | Release action               |
+| ----------------------- | --------------------------------------------- | ---------------------------- |
+| Documentation/demo site | Site and local library from the same checkout | Website deployment           |
+| npm runtime             | Validated archive of `packages/audiobits`     | Explicit package publication |
 
 Root, site, and example workspaces stay `private: true`. Initially keep the
 library private too; make it publishable only in the explicitly approved first
@@ -37,11 +37,10 @@ deployment fails, retain its prior deployment and report the temporary mismatch.
 
 ## First core release gate
 
-The earliest candidate is the Step 03 core, after an explicit decision to use
-the reduced release scope described in [the roadmap](roadmap.md). Requirements:
+Release preparation verifies the implemented sound set and reasonable 0.1 API:
 
-- Three working sounds with documented controls and cleanup behavior.
-- Focused unit tests and Chromium runtime/browser checks pass.
+- Eight working sounds with documented controls and cleanup behavior.
+- Focused unit tests and Chromium/Firefox/WebKit runtime/browser checks pass.
 - Listening review confirms the shipped sounds and control transitions.
 - Clean tarball consumption verifies ESM imports, declarations, and browser use.
 - Node import/recipe validation works without browser globals or side effects.
@@ -51,9 +50,9 @@ the reduced release scope described in [the roadmap](roadmap.md). Requirements:
 - Final npm identity, ownership, and naming decision are confirmed.
 - The exact artifact/version and publication action receive explicit approval.
 
-Do not require Firefox/WebKit/mobile acceptance or ten showcase sounds for this
-small release. Do not defer core ownership, disposal, validation, or failed-start
-handling merely because compatibility work is deferred.
+Run the final Chromium, Firefox and WebKit matrix before release. Listening and
+physical-device evidence remain separate. Never defer ownership, validation or
+failed-start handling because publication is disabled.
 
 ## Publication workflow
 
@@ -89,11 +88,11 @@ release failures do not require rebuilding unrelated website content.
 - [npm trusted publishing](https://docs.npmjs.com/trusted-publishers/)
 - [publint](https://publint.dev/)
 
-## Step 06 candidate preparation
+## Private candidate preparation
 
-The full accepted Steps 01–05 core is selected. The private candidate is
+Candidate scope follows the implemented runtime and curated sound set. The private candidate is
 `0.1.0-rc.0`; Changesets 3.0.3 applied the initial minor note in `rc` mode.
-It includes only three curated recipes, schema-1 oscillator/white-noise
+It includes curated recipes, schema-1 oscillator/white-noise
 sources and filters, seeded variation, play/live controls, bounded voices,
 buses/shared delay, explicit native interop and lifecycle APIs. Deferred
 features in the recipe study remain unavailable.
@@ -102,17 +101,16 @@ Run the preparation gate from the repository root under the pinned Node version:
 
 ```sh
 pnpm install --frozen-lockfile
-pnpm exec playwright install chromium
+pnpm exec playwright install chromium firefox webkit
 pnpm release:prepare
-OPENSPEC_TELEMETRY=0 openspec validate --all --strict --no-interactive
 ```
 
-`release:prepare` runs lint, types, units, the full Chromium integration suite,
+`release:prepare` runs lint, types, units, the Chromium/Firefox/WebKit integration suite,
 and the isolated packed-package check. `pnpm test:package` is also a focused
 rehearsal: strict publint, a complete archive allowlist/content review, offline
 consumer install, Node imports without browser globals, declaration resolution,
 metadata versions, packaged Markdown examples, unused-import tree-shaking, and
-native Chromium playback/Stop/disposal of the exact quick start and Skill host.
+native Chromium playback/Stop/disposal of the exact quick start, production lifecycle and Skill host.
 It starts an ephemeral loopback server and requires the installed Chromium binary.
 No registry authentication, registry write or hosting account is used.
 
@@ -188,5 +186,34 @@ archive, and verify registry existence/integrity before retrying any ambiguous
 failure. Keep the previously stable site on failure. Published defects require
 new versions; website rollback changes only the hosting deployment.
 
-See [Step 06 evidence](../openspec/changes/06-core-release/verification.md) for
-executed checks, inherited listening acceptance and unresolved release gates.
+Current PR checks and ignored archive evidence identify actual candidate bytes.
+Foundation acceptance is historical; new sounds and exact candidate artifacts
+need listening review before release. Production inputs remain unresolved.
+
+### Hosted validation and remaining gaps
+
+The 2026-10-07 [Linux CI repair run](https://github.com/joacod/audiobits/actions/runs/37678294832)
+passed lint, typechecking, 47 unit tests, production builds, the packed-consumer
+rehearsal and 94 Chromium/Firefox/WebKit browser checks. Eight checks skipped
+explicitly: six Firefox offline-checkpoint cases and two Chromium-only autoplay
+checks. Firefox finite rendering, live automation fallback, resource cleanup and
+public gallery workflows passed. Offline checkpoint signal coverage remains
+unavailable where the native APIs are absent.
+
+Repeated Linux execution reproduced a packed-host failure with nonzero output
+but an audio clock stalled at 11.6 ms. The null sink's default two-second buffering
+was unsuitable for live audio checks. Both CI workflows now use `norewinds=1`,
+which bounds its buffering to 50 ms. Signal, cleanup assertions and timeouts
+remain intact; live fallback coverage is independent of offline capability skips.
+
+The checks used Node 24.21.0, pnpm 12.9.1 and Playwright 1.63.0. The isolated
+archive rehearsal checks eight exports, installed authoring types, six packaged
+examples and three native Chromium hosts. Current PR checks and ignored archive
+evidence identify the exact candidate; the aggregate `release:prepare` invocation
+is recorded separately from individual CI commands.
+
+Local Firefox still fails before page creation with `Could not find profile folder`,
+matching the [reported macOS 27 launch issue](https://github.com/microsoft/playwright/issues/42768).
+Linux engine automation does not establish physical Safari/iOS or mobile support.
+New-sound listening acceptance and physical-device review remain release
+follow-ups. Publication and deployment guards remain disabled.
