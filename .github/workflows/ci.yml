@@ -29,4 +29,7 @@ jobs:
           pactl load-module module-null-sink sink_name=audiobits_ci
           pactl set-default-sink audiobits_ci
       - run: pnpm test:package
+        id: package
       - run: pnpm test:browser
+        # Report independent browser failures even if the packed consumer fails.
+        if: success() || (failure() && steps.package.outcome == 'failure')

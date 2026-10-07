@@ -378,7 +378,21 @@ Object.assign(globalThis, { probe });`,
             timeout: 2000,
             message: `Finite host did not finish: ${example.name}`,
           })
-          .toEqual({ active: 0, retiring: 0 });
+          .toEqual({ active: 0, retiring: 0 })
+          .catch(async (error) => {
+            console.error("Finite host diagnostics", {
+              example: example.name,
+              ...(await page.evaluate(async () => ({
+                signal: await globalThis.probe.signal,
+                state: globalThis.probe.state,
+                contextState: globalThis.probe.contextState,
+                contextTime: globalThis.probe.contextTime,
+                counts: globalThis.probe.counts,
+              }))),
+              errors,
+            });
+            throw error;
+          });
       }
       const signal = await page.evaluate(() => globalThis.probe.signal);
       const diagnostics = await page.evaluate(() => ({
