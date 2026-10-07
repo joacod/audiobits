@@ -7,7 +7,6 @@ next-env.d.ts
 playwright-report
 test-results
 *.tsbuildinfo
-docs/history/openspec/
 
 # Preserve upstream formatting in vendored agent skills.
 apps/www/.agents/skills/
