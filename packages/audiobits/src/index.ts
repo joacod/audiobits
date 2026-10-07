@@ -10,6 +10,12 @@ export type {
   Filter,
   Envelope,
   Source,
+  Value,
+  PointValue,
+  Mapping,
+  Variation,
+  Parameter,
+  Parameters,
 } from "./recipe/generated";
 export { recipeSchema } from "./recipe/generated";
 export { createAudio } from "./runtime/engine";

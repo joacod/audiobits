@@ -1,8 +1,9 @@
 # Recipe model and runtime contract
 
 Status: draft schema v1. Step 02 implements the finite oscillator/filter subset
-and confirmation fixture; [the development API](../packages/audiobits/README.md)
-is the current executable contract. Step 03 additions below remain proposed.
+and confirmation fixture; Step 03 adds controls, variation, noise, and sustained
+voices. [The development API](../packages/audiobits/README.md) is the executable
+contract; the Step 03 listening gate passed maintainer manual verification.
 Reconcile this contract with listening evidence before the first release.
 
 ## Data boundary
@@ -67,10 +68,11 @@ stopped before onset without becoming audible.
 
 Step 02 supports numeric values and frequency automation. Step 03 adds bounded
 control mappings and seeded variation to supported targets. Use this finite
-grammar rather than arbitrary expressions:
+grammar rather than arbitrary expressions. Frequencies support `Value`; layer gain
+supports only `PointValue`, while envelopes and filter Q remain numeric:
 
 ```ts
-// Proposed notation, not exported declarations.
+// Abbreviated notation; generated declarations are exported by audiobits.
 type Mapping = { control: string; range: [number, number]; scale: "linear" | "exponential" };
 type Variation = { random: [number, number] };
 type PointValue = number | Mapping | Variation;
@@ -107,8 +109,10 @@ fails with an ended-voice error.
 
 An explicit unsigned 32-bit seed at play time reproduces variation choices and
 noise generation for the same normalized recipe and sample rate. Normalize
-property traversal deterministically. Specify and test a small stable PRNG in
-Step 03; reject invalid seeds and protect its behavior with known-vector tests.
+property traversal deterministically. Step 03 uses xorshift32 (shifts 13/17/5), mapping public seed zero internally
+to `0x6d2b79f5`, and rejects invalid seeds. Known-vector tests protect the stream.
+The [development API](../packages/audiobits/README.md) specifies traversal,
+per-layer noise streams, sample-rate bounds, and buffer ownership.
 Without a seed, the engine chooses a fresh one and exposes it on the voice for
 replay. Do not call unseeded randomness while rendering a seeded sound.
 
@@ -119,9 +123,8 @@ modulation, which is deferred.
 ## Effects
 
 Step 02 supports a lowpass/highpass/bandpass filter with frequency and Q.
-Q is bounded to `[0.1, 20]`. Step 03 may add a bounded saturation transfer curve
-only if the impact/thruster listening work needs it; add its explicit schema and
-tests before use. Do not ship placeholder descriptors for unsupported effects.
+Q is bounded to `[0.1, 20]`. Saturation remains unimplemented; listening has not
+established a need for it. Do not ship placeholder descriptors for unsupported effects.
 
 Step 04 adds bus-level delay with bounded delay time, feedback, wet amount, and
 tail cutoff. Shared effects are runtime bus configuration, not embedded context

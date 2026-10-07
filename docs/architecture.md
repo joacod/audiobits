@@ -1,6 +1,7 @@
 # Architecture design
 
-Status: Steps 01–02 implemented; later capabilities below remain proposed.
+Status: Steps 01–03 implemented and accepted.
+Bus/native capabilities below remain proposed.
 See [the roadmap](roadmap.md) for scope and [the development API](../packages/audiobits/README.md)
 for currently exported behavior.
 
@@ -31,8 +32,8 @@ controls, and visualization dependencies stay in `apps/www`.
 ## Execution boundary
 
 ```text
-JSON recipe → validate → normalize → reusable execution plan
-                                          ↓ play
+JSON recipe → validate → immutable reusable definition
+                                          ↓ play: controls + seed → plan
                                   fresh per-voice graph
                                           ↓
                               voice output → bus → master
@@ -50,8 +51,8 @@ eligibility rules. No transparent optimizer is promised in the first release.
 
 ## Proposed public surface
 
-Names below include implemented Step 02 APIs and later design targets.
-`voice.set()` remains Step 03 work; bus/native APIs remain Step 04 work.
+Names below include implemented Steps 02–03 APIs and later design targets.
+`voice.set()` is implemented; bus/native APIs remain Step 04 work.
 
 | Concept | Responsibility |
 | --- | --- |
@@ -68,7 +69,7 @@ Names below include implemented Step 02 APIs and later design targets.
 | `audio.stopAll()` | Stop owned voices; bus tails follow the documented policy |
 | `audio.dispose()` | Idempotent shutdown including pending starts and owned graph |
 
-`audio.sound()` may run before start because it stores a pure plan. Calls to
+`audio.sound()` may run before start because it stores an immutable recipe snapshot. Calls to
 `play()` before successful start fail with a structured not-ready error; the
 engine does not queue stale UI sounds for later replay. Capture errors at the
 application boundary and present a retry action where a gesture is required.
@@ -76,10 +77,10 @@ application boundary and present a retry action where a gesture is required.
 ## Ownership and lifecycle
 
 The engine owns exactly one lazily created context, a master gain, voice records,
-and its generated resources. A sound owns a recipe snapshot and reusable plan;
-each play creates its own sources and envelopes. Disposing a sound stops its
+and its generated resources. A sound owns a recipe snapshot; each play resolves controls/seed into an internal
+plan and creates its own sources, envelopes, and bounded noise buffers. Disposing a sound stops its
 voices. Engine disposal invalidates pending starts, stops voices, disconnects
-owned nodes, clears caches/listeners, and closes the context once.
+owned nodes, clears buffer references/listeners, and closes the context once.
 
 Cleanup must not depend solely on `onended` or future audio-clock progress.
 Explicit teardown finalizes records even if a context is suspended or closed.

@@ -1,6 +1,6 @@
 import { expect, it, vi } from "vitest";
 import { createAudio, createEngine } from "../src/runtime/engine";
-import { confirmation } from "../src/recipes";
+import { confirmation, impact, thruster } from "../src/recipes";
 
 class Param {
   value = 0;
@@ -27,6 +27,10 @@ class Node {
   Q = new Param();
   pan = new Param();
   type = "";
+  buffer: { data: Float32Array } | null = null;
+  loop = false;
+  loopStart = 0;
+  loopEnd = 0;
   onended: (() => void) | null = null;
   start = vi.fn();
   stop = vi.fn();
@@ -49,6 +53,20 @@ function setup(options = {}) {
     createGain: vi.fn(make),
     createStereoPanner: vi.fn(make),
     createBiquadFilter: vi.fn(make),
+    createBuffer: vi.fn((_channels: number, length: number) => {
+      const data = new Float32Array(length);
+      return {
+        data,
+        copyToChannel(input: Float32Array) {
+          data.set(input);
+        },
+      };
+    }),
+    createBufferSource: vi.fn(() => {
+      const node = make();
+      sources.push(node);
+      return node;
+    }),
     createOscillator: vi.fn(() => {
       const node = make();
       sources.push(node);
@@ -303,4 +321,126 @@ it("bounds a blocked resume and permits a new gesture retry without old playback
   } finally {
     vi.useRealTimers();
   }
+});
+
+it("validates play controls and seeds before allocation or stealing", async () => {
+  const { audio, nodes, sources } = setup({ maxVoices: 1 });
+  await audio.start();
+  const sound = audio.sound(impact);
+  const first = sound.play({ seed: 0, parameters: { intensity: 0 } });
+  const count = nodes.length;
+  for (const options of [
+    { seed: -1 },
+    { seed: 1.1 },
+    { parameters: { intensity: 2 } },
+    { parameters: { unknown: 0 } },
+    { parameters: { intensity: NaN } },
+  ]) {
+    expect(() => sound.play(options)).toThrow();
+    expect(nodes).toHaveLength(count);
+    expect(first.state).toBe("active");
+  }
+  const second = sound.play({ seed: 42, parameters: { intensity: 1 } });
+  expect(second.seed).toBe(42);
+  expect(second.parameters).toEqual({ intensity: 1 });
+  expect(first.seed).toBe(0);
+  expect(first.state).toBe("retiring");
+  expect(() => second.set({ intensity: 0 })).toThrow(/live/);
+  expect(second.parameters).toEqual({ intensity: 1 });
+  expect(sources.filter((source) => source.buffer !== null)).toHaveLength(2);
+  await audio.dispose();
+  expect(sources.every((source) => source.buffer === null)).toBe(true);
+});
+it("retargets live ramps from their current values atomically without new graphs", async () => {
+  const { audio, context, sources, nodes } = setup();
+  await audio.start();
+  const voice = audio
+    .sound(thruster)
+    .play({ seed: 42, parameters: { throttle: 0 } });
+  const source = sources[0];
+  const count = nodes.length;
+  expect(source.stop).not.toHaveBeenCalled();
+  const noise = sources[1];
+  const buffer = noise.buffer;
+  expect(buffer!.data.byteLength).toBe(192000);
+  expect(noise.loopStart).toBe(0.02);
+  voice.set({ throttle: 1 });
+  expect(source.frequency.calls.at(-1)).toEqual(["linear", 130, 1.04]);
+  context.currentTime = 1.02;
+  voice.set({ throttle: 0 });
+  expect(source.frequency.calls.at(-2)).toEqual(["set", 87.5, 1.02]);
+  const before = source.frequency.calls.length;
+  expect(() => voice.set({ throttle: 1, unknown: 0 })).toThrow();
+  expect(source.frequency.calls).toHaveLength(before);
+  expect(voice.parameters).toEqual({ throttle: 0 });
+  const accessor = Object.defineProperty({}, "throttle", {
+    enumerable: true,
+    get() {
+      throw new Error("read getter");
+    },
+  });
+  expect(() => voice.set(accessor)).toThrow(/Invalid/);
+  for (let i = 0; i < 1000; i++) {
+    context.currentTime += 0.001;
+    voice.set({ throttle: i % 2 });
+  }
+  expect(nodes).toHaveLength(count);
+  expect(sources).toHaveLength(2);
+  expect(noise.buffer).toBe(buffer);
+  expect(source.start).toHaveBeenCalledTimes(1);
+  expect(audio.counts).toEqual({ active: 1, retiring: 0 });
+  voice.stop();
+  expect(() => voice.set({ throttle: 0.5 })).toThrow(/no longer active/);
+  sources.forEach((source) => source.onended?.());
+  await voice.ended;
+  expect(noise.buffer).toBeNull();
+  expect(audio.counts.active).toBe(0);
+  await audio.dispose();
+});
+it("bounds sustained start/stop resources, cancelled onset and disposal", async () => {
+  const { audio, context, sources } = setup({
+    maxVoices: 2,
+    maxVoicesPerSound: 2,
+  });
+  await audio.start();
+  const sound = audio.sound(thruster);
+  const future = sound.play({ at: 2 });
+  future.set({ throttle: 1 });
+  future.stop();
+  await future.ended;
+  expect(() => future.set({ throttle: 0 })).toThrow(/no longer active/);
+  for (let i = 0; i < 200; i++) {
+    const voice = sound.play();
+    expect(Number.isInteger(voice.seed)).toBe(true);
+    voice.set({ throttle: 1 });
+    voice.stop();
+    expect(audio.counts.active).toBeLessThanOrEqual(2);
+    expect(audio.counts.retiring).toBeLessThanOrEqual(1);
+    expect(
+      sources.filter((source) => source.buffer !== null).length,
+    ).toBeLessThanOrEqual(3);
+  }
+  context.state = "suspended";
+  sound.dispose();
+  expect(audio.counts).toEqual({ active: 0, retiring: 0 });
+  expect(sources.every((source) => source.buffer === null)).toBe(true);
+  await audio.dispose();
+});
+it("cleans noise graphs after buffer failure and rejects unsupported noise rates first", async () => {
+  const { audio, context, nodes } = setup();
+  await audio.start();
+  const sound = audio.sound(thruster);
+  context.sampleRate = 384000;
+  expect(() => sound.play()).toThrow(/Noise/);
+  expect(nodes).toHaveLength(1);
+  context.sampleRate = 48000;
+  context.createBuffer.mockImplementationOnce(() => {
+    throw new Error("buffer allocation");
+  });
+  expect(() => sound.play()).toThrow(/buffer allocation/);
+  expect(audio.counts).toEqual({ active: 0, retiring: 0 });
+  expect(
+    nodes.slice(1).every((node) => node.disconnect.mock.calls.length === 1),
+  ).toBe(true);
+  await audio.dispose();
 });
