@@ -14,12 +14,16 @@ export function GalleryPage({ selected }: { selected?: SoundKind }) {
           {siteBuild.channel === "Stable" ? "Docs" : "Development docs"}
         </Link>
       </nav>
-      <p className="eyebrow">
-        {siteBuild.channel} · {siteBuild.version} · {siteBuild.source}
-      </p>
-      <h1>{selected ? soundInfo[selected].title : "AudioBits"}</h1>
-      <p className="intro">Procedural sound for interactive web experiences.</p>
-      <p>Small JSON definitions. Fresh voices. No audio downloads.</p>
+      <header className="gallery-intro">
+        <h1>{selected ? soundInfo[selected].title : "AudioBits"}</h1>
+        <p className="intro">
+          Procedural sound for interactive web experiences.
+        </p>
+        <p>Small JSON definitions. Fresh voices. No audio downloads.</p>
+        <p className="gallery-channel">
+          {siteBuild.channel} · {siteBuild.version} · {siteBuild.source}
+        </p>
+      </header>
       {selected && (
         <p>
           <Link href="/sounds">All sounds</Link>

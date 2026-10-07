@@ -272,15 +272,19 @@ export function ConfirmationDemo({
       </div>
       {(!selected || selected === "confirmation") && (
         <article className="sound-card" id="confirmation">
-          <p className="eyebrow">{soundInfo.confirmation.use}</p>
-          <h3>
-            <Link href="/sounds/confirmation">Confirmation</Link>
-          </h3>
-          <p>{soundInfo.confirmation.description}</p>
-          <Button onClick={() => void play()}>Play confirmation</Button>
-          <p aria-live="polite">
-            Confirmation: {playing.confirmation ?? "ready"}
-          </p>
+          <div className="sound-preview">
+            <h3>
+              <Link href="/sounds/confirmation">Confirmation</Link>
+            </h3>
+            <p className="sound-use">{soundInfo.confirmation.use}</p>
+            <p>{soundInfo.confirmation.description}</p>
+            <Button className="play-action" onClick={() => void play()}>
+              Play confirmation
+            </Button>
+            <p aria-live="polite">
+              Confirmation: {playing.confirmation ?? "ready"}
+            </p>
+          </div>
           <RecipeTools
             kind="confirmation"
             onReset={resetControl}
@@ -293,28 +297,32 @@ export function ConfirmationDemo({
       )}
       {(!selected || selected === "impact") && (
         <article className="sound-card" id="impact">
-          <p className="eyebrow">{soundInfo.impact.use}</p>
-          <h3>
-            <Link href="/sounds/impact">Impact</Link>
-          </h3>
-          <p>
-            A descending body and filtered noise transient. Intensity changes
-            pitch, brightness, and level.
-          </p>
-          <label>
-            Intensity: {intensity.toFixed(2)}
-            <input
-              aria-label="Intensity"
-              type="range"
-              min="0"
-              max="1"
-              step="0.01"
-              value={intensity}
-              onChange={(event) => setIntensity(Number(event.target.value))}
-            />
-          </label>
-          <Button onClick={() => void play("impact")}>Play impact</Button>
-          <p aria-live="polite">Impact: {playing.impact ?? "ready"}</p>
+          <div className="sound-preview">
+            <h3>
+              <Link href="/sounds/impact">Impact</Link>
+            </h3>
+            <p className="sound-use">{soundInfo.impact.use}</p>
+            <p>
+              A descending body and filtered noise transient. Intensity changes
+              pitch, brightness, and level.
+            </p>
+            <label>
+              Intensity: {intensity.toFixed(2)}
+              <input
+                aria-label="Intensity"
+                type="range"
+                min="0"
+                max="1"
+                step="0.01"
+                value={intensity}
+                onChange={(event) => setIntensity(Number(event.target.value))}
+              />
+            </label>
+            <Button className="play-action" onClick={() => void play("impact")}>
+              Play impact
+            </Button>
+            <p aria-live="polite">Impact: {playing.impact ?? "ready"}</p>
+          </div>
           <RecipeTools
             kind="impact"
             onReset={resetControl}
@@ -327,49 +335,52 @@ export function ConfirmationDemo({
       )}
       {(!selected || selected === "thruster") && (
         <article className="sound-card" id="thruster">
-          <p className="eyebrow">{soundInfo.thruster.use}</p>
-          <h3>
-            <Link href="/sounds/thruster">Thruster</Link>
-          </h3>
-          <p>
-            Start once, adjust throttle while it runs, then release with Stop.
-          </p>
-          <label>
-            Throttle: {throttle.toFixed(2)}
-            <input
-              aria-label="Throttle"
-              type="range"
-              min="0"
-              max="1"
-              step="0.01"
-              value={throttle}
-              onChange={(event) => {
-                const value = Number(event.target.value);
-                throttleValue.current = value;
-                setThrottle(value);
-                try {
-                  if (thrusterVoice.current?.state === "active")
-                    thrusterVoice.current.set({ throttle: value });
-                } catch (cause) {
-                  setError(
-                    cause instanceof Error
-                      ? cause.message
-                      : "Control update failed.",
-                  );
-                }
-              }}
-            />
-          </label>
-          <div className="audio-controls">
-            <Button
-              disabled={thrusterState !== "stopped"}
-              onClick={() => void play("thruster")}
-            >
-              Start thruster
-            </Button>
-            <Button onClick={stopThruster}>Stop thruster</Button>
+          <div className="sound-preview">
+            <h3>
+              <Link href="/sounds/thruster">Thruster</Link>
+            </h3>
+            <p className="sound-use">{soundInfo.thruster.use}</p>
+            <p>
+              Start once, adjust throttle while it runs, then release with Stop.
+            </p>
+            <label>
+              Throttle: {throttle.toFixed(2)}
+              <input
+                aria-label="Throttle"
+                type="range"
+                min="0"
+                max="1"
+                step="0.01"
+                value={throttle}
+                onChange={(event) => {
+                  const value = Number(event.target.value);
+                  throttleValue.current = value;
+                  setThrottle(value);
+                  try {
+                    if (thrusterVoice.current?.state === "active")
+                      thrusterVoice.current.set({ throttle: value });
+                  } catch (cause) {
+                    setError(
+                      cause instanceof Error
+                        ? cause.message
+                        : "Control update failed.",
+                    );
+                  }
+                }}
+              />
+            </label>
+            <div className="audio-controls">
+              <Button
+                className="play-action"
+                disabled={thrusterState !== "stopped"}
+                onClick={() => void play("thruster")}
+              >
+                Start thruster
+              </Button>
+              <Button onClick={stopThruster}>Stop thruster</Button>
+            </div>
+            <p data-testid="thruster-state">Thruster: {thrusterState}</p>
           </div>
-          <p data-testid="thruster-state">Thruster: {thrusterState}</p>
           <RecipeTools
             kind="thruster"
             onReset={resetControl}

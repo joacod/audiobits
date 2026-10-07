@@ -41,7 +41,16 @@ when it needs to follow that override.
 Buttons retain their selected state through `aria-pressed`. Hover feedback is
 limited to enabled buttons. Within `.audio-controls`, `gap` owns spacing and
 button margins are zero; standalone buttons retain their original margins.
+Playback buttons use `.play-action` for the filled accent treatment; supporting
+actions use neutral borders and hover surfaces. Sound panels place playback
+beside recipe tools on wide screens and stack in DOM order at narrow widths.
+The sticky mixer groups its actions and volume side by side on wide screens.
 The existing reduced-motion override remains scoped to the gallery.
+
+Impeccable work targets these custom gallery surfaces. Leave Fumadocs routes,
+components, MDX content, and shared theme definitions unchanged unless explicitly
+requested; see [the website instructions](AGENTS.md). When changing this shared
+stylesheet, also check a documentation page for unintended visual changes.
 
 Verify changes with `pnpm build:site` and `pnpm lint`, then inspect the homepage
 at desktop and narrow widths in light and dark themes. Check keyboard focus,
