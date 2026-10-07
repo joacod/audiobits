@@ -10,6 +10,36 @@ const impactSound = audio.sound(impact);
 const thrusterSound = audio.sound(thruster);
 let thrusterVoice: import("audiobits").Voice | undefined;
 let request = 0;
+let routed: import("audiobits").Bus | undefined;
+let removeAnalyser: (() => void) | undefined;
+let analyser: AnalyserNode | undefined;
+let frame = 0;
+function routing() {
+  if (!routed) {
+    routed = audio.bus("effects");
+    routed.setGainDb(
+      Number(document.querySelector<HTMLInputElement>("#volume")!.value),
+      0.1,
+    );
+    const native = audio.native;
+    analyser = native.context.createAnalyser();
+    removeAnalyser = native.connect(analyser);
+    const samples = new Float32Array(analyser.fftSize);
+    const meter = document.querySelector<HTMLParagraphElement>("#level")!;
+    const read = () => {
+      if (!mounted || !analyser) return;
+      analyser.getFloatTimeDomainData(samples);
+      const peak = samples.reduce(
+        (value, sample) => Math.max(value, Math.abs(sample)),
+        0,
+      );
+      meter.textContent = `Output peak: ${peak.toFixed(3)}`;
+      frame = requestAnimationFrame(read);
+    };
+    read();
+  }
+  return routed;
+}
 const thrusterState =
   document.querySelector<HTMLParagraphElement>("#thruster-state")!;
 const thrusterButton = document.querySelector<HTMLButtonElement>("#thruster")!;
@@ -38,7 +68,8 @@ document.querySelector("#play")!.addEventListener("click", () => {
   void audio
     .start()
     .then(() => {
-      if (mounted && token === request) sound.play();
+      if (mounted && !document.hidden && token === request)
+        sound.play({ bus: routing() });
     })
     .catch((cause: unknown) => {
       if (mounted)
@@ -48,7 +79,7 @@ document.querySelector("#play")!.addEventListener("click", () => {
 });
 document.querySelector("#stop")!.addEventListener("click", () => {
   stopThruster();
-  audio.stopAll();
+  audio.stopAll({ tails: "cut" });
 });
 mute.addEventListener("click", () => {
   const muted = mute.getAttribute("aria-pressed") !== "true";
@@ -64,8 +95,8 @@ document.querySelector("#impact")!.addEventListener("click", () => {
   void audio
     .start()
     .then(() => {
-      if (mounted && token === request)
-        impactSound.play({ parameters: { intensity } });
+      if (mounted && !document.hidden && token === request)
+        impactSound.play({ parameters: { intensity }, bus: routing() });
     })
     .catch(showError);
 });
@@ -77,9 +108,15 @@ thrusterButton.addEventListener("click", () => {
   void audio
     .start()
     .then(() => {
-      if (!mounted || token !== request || thrusterVoice?.state === "active")
+      if (
+        !mounted ||
+        document.hidden ||
+        token !== request ||
+        thrusterVoice?.state === "active"
+      )
         return;
       const voice = thrusterSound.play({
+        bus: routing(),
         parameters: {
           throttle: Number(
             document.querySelector<HTMLInputElement>("#throttle")!.value,
@@ -93,7 +130,7 @@ thrusterButton.addEventListener("click", () => {
       });
     })
     .catch((cause: unknown) => {
-      if (mounted && token === request) stopThruster();
+      if (mounted && !document.hidden && token === request) stopThruster();
       showError(cause);
     });
 });
@@ -115,7 +152,8 @@ document
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) {
     stopThruster();
-    audio.stopAll();
+    audio.stopAll({ tails: "cut" });
+    void audio.suspend().catch(showError);
   }
 });
 window.addEventListener(
@@ -125,7 +163,37 @@ window.addEventListener(
     request++;
     thrusterVoice = undefined;
     unsubscribe();
+    cancelAnimationFrame(frame);
+    removeAnalyser?.();
+    analyser?.disconnect();
+    analyser = undefined;
     void audio.dispose().catch(() => {});
   },
   { once: true },
 );
+
+document.querySelector("#delay")!.addEventListener("click", () => {
+  const token = request;
+  void audio
+    .start()
+    .then(() => {
+      if (!mounted || document.hidden || token !== request) return;
+      const button = document.querySelector<HTMLButtonElement>("#delay")!;
+      const enabled = button.getAttribute("aria-pressed") !== "true";
+      routing().setDelay(
+        enabled ? { seconds: 0.18, feedback: 0.35, wet: 0.25 } : null,
+      );
+      button.setAttribute("aria-pressed", String(enabled));
+    })
+    .catch(showError);
+});
+
+document
+  .querySelector<HTMLInputElement>("#volume")!
+  .addEventListener("input", (event) => {
+    try {
+      routed?.setGainDb(Number((event.target as HTMLInputElement).value), 0.1);
+    } catch (cause) {
+      showError(cause);
+    }
+  });

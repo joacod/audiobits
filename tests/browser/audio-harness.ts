@@ -331,7 +331,7 @@ async function dynamicLifecycle() {
   const sound = audio.sound(thruster);
   const impactSound = audio.sound(impact);
   const voice = sound.play({ seed: 42 });
-  const nodesPerThruster = live.size - 1;
+  const nodesPerThruster = live.size - 2;
   const baseline = created;
   const originalBuffer = buffers.at(-1)!.buffer;
   for (let i = 0; i < 1000; i++) voice.set({ throttle: (i % 101) / 100 });
@@ -347,7 +347,7 @@ async function dynamicLifecycle() {
   }
   require(endedError, "Stopped voice accepted controls");
   await voice.ended;
-  require(live.size === 1 &&
+  require(live.size === 2 &&
     buffers.every(
       (source) => source.buffer === null,
     ), "Release retained resources");
@@ -361,7 +361,7 @@ async function dynamicLifecycle() {
     scheduling.push(performance.now() - before);
   }
   await audio.suspend();
-  require(live.size === 1, "Suspension retained nodes");
+  require(live.size === 2, "Suspension retained nodes");
   await audio.start();
   let maxNodes = 0,
     maxBytes = 0;
@@ -375,14 +375,14 @@ async function dynamicLifecycle() {
       0,
     );
     maxBytes = Math.max(maxBytes, bytes);
-    require(live.size <= 31 &&
+    require(live.size <= 32 &&
       bytes <= context.sampleRate * 4 * 3, "Sustained stress exceeded bounds");
     require(audio.counts.active <= 2 &&
       audio.counts.retiring <= 1, "Voice stress exceeded bounds");
   }
   sound.play({ seed: 7 });
   sound.dispose();
-  require(live.size === 1 &&
+  require(live.size === 2 &&
     buffers.every(
       (source) => source.buffer === null,
     ), "Sound disposal retained resources");
@@ -411,3 +411,105 @@ async function dynamicLifecycle() {
   };
 }
 Object.assign(globalThis, { dynamicSignal, dynamicLifecycle });
+
+// Offline signal checks use native delay nodes; they do not establish listening quality.
+async function mixingSignal(rate: number, cut: boolean) {
+  const { OwnedBus } = await import("../../packages/audiobits/src/runtime/bus");
+  const context = new OfflineAudioContext(1, rate * 7, rate);
+  const bus = new OwnedBus(
+    "master",
+    context as unknown as AudioContext,
+    {},
+    null,
+    () => {},
+    -12,
+  );
+  bus.setDelay({ seconds: 0.2, feedback: 0.9, wet: 0.5 });
+  createGraph(context, bus.input, compile(confirmation), 0.05, 0, 0, () =>
+    bus.tail(),
+  );
+  if (cut) {
+    const trigger = context.createOscillator();
+    trigger.onended = () => {
+      bus.cut();
+      trigger.disconnect();
+    };
+    trigger.start();
+    trigger.stop(0.4);
+  }
+  const data = (await context.startRendering()).getChannelData(0);
+  let tailEnergy = 0,
+    latePeak = 0,
+    peak = 0;
+  for (let i = 0; i < data.length; i++) {
+    require(Number.isFinite(data[i]), "Nonfinite delay output");
+    peak = Math.max(peak, Math.abs(data[i]));
+    if (i > rate * 0.5 && i < rate) tailEnergy += data[i] ** 2;
+    if (i > rate * 6) latePeak = Math.max(latePeak, Math.abs(data[i]));
+  }
+  bus.destroy();
+  return { rate, cut, tailEnergy, latePeak, peak };
+}
+async function mixingLifecycle() {
+  const context = new AudioContext();
+  const live = new Set<AudioNode>();
+  let peakNodes = 0;
+  for (const name of [
+    "createGain",
+    "createDelay",
+    "createOscillator",
+    "createBufferSource",
+    "createBiquadFilter",
+    "createStereoPanner",
+  ] as const) {
+    const native = context[name].bind(context);
+    Object.assign(context, {
+      [name]: (...args: number[]) => {
+        const node = (native as (...args: number[]) => AudioNode)(...args);
+        live.add(node);
+        peakNodes = Math.max(peakNodes, live.size);
+        const disconnect = node.disconnect.bind(node);
+        node.disconnect = ((...targets: AudioNode[]) => {
+          if (!targets.length) live.delete(node);
+          if (targets.length) disconnect(targets[0]);
+          else disconnect();
+        }) as typeof node.disconnect;
+        return node;
+      },
+    });
+  }
+  const audio = createEngine(
+    { maxVoices: 2, maxVoicesPerSound: 2 },
+    () => context,
+  );
+  await audio.start();
+  const parent = audio.bus("effects");
+  const child = audio.bus("child", parent);
+  parent.setDelay({ seconds: 0.08, feedback: 0.5, wet: 0.3 });
+  const analyser = context.createAnalyser();
+  const remove = audio.native.connect(analyser);
+  const sound = audio.sound(thruster);
+  const finite = audio.sound(confirmation);
+  for (let i = 0; i < 200; i++) {
+    sound.play({ bus: child, seed: i });
+    finite.play({ bus: parent });
+    parent.setMuted(i % 2 === 0);
+    parent.setGainDb(-6, 0.01);
+    audio.stopAll({ tails: "cut" });
+    require(audio.counts.active <= 2 &&
+      audio.counts.retiring <= 1, "Mixed voice limit exceeded");
+    require(live.size <= 45, "Mixed owned-node limit exceeded");
+  }
+  await audio.suspend();
+  require(live.size === 6, "Suspended mixed resources retained");
+  await audio.start();
+  sound.play({ bus: child });
+  parent.dispose();
+  require(audio.counts.active === 0 && live.size === 2, "Subtree leaked");
+  remove();
+  analyser.disconnect();
+  await audio.dispose();
+  require(live.size === 0, "Engine leaked nodes");
+  return { peakNodes, finalNodes: live.size, state: audio.state };
+}
+Object.assign(globalThis, { mixingSignal, mixingLifecycle });

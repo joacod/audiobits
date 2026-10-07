@@ -1,7 +1,9 @@
 # Local development
 
 The workspace foundation, recipe playback, and Step 03 dynamic controls are
-implemented. [Step 03 verification](../openspec/changes/03-dynamic-sounds/verification.md)
+implemented. Step 04 adds buses, shared delay, native analyser taps, and hide
+cleanup; maintainer manual acceptance is complete. [Step 04 verification](../openspec/changes/04-mixing-and-lifecycle/verification.md)
+records the automated routing/lifecycle gate. [Step 03 verification](../openspec/changes/03-dynamic-sounds/verification.md)
 records automated checks and maintainer listening acceptance. See
 [Step 02 verification](../openspec/changes/02-recipe-playback/verification.md)
 for playback evidence and maintainer manual verification;
@@ -85,7 +87,8 @@ The temporary consumer is removed afterward.
 
 The isolated consumer imports validation, the lazy engine, and the separately
 exported confirmation, impact, and thruster without browser globals. It also
-typechecks seeded play and live updates through installed declarations. Structural schema and recipe
+typechecks seeded play, live updates, bus routing/delay, cut tails, and native
+analyser cleanup through installed declarations. Structural schema and recipe
 types are generated from `scripts/recipe-descriptor.mjs` during library build.
 Use `pnpm build:lib` after descriptor edits; `pnpm test` detects generation drift.
 This package check establishes consumption and pure import behavior. Audio

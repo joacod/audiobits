@@ -1,7 +1,8 @@
 # Architecture design
 
 Status: Steps 01–03 implemented and accepted.
-Bus/native capabilities below remain proposed.
+Step 04 bus/native capabilities are implemented and accepted with automated
+evidence and maintainer manual verification.
 See [the roadmap](roadmap.md) for scope and [the development API](../packages/audiobits/README.md)
 for currently exported behavior.
 
@@ -52,7 +53,7 @@ eligibility rules. No transparent optimizer is promised in the first release.
 ## Proposed public surface
 
 Names below include implemented Steps 02–03 APIs and later design targets.
-`voice.set()` is implemented; bus/native APIs remain Step 04 work.
+`voice.set()`, buses, shared delay, and narrow native taps are implemented in the development package.
 
 | Concept | Responsibility |
 | --- | --- |
@@ -60,13 +61,15 @@ Names below include implemented Steps 02–03 APIs and later design targets.
 | `validateRecipe(unknown)` | Structured issues with code and data path; no audio allocation |
 | `createAudio(options)` | Create a lazy engine handle; no context until `start()` |
 | `audio.start()` | Create/resume the owned context in the current gesture path |
-| `audio.suspend()` | Suspend explicitly; the application chooses what to stop first |
+| `audio.suspend()` | Invalidate pending activation, finalize owned voices/effects, and suspend |
 | `audio.sound(recipe)` | Return an engine-bound reusable definition after validation |
 | `sound.play(options)` | Synchronous voice creation when the engine is running |
 | `voice.set(parameters)` | Validate and smooth supported live controls |
 | `voice.stop()` | Release/fade once, then clean up owned sources and effects |
 | `voice.ended` | Promise that settles when owned resources are released |
-| `audio.stopAll()` | Stop owned voices; bus tails follow the documented policy |
+| `audio.stopAll({ tails })` | Release owned voices with allow/cut shared-tail policy |
+| `audio.bus(name, parent)` | Reuse/create a named bus after activation |
+| `audio.native` | Owned context/output with caller-owned native taps |
 | `audio.dispose()` | Idempotent shutdown including pending starts and owned graph |
 
 `audio.sound()` may run before start because it stores an immutable recipe snapshot. Calls to
@@ -76,7 +79,7 @@ application boundary and present a retry action where a gesture is required.
 
 ## Ownership and lifecycle
 
-The engine owns exactly one lazily created context, a master gain, voice records,
+The engine owns exactly one lazily created context, master gain/mute stages, named buses, voice records,
 and its generated resources. A sound owns a recipe snapshot; each play resolves controls/seed into an internal
 plan and creates its own sources, envelopes, and bounded noise buffers. Disposing a sound stops its
 voices. Engine disposal invalidates pending starts, stops voices, disconnects
@@ -118,7 +121,9 @@ to a voice or a shared bus; their tails have bounded disposal semantics.
 
 ## Native interop
 
-Add a narrow output connection/context accessor only when Step 04 exercises it.
+`audio.native` exposes the owned context and master output after startup, with
+a context-checked tap helper. The vanilla consumer exercises an analyser without
+connecting it to destination again.
 The caller owns nodes it creates, including stopping sources and disconnecting
 them. Validate context identity before connecting. Native playback is not counted
 as a managed voice and cannot inherit recipe serialization or stop guarantees.

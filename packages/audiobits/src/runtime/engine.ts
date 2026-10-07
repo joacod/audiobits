@@ -1,3 +1,5 @@
+import { OwnedBus } from "./bus";
+import type { Bus } from "./bus";
 import { defineSound, AudioBitsError } from "../recipe/validate";
 import type { Recipe } from "../recipe/generated";
 import {
@@ -29,6 +31,7 @@ export interface PlayOptions {
   readonly pan?: number;
   readonly parameters?: Controls;
   readonly seed?: number;
+  readonly bus?: Bus;
 }
 export interface Voice {
   readonly ended: Promise<void>;
@@ -49,13 +52,21 @@ export interface AudioEngine {
   start(): Promise<void>;
   suspend(): Promise<void>;
   sound(input: unknown): Sound;
-  stopAll(): void;
+  readonly master: Bus;
+  bus(name: string, parent?: Bus): Bus;
+  readonly native: {
+    readonly context: AudioContext;
+    readonly output: AudioNode;
+    connect(node: AudioNode): () => void;
+  };
+  stopAll(options?: { readonly tails?: "allow" | "cut" }): void;
   setMuted(muted: boolean): void;
   subscribe(listener: (state: AudioState) => void): () => void;
   dispose(): Promise<void>;
 }
 interface RecordVoice {
   sound: Sound;
+  bus: OwnedBus;
   voice: Voice;
   graph: Graph | undefined;
   finish(): void;
@@ -70,7 +81,7 @@ function range(value: number, min: number, max: number, name: string): number {
   return value;
 }
 
-// Internal injection boundary for lifecycle tests; native interop is not public.
+// Internal context injection boundary for lifecycle tests.
 export function createEngine(
   options: AudioOptions,
   contextFactory: () => AudioContext,
@@ -90,8 +101,14 @@ export function createEngine(
   const level =
     10 ** (range(options.masterGainDb ?? -12, -60, 0, "masterGainDb") / 20);
   let state: AudioState = "idle";
+  let generation = 0;
+  let wantsRunning = false;
+  let activated = false;
   let context: AudioContext | undefined;
-  let master: GainNode | undefined;
+  let master: OwnedBus | undefined;
+  const buses = new Map<string, OwnedBus>();
+  const owner = {};
+  const taps = new Set<AudioNode>();
   let muted = false;
   let pending: Promise<void> | undefined;
   let cancelStart: (() => void) | undefined;
@@ -121,7 +138,15 @@ export function createEngine(
   function syncNative() {
     if (!context || state === "disposed") return;
     const native = context.state as string;
-    if (native !== "running") finalize();
+    if (native === "running" && !wantsRunning) {
+      void context.suspend().catch(() => {});
+      return;
+    }
+    if (native !== "running" && state !== "starting") wantsRunning = false;
+    if (native !== "running") {
+      finalize();
+      for (const bus of buses.values()) bus.clear();
+    }
     if (state !== "starting")
       emit(
         native === "running"
@@ -132,6 +157,36 @@ export function createEngine(
               ? "interrupted"
               : "suspended",
       );
+  }
+  function within(bus: OwnedBus, ancestor: OwnedBus): boolean {
+    for (let cursor: OwnedBus | null = bus; cursor; cursor = cursor.parent)
+      if (cursor === ancestor) return true;
+    return false;
+  }
+  function childTail(bus: OwnedBus): number {
+    let longest = 0;
+    for (const child of buses.values())
+      if (child.parent === bus)
+        longest = Math.max(
+          longest,
+          Math.min(5, child.tailSeconds + childTail(child)),
+        );
+    return longest;
+  }
+  function refreshRoutes() {
+    for (const bus of buses.values()) {
+      if (voices.some((record) => within(record.bus, bus))) bus.prepare();
+      else bus.tail(childTail(bus));
+    }
+  }
+  function removeBus(bus: OwnedBus) {
+    for (const record of [...voices])
+      if (within(record.bus, bus)) record.finish();
+    for (const child of [...buses.values()])
+      if (within(child, bus)) {
+        child.destroy();
+        buses.delete(child.name);
+      }
   }
   const audio: AudioEngine = {
     get state() {
@@ -154,8 +209,10 @@ export function createEngine(
         return Promise.reject(error);
       }
       if (pending) return pending;
-      if (state === "running" && context?.state === "running")
+      if (wantsRunning && state === "running" && context?.state === "running")
         return Promise.resolve();
+      wantsRunning = true;
+      const token = ++generation;
       emit("starting");
       if (audio.state === "disposed")
         return Promise.reject(
@@ -168,19 +225,23 @@ export function createEngine(
           context.addEventListener("statechange", syncNative);
         }
         if (!master) {
-          const gain = context.createGain();
-          try {
-            gain.gain.value = muted ? 0 : level;
-            gain.connect(context.destination);
-            master = gain;
-          } catch (error) {
-            gain.disconnect();
-            throw error;
-          }
+          const root = new OwnedBus(
+            "master",
+            context,
+            owner,
+            null,
+            removeBus,
+            20 * Math.log10(level),
+            refreshRoutes,
+          );
+          root.output.gain.value = muted ? 0 : 1;
+          master = root;
+          buses.set("master", root);
         }
         // Invoke both creation and resume synchronously in the gesture path.
         resume = context.resume();
       } catch {
+        wantsRunning = false;
         emit(context?.state === "closed" ? "closed" : "suspended");
         return Promise.reject(
           new AudioBitsError(
@@ -192,7 +253,10 @@ export function createEngine(
       const cancellation = new Promise<void>((_, reject) => {
         cancelStart = () =>
           reject(
-            new AudioBitsError("disposed", "Engine disposed during startup."),
+            new AudioBitsError(
+              state === "disposed" ? "disposed" : "start-cancelled",
+              "Audio start cancelled during cleanup.",
+            ),
           );
       });
       // Some browsers leave blocked resume promises pending instead of rejecting.
@@ -211,25 +275,43 @@ export function createEngine(
           2000,
         );
       });
+      void resume.then(
+        () => {
+          if (
+            !wantsRunning &&
+            context?.state === "running" &&
+            state !== "disposed"
+          )
+            void context.suspend().catch(() => {});
+        },
+        () => {},
+      );
       const operation = Promise.race([resume, cancellation, deadline])
         .then(() => {
+          if (token !== generation && state !== "disposed")
+            throw new AudioBitsError(
+              "start-cancelled",
+              "Audio start was cancelled; use a fresh gesture.",
+            );
           if (state === "disposed")
             throw new AudioBitsError(
               "disposed",
-              "Engine disposed during startup.",
+              "Audio start cancelled during cleanup.",
             );
           if (context?.state !== "running")
             throw new AudioBitsError(
               "start-failed",
               "Audio is blocked. Retry Play with a user gesture.",
             );
+          activated = true;
           emit("running");
         })
         .catch((error: unknown) => {
+          if (token === generation) wantsRunning = false;
           if (state === "disposed")
             throw new AudioBitsError(
               "disposed",
-              "Engine disposed during startup.",
+              "Audio start cancelled during cleanup.",
             );
           emit(context?.state === "closed" ? "closed" : "suspended");
           throw error instanceof AudioBitsError
@@ -251,9 +333,14 @@ export function createEngine(
     },
     async suspend() {
       terminal();
-      if (pending) await pending;
+      wantsRunning = false;
+      const token = ++generation;
+      cancelStart?.();
+      if (pending) await pending.catch(() => {});
       terminal();
+      if (token !== generation) return;
       finalize();
+      for (const bus of buses.values()) bus.clear();
       if (context) {
         await context.suspend();
         syncNative();
@@ -275,6 +362,13 @@ export function createEngine(
               "not-ready",
               "Call start() from a user gesture before playing.",
             );
+          const route = playOptions.bus ?? master;
+          if (!(route instanceof OwnedBus) || route.owner !== owner)
+            throw new AudioBitsError(
+              "invalid-route",
+              "Bus must belong to this engine.",
+            );
+          route.assert();
           const now = context.currentTime;
           const at = playOptions.at ?? now;
           range(at, now, Number.MAX_SAFE_INTEGER, "at");
@@ -314,6 +408,7 @@ export function createEngine(
           });
           const record: RecordVoice = {
             sound,
+            bus: route,
             status: "active",
             graph: undefined,
             voice: {
@@ -349,14 +444,22 @@ export function createEngine(
               record.graph?.finish();
               const index = voices.indexOf(record);
               if (index !== -1) voices.splice(index, 1);
+              if (state !== "disposed" && context?.state === "running") {
+                for (const bus of buses.values()) {
+                  if (!voices.some((v) => within(v.bus, bus)))
+                    bus.tail(childTail(bus));
+                }
+              }
               resolveEnded();
             },
           };
+          for (let bus: OwnedBus | null = route; bus; bus = bus.parent)
+            bus.prepare();
           voices.push(record);
           try {
             record.graph = createGraph(
               context,
-              master,
+              route.input,
               plan,
               at,
               gainDb,
@@ -378,21 +481,102 @@ export function createEngine(
       };
       return sound;
     },
-    stopAll() {
-      for (const record of [...voices]) record.voice.stop();
+    get master() {
+      terminal();
+      if (!activated || !master)
+        throw new AudioBitsError("not-ready", "Call start() first.");
+      return master;
+    },
+    bus(name, parent = audio.master) {
+      terminal();
+      if (typeof name !== "string" || !name.trim() || name.length > 64)
+        throw new AudioBitsError(
+          "invalid-option",
+          "Bus name must contain 1–64 characters.",
+        );
+      const existing = buses.get(name);
+      if (existing) return existing;
+      if (!(parent instanceof OwnedBus) || parent.owner !== owner)
+        throw new AudioBitsError(
+          "invalid-route",
+          "Parent must belong to this engine.",
+        );
+      parent.assert();
+      if (buses.size >= 32)
+        throw new AudioBitsError(
+          "invalid-option",
+          "At most 32 buses including master.",
+        );
+      const bus = new OwnedBus(
+        name,
+        context!,
+        owner,
+        parent,
+        removeBus,
+        0,
+        refreshRoutes,
+      );
+      buses.set(name, bus);
+      return bus;
+    },
+    get native() {
+      terminal();
+      if (!activated || !context || !master)
+        throw new AudioBitsError("not-ready", "Call start() first.");
+      const output = master.output;
+      return {
+        context,
+        output,
+        connect(node: AudioNode) {
+          terminal();
+          if (
+            node.context !== context ||
+            node === context?.destination ||
+            node === output
+          )
+            throw new AudioBitsError(
+              "invalid-route",
+              "Native tap must use this context and cannot duplicate destination routing.",
+            );
+          if (taps.has(node))
+            throw new AudioBitsError(
+              "invalid-route",
+              "Native tap already connected.",
+            );
+          output.connect(node);
+          taps.add(node);
+          return () => {
+            if (taps.delete(node) && state !== "disposed")
+              output.disconnect(node);
+          };
+        },
+      };
+    },
+    stopAll(options = {}) {
+      if (
+        options.tails !== undefined &&
+        options.tails !== "allow" &&
+        options.tails !== "cut"
+      )
+        throw new AudioBitsError(
+          "invalid-option",
+          "Tails must be allow or cut.",
+        );
+      for (const record of [...voices]) {
+        if (options.tails === "cut") {
+          if (record.status !== "retiring") record.status = "stopping";
+          record.graph?.stop(0.005);
+        } else record.voice.stop();
+        if (context?.state !== "running") record.finish();
+      }
+      if (options.tails === "cut") for (const bus of buses.values()) bus.cut();
     },
     setMuted(value) {
       terminal();
       if (typeof value !== "boolean")
         throw new AudioBitsError("invalid-option", "Mute must be boolean.");
       muted = value;
-      if (master && context) {
-        const now = context.currentTime;
-        const current = master.gain.value;
-        master.gain.cancelAndHoldAtTime(now);
-        master.gain.setValueAtTime(current, now);
-        master.gain.linearRampToValueAtTime(muted ? 0 : level, now + 0.005);
-      }
+      master?.setMuted(value);
     },
     subscribe(listener) {
       terminal();
@@ -404,11 +588,15 @@ export function createEngine(
     dispose() {
       if (disposal) return disposal;
       if (state === "disposed") return Promise.resolve();
+      wantsRunning = false;
+      generation++;
       emit("disposed");
       cancelStart?.();
       finalize();
       listeners.clear();
-      master?.disconnect();
+      for (const bus of buses.values()) bus.destroy();
+      buses.clear();
+      taps.clear();
       if (context) context.removeEventListener("statechange", syncNative);
       disposal =
         context && context.state !== "closed"
