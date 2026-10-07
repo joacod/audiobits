@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { resolve } from "node:path";
 import { requireOfflineCheckpoints } from "./offline-capabilities";
 
-test("managed linear automation preserves signal and cleanup without native hold", async ({
+test("managed offline linear automation preserves signal without native hold", async ({
   page,
 }) => {
   await page.goto("http://127.0.0.1:4173");
@@ -32,7 +32,6 @@ test("managed linear automation preserves signal and cleanup without native hold
         rate: number,
         cut: boolean,
       ): Promise<{ tailEnergy: number; fadeEnergy: number; latePeak: number }>;
-      mixingLifecycle(): Promise<{ finalNodes: number; state: string }>;
       comparisonSignal(
         rate: number,
         kind: string,
@@ -70,8 +69,22 @@ test("managed linear automation preserves signal and cleanup without native hold
   expect(results.mixing.latePeak).toBe(0);
   expect(results.comparison.difference).toBeLessThan(0.000001);
   expect(results.comparison.latePeak).toBe(0);
-  // Same fallback through the real gesture/engine/bus lifecycle.
+});
+
+test("managed live automation cleans up without native hold", async ({
+  page,
+}) => {
+  await page.goto("http://127.0.0.1:4173");
+  await page.addScriptTag({
+    path: resolve(
+      "node_modules/.cache/audiobits-audio-tests/audio-harness.iife.js",
+    ),
+  });
   await page.evaluate(() => {
+    Object.defineProperty(AudioParam.prototype, "cancelAndHoldAtTime", {
+      configurable: true,
+      value: undefined,
+    });
     const button = document.createElement("button");
     button.textContent = "Fallback lifecycle";
     button.onclick = () => {

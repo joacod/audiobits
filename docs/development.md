@@ -67,10 +67,14 @@ pnpm exec playwright install chromium firefox webkit
 pnpm test:browser
 ```
 
-CI uses `playwright install --with-deps chromium firefox webkit` on Linux. The browser suite
+CI checks pull requests and pushes to main, with superseded runs cancelled; a
+feature-branch push does not duplicate its pull-request run. CI uses
+`playwright install --with-deps chromium firefox webkit` on Linux. The browser suite
 starts its own site on port 3100 and vanilla preview on port 4173. Neither port
 may already be occupied. Linux CI starts PulseAudio with a clocked null sink
-so headless Firefox has an output device. The sink exercises native audio
+so headless Firefox has an output device. Its `norewinds=1` setting limits null-sink
+buffering to 50 ms instead of the default two seconds, keeping Chromium's output
+clock responsive during finite playback. The sink exercises native audio
 processing without establishing audible output or listening quality. Keep `NODE_ENV` unset for normal local commands; an
 unrelated value can interfere with Next.js. CI disables Next telemetry.
 
