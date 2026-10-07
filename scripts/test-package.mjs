@@ -19,12 +19,20 @@ try {
   const files = execFileSync("tar", ["-tzf", archive], { encoding: "utf8" })
     .trim()
     .split("\n");
+  const emitted = await readdir(resolve("packages/audiobits/dist"), {
+    recursive: true,
+  });
+  const outputFiles = emitted.filter((file) => /\.(js|d\.ts|json)$/.test(file));
+  if (
+    outputFiles.length !== 7 ||
+    emitted.some((file) => !outputFiles.includes(file) && file !== "recipes")
+  )
+    throw new Error("Unexpected build output");
   const allowed = new Set([
     "package/package.json",
     "package/README.md",
     "package/LICENSE",
-    "package/dist/index.js",
-    "package/dist/index.d.ts",
+    ...outputFiles.map((file) => `package/dist/${file}`),
   ]);
   if (files.length !== allowed.size || files.some((file) => !allowed.has(file)))
     throw new Error(`Unexpected package files: ${files.join(", ")}`);
@@ -53,7 +61,7 @@ try {
   );
   await writeFile(
     join(consumer, "index.ts"),
-    'import { workspaceStatus } from "audiobits"; const status: string = workspaceStatus; console.log(status);\n',
+    'import { workspaceStatus, createAudio, defineSound, validateRecipe } from "audiobits"; import { confirmation } from "audiobits/recipes"; const status: string = workspaceStatus; const audio = createAudio(); const recipe = defineSound(confirmation); audio.sound(recipe); console.log(status, validateRecipe(recipe)); void audio.dispose();\n',
   );
   run(
     process.execPath,
@@ -80,7 +88,13 @@ try {
     import assert from 'node:assert/strict';
     assert.equal(typeof window, 'undefined');
     assert.equal(typeof AudioContext, 'undefined');
-    const { workspaceStatus } = await import('audiobits');
+    const { workspaceStatus, createAudio, defineSound, validateRecipe } = await import('audiobits');
+    const { confirmation } = await import('audiobits/recipes');
+    assert.ok(validateRecipe(confirmation).ok);
+    const audio = createAudio();
+    audio.sound(defineSound(confirmation));
+    assert.equal(audio.state, 'idle');
+    await audio.dispose();
     assert.equal(workspaceStatus, 'AudioBits workspace ready');
     assert.ok(import.meta.resolve('audiobits').startsWith(new URL('./node_modules/', import.meta.url).href));
     console.log('Isolated Node import and exported value passed.');

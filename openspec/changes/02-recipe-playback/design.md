@@ -2,8 +2,8 @@
 
 ## Context
 
-Step 01 accepted; local builds and package consumption work. This is a proposed change; no implementation or validation is implied
-by the presence of these artifacts.
+Step 01 accepted; local builds and package consumption work. Implementation and evidence are recorded in [verification.md](verification.md).
+The change remains open until its acceptance review.
 
 ## Goals / Non-Goals
 
@@ -31,7 +31,8 @@ and deterministic oldest-voice stealing from the beginning.
 `createAudio()` does not allocate a context. `start()` invokes native creation
 and resume synchronously in the user gesture before awaiting. Concurrent starts
 share one operation; dispose invalidates pending operations. A blocked start
-exposes a retryable error. Play while not running fails without queueing.
+exposes a retryable error, with a two-second wall-clock deadline when native
+resume remains pending. That deadline does not drive audio scheduling. Play while not running fails without queueing.
 
 Use the confirmation design fixture as a sound-design starting point. The site
 has Play, mute, Stop all, state/error feedback, and route cleanup. Keep visuals

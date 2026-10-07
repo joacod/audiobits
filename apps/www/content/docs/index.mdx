@@ -3,8 +3,34 @@ title: Workspace foundation
 description: Development preview of the unreleased AudioBits package.
 ---
 
-AudioBits is unreleased. This preview verifies the local workspace and MDX
-pipeline. Audio playback and recipe APIs are not implemented yet.
+AudioBits is unreleased. The development workspace supports a small recipe
+playback subset: finite oscillator sounds, frequency automation, ADSR envelopes,
+and bounded filters.
 
-The website and vanilla example consume the library through its public package
-exports. No npm publication is needed to test a local library edit.
+## Start with a gesture
+
+```ts
+import { createAudio } from "audiobits";
+import { confirmation } from "audiobits/recipes";
+
+const audio = createAudio();
+const sound = audio.sound(confirmation);
+
+// Inside the application's Play handler:
+await audio.start();
+const voice = sound.play();
+// On Stop: voice.stop(). On unmount: await audio.dispose().
+```
+
+Construction and validation do not allocate browser audio. Start synchronously
+in the gesture handler before awaiting; playback before successful activation
+fails without queueing. A failed start can be retried with a new Play action.
+Each play owns fresh sources. Dispose the engine when leaving its host view.
+
+The home page provides Play, mute, Stop all, state, and error controls. Nothing
+plays on page load. Signal and lifecycle checks run in Chromium; automated
+checks do not establish listening quality or other-browser support.
+
+The website and vanilla example consume built public package exports.
+No npm publication is needed to test a local library edit. Dynamic controls,
+noise, buses, native interop, and a polished gallery remain later work.

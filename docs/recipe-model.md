@@ -1,9 +1,9 @@
 # Recipe model and runtime contract
 
-Status: proposed schema v1. These examples are design fixtures, not executable
-library examples yet. Steps 02–03 must validate and compile them before promotion
-to user documentation. Reconcile this contract with listening evidence before
-the first schema-bearing release.
+Status: draft schema v1. Step 02 implements the finite oscillator/filter subset
+and confirmation fixture; [the development API](../packages/audiobits/README.md)
+is the current executable contract. Step 03 additions below remain proposed.
+Reconcile this contract with listening evidence before the first release.
 
 ## Data boundary
 
