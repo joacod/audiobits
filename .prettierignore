@@ -9,6 +9,9 @@ test-results
 *.tsbuildinfo
 openspec/
 
+# Preserve upstream formatting in vendored agent skills.
+apps/www/.agents/skills/
+
 # Preserve the formatting of planning documents outside Step 01.
 docs/*.md
 !docs/development.md

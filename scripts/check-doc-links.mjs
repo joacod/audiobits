@@ -11,6 +11,8 @@ const ignored = new Set([
   "playwright-report",
 ]);
 async function check(dir) {
+  // Vendored skill references are checked separately from project docs.
+  if (resolve(dir) === resolve("apps/www/.agents/skills")) return;
   for (const item of await readdir(dir, { withFileTypes: true })) {
     if (ignored.has(item.name)) continue;
     const path = resolve(dir, item.name);
