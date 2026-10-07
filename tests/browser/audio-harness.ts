@@ -2,7 +2,11 @@
 import { compile } from "../../packages/audiobits/src/compiler/plan";
 import { createGraph } from "../../packages/audiobits/src/compiler/graph";
 import { createEngine } from "../../packages/audiobits/src/runtime/engine";
-import { confirmation } from "../../packages/audiobits/src/recipes";
+import {
+  confirmation,
+  impact,
+  thruster,
+} from "../../packages/audiobits/src/recipes";
 
 function require(condition: boolean, message: string) {
   if (!condition) throw new Error(message);
@@ -186,3 +190,224 @@ async function blockedActivation() {
   return result;
 }
 Object.assign(globalThis, { blockedActivation });
+
+async function dynamicSignal(
+  rate: number,
+  kind: "impact" | "thruster",
+  control: number,
+  update = false,
+  cancel = false,
+  count = 1,
+  stopAt = 2.2,
+) {
+  const recipe = kind === "impact" ? impact : thruster;
+  const name = kind === "impact" ? "intensity" : "throttle";
+  const context = new OfflineAudioContext(1, rate * 3, rate);
+  let finished = 0;
+  const graphs = Array.from({ length: count }, () =>
+    createGraph(
+      context,
+      context.destination,
+      compile(recipe, { [name]: control }, 42),
+      0.05,
+      -12,
+      0,
+      () => {
+        finished++;
+      },
+    ),
+  );
+  const graph = graphs[0];
+  if (cancel) graphs.forEach((graph) => graph.stop());
+  const pauses: Promise<void>[] = [];
+  if (kind === "thruster" && !cancel) {
+    if (update) {
+      for (const [time, value] of [
+        [0.4, 1],
+        [0.42, 0],
+        [0.44, 1],
+        [0.6, 0.2],
+      ]) {
+        pauses.push(
+          context.suspend(time).then(() => {
+            graph.set({ throttle: value });
+            return context.resume();
+          }),
+        );
+      }
+    }
+    pauses.push(
+      context.suspend(stopAt).then(() => {
+        graph.stop();
+        return context.resume();
+      }),
+    );
+  }
+  const rendering = context.startRendering();
+  await Promise.all(pauses);
+  const data = (await rendering).getChannelData(0);
+  let peak = 0,
+    energy = 0,
+    tail = 0,
+    onset = 0,
+    delta = 0,
+    seamDelta = 0,
+    seamRms = 0,
+    steadyRms = 0;
+  let checksum = 2166136261;
+  const bits = new Uint32Array(data.buffer);
+  for (let i = 0; i < data.length; i++) {
+    require(Number.isFinite(data[i]), "Nonfinite dynamic output");
+    peak = Math.max(peak, Math.abs(data[i]));
+    energy += data[i] ** 2;
+    if (i < rate * 0.05) onset = Math.max(onset, Math.abs(data[i]));
+    if (i > rate * 2.5) tail = Math.max(tail, Math.abs(data[i]));
+    if (i) delta = Math.max(delta, Math.abs(data[i] - data[i - 1]));
+    // First loop wraps at onset + 1 s, subsequent loops have 0.98 s period.
+    if (Math.abs(i / rate - 1.05) < 0.025) {
+      if (i) seamDelta = Math.max(seamDelta, Math.abs(data[i] - data[i - 1]));
+      seamRms += data[i] ** 2;
+    }
+    if (Math.abs(i / rate - 0.85) < 0.025) steadyRms += data[i] ** 2;
+    checksum = Math.imul(checksum ^ bits[i], 16777619) >>> 0;
+  }
+  return {
+    rate,
+    count,
+    kind,
+    control,
+    peak,
+    energy,
+    tail,
+    onset,
+    delta,
+    seamDelta,
+    seamRms: Math.sqrt(seamRms / (rate * 0.05)),
+    steadyRms: Math.sqrt(steadyRms / (rate * 0.05)),
+    checksum,
+    finished,
+  };
+}
+async function dynamicLifecycle() {
+  const context = new AudioContext();
+  const live = new Set<AudioNode>();
+  const buffers: AudioBufferSourceNode[] = [];
+  let created = 0;
+  for (const name of [
+    "createGain",
+    "createOscillator",
+    "createBufferSource",
+    "createBiquadFilter",
+    "createStereoPanner",
+  ] as const) {
+    const native = context[name].bind(context);
+    Object.assign(context, {
+      [name]: () => {
+        const node = native();
+        created++;
+        live.add(node);
+        if ("buffer" in node) buffers.push(node as AudioBufferSourceNode);
+        const disconnect = node.disconnect.bind(node);
+        node.disconnect = () => {
+          live.delete(node);
+          disconnect();
+        };
+        return node;
+      },
+    });
+  }
+  const audio = createEngine(
+    { maxVoices: 2, maxVoicesPerSound: 2 },
+    () => context,
+  );
+  await audio.start();
+  const preparation: number[] = [];
+  for (let i = 0; i < 100; i++) {
+    const before = performance.now();
+    const sound = audio.sound(impact);
+    preparation.push(performance.now() - before);
+    sound.dispose();
+  }
+  const sound = audio.sound(thruster);
+  const impactSound = audio.sound(impact);
+  const voice = sound.play({ seed: 42 });
+  const nodesPerThruster = live.size - 1;
+  const baseline = created;
+  const originalBuffer = buffers.at(-1)!.buffer;
+  for (let i = 0; i < 1000; i++) voice.set({ throttle: (i % 101) / 100 });
+  require(created === baseline &&
+    buffers.at(-1)!.buffer ===
+      originalBuffer, "Live controls recreated resources");
+  voice.stop();
+  let endedError = false;
+  try {
+    voice.set({ throttle: 0 });
+  } catch {
+    endedError = true;
+  }
+  require(endedError, "Stopped voice accepted controls");
+  await voice.ended;
+  require(live.size === 1 &&
+    buffers.every(
+      (source) => source.buffer === null,
+    ), "Release retained resources");
+  const future = sound.play({ at: context.currentTime + 10 });
+  future.stop();
+  await future.ended;
+  const scheduling: number[] = [];
+  for (let i = 0; i < 100; i++) {
+    const before = performance.now();
+    impactSound.play({ seed: i });
+    scheduling.push(performance.now() - before);
+  }
+  await audio.suspend();
+  require(live.size === 1, "Suspension retained nodes");
+  await audio.start();
+  let maxNodes = 0,
+    maxBytes = 0;
+  for (let i = 0; i < 1000; i++) {
+    const next = sound.play({ seed: i });
+    next.set({ throttle: 1 });
+    next.stop();
+    maxNodes = Math.max(maxNodes, live.size);
+    const bytes = buffers.reduce(
+      (sum, source) => sum + (source.buffer ? source.buffer.length * 4 : 0),
+      0,
+    );
+    maxBytes = Math.max(maxBytes, bytes);
+    require(live.size <= 31 &&
+      bytes <= context.sampleRate * 4 * 3, "Sustained stress exceeded bounds");
+    require(audio.counts.active <= 2 &&
+      audio.counts.retiring <= 1, "Voice stress exceeded bounds");
+  }
+  sound.play({ seed: 7 });
+  sound.dispose();
+  require(live.size === 1 &&
+    buffers.every(
+      (source) => source.buffer === null,
+    ), "Sound disposal retained resources");
+  audio.sound(thruster).play({ seed: 8 });
+  await audio.dispose();
+  require(live.size === 0, "Engine disposal retained nodes");
+  const stats = (values: number[]) => {
+    const firstMs = values[0];
+    values.sort((a, b) => a - b);
+    return {
+      firstMs,
+      medianMs: values[50],
+      p95Ms: values[95],
+      maxMs: values.at(-1),
+    };
+  };
+  return {
+    sampleRate: context.sampleRate,
+    nodesPerThruster,
+    maxNodes,
+    maxBytes,
+    preparation: stats(preparation),
+    scheduling: stats(scheduling),
+    finalNodes: live.size,
+    counts: audio.counts,
+  };
+}
+Object.assign(globalThis, { dynamicSignal, dynamicLifecycle });

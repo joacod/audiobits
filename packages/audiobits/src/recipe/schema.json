@@ -2,9 +2,50 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$ref": "#/$defs/Recipe",
   "$defs": {
-    "Frequency": {
+    "Mapping": {
+      "type": "object",
+      "properties": {
+        "control": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "range": {
+          "type": "array",
+          "prefixItems": [
+            { "type": "number", "minimum": -60000, "maximum": 60000 },
+            { "type": "number", "minimum": -60000, "maximum": 60000 }
+          ],
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "scale": { "enum": ["linear", "exponential"] }
+      },
+      "required": ["control", "range", "scale"],
+      "additionalProperties": false
+    },
+    "Variation": {
+      "type": "object",
+      "properties": {
+        "random": {
+          "type": "array",
+          "prefixItems": [
+            { "type": "number", "minimum": -60000, "maximum": 60000 },
+            { "type": "number", "minimum": -60000, "maximum": 60000 }
+          ],
+          "minItems": 2,
+          "maxItems": 2
+        }
+      },
+      "required": ["random"],
+      "additionalProperties": false
+    },
+    "PointValue": {
       "anyOf": [
-        { "type": "number", "minimum": 20, "maximum": 20000 },
+        { "type": "number", "minimum": -60000, "maximum": 60000 },
+        { "$ref": "#/$defs/Mapping" },
+        { "$ref": "#/$defs/Variation" }
+      ]
+    },
+    "Value": {
+      "anyOf": [
+        { "$ref": "#/$defs/PointValue" },
         {
           "type": "object",
           "properties": {
@@ -14,7 +55,7 @@
                 "type": "array",
                 "prefixItems": [
                   { "type": "number", "minimum": 0, "maximum": 60 },
-                  { "type": "number", "minimum": 20, "maximum": 20000 }
+                  { "$ref": "#/$defs/PointValue" }
                 ],
                 "minItems": 2,
                 "maxItems": 2
@@ -28,6 +69,48 @@
           "additionalProperties": false
         }
       ]
+    },
+    "Frequency": { "$ref": "#/$defs/Value" },
+    "Parameter": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "min": { "type": "number", "minimum": -60000, "maximum": 60000 },
+            "max": { "type": "number", "minimum": -60000, "maximum": 60000 },
+            "default": {
+              "type": "number",
+              "minimum": -60000,
+              "maximum": 60000
+            },
+            "mode": { "const": "play" }
+          },
+          "required": ["min", "max", "default", "mode"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "min": { "type": "number", "minimum": -60000, "maximum": 60000 },
+            "max": { "type": "number", "minimum": -60000, "maximum": 60000 },
+            "default": {
+              "type": "number",
+              "minimum": -60000,
+              "maximum": 60000
+            },
+            "mode": { "const": "live" },
+            "smoothing": { "type": "number", "minimum": 0.005, "maximum": 1 }
+          },
+          "required": ["min", "max", "default", "mode", "smoothing"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "Parameters": {
+      "type": "object",
+      "maxProperties": 16,
+      "propertyNames": { "pattern": "^[A-Za-z][A-Za-z0-9_]{0,63}$" },
+      "additionalProperties": { "$ref": "#/$defs/Parameter" }
     },
     "Envelope": {
       "type": "object",
@@ -45,28 +128,41 @@
       "properties": {
         "type": { "const": "filter" },
         "filter": { "enum": ["lowpass", "highpass", "bandpass"] },
-        "frequency": { "type": "number", "minimum": 20, "maximum": 20000 },
+        "frequency": { "$ref": "#/$defs/Frequency" },
         "q": { "type": "number", "minimum": 0.1, "maximum": 20 }
       },
       "required": ["type", "filter", "frequency", "q"],
       "additionalProperties": false
     },
     "Source": {
-      "type": "object",
-      "properties": {
-        "type": { "const": "oscillator" },
-        "waveform": { "enum": ["sine", "triangle", "sawtooth", "square"] },
-        "frequency": { "$ref": "#/$defs/Frequency" }
-      },
-      "required": ["type", "waveform", "frequency"],
-      "additionalProperties": false
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "oscillator" },
+            "waveform": { "enum": ["sine", "triangle", "sawtooth", "square"] },
+            "frequency": { "$ref": "#/$defs/Frequency" }
+          },
+          "required": ["type", "waveform", "frequency"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "noise" },
+            "color": { "const": "white" }
+          },
+          "required": ["type", "color"],
+          "additionalProperties": false
+        }
+      ]
     },
     "Layer": {
       "type": "object",
       "properties": {
         "id": { "type": "string", "minLength": 1, "maxLength": 64 },
         "source": { "$ref": "#/$defs/Source" },
-        "gainDb": { "type": "number", "minimum": -60, "maximum": 0 },
+        "gainDb": { "$ref": "#/$defs/PointValue" },
         "envelope": { "$ref": "#/$defs/Envelope" },
         "effects": {
           "type": "array",
@@ -78,7 +174,7 @@
       "required": ["id", "source", "gainDb", "envelope"],
       "additionalProperties": false
     },
-    "Recipe": {
+    "OneShotRecipe": {
       "type": "object",
       "properties": {
         "schemaVersion": { "const": 1 },
@@ -89,6 +185,7 @@
           "maximum": 60,
           "exclusiveMinimum": 0
         },
+        "parameters": { "$ref": "#/$defs/Parameters" },
         "layers": {
           "type": "array",
           "items": { "$ref": "#/$defs/Layer" },
@@ -104,6 +201,34 @@
       },
       "required": ["schemaVersion", "kind", "duration", "layers"],
       "additionalProperties": false
+    },
+    "SustainedRecipe": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "sustained" },
+        "parameters": { "$ref": "#/$defs/Parameters" },
+        "layers": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Layer" },
+          "minItems": 1,
+          "maxItems": 16
+        },
+        "effects": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Filter" },
+          "minItems": 0,
+          "maxItems": 8
+        }
+      },
+      "required": ["schemaVersion", "kind", "layers"],
+      "additionalProperties": false
+    },
+    "Recipe": {
+      "anyOf": [
+        { "$ref": "#/$defs/OneShotRecipe" },
+        { "$ref": "#/$defs/SustainedRecipe" }
+      ]
     }
   }
 }

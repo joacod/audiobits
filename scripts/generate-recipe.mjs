@@ -13,6 +13,8 @@ function type(node) {
   if (node.prefixItems)
     return `readonly [${node.prefixItems.map(type).join(", ")}]`;
   if (node.type === "array") return `ReadonlyArray<${type(node.items)}>`;
+  if (!node.properties)
+    return `Readonly<Record<string, ${type(node.additionalProperties)}>>`;
   return `{ ${Object.entries(node.properties)
     .map(
       ([key, value]) =>

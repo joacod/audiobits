@@ -1,5 +1,5 @@
 import { recipeSchema } from "./generated";
-import type { Recipe } from "./generated";
+import type { Recipe, Value, PointValue } from "./generated";
 
 export interface RecipeIssue {
   readonly code: string;
@@ -26,6 +26,9 @@ interface Shape {
   items?: Shape;
   properties?: Record<string, Shape>;
   required?: string[];
+  maxProperties?: number;
+  propertyNames?: { pattern: string };
+  additionalProperties?: boolean | Shape;
 }
 const schema = recipeSchema as unknown as { $defs: Record<string, Shape> };
 
@@ -109,10 +112,18 @@ export function validateRecipe(input: unknown): ValidationResult {
     if (node.$ref)
       return check(value, schema.$defs[node.$ref.split("/").at(-1)!], path);
     if (node.anyOf) {
-      const candidate =
-        typeof value === "number" ? node.anyOf[0] : node.anyOf[1];
-      return check(value, candidate, path);
+      const start = issues.length;
+      let best: RecipeIssue[] | undefined;
+      for (const candidate of node.anyOf) {
+        check(value, candidate, path);
+        const found = issues.splice(start);
+        if (!found.length) return;
+        if (!best || found.length < best.length) best = found;
+      }
+      for (const issue of best!) add(issue.code, issue.path, issue.message);
+      return;
     }
+
     if ("const" in node && value !== node.const) {
       add(
         path === '$["schemaVersion"]' ? "version" : "unsupported",
@@ -164,22 +175,39 @@ export function validateRecipe(input: unknown): ValidationResult {
         return;
       }
       const record = value as Record<string, unknown>;
-      for (const key of node.required!)
+      for (const key of node.required ?? [])
         if (!Object.hasOwn(record, key))
           add(
             "required",
             `${path}[${JSON.stringify(key)}]`,
             "Required field is missing.",
           );
+      if (node.maxProperties && Object.keys(record).length > node.maxProperties)
+        add("resource-limit", path, "At most 16 parameters are supported.");
       for (const key of Object.keys(record).sort()) {
-        const child = node.properties![key];
-        if (!Object.hasOwn(node.properties!, key))
+        const field = `${path}[${JSON.stringify(key)}]`;
+        if (
+          node.propertyNames &&
+          !new RegExp(node.propertyNames.pattern).test(key)
+        )
+          add(
+            "parameter-name",
+            field,
+            "Use an ASCII letter followed by letters, digits or underscores (up to 64 characters).",
+          );
+        if (node.properties && Object.hasOwn(node.properties, key))
+          check(record[key], node.properties[key], field);
+        else if (
+          node.additionalProperties &&
+          typeof node.additionalProperties === "object"
+        )
+          check(record[key], node.additionalProperties, field);
+        else
           add(
             "unknown-field",
-            `${path}[${JSON.stringify(key)}]`,
+            field,
             "Field is not supported in this schema subset.",
           );
-        else check(record[key], child, `${path}[${JSON.stringify(key)}]`);
       }
     }
   }
@@ -189,6 +217,87 @@ export function validateRecipe(input: unknown): ValidationResult {
   const ids = new Set<string>();
   let effects = recipe.effects?.length ?? 0;
   let points = 0;
+  for (const [name, parameter] of Object.entries(recipe.parameters ?? {})) {
+    if (
+      parameter.min >= parameter.max ||
+      parameter.default < parameter.min ||
+      parameter.default > parameter.max
+    )
+      add(
+        "range",
+        `$["parameters"][${JSON.stringify(name)}]`,
+        "Require min < max and a default within that range.",
+      );
+  }
+  function point(
+    value: PointValue,
+    min: number,
+    max: number,
+    path: string,
+    automated = false,
+    exponential = false,
+  ) {
+    const extrema =
+      typeof value === "number"
+        ? [value]
+        : "random" in value
+          ? value.random
+          : value.range;
+    if (extrema.some((v) => v < min || v > max || (exponential && v <= 0)))
+      add(
+        "range",
+        path,
+        "Every possible value must satisfy the target range and curve.",
+      );
+    if (typeof value === "number") return;
+    if ("random" in value) {
+      if (value.random[0] > value.random[1])
+        add("range", path, "Random bounds must be ordered.");
+    } else {
+      const parameter = Object.hasOwn(recipe.parameters ?? {}, value.control)
+        ? recipe.parameters![value.control]
+        : undefined;
+      if (!parameter)
+        add("reference", path, "Mapping references an undeclared control.");
+      else if (automated && parameter.mode === "live")
+        add("mode", path, "Automation points require play-only controls.");
+      if (value.scale === "exponential" && value.range.some((v) => v <= 0))
+        add("range", path, "Exponential mapping endpoints must be positive.");
+    }
+  }
+  function value(input: Value, min: number, max: number, path: string) {
+    if (typeof input === "number" || !("points" in input))
+      return point(input, min, max, path);
+    points += input.points.length;
+    let previous = -1;
+    input.points.forEach(([time, v], index) => {
+      if (
+        (index === 0 && time !== 0) ||
+        time <= previous ||
+        time > (recipe.kind === "one-shot" ? recipe.duration : 60)
+      )
+        add(
+          "timeline",
+          `${path}["points"][${index}][0]`,
+          "Automation must start at zero, increase strictly, and end by gate close (60 seconds for sustained).",
+        );
+      previous = time;
+      point(
+        v,
+        min,
+        max,
+        `${path}["points"][${index}][1]`,
+        true,
+        input.curve === "exponential",
+      );
+    });
+  }
+  function filters(list: Recipe["effects"], path: string) {
+    list?.forEach((filter, index) =>
+      value(filter.frequency, 20, 20000, `${path}[${index}]["frequency"]`),
+    );
+  }
+  filters(recipe.effects, '$["effects"]');
   recipe.layers.forEach((layer, i) => {
     const path = `$["layers"][${i}]`;
     if (ids.has(layer.id))
@@ -196,32 +305,24 @@ export function validateRecipe(input: unknown): ValidationResult {
     ids.add(layer.id);
     effects += layer.effects?.length ?? 0;
     if (
+      recipe.kind === "one-shot" &&
       Math.max(0.002, layer.envelope.attack) + layer.envelope.decay >
-      recipe.duration
+        recipe.duration
     )
       add(
         "timeline",
         `${path}["envelope"]`,
         "Effective attack plus decay exceeds gate duration.",
       );
-    const frequency = layer.source.frequency;
-    if (typeof frequency !== "number") {
-      points += frequency.points.length;
-      let previous = -1;
-      frequency.points.forEach(([time], index) => {
-        if (
-          (index === 0 && time !== 0) ||
-          time <= previous ||
-          time > recipe.duration
-        )
-          add(
-            "timeline",
-            `${path}["source"]["frequency"]["points"][${index}][0]`,
-            "Automation must start at zero, increase strictly, and end by gate close.",
-          );
-        previous = time;
-      });
-    }
+    if (layer.source.type === "oscillator")
+      value(
+        layer.source.frequency,
+        20,
+        20000,
+        `${path}["source"]["frequency"]`,
+      );
+    value(layer.gainDb, -60, 0, `${path}["gainDb"]`);
+    filters(layer.effects, `${path}["effects"]`);
   });
   if (effects > 8)
     add(

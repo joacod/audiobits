@@ -4,8 +4,10 @@ description: Development preview of the unreleased AudioBits package.
 ---
 
 AudioBits is unreleased. The development workspace supports a small recipe
-playback subset: finite oscillator sounds, frequency automation, ADSR envelopes,
-and bounded filters.
+playback core: finite and sustained oscillator/noise sounds, seeded variation,
+live controls, frequency automation, ADSR envelopes, and bounded filters.
+The three-sound preview passed maintainer manual verification. Browser and
+output-device details for that review were not supplied.
 
 ## Start with a gesture
 
@@ -32,5 +34,31 @@ plays on page load. Signal and lifecycle checks run in Chromium; automated
 checks do not establish listening quality or other-browser support.
 
 The website and vanilla example consume built public package exports.
-No npm publication is needed to test a local library edit. Dynamic controls,
-noise, buses, native interop, and a polished gallery remain later work.
+No npm publication is needed to test a local library edit. Buses, native interop,
+and a polished gallery remain later work.
+
+## One continuous thruster
+
+```ts
+import { createAudio } from "audiobits";
+import { impact, thruster } from "audiobits/recipes";
+
+const audio = createAudio();
+const hit = audio.sound(impact);
+const engine = audio.sound(thruster);
+// In the application's gesture handler:
+await audio.start();
+hit.play({ parameters: { intensity: 0.8 }, seed: 42 });
+const voice = engine.play({ parameters: { throttle: 0.2 }, seed: 42 });
+voice.set({ throttle: 1 });
+voice.stop();
+await voice.ended;
+await audio.dispose();
+```
+
+Start the thruster once and retain its voice for slider updates. Invalid or
+play-only updates fail atomically. Seeded choices and noise replay at the same
+sample rate; voices expose `seed` and a frozen `parameters` snapshot. Noise uses
+one mono one-second buffer per layer, with a 20 ms loop crossfade and no cache.
+Live updates reuse nodes and buffers. The demos stop on page hide and dispose
+on teardown; they never start automatically.

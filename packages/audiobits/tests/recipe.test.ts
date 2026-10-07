@@ -25,20 +25,20 @@ describe("pure recipe contract", () => {
   it("rejects unknown versions, fields and all deferred forms with stable paths", () => {
     const data = fixture();
     data.schemaVersion = 2;
-    data.parameters = {};
+    data.routing = {};
     expect(issues(data).map(({ code, path }) => ({ code, path }))).toEqual([
-      { code: "unknown-field", path: '$["parameters"]' },
+      { code: "unknown-field", path: '$["routing"]' },
       { code: "version", path: '$["schemaVersion"]' },
     ]);
     for (const mutate of [
       (data: ReturnType<typeof fixture>) => {
-        data.kind = "sustained";
+        data.kind = "sequence";
       },
       (data: ReturnType<typeof fixture>) => {
-        data.layers[0].source = { type: "noise", color: "white" };
+        data.layers[0].source = { type: "noise", color: "pink" };
       },
       (data: ReturnType<typeof fixture>) => {
-        data.layers[0].gainDb = { random: [-20, -10] };
+        data.layers[0].gainDb = { expression: "intensity * 2" };
       },
       (data: ReturnType<typeof fixture>) => {
         data.layers[0].source.frequency = {

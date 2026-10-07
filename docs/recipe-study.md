@@ -1,8 +1,9 @@
 # Ten-experience recipe study
 
-Status: authoring study. None of these sounds has been rendered or auditioned
-in this repository. Values are starting points for sound design, not quality
-claims. The [recipe model](recipe-model.md) defines their proposed semantics.
+Status: the first three fixtures are implemented and have automated signal
+evidence. Confirmation passed Step 02 maintainer listening; Step 03 manual
+verification for all three was confirmed by the maintainer. The remaining seven are authoring sketches,
+not rendered or accepted sounds. Values are starting points, not quality claims. The [recipe model](recipe-model.md) defines their proposed semantics.
 
 ## First three implementation fixtures
 

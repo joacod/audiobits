@@ -1,5 +1,11 @@
 import { defineSound, AudioBitsError } from "../recipe/validate";
 import type { Recipe } from "../recipe/generated";
+import {
+  controlsFor,
+  validateControls,
+  validateSeed,
+} from "../compiler/values";
+import type { Controls } from "../compiler/values";
 import { compile } from "../compiler/plan";
 import { checkNyquist, createGraph } from "../compiler/graph";
 import type { Graph } from "../compiler/graph";
@@ -21,9 +27,14 @@ export interface PlayOptions {
   readonly at?: number;
   readonly gainDb?: number;
   readonly pan?: number;
+  readonly parameters?: Controls;
+  readonly seed?: number;
 }
 export interface Voice {
   readonly ended: Promise<void>;
+  readonly seed: number;
+  readonly parameters: Controls;
+  set(parameters: Controls): void;
   readonly state: "active" | "stopping" | "retiring" | "ended";
   stop(): void;
 }
@@ -251,7 +262,7 @@ export function createEngine(
     sound(input) {
       terminal();
       const recipe = defineSound(input);
-      const plan = compile(recipe);
+
       let disposed = false;
       const sound: Sound = {
         recipe,
@@ -269,6 +280,13 @@ export function createEngine(
           range(at, now, Number.MAX_SAFE_INTEGER, "at");
           const gainDb = range(playOptions.gainDb ?? 0, -60, 0, "gainDb");
           const pan = range(playOptions.pan ?? 0, -1, 1, "pan");
+          let parameters = controlsFor(recipe, playOptions.parameters);
+          const seed = validateSeed(
+            playOptions.seed === undefined
+              ? Math.floor(Math.random() * 0x100000000)
+              : playOptions.seed,
+          );
+          const plan = compile(recipe, parameters, seed);
           checkNyquist(plan, context.sampleRate);
           // Reserved future starts count as active. At most one global retiree,
           // which also guarantees at most one retiree for any individual sound.
@@ -300,6 +318,21 @@ export function createEngine(
             graph: undefined,
             voice: {
               ended,
+              seed,
+              get parameters() {
+                return parameters;
+              },
+              set(update) {
+                if (record.status !== "active" || context?.state !== "running")
+                  throw new AudioBitsError(
+                    "ended-voice",
+                    "Voice is no longer active.",
+                  );
+                const validated = validateControls(recipe, update, true);
+                const next = Object.freeze({ ...parameters, ...validated });
+                record.graph!.set(next);
+                parameters = next;
+              },
               get state() {
                 return record.status;
               },

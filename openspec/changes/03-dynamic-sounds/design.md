@@ -2,8 +2,9 @@
 
 ## Context
 
-Step 02 accepted, including working finite playback and resource ownership. This is a proposed change; no implementation or validation is implied
-by the presence of these artifacts.
+Step 02 accepted, including working finite playback and resource ownership.
+Step 03 is implemented; [verification](verification.md) records automated
+evidence and maintainer listening acceptance.
 
 ## Goals / Non-Goals
 
@@ -24,7 +25,13 @@ for zero seed, normalized property traversal, and known-vector tests. Expose the
 actual seed on each voice. Generate noise at context sample rate with bounded
 buffer storage; loop sustained noise with a tested seam treatment. Cache only
 bounded primitive noise resources if necessary, not rendered recipe output.
-Specify buffer length and eviction from measurements in this step before merge.
+The implementation uses one mono one-second buffer per noise layer, a 20 ms
+tail-to-prefix crossfade, and loop start after that prefix. There is no shared
+cache or eviction policy. Noise sample rates are bounded to 8000–192000 Hz;
+[verification](verification.md) records retained bytes and scheduling cost.
+Frequency values support onset automation; layer gain supports direct numeric,
+mapped, or random values. Live ramps interpolate native Hz/linear amplitude
+over the declared smoothing time, independently of fixed envelopes.
 
 Sustained voices share the existing voice registry and release semantics. Updating
 throttle changes native parameters on one voice; it never recreates the whole

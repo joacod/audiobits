@@ -1,5 +1,12 @@
 import { execFileSync } from "node:child_process";
-import { mkdtemp, readFile, writeFile, readdir, rm } from "node:fs/promises";
+import {
+  mkdtemp,
+  readFile,
+  writeFile,
+  readdir,
+  rm,
+  stat,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
@@ -16,6 +23,7 @@ try {
     consumer,
     (await readdir(consumer)).find((file) => file.endsWith(".tgz")),
   );
+  console.log(`Packed archive size: ${(await stat(archive)).size} bytes.`);
   const files = execFileSync("tar", ["-tzf", archive], { encoding: "utf8" })
     .trim()
     .split("\n");
@@ -61,7 +69,7 @@ try {
   );
   await writeFile(
     join(consumer, "index.ts"),
-    'import { workspaceStatus, createAudio, defineSound, validateRecipe } from "audiobits"; import { confirmation } from "audiobits/recipes"; const status: string = workspaceStatus; const audio = createAudio(); const recipe = defineSound(confirmation); audio.sound(recipe); console.log(status, validateRecipe(recipe)); void audio.dispose();\n',
+    'import { workspaceStatus, createAudio, defineSound, validateRecipe } from "audiobits"; import { confirmation, impact, thruster } from "audiobits/recipes"; const status: string = workspaceStatus; const audio = createAudio(); const recipe = defineSound(confirmation); audio.sound(recipe); const dynamic = () => { const voice = audio.sound(thruster).play({ seed: 42, parameters: { throttle: 0.2 } }); voice.set({ throttle: 1 }); const seed: number = voice.seed; audio.sound(impact).play({ parameters: { intensity: 1 }, seed }); voice.stop(); }; void dynamic; console.log(status, validateRecipe(recipe)); void audio.dispose();\n',
   );
   run(
     process.execPath,
@@ -89,10 +97,10 @@ try {
     assert.equal(typeof window, 'undefined');
     assert.equal(typeof AudioContext, 'undefined');
     const { workspaceStatus, createAudio, defineSound, validateRecipe } = await import('audiobits');
-    const { confirmation } = await import('audiobits/recipes');
-    assert.ok(validateRecipe(confirmation).ok);
+    const { confirmation, impact, thruster } = await import('audiobits/recipes');
+    for (const recipe of [confirmation, impact, thruster]) assert.ok(validateRecipe(recipe).ok);
     const audio = createAudio();
-    audio.sound(defineSound(confirmation));
+    for (const recipe of [confirmation, impact, thruster]) audio.sound(defineSound(recipe));
     assert.equal(audio.state, 'idle');
     await audio.dispose();
     assert.equal(workspaceStatus, 'AudioBits workspace ready');

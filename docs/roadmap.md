@@ -2,7 +2,8 @@
 
 Status: Step 00 planning complete; Step 01 foundation implemented; Step 02
 recipe playback implemented with automated evidence and maintainer manual
-verification. Step 03 has not started.
+verification. Step 03 is implemented with automated evidence and maintainer
+manual verification. Step 04 has not started.
 
 Read [AGENTS.md](../AGENTS.md) before implementation. Every numbered step is an
 OpenSpec change with its own proposal, design, and tasks. Runtime changes also
@@ -66,6 +67,8 @@ git diff --check
 Application scripts in [local development](development.md) are now available.
 See [Step 01 evidence](../openspec/changes/01-workspace-foundation/verification.md)
 for foundation verification and [Step 02 evidence](../openspec/changes/02-recipe-playback/verification.md)
-for playback verification. Later audio APIs remain unimplemented.
+for playback verification. [Step 03 evidence](../openspec/changes/03-dynamic-sounds/verification.md)
+records dynamic controls and maintainer listening acceptance. Steps 04–06 remain
+unimplemented.
 At each gate, record exact commands and outcomes, browser/version where relevant,
 listening evidence, and unresolved limitations in that change's verification note.
