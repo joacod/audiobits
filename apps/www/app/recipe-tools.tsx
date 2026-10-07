@@ -4,19 +4,24 @@ import { memo, useMemo, useState } from "react";
 import { Button } from "@base-ui/react/button";
 import { validateRecipe } from "audiobits";
 import type { Recipe } from "audiobits";
-import { libraryExample, rawHost, sounds } from "../lib/gallery";
+import {
+  libraryExample,
+  rawHost,
+  sounds,
+  hasRawComparison,
+} from "../lib/gallery";
 import type { SoundKind } from "../lib/gallery";
 
 export const RecipeTools = memo(function RecipeTools({
   kind,
-  control,
+  controls,
   rawSource,
   onApply,
   onSeed,
   onReset,
 }: {
   kind: SoundKind;
-  control: number;
+  controls: Readonly<Record<string, number>>;
   rawSource: string;
   onApply(kind: SoundKind, recipe: Recipe): void;
   onSeed(kind: SoundKind, seed: number | null): void;
@@ -38,8 +43,8 @@ export const RecipeTools = memo(function RecipeTools({
     seedValue <= 0xffffffff;
   const exampleSeed = validSeed ? seedValue : 42;
   const example = useMemo(
-    () => libraryExample(recipe, control, exampleSeed),
-    [recipe, control, exampleSeed],
+    () => libraryExample(recipe, controls, exampleSeed),
+    [recipe, controls, exampleSeed],
   );
   const original = useMemo(
     () => JSON.stringify(recipe) === JSON.stringify(sounds[kind]),
@@ -60,26 +65,8 @@ export const RecipeTools = memo(function RecipeTools({
         );
         return;
       }
-      // The curated card keeps its primary control contract. Other parameters use defaults.
-      const name =
-        kind === "impact"
-          ? "intensity"
-          : kind === "thruster"
-            ? "throttle"
-            : undefined;
-      const declaration = name ? result.recipe.parameters?.[name] : undefined;
-      if (
-        result.recipe.kind !== sounds[kind].kind ||
-        (name &&
-          (!declaration ||
-            declaration.min !== 0 ||
-            declaration.max !== 1 ||
-            declaration.default !== (kind === "impact" ? 0.5 : 0.2) ||
-            declaration.mode !== (kind === "impact" ? "play" : "live")))
-      ) {
-        setIssues([
-          "$: Keep this card's playback kind and primary parameter contract (range, default, and mode).",
-        ]);
+      if (result.recipe.kind !== sounds[kind].kind) {
+        setIssues(["$: Keep this card's one-shot or sustained playback kind."]);
         return;
       }
       onApply(kind, result.recipe);
@@ -182,38 +169,47 @@ export const RecipeTools = memo(function RecipeTools({
             <pre>
               <code>{example}</code>
             </pre>
-            <h4>Raw Web Audio · bundled {kind}</h4>
-            <p>
-              Equivalent dry sound, seeded noise, live smoothing, release, and
-              cleanup for the bundled definition. Both examples use -12 dB
-              master gain. Shared delay and voice stealing are library features
-              outside this single-voice comparison.
-            </p>
-            {original ? (
+            {hasRawComparison(kind) && (
               <>
-                <Button
-                  onClick={() =>
-                    void copy(
-                      `${rawSource}\n${rawHost(kind, control, seedValue)}`,
-                    )
-                  }
-                  disabled={!validSeed}
-                >
-                  Copy raw {kind} example
-                </Button>
-                <pre>
-                  <code>
-                    {rawSource}
-                    {"\n"}
-                    {rawHost(kind, control, validSeed ? seedValue : 42)}
-                  </code>
-                </pre>
+                <h4>Raw Web Audio · bundled {kind}</h4>
+                <p>
+                  Equivalent dry sound, seeded noise, live smoothing, release,
+                  and cleanup for the bundled definition. Both examples use -12
+                  dB master gain. Shared delay and voice stealing are library
+                  features outside this single-voice comparison.
+                </p>
+                {original ? (
+                  <>
+                    <Button
+                      onClick={() =>
+                        void copy(
+                          `${rawSource}\n${rawHost(kind, Object.values(controls)[0] ?? 0, seedValue)}`,
+                        )
+                      }
+                      disabled={!validSeed}
+                    >
+                      Copy raw {kind} example
+                    </Button>
+                    <pre>
+                      <code>
+                        {rawSource}
+                        {"\n"}
+                        {rawHost(
+                          kind,
+                          Object.values(controls)[0] ?? 0,
+                          validSeed ? seedValue : 42,
+                        )}
+                      </code>
+                    </pre>
+                  </>
+                ) : (
+                  <p>
+                    Restore the bundled recipe to view its raw comparison.
+                    Edited recipes are represented by the current AudioBits
+                    example above.
+                  </p>
+                )}
               </>
-            ) : (
-              <p>
-                Restore the bundled recipe to view its raw comparison. Edited
-                recipes are represented by the current AudioBits example above.
-              </p>
             )}
           </>
         )}

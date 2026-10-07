@@ -1,9 +1,9 @@
 # Website and documentation design
 
-Status: Step 05 implements the three-sound gallery, bounded recipe editor,
-current examples, and Fumadocs guides with local automated evidence. Gallery
-listening acceptance was confirmed by the maintainer on 2026-10-06. The optional visualization integrations
-below remain design considerations, not installed components.
+The gallery uses a demo registry outside recipes and controls derived from accepted
+parameter declarations. One engine owns the mounted session. Selected raw comparisons
+cover the original trio; new sounds use the same bounded recipe editor and lifecycle.
+Optional visualization integrations are not installed dependencies.
 
 ## First interaction
 

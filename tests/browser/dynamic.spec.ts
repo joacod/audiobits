@@ -142,7 +142,9 @@ for (const target of ["site", "vanilla"] as const) {
     await page.goto(
       target === "site" ? "http://127.0.0.1:3100" : "http://127.0.0.1:4173",
     );
-    await page.getByRole("slider", { name: "Intensity" }).fill("1");
+    await page
+      .getByRole("slider", { name: "Intensity", exact: true })
+      .fill("1");
     for (let i = 0; i < 3; i++)
       await page.getByRole("button", { name: "Play impact" }).click();
     await page.getByRole("button", { name: "Start thruster" }).click();
@@ -174,7 +176,7 @@ for (const target of ["site", "vanilla"] as const) {
     if (target === "site")
       await expect(
         page
-          .getByRole("region", { name: "Three-sound development preview" })
+          .getByRole("region", { name: "Procedural sound gallery" })
           .getByRole("alert"),
       ).toHaveCount(0);
     else await expect(page.getByRole("alert")).toBeEmpty();

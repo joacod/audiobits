@@ -1,35 +1,127 @@
 import capabilities from "audiobits/capabilities.json" with { type: "json" };
-import { confirmation, impact, thruster } from "audiobits/recipes";
+import {
+  confirmation,
+  impact,
+  thruster,
+  tactileClick,
+  gentleRejection,
+  glassNotification,
+  whoosh,
+  powerUp,
+} from "audiobits/recipes";
 import type { Recipe } from "audiobits";
 
-export const sounds = { confirmation, impact, thruster };
-export type SoundKind = keyof typeof sounds;
-export const soundInfo = {
+// Presentation belongs to the gallery, independently of portable recipe data.
+export const demos = {
   confirmation: {
+    recipe: confirmation,
     title: "Confirmation",
     description: "A soft upward chime for a completed action.",
     use: "Success feedback · one-shot",
+    labels: {},
+    endpoints: {},
   },
   impact: {
+    recipe: impact,
     title: "Impact",
-    description: "A descending body with a bright noise transient.",
+    description:
+      "A descending body and filtered noise transient. Intensity changes pitch, brightness, and level.",
     use: "Collisions and hits · one-shot",
+    labels: { intensity: "Intensity" },
+    endpoints: { intensity: ["Soft", "Hard"] },
   },
   thruster: {
+    recipe: thruster,
     title: "Thruster",
-    description: "A continuous motor and exhaust that respond to throttle.",
+    description:
+      "Start once, adjust throttle while it runs, then release with Stop.",
     use: "Movement and propulsion · sustained",
+    labels: { throttle: "Throttle" },
+    endpoints: { throttle: ["Idle", "Full thrust"] },
+  },
+  "tactile-click": {
+    recipe: tactileClick,
+    title: "Tactile click",
+    description: "A tiny rounded contact with a restrained noise texture.",
+    use: "Buttons and toggles · one-shot",
+    labels: { intensity: "Click intensity" },
+    endpoints: { intensity: ["Light", "Firm"] },
+  },
+  "gentle-rejection": {
+    recipe: gentleRejection,
+    title: "Gentle rejection",
+    description: "Two soft descending tones for an unavailable action.",
+    use: "Unavailable actions · one-shot",
+    labels: {},
+    endpoints: {},
+  },
+  "glass-notification": {
+    recipe: glassNotification,
+    title: "Glass notification",
+    description:
+      "Four delicate partials with independent decays and a bright glass rim.",
+    use: "Quiet notifications · one-shot",
+    labels: { brightness: "Brightness" },
+    endpoints: { brightness: ["Warm", "Brilliant"] },
+  },
+  whoosh: {
+    recipe: whoosh,
+    title: "Whoosh",
+    description:
+      "Filtered noise sweeps past with an adjustable sense of weight.",
+    use: "Transitions and movement · one-shot",
+    labels: { size: "Size" },
+    endpoints: { size: ["Small", "Huge"] },
+  },
+  "power-up": {
+    recipe: powerUp,
+    title: "Power-up",
+    description: "A rising triangle and sine halo that gather energy together.",
+    use: "Rewards and pickups · one-shot",
+    labels: { intensity: "Power intensity" },
+    endpoints: { intensity: ["Gentle", "Charged"] },
   },
 };
-export function parametersFor(recipe: Recipe, control: number) {
+export type SoundKind = keyof typeof demos;
+export const soundKinds = Object.keys(demos) as SoundKind[];
+export const sounds = Object.fromEntries(
+  soundKinds.map((kind) => [kind, demos[kind].recipe]),
+) as Record<SoundKind, Recipe>;
+export const soundInfo = demos;
+export type RawSoundKind = "confirmation" | "impact" | "thruster";
+export function hasRawComparison(kind: SoundKind): kind is RawSoundKind {
+  return kind === "confirmation" || kind === "impact" || kind === "thruster";
+}
+export function parametersFor(
+  recipe: Recipe,
+  control: number | Readonly<Record<string, number>> = {},
+) {
   return Object.fromEntries(
-    Object.entries(recipe.parameters ?? {}).map(([name, parameter]) => [
+    Object.entries(recipe.parameters ?? {}).map(([name, p]) => [
       name,
-      name === "intensity" || name === "throttle" ? control : parameter.default,
+      typeof control === "number"
+        ? p.min + control * (p.max - p.min)
+        : (control[name] ?? p.default),
     ]),
   );
 }
-export function libraryExample(recipe: Recipe, control: number, seed: number) {
+export function parameterLabel(kind: SoundKind, name: string): string {
+  const labels: Readonly<Record<string, string>> = demos[kind].labels;
+  return labels[name] ?? name[0].toUpperCase() + name.slice(1);
+}
+export function parameterEndpoints(
+  kind: SoundKind,
+  name: string,
+): readonly string[] | undefined {
+  const endpoints: Readonly<Record<string, readonly string[]>> =
+    demos[kind].endpoints;
+  return endpoints[name];
+}
+export function libraryExample(
+  recipe: Recipe,
+  control: number | Readonly<Record<string, number>>,
+  seed: number,
+) {
   return `import { createAudio, defineSound } from "audiobits";
 
 // AudioBits ${capabilities.packageVersion} · package API
@@ -50,7 +142,13 @@ export async function play() {
 ${
   recipe.kind === "sustained"
     ? `
-// While active: voice?.set({ throttle: ${control} });
+// While active: voice?.set(${JSON.stringify(
+        Object.fromEntries(
+          Object.entries(recipe.parameters ?? {})
+            .filter(([, p]) => p.mode === "live")
+            .map(([name]) => [name, parametersFor(recipe, control)[name]]),
+        ),
+      )});
 `
     : ""
 }
@@ -77,7 +175,7 @@ export async function dispose() {
 `;
 }
 
-export function rawHost(kind: SoundKind, control: number, seed: number) {
+export function rawHost(kind: RawSoundKind, control: number, seed: number) {
   return `
 // Call directly from the host's Play gesture. Catch errors and show Retry Play.
 let context: AudioContext | undefined;

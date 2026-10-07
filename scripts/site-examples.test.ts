@@ -2,7 +2,12 @@ import { readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import ts from "typescript";
 import { expect, test } from "vitest";
-import { libraryExample, rawHost, sounds } from "../apps/www/lib/gallery";
+import {
+  libraryExample,
+  rawHost,
+  sounds,
+  hasRawComparison,
+} from "../apps/www/lib/gallery";
 
 test("all documentation fences and current gallery/raw examples typecheck through public exports", () => {
   const snippets: string[] = [];
@@ -16,7 +21,8 @@ test("all documentation fences and current gallery/raw examples typecheck throug
     for (const control of [0, 0.5, 1]) {
       for (const seed of [0, 42, 0xffffffff]) {
         snippets.push(libraryExample(sounds[kind], control, seed));
-        snippets.push(raw + rawHost(kind, control, seed));
+        if (hasRawComparison(kind))
+          snippets.push(raw + rawHost(kind, control, seed));
       }
     }
   }
