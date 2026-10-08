@@ -55,6 +55,10 @@ recipes, native extensions, or maximum engine concurrency.
 
 ## Listening gate
 
+The current eight curated sounds have passed the maintainer-reported listening
+gate in Chrome. Output devices and detailed control/seed coverage were not
+specified; automated checks remain separate from this acceptance.
+
 For each core sound, listen at default settings and control extrema, with
 repeated triggers, fast parameter changes, and stop during attack/sustain/release.
 Record who or what performed the review, browser, output device category, observed

@@ -40,7 +40,7 @@ Public exports, recipe metadata, browser signal/lifecycle checks and copyable
 examples. Automated evidence does not establish listening quality. The maintainer
 reported manual sound-quality acceptance for the current eight sounds on 2026-10-07.
 Devices and detailed listening coverage were not specified. Physical device
-acceptance remains pending.
+compatibility is unverified and deliberately deferred.
 
 ## Product Principles
 

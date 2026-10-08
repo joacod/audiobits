@@ -110,4 +110,4 @@ Chromium desktop plus a narrow viewport; this layout check is not mobile-browser
 compatibility certification. The eight bundled sounds have automated signal
 checks. The maintainer reported listening acceptance for all eight on
 2026-10-07; devices and detailed coverage were not specified. Physical-device
-checks remain separate and pending.
+compatibility is unverified and deliberately deferred.
