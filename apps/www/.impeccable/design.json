@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-07T21:16:23.367353+00:00",
+  "generatedAt": "2026-10-08T00:00:00Z",
   "title": "Design System: AudioBits showcase",
   "extensions": {
     "colorMeta": {
@@ -198,7 +198,7 @@
       "refersTo": "recipe-editor",
       "description": "Plain editable recipe data, with native scrolling.",
       "html": "<label class=\"ds-editor\">Recipe JSON<textarea aria-label=\"Recipe JSON\">{\n  \"schemaVersion\": 1\n}</textarea></label>",
-      "css": ".ds-editor{font-family:Arial,sans-serif;color:var(--ink, #243c32);display:block;font-size:.9rem}.ds-editor textarea{display:block;width:100%;min-height:18rem;padding:.75rem;border:1px solid var(--rule, #b8c1b3);border-radius:4px;background:var(--paper, #f3f0e6);color:var(--ink, #243c32);caret-color:var(--ink, #243c32);font-family:monospace;font-size:.85rem;font-variant-numeric:tabular-nums;scrollbar-color:var(--quiet, #536257) var(--paper, #f3f0e6)}.ds-editor textarea:focus-visible{outline:3px solid var(--focus, #715600);outline-offset:4px;}"
+      "css": ".ds-editor{font-family:Arial,sans-serif;color:var(--ink, #243c32);display:block;font-size:.9rem}.ds-editor textarea{display:block;width:100%;min-height:24rem;padding:.75rem;border:1px solid var(--rule, #b8c1b3);border-radius:4px;background:var(--paper, #f3f0e6);color:var(--ink, #243c32);caret-color:var(--ink, #243c32);font-family:monospace;font-size:.85rem;font-variant-numeric:tabular-nums;scrollbar-color:var(--quiet, #536257) var(--paper, #f3f0e6)}.ds-editor textarea:focus-visible{outline:3px solid var(--focus, #715600);outline-offset:4px;}"
     },
     {
       "name": "Masthead",
@@ -211,15 +211,15 @@
       "name": "Specimen entry",
       "kind": "card",
       "refersTo": "specimen-entry",
-      "description": "Flat, ruled sound entry; preview shows its material and type.",
-      "html": "<article class=\"ds-specimen\"><div><h3>Impact</h3><p>A hit with character.</p></div><p>Recipe and controls occupy this column.</p></article>",
-      "css": ".ds-specimen{font-family:Arial,sans-serif;color:var(--ink, #243c32);display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:3rem;padding:2.5rem 0;border-top:1px solid var(--rule, #b8c1b3);background:var(--paper, #f3f0e6)}.ds-specimen h3{font-family:Fraunces,Georgia,serif;font-weight:450;font-size:2.5rem;line-height:1.15;letter-spacing:-.02em;margin:0}.ds-specimen p{font-size:.9rem;line-height:1.55}@media(max-width:760px){.ds-specimen{grid-template-columns:minmax(0,1fr);gap:1.5rem;padding:2rem 0}.ds-specimen h3{font-size:2rem}}"
+      "description": "Light ruled collection entry; deep inspection belongs to the detail workbench.",
+      "html": "<article class=\"ds-specimen\"><div><h3>Impact</h3><p>A hit with character.</p></div><p>Play, vary, then open the workbench.</p></article>",
+      "css": ".ds-specimen{font-family:Arial,sans-serif;color:var(--ink, #243c32);display:grid;grid-template-columns:minmax(0,1fr);gap:.75rem;padding:2.5rem 0;border-top:1px solid var(--rule, #b8c1b3);background:var(--paper, #f3f0e6)}.ds-specimen h3{font-family:Fraunces,Georgia,serif;font-weight:450;font-size:2.5rem;line-height:1.15;letter-spacing:-.02em;margin:0}.ds-specimen p{font-size:.9rem;line-height:1.55}@media(max-width:760px){.ds-specimen{grid-template-columns:minmax(0,1fr);gap:1.5rem;padding:2rem 0}.ds-specimen h3{font-size:2rem}}"
     },
     {
       "name": "Output scope",
       "kind": "custom",
       "refersTo": "output-scope",
-      "description": "Static material preview of the measured-output band; live app uses analyser data.",
+      "description": "Static preview of the monitor waveform; the live app reads native analyser output.",
       "html": "<figure class=\"ds-scope\"><figcaption>Play to see the generated signal</figcaption><svg class=\"ds-baseline\" viewBox=\"0 0 900 128\" role=\"img\" aria-label=\"Idle baseline\"><path d=\"M0 64H900\" stroke=\"currentColor\" fill=\"none\"/></svg></figure>",
       "css": ".ds-scope{font-family:Arial,sans-serif;background:var(--ink, #243c32);color:var(--paper, #f3f0e6);margin:0;padding:1.25rem 1.5rem}.ds-scope figcaption{font-size:.75rem}.ds-baseline{display:block;width:100%;height:clamp(5rem,12vw,10rem);color:var(--signal, #ecce82);margin-top:.75rem}@media(max-width:760px){.ds-scope{padding:.75rem}.ds-scope figcaption{font-size:.7rem}.ds-baseline{height:3rem;margin-top:.5rem}}"
     },

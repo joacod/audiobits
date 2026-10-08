@@ -45,9 +45,24 @@ framework or decision note for trivial choices is required.
   inspect complete changed content before handoff.
 - Canonical docs: root README for onboarding, package README/site docs for API
   usage, architecture for system boundaries, focused docs for contributor tasks.
-  Historical specifications are secondary and do not govern ordinary changes.
 - Run appropriate scripts from [development](docs/development.md). Separate unit,
   browser, signal, listening, performance and package evidence. Automated checks
   do not establish pleasantness or real-device support.
 - Report files, behavior, exclusions, commands/results and remaining gaps. Follow
   the selected scope and commit boundaries.
+
+## Focus and verification
+
+- Finish the requested implementation first. Verification supports delivery; it must not become a separate compatibility or infrastructure project.
+- While unreleased, Chromium is the default browser target. Firefox, WebKit, other operating systems and physical-device checks are follow-up work unless explicitly requested for the current task.
+- Run the smallest useful checks: lint/typecheck for code, focused unit tests for changed logic, and affected Chromium tests for interactions. Reuse passing builds and checks unless later changes invalidate them.
+- Do not run `release:prepare`, repeated full suites, Docker/VM setup or broad compatibility investigations as routine task endings. Reserve release gates for an explicitly requested release-verification task.
+- Report failures outside the selected target briefly and defer them. Do not let them block scoped delivery or silently claim compatibility.
+- Keep assertions meaningful. Do not hide flakes with arbitrary waits, larger timeouts, more retries or weaker assertions; investigate only failures relevant to the agreed scope. CI retries remain diagnostic and flakes fail CI.
+- Stop once the requested work and its focused checks are complete. Automated checks do not establish listening quality or physical-device support.
+
+## Showcase boundaries
+
+- `/` is product discovery, `/sounds` is collection exploration, `/sounds/[slug]` is the sound workbench, and `/docs` remains Fumadocs reference documentation.
+- Presentation metadata stays outside recipes; visual dependencies stay inside `apps/www`.
+- Use real analyser output and a small set of reusable visualization families, not eight bespoke graphics projects.

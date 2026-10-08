@@ -128,7 +128,7 @@ The frontmatter records the normative CSS values.
 
 ### Neutral
 
-- **Warm paper** (`paper`): page, sticky mixer and editable fields.
+- **Warm paper** (`paper`): page, monitor and editable fields.
 - **Green ink** (`ink`): main text, structural rules, slider accent and dark signal surfaces.
 - **Quiet green** (`quiet`): captions, supporting text and scrollbars.
 - **Sage rule** (`rule`): specimen dividers and ordinary control borders.
@@ -161,24 +161,24 @@ terminal chrome.
 ## Layout
 
 The page uses a centered content area of (76rem), with side gutters calculated as
-`max(1.5rem, calc((100vw - 76rem) / 2))`. There is no sidebar. The masthead and
-collection index wrap; the mixer sticks to the top of the viewport.
+`max(1.5rem, calc((100vw - 76rem) / 2))`. The masthead wraps. Home pairs a glass
+interaction with fine ink threads, then two supporting sounds. The eight-sound
+teaser is a compact two-column typographic index, collapsing to one on phones.
 
-Specimen entries pair playback and controls with recipe tools in columns of
-(1.15fr / 1fr), separated by (3rem). Editorial sections use equal columns; rows
-and generous vertical spacing establish the rhythm. Dark recipe material can
-extend across the page gutters without becoming a separate floating panel.
+Collection and workbench pair flexible sound content with an (18rem) monitor rail
+and a (3rem) gap. From (761px) to (1000px), the rail is (16rem) and gap (1.5rem).
+The monitor sticks (1rem) below the viewport top. Inspector content fills its
+column; code scrolls internally rather than widening the page.
 
-At (760px) and below, gutters become (1rem), specimen and story grids collapse,
-and the mixer puts actions/status above its full-width volume label. The final
-mobile featured specimen places the title beside Play, then the labelled slider,
-status and compact code sample underneath. Its waveform is (3rem) high. Code
-panels scroll internally rather than widening the page.
+At (760px) and below, gutters become (1rem), layouts become one column, and the
+monitor becomes a fixed bottom dock. Levels expands volume; Mute and Stop remain
+visible. Bottom safe-area padding and (12rem) page clearance keep the last content
+reachable. Sound portraits are (13rem) high, with a compact (9rem) home portrait.
 
 ## Elevation & Depth
 
 The showcase uses no box shadows. Fine rules, paper/code tonal changes and solid
-ink bands supply depth. The sticky mixer remains opaque paper; it uses stacking
+ink bands supply depth. The monitor remains opaque paper; it uses stacking
 order rather than a floating shadow. Signal drawing and the click spark are
 content/state feedback, not surface elevation.
 
@@ -230,18 +230,27 @@ collection index is a wrapping list between rules, rather than chips. On mobile,
 the wordmark occupies its own row; masthead link boxes use the implemented
 (32px) minimum height.
 
-### Output Scope
+### Audio Monitor and Portraits
 
-One full-width ink band pairs a compact paper caption with a brass waveform.
-The display reads caller-owned native analyser data; it returns to a baseline
-while idle and pauses animation for reduced motion. The static sidecar preview
-illustrates its material only and is not an audio measurement.
+The monitor pairs an ink waveform with current/last sound, engine state, effects
+volume, Mute and Stop all. Portraits use paper and ink with three reusable forms:
+pulse ellipses, harmonic bands and flowing lines. The home has one thread field.
+Static portrait geometry is illustrative; live displacement follows native output.
+The monitor is the literal waveform, with labelled display gain. Both stop drawing
+offscreen, while hidden and under reduced motion.
+
+### Inspector
+
+Base UI tabs put Code, Recipe and available Raw Web Audio side by side. Selected
+tabs use ink on paper's inverse; tabs have (48px) targets. Code defaults to the
+small current example and links to production lifecycle. Recipe editing is opt-in.
+Seed, Randomize and Reset variation belong with playback, above the inspector.
 
 ## Do's and Don'ts
 
 ### Do:
 
-- **Do** keep Play, parameter labels and visible playback status ahead of recipe disclosures.
+- **Do** keep Play, parameter labels and visible playback status ahead of the inspector.
 - **Do** use the paper, ink and brass roles consistently across showcase routes.
 - **Do** collapse specimen columns at the established mobile breakpoint and retain usable code overflow.
 - **Do** label native controls, retain visible focus, and respect reduced motion.

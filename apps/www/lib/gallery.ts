@@ -14,6 +14,7 @@ import type { Recipe } from "audiobits";
 // Presentation belongs to the gallery, independently of portable recipe data.
 export const demos = {
   confirmation: {
+    visualFamily: "harmonic",
     exportName: "confirmation",
     recipe: confirmation,
     title: "Confirmation",
@@ -23,6 +24,7 @@ export const demos = {
     endpoints: {},
   },
   impact: {
+    visualFamily: "pulse",
     exportName: "impact",
     recipe: impact,
     title: "Impact",
@@ -33,6 +35,7 @@ export const demos = {
     endpoints: { intensity: ["Soft", "Hard"] },
   },
   thruster: {
+    visualFamily: "flow",
     exportName: "thruster",
     recipe: thruster,
     title: "Thruster",
@@ -43,6 +46,7 @@ export const demos = {
     endpoints: { throttle: ["Idle", "Full thrust"] },
   },
   "tactile-click": {
+    visualFamily: "pulse",
     exportName: "tactileClick",
     recipe: tactileClick,
     title: "Tactile click",
@@ -52,6 +56,7 @@ export const demos = {
     endpoints: { intensity: ["Light", "Firm"] },
   },
   "gentle-rejection": {
+    visualFamily: "pulse",
     exportName: "gentleRejection",
     recipe: gentleRejection,
     title: "Gentle rejection",
@@ -61,6 +66,7 @@ export const demos = {
     endpoints: {},
   },
   "glass-notification": {
+    visualFamily: "harmonic",
     exportName: "glassNotification",
     recipe: glassNotification,
     title: "Glass notification",
@@ -71,6 +77,7 @@ export const demos = {
     endpoints: { brightness: ["Warm", "Brilliant"] },
   },
   whoosh: {
+    visualFamily: "flow",
     exportName: "whoosh",
     recipe: whoosh,
     title: "Whoosh",
@@ -81,6 +88,7 @@ export const demos = {
     endpoints: { size: ["Small", "Huge"] },
   },
   "power-up": {
+    visualFamily: "harmonic",
     exportName: "powerUp",
     recipe: powerUp,
     title: "Power-up",
@@ -89,7 +97,7 @@ export const demos = {
     labels: { intensity: "Power intensity" },
     endpoints: { intensity: ["Gentle", "Charged"] },
   },
-};
+} as const;
 export type SoundKind = keyof typeof demos;
 export const soundKinds = Object.keys(demos) as SoundKind[];
 export const sounds = Object.fromEntries(

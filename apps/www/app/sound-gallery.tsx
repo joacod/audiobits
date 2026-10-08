@@ -8,9 +8,9 @@ import {
   useSyncExternalStore,
 } from "react";
 import Link from "next/link";
-import { Button } from "@base-ui/react/button";
+
 import { SoundCard } from "./sound-card";
-import { OutputScope } from "./output-scope";
+import { AudioMonitor } from "./audio-monitor";
 import { soundInfo, soundKinds, sounds, parametersFor } from "../lib/gallery";
 import type { SoundKind } from "../lib/gallery";
 import { createAudio } from "audiobits";
@@ -60,6 +60,7 @@ export function SoundGallery({
   const [state, setState] = useState<AudioState>("idle");
   const [error, setError] = useState("");
   const [muted, setMuted] = useState(false);
+  const [current, setCurrent] = useState<SoundKind | null>(null);
   const ready = useSyncExternalStore(
     subscribeHydration,
     () => true,
@@ -175,6 +176,7 @@ export function SoundGallery({
         route.current.setGainDb(volumeValue.current, 0.1);
       }
       setStarted(engine);
+      setCurrent(kind);
       const voice = definition.play({
         seed,
         bus: route.current,
@@ -206,116 +208,84 @@ export function SoundGallery({
       }
     }
   }
+  const active = Object.values(playing).some(
+    (value) => value === "running" || value === "playing",
+  );
+  const kinds: SoundKind[] = selected
+    ? [selected]
+    : home
+      ? ["glass-notification", "impact", "thruster"]
+      : soundKinds;
   return (
-    <section aria-labelledby="gallery-heading">
-      <h2 id="gallery-heading" className="sr-only">
-        Procedural sound gallery
-      </h2>
-      <div className="gallery-mixer">
-        <div className="audio-controls">
-          <Button
-            aria-pressed={muted}
-            onClick={() => {
-              const next = !muted;
-              audio.current?.setMuted(next);
-              setMuted(next);
-            }}
-          >
-            Mute
-          </Button>
-          <Button onClick={stopAll}>Stop all</Button>
-        </div>
-        <label>
-          Effects volume: {volume} dB
-          <input
-            aria-label="Effects volume"
-            disabled={!ready}
-            type="range"
-            min="-60"
-            max="0"
-            step="1"
-            value={volume}
-            onChange={(event) => {
-              const value = Number(event.target.value);
-              volumeValue.current = value;
-              setVolume(value);
-              try {
-                route.current?.setGainDb(value, 0.1);
-              } catch (cause) {
-                setError(
-                  cause instanceof Error ? cause.message : "Volume failed.",
-                );
-              }
-            }}
-          />
-        </label>
-        <p role="status">Audio: {state}</p>
-        {error && <p role="alert">{error}</p>}
-      </div>
-      <OutputScope
-        engine={started}
-        active={Object.values(playing).some(
-          (value) => value === "running" || value === "playing",
+    <section
+      className={home ? "discovery-session" : "lab-session"}
+      aria-label={home ? "Hear AudioBits" : "Sound lab"}
+    >
+      <div className="session-sounds">
+        {!home && !selected && (
+          <nav className="sound-index" aria-label="Sound collection">
+            {soundKinds.map((kind) => (
+              <Link
+                href={`#${kind}`}
+                aria-label={`Jump to ${soundInfo[kind].title}`}
+                key={kind}
+              >
+                {soundInfo[kind].title}
+              </Link>
+            ))}
+          </nav>
         )}
+        {kinds.map((kind, index) => (
+          <SoundCard
+            key={kind}
+            kind={kind}
+            ready={ready}
+            recipe={recipes[kind]}
+            controls={controls[kind]}
+            playing={playing[kind]}
+            rawSource={rawSource}
+            onPlay={play}
+            onStop={stop}
+            onUpdateControl={updateControl}
+            onReset={resetControl}
+            onSeed={setSeed}
+            onApply={applyRecipe}
+            featured={home && index === 0}
+            workbench={!!selected}
+            discovery={home}
+            engine={started}
+          />
+        ))}
+      </div>
+      <AudioMonitor
+        engine={started}
+        active={active}
+        current={
+          current
+            ? `${soundInfo[current].title} · ${playing[current] ?? "ready"}`
+            : ""
+        }
+        state={state}
+        muted={muted}
+        volume={volume}
+        ready={ready}
+        error={error}
+        onMute={() => {
+          const next = !muted;
+          audio.current?.setMuted(next);
+          setMuted(next);
+        }}
+        onStop={stopAll}
+        onVolume={(value) => {
+          volumeValue.current = value;
+          setVolume(value);
+          try {
+            route.current?.setGainDb(value, 0.1);
+          } catch (cause) {
+            setError(cause instanceof Error ? cause.message : "Volume failed.");
+          }
+        }}
       />
-      {home && (
-        <SoundCard
-          kind="impact"
-          ready={ready}
-          recipe={recipes["impact"]}
-          controls={controls["impact"]}
-          playing={playing["impact"]}
-          rawSource={rawSource}
-          onPlay={play}
-          onStop={stop}
-          onUpdateControl={updateControl}
-          onReset={resetControl}
-          onSeed={setSeed}
-          onApply={applyRecipe}
-          featured
-        />
-      )}
-      {!selected && (
-        <nav className="sound-index" aria-label="Sound collection">
-          {soundKinds.map((kind) => (
-            <Link
-              href={`#${kind}`}
-              aria-label={`Jump to ${soundInfo[kind].title}`}
-              key={kind}
-            >
-              {soundInfo[kind].title}
-            </Link>
-          ))}
-        </nav>
-      )}
-      {!selected && (
-        <div id="collection" className="collection-title">
-          <h2>
-            {home ? "A character for every interaction." : "Find your sound."}
-          </h2>
-          <p>Play. Change. Repeat.</p>
-        </div>
-      )}
-      {(selected
-        ? [selected]
-        : soundKinds.filter((kind) => !home || kind !== "impact")
-      ).map((kind) => (
-        <SoundCard
-          key={kind}
-          ready={ready}
-          kind={kind}
-          recipe={recipes[kind]}
-          controls={controls[kind]}
-          playing={playing[kind]}
-          rawSource={rawSource}
-          onPlay={play}
-          onStop={stop}
-          onUpdateControl={updateControl}
-          onReset={resetControl}
-          onSeed={setSeed}
-          onApply={applyRecipe}
-        />
-      ))}
     </section>
   );
 }

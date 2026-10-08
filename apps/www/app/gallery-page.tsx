@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { SoundGallery } from "./sound-gallery";
 import { siteBuild, rawExampleSource } from "../lib/site-build";
-import { soundInfo } from "../lib/gallery";
+import { soundInfo, soundKinds } from "../lib/gallery";
 import type { SoundKind } from "../lib/gallery";
 
 export function GalleryPage({
@@ -47,22 +47,36 @@ export function GalleryPage({
         <div className="intro-line">
           <p className="intro">
             {home
-              ? "Browser-native audio. No sample required."
-              : "Eight sounds. Make them yours."}
+              ? "Browser-native procedural audio. Hear it. Change it. Make it yours."
+              : selected
+                ? soundInfo[selected].description
+                : "Eight sounds. Play, compare and find your next interaction."}
           </p>
           <p className="gallery-channel">
             {siteBuild.channel} · {siteBuild.version} · {siteBuild.source}
           </p>
         </div>
         {selected && (
-          <Link href="/sounds" aria-label="All sounds">
-            Back to all sounds
-          </Link>
+          <nav className="workbench-nav" aria-label="Sound navigation">
+            <Link href="/sounds" aria-label="All sounds">
+              All sounds
+            </Link>
+            <Link
+              href={`/sounds/${soundKinds[(soundKinds.indexOf(selected) + soundKinds.length - 1) % soundKinds.length]}`}
+            >
+              Previous sound
+            </Link>
+            <Link
+              href={`/sounds/${soundKinds[(soundKinds.indexOf(selected) + 1) % soundKinds.length]}`}
+            >
+              Next sound
+            </Link>
+          </nav>
         )}
       </header>
       <SoundGallery
-        key={selected ?? "gallery"}
-        rawSource={rawExampleSource()}
+        key={selected ?? (home ? "home" : "collection")}
+        rawSource={selected ? rawExampleSource() : ""}
         selected={selected}
         home={home}
       />
@@ -103,7 +117,7 @@ hit.play({ parameters: { intensity: 0.8 } });`}</code>
               <span aria-hidden="true">→</span>
               <span>AudioBits</span>
               <span aria-hidden="true">→</span>
-              <span>Browser audio</span>
+              <span>Web Audio</span>
             </div>
             <div className="recipe-story-copy">
               <p>
@@ -111,6 +125,13 @@ hit.play({ parameters: { intensity: 0.8 } });`}</code>
                 can read, validate and change. Open any sound’s recipe to try
                 it.
               </p>
+              <pre>
+                <code>{`{
+  "schemaVersion": 1,
+  "kind": "one-shot",
+  "duration": 0.3
+}`}</code>
+              </pre>
               <Link href="/docs/recipes">Inside a recipe</Link>
             </div>
           </section>
@@ -140,6 +161,25 @@ hit.play({ parameters: { intensity: 0.8 } });`}</code>
               </div>
             </dl>
             <Link href="/docs/lifecycle">Playback and lifecycle</Link>
+          </section>
+          <section
+            className="collection-teaser"
+            aria-labelledby="teaser-heading"
+          >
+            <h2 id="teaser-heading">
+              Eight starting points.
+              <br />
+              <em>Endless character.</em>
+            </h2>
+            <div className="teaser-list">
+              {soundKinds.map((kind) => (
+                <Link key={kind} href={`/sounds/${kind}`}>
+                  <span>{soundInfo[kind].title}</span>
+                  <small>{soundInfo[kind].use}</small>
+                </Link>
+              ))}
+            </div>
+            <Link href="/sounds">Explore all sounds →</Link>
           </section>
           <section className="agent-story" aria-labelledby="agent-heading">
             <h2 id="agent-heading">

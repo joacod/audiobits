@@ -53,3 +53,10 @@ acceptance remains pending.
 
 Keyboard and touch operation, labelled controls, visible focus and playback state,
 adequate contrast, reduced motion, mute and explicit Stop. No sound-only feedback.
+
+## Route purposes
+
+- `/`: persuade through a glass-notification hero and two supporting sound moments.
+- `/sounds`: operate a light sound collection with a persistent audio monitor.
+- `/sounds/[slug]`: understand and customize one sound with playback variation and a tabbed inspector.
+- `/docs`: read the calm Fumadocs reference; marketing components do not enter it.
