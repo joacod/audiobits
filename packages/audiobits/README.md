@@ -7,14 +7,15 @@ Prerelease verification target: current Chromium. Other browsers and operating
 systems are unverified and deliberately deferred. Maintainer listening acceptance for the
 unchanged sound definitions is recorded separately.
 
-## Install
+## Quick start
 
 ```sh
 npm install audiobits
 ```
 
-Use a browser bundler and call `play()` directly from a gesture handler. Surface rejection
-with `void play().catch(showError)` and retry from a fresh gesture.
+Use a browser bundler. Create the engine and sound once; run the final two lines
+inside a user gesture handler, such as a button click. Call `audio.start()`
+directly in that handler and await it before playback.
 
 ```ts
 import { createAudio } from "audiobits";
@@ -22,19 +23,15 @@ import { confirmation } from "audiobits/recipes";
 
 const audio = createAudio();
 const sound = audio.sound(confirmation);
-export async function play() {
-  await audio.start();
-  sound.play();
-}
-export function stop() {
-  audio.stopAll({ tails: "cut" });
-}
-export async function dispose() {
-  await audio.dispose();
-}
+
+await audio.start();
+sound.play();
 ```
 
-Bind `play()` to a button click (`void play().catch(showError)`).
+Surface activation failures and retry from a fresh gesture. Use
+`audio.stopAll({ tails: "cut" })` to stop playback and `await audio.dispose()`
+when the host is removed. See the production lifecycle example below for
+hiding and navigation.
 
 ## Production lifecycle
 

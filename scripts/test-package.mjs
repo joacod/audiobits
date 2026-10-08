@@ -257,9 +257,23 @@ try {
   for (const example of examples.filter(
     ({ file, index }) => file !== "README.md" || index <= 1,
   )) {
+    // The minimal quick start supplies setup and gesture-body statements;
+    // the host owns its click handler, Stop action and teardown.
+    const hostCode =
+      example.file === "README.md" && example.index === 0
+        ? example.code.replace(
+            "await audio.start();\nsound.play();",
+            `export async function play() {
+  await audio.start();
+  sound.play();
+}
+export function stop() { audio.stopAll({ tails: "cut" }); }
+export async function dispose() { await audio.dispose(); }`,
+          )
+        : example.code;
     await writeFile(
       join(consumer, `${example.name}-browser.ts`),
-      `${example.code}
+      `${hostCode}
 let context: AudioContext | undefined;
 let analyser: AnalyserNode | undefined;
 let detach: (() => void) | undefined;
