@@ -45,7 +45,6 @@ framework or decision note for trivial choices is required.
   inspect complete changed content before handoff.
 - Canonical docs: root README for onboarding, package README/site docs for API
   usage, architecture for system boundaries, focused docs for contributor tasks.
-  Historical specifications are secondary and do not govern ordinary changes.
 - Run appropriate scripts from [development](docs/development.md). Separate unit,
   browser, signal, listening, performance and package evidence. Automated checks
   do not establish pleasantness or real-device support.

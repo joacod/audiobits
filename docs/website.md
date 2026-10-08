@@ -83,4 +83,6 @@ A visitor can discover a sound, play it, hear a meaningful control change,
 stop it, and copy a working example without reading the architecture. Check
 Chromium desktop plus a narrow viewport; this layout check is not mobile-browser
 compatibility certification. The eight bundled sounds have automated signal
-checks; the five new definitions require their own listening acceptance.
+checks. The maintainer reported listening acceptance for all eight on
+2026-10-07; devices and detailed coverage were not specified. Physical-device
+checks remain separate and pending.
