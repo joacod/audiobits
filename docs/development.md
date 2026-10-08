@@ -96,7 +96,9 @@ path routing, browser matrix or packed-package rehearsal. Configure PR branch
 protection around quality; Chromium integration runs after merges to `main`.
 Candidate workflows are manual and remain separate from normal CI. The
 [production release workflow](releases.md) creates Version Packages PRs and
-stages verified npm archives for human 2FA approval.
+directly publishes verified npm archives through OIDC after the maintainer merges
+the Version Packages PR, then verifies public availability and creates the Git
+tag and GitHub Release.
 
 The browser suite owns ports 3100 and 4173; neither may already be occupied.
 [Centralized Linux audio setup](../scripts/ci/setup-linux-audio.sh) provisions
@@ -174,8 +176,9 @@ Ordinary changes use the scripts above; no formal specification CLI is required.
 The site consumes the local runtime without a version bump or npm publication.
 `pnpm build:site` includes the library build from the same checkout. Site hosting
 and deployment remain unconfigured. The
-[release workflow](releases.md) stages npm packages for manual approval; website
-deployment remains separate. Label development documentation distinctly from a
+[release workflow](releases.md) publishes npm packages through OIDC and finalizes
+GitHub Releases after public availability verification; website deployment
+remains separate. Label development documentation distinctly from a
 stable release.
 
 ## Gallery examples

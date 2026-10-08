@@ -170,7 +170,7 @@ test("normal CI keeps PR quality separate from main-only Chromium integration", 
   expect(metadata.browserMatrix).toEqual(["Chromium"]);
 });
 
-test("production release isolates version PR permissions from verified npm staging", async () => {
+test("production release isolates direct npm publication from GitHub finalization", async () => {
   const { createRequire } = await import("node:module");
   const require = createRequire(import.meta.url);
   const { load } = createRequire(require.resolve("eslint/package.json"))(
@@ -190,8 +190,9 @@ test("production release isolates version PR permissions from verified npm stagi
     "github.ref == 'refs/heads/main'",
   );
   expect(Object.keys(release.jobs).sort()).toEqual([
+    "github-release",
+    "publish",
     "select-mode",
-    "stage",
     "version",
   ]);
   expect(release.jobs["select-mode"].permissions).toEqual({ contents: "read" });
@@ -199,7 +200,7 @@ test("production release isolates version PR permissions from verified npm stagi
     contents: "write",
     "pull-requests": "write",
   });
-  expect(release.jobs.stage.permissions).toEqual({
+  expect(release.jobs.publish.permissions).toEqual({
     contents: "read",
     "id-token": "write",
   });
@@ -216,16 +217,17 @@ test("production release isolates version PR permissions from verified npm stagi
   });
   for (const [job, mode] of [
     ["version", "version"],
-    ["stage", "publish"],
+    ["publish", "publish"],
   ]) {
     expect(release.jobs[job].needs).toBe("select-mode");
     expect(release.jobs[job].if).toBe(
       `needs.select-mode.outputs.mode == '${mode}'`,
     );
   }
-  for (const job of Object.values(release.jobs) as {
-    steps: { uses?: string; run?: string; with?: Record<string, unknown> }[];
-  }[]) {
+  for (const name of ["select-mode", "version", "publish"]) {
+    const job = release.jobs[name] as {
+      steps: { uses?: string; run?: string; with?: Record<string, unknown> }[];
+    };
     expect(job.steps[0].uses).toBe("actions/checkout@v5");
     expect(
       job.steps.find(({ uses }) => uses === "pnpm/action-setup@v4"),
@@ -236,18 +238,18 @@ test("production release isolates version PR permissions from verified npm stagi
       ],
     ).toBe(".node-version");
   }
-  const steps = release.jobs.stage.steps;
+  const steps = release.jobs.publish.steps;
   const runs = steps.flatMap(({ run }: { run?: string }) => run ?? []);
   const gate = runs.indexOf("pnpm release:prepare");
   const verify = runs.indexOf(
     'node scripts/verify-release-artifact.mjs >> "$GITHUB_OUTPUT"',
   );
-  const stage = runs.indexOf(
-    'npm stage publish "$RELEASE_ARCHIVE" --access public --tag latest',
+  const publish = runs.indexOf(
+    'npm publish "$RELEASE_ARCHIVE" --access public --tag latest',
   );
   expect(gate).toBeGreaterThan(-1);
   expect(verify).toBe(gate + 1);
-  expect(stage).toBe(verify + 1);
+  expect(publish).toBe(verify + 1);
   expect(runs).toContain("npm install --global npm@11.19.0");
   for (const setup of [
     "pnpm exec playwright install --with-deps chromium",
@@ -268,9 +270,8 @@ test("production release isolates version PR permissions from verified npm stagi
     steps.find(({ id }: { id?: string }) => id === "artifact"),
   ).toBeDefined();
   expect(
-    steps.find(({ run }: { run?: string }) =>
-      run?.startsWith("npm stage publish"),
-    ).env.RELEASE_ARCHIVE,
+    steps.find(({ run }: { run?: string }) => run?.startsWith("npm publish"))
+      .env.RELEASE_ARCHIVE,
   ).toBe("${{ steps.artifact.outputs.archive }}");
   expect(
     steps.some(
@@ -290,8 +291,38 @@ test("production release isolates version PR permissions from verified npm stagi
     );
   }
   expect(source).not.toMatch(
-    /NPM_TOKEN|NODE_AUTH_TOKEN|npm publish|changeset publish|npm stage approve|git tag|gh release|action\/publish|create-github-releases|push-git-tags/,
+    /NPM_TOKEN|NODE_AUTH_TOKEN|changeset publish|npm stage publish|npm stage approve|action\/publish|create-github-releases|push-git-tags/,
   );
+  expect(release.jobs["github-release"].needs).toBe("publish");
+  expect(release.jobs["github-release"].if).toBeUndefined();
+  expect(release.jobs["github-release"].permissions).toEqual({
+    contents: "write",
+  });
+  expect(release.jobs["github-release"].steps[0].with.ref).toBe(
+    "${{ github.sha }}",
+  );
+  const finalization = release.jobs["github-release"].steps.at(-1);
+  expect(finalization.run).toBe("node scripts/finalize-github-release.mjs");
+  expect(finalization.env).toEqual({
+    GH_TOKEN: "${{ github.token }}",
+    RELEASE_SHA: "${{ github.sha }}",
+  });
+  for (const [name, job] of Object.entries(release.jobs) as [
+    string,
+    { permissions: Record<string, string> },
+  ][]) {
+    expect(job.permissions["id-token"]).toBe(
+      name === "publish" ? "write" : undefined,
+    );
+  }
+  const helper = readFileSync("scripts/finalize-github-release.mjs", "utf8");
+  expect(helper).toContain(
+    'readFileSync("packages/audiobits/package.json", "utf8")',
+  );
+  expect(helper).toContain(
+    'readFileSync("packages/audiobits/CHANGELOG.md", "utf8")',
+  );
+  expect(helper).not.toMatch(/npm publish|npm stage|NPM_TOKEN|NODE_AUTH_TOKEN/);
   const candidate = load(
     readFileSync(".github/workflows/npm-candidate.yml", "utf8"),
   );
@@ -313,8 +344,8 @@ test("published package identifies the GitHub repository and monorepo directory"
   });
 });
 
-test("staging accepts only the retained archive matching clean release evidence", () => {
-  const root = mkdtempSync(join(tmpdir(), "audiobits-stage-test-"));
+test("publication accepts only the retained archive matching clean release evidence", () => {
+  const root = mkdtempSync(join(tmpdir(), "audiobits-publish-test-"));
   const directory = join(root, "node_modules/.cache/audiobits-release");
   const manifest = JSON.parse(
     readFileSync("packages/audiobits/package.json", "utf8"),

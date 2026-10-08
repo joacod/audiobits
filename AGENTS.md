@@ -38,8 +38,8 @@ Complete the requested task with the smallest coherent change.
 - Website-only, CI/release infrastructure, tests-only, agent/process docs and
   internal refactors without published behavior changes generally need no Changeset.
 - During ordinary feature/fix work, do not run `changeset version`, `npm publish`,
-  `npm stage publish` or `npm stage approve`. Release timing belongs to the
-  Version Packages PR and release workflow.
+  or create Git tags/GitHub Releases manually. Release timing is controlled by
+  the maintainer merging the Version Packages PR.
 
 ## Architecture boundaries
 

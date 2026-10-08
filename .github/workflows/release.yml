@@ -41,7 +41,7 @@ jobs:
       - uses: changesets/action/version@v2
         with:
           pr-title: Version Packages
-  stage:
+  publish:
     needs: select-mode
     if: needs.select-mode.outputs.mode == 'publish'
     runs-on: ubuntu-latest
@@ -65,13 +65,31 @@ jobs:
       - name: Verify retained release artifact
         id: artifact
         run: node scripts/verify-release-artifact.mjs >> "$GITHUB_OUTPUT"
-      - name: Stage verified package for human approval
+      - name: Publish verified package through OIDC
         env:
           RELEASE_ARCHIVE: ${{ steps.artifact.outputs.archive }}
-        run: npm stage publish "$RELEASE_ARCHIVE" --access public --tag latest
+        run: npm publish "$RELEASE_ARCHIVE" --access public --tag latest
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: release-browser-failures
           path: test-results/
           retention-days: 7
+  github-release:
+    needs: publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .node-version
+      - name: Verify public availability and finalize GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_SHA: ${{ github.sha }}
+        run: node scripts/finalize-github-release.mjs
