@@ -1,7 +1,8 @@
 # Product finish roadmap
 
-The recipe/runtime foundation, eight-sound gallery and private candidate are
-implemented. Publication and deployment remain disabled. Architecture stays
+The recipe/runtime foundation and eight-sound gallery are implemented. AudioBits
+`0.1.0` is prepared as the stable publishable candidate but has not yet been
+published to npm. Publication and deployment remain disabled. Architecture stays
 fixed unless a real sound or experience is blocked by the existing vocabulary.
 
 1. **First npm release:** approve and publish the exact npm artifact in a separate

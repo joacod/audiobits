@@ -204,7 +204,8 @@ hit.play({ parameters: { intensity: 0.8 } });`}</code>
           </pre>
         ) : (
           <p className="release-note">
-            Unreleased candidate. The npm install command will be available
+            AudioBits 0.1.0 is prepared for stable publication but has not yet
+            been published to npm. The npm install command will be available
             after publication.
           </p>
         )}

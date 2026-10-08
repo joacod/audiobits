@@ -5,9 +5,9 @@ description: Integrate AudioBits procedural sounds into a browser application, i
 
 # AudioBits integration
 
-This guide ships with the private 0.1.0-rc.0 candidate. Confirm the installed
+This guide ships with AudioBits 0.1.0, prepared for stable publication but not yet published to npm. Confirm the installed
 package version and read `audiobits/capabilities.json` and
-`audiobits/schema.json` before choosing primitives. Candidate metadata describes
+`audiobits/schema.json` before choosing primitives. Package metadata describes
 shipped behavior, not registry availability. Prerelease verification target: current Chromium. Other browsers and operating
 systems are unverified and deliberately deferred.
 
@@ -29,7 +29,7 @@ Returning requires another gesture. Detach and disconnect caller-owned taps.
 
 No recipe strings are executable. Do not invent sequencing, spatial audio,
 extra recipe effects, caches, worklets, framework adapters, or broader browser
-support from the candidate.
+support from the package.
 
 Buses provide gain, mute, and routing. Shared effects are deferred until
 multiple real sound requirements justify an API.

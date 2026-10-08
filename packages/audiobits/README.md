@@ -1,17 +1,17 @@
 # AudioBits
 
-Private, unreleased **0.1.0-rc.0** candidate. It includes confirmation, impact, thruster, tactile click, gentle rejection,
+AudioBits **0.1.0** is prepared for stable publication but has not yet been published to npm. It includes confirmation, impact, thruster, tactile click, gentle rejection,
 glass notification, whoosh and power-up; schema-1 recipes; play/live controls; seeded variation; bounded
 voices; bus gain, mute and routing; native output taps; and explicit lifecycle APIs.
 Prerelease verification target: current Chromium. Other browsers and operating
 systems are unverified and deliberately deferred. Maintainer listening acceptance for the
 unchanged sound definitions is recorded separately. Nothing has been published,
-and the final npm identifier and ownership remain unconfirmed.
+and the npm identifier remains `audiobits`.
 
-## Try the candidate locally
+## Try locally
 
 Install the reviewed archive into your own private consumer with
-`npm install /path/to/audiobits-0.1.0-rc.0.tgz`. This is a local file install,
+`npm install /path/to/audiobits-0.1.0.tgz`. This is a local file install,
 not an instruction to install an existing registry package. Use a browser
 bundler and call `play()` directly from a gesture handler. Surface rejection
 with `void play().catch(showError)` and retry from a fresh gesture.
@@ -76,7 +76,7 @@ after two wall-clock seconds; the context stays owned for gesture retry. Play
 before activation fails with `not-ready`; no input is queued.
 
 The archive exports `audiobits/schema.json` and `audiobits/capabilities.json`.
-The latter identifies candidate version, shipped primitives, initial Chromium gate and candidate browser matrix;
+The latter identifies package version, shipped primitives, initial Chromium gate and verification browser matrix;
 the schema is structural, while `validateRecipe` enforces additional semantic
 limits. Agent guidance is included in [the AudioBits Skill](skill/SKILL.md).
 
@@ -91,7 +91,7 @@ Paths use JSON bracket notation, such as `$["layers"][0]["id"]`.
 `invalid-recipe`. The input must be plain JSON data without accessors or cycles.
 Unknown fields and versions are rejected. Validation is browser-independent.
 
-Candidate schema version 1 supports:
+Schema version 1 supports:
 
 - One-shot gates in `(0, 60]` seconds or sustained playback until Stop, with
   1–16 uniquely identified layers. Sustained recipes forbid `duration`.
@@ -116,7 +116,7 @@ Candidate schema version 1 supports:
 Depth is limited to 16, visited values to 10000, and diagnostics to 100.
 Source/filter frequencies must be below the owning context's Nyquist frequency
 at playback, including all mapping/variation extrema. Other effects,
-expression strings, sequencing, and continuous random modulation are rejected. These are draft capabilities, not released schema promises.
+expression strings, sequencing, and continuous random modulation are rejected. These are the capabilities shipped in 0.1.0.
 The generated schema is available as `recipeSchema` or `audiobits/schema.json`.
 
 ## Runtime ownership
@@ -207,7 +207,7 @@ traverses root effects, then layers in array order. Each layer resolves gain,
 layer filters, source frequency, and a noise seed, in that order; automation
 points follow time order. Each variation consumes one draw, and each noise layer
 consumes one draw for its own xorshift32 stream. Object property insertion order
-does not change this traversal. This draft algorithm reproduces choices and
+does not change this traversal. This algorithm reproduces choices and
 noise for the same normalized recipe, controls, seed and sample rate; it does not
 promise identical oscillator/filter samples across browsers or sample rates.
 

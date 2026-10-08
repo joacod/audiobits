@@ -1,6 +1,7 @@
 # Product scope
 
-The runtime foundation is implemented; the package is private and unreleased.
+The runtime foundation is implemented. AudioBits `0.1.0` is prepared as the stable
+publishable candidate but has not yet been published to npm.
 
 ## Purpose
 

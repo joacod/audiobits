@@ -145,9 +145,9 @@ try {
       "utf8",
     ),
   );
-  if (!manifest.private || manifest.dependencies || manifest.peerDependencies)
+  if (manifest.private || manifest.dependencies || manifest.peerDependencies)
     throw new Error(
-      "Runtime must remain private with zero runtime dependencies",
+      "Runtime must be publishable with zero runtime dependencies",
     );
   const output = await readFile(
     join(consumer, "node_modules/audiobits/dist/index.js"),
@@ -174,7 +174,7 @@ try {
     capabilities.schemaVersion,
     schema.$defs.OneShotRecipe.properties.schemaVersion.const,
   );
-  assert.equal(capabilities.status, "unreleased");
+  assert.equal(capabilities.status, "stable");
   // Inspect all archive text, not just the runtime entry. No maps or source files are shipped.
   for (const file of files) {
     const content = await readFile(

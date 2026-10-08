@@ -15,5 +15,5 @@ an effect-specific setter would encourage an unearned family of methods.
 The unused delay graph, tail clocks and reconstruction logic were removed with
 it. A generalized effects API waits for multiple real sound requirements.
 Native interop covers output/analyser taps; arbitrary graph ownership is outside
-this contract. The package remains private and unreleased, with no persisted
-consumer compatibility requirement for these removed APIs.
+this contract. The package was private and unreleased when these APIs were removed, with no
+persisted consumer compatibility requirement.
