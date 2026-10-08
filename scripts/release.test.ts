@@ -213,7 +213,10 @@ test("production release isolates direct npm publication from GitHub finalizatio
   });
   expect(release.jobs.version.steps).toContainEqual({
     uses: "changesets/action/version@v2",
-    with: { "pr-title": "Version Packages" },
+    with: {
+      "pr-title": "Version Packages",
+      script: "pnpm version-packages",
+    },
   });
   for (const [job, mode] of [
     ["version", "version"],
@@ -291,7 +294,7 @@ test("production release isolates direct npm publication from GitHub finalizatio
     );
   }
   expect(source).not.toMatch(
-    /NPM_TOKEN|NODE_AUTH_TOKEN|changeset publish|npm stage publish|npm stage approve|action\/publish|create-github-releases|push-git-tags/,
+    /NPM_TOKEN|NODE_AUTH_TOKEN|\bPAT\b|secrets\s*\.|changeset publish|npm stage publish|npm stage approve|action\/publish|create-github-releases|push-git-tags/,
   );
   expect(release.jobs["github-release"].needs).toBe("publish");
   expect(release.jobs["github-release"].if).toBeUndefined();
@@ -331,6 +334,21 @@ test("production release isolates direct npm publication from GitHub finalizatio
   }[]) {
     expect(job.permissions?.["id-token"]).toBeUndefined();
   }
+});
+
+test("automated versioning regenerates metadata only after Changesets succeeds", () => {
+  const manifest = JSON.parse(readFileSync("package.json", "utf8"));
+  expect(manifest.scripts["version-packages"].split(" && ")).toEqual([
+    "changeset version",
+    "node scripts/generate-recipe.mjs",
+  ]);
+  expect(manifest.scripts["version-packages"]).not.toMatch(
+    /NPM_TOKEN|NODE_AUTH_TOKEN|\bPAT\b|secrets\s*\./,
+  );
+  const instructions = readFileSync("AGENTS.md", "utf8");
+  expect(instructions).toMatch(
+    /During ordinary feature\/fix work, do not run `changeset version`,\s+`pnpm version-packages`, `npm publish`/,
+  );
 });
 
 test("published package identifies the GitHub repository and monorepo directory", () => {
