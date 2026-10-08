@@ -11,7 +11,9 @@ package version and read `audiobits/capabilities.json` and
 shipped behavior, not registry availability. Prerelease verification target: current Chromium. Other browsers and operating
 systems are unverified and deliberately deferred.
 
-Use public imports from `audiobits` and `audiobits/recipes`. Create engines and
+Install with `npm install audiobits` and use a browser bundler. Follow the
+[package quick start](../README.md#quick-start) to play the bundled `confirmation`
+recipe with public imports from `audiobits` and `audiobits/recipes`. Create engines and
 sounds without browser activation, then invoke `start()` synchronously inside
 a user gesture and await it before `play()`. Surface failures and allow a fresh
 gesture retry. Never queue playback across Stop, hiding, or disposal.
