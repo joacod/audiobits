@@ -1,6 +1,6 @@
 # AudioBits agent rules
 
-AudioBits is a private, unreleased browser-audio project.
+AudioBits is a browser-audio project with a public npm package.
 
 Complete the requested task with the smallest coherent change.
 

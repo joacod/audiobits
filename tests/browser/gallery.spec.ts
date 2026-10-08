@@ -272,7 +272,7 @@ test("documentation routes and links render the shipped development API", async 
     await expect(
       page
         .locator("main")
-        .getByText("Development API · 0.1.0 · Local workspace package.", {
+        .getByText("Development API · 0.1.1 · Local workspace package.", {
           exact: true,
         })
         .first(),

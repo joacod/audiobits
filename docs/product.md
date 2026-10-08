@@ -1,7 +1,6 @@
 # Product scope
 
-The runtime foundation is implemented. AudioBits `0.1.0` is prepared as the stable
-publishable candidate but has not yet been published to npm.
+The runtime foundation is implemented. AudioBits `0.1.0` is publicly available on npm.
 
 ## Purpose
 
@@ -49,13 +48,13 @@ recording suite, streaming player, WebRTC, hosted sound generation, or account
 system. No MCP server, copy-owned registry, paid catalog, framework adapters,
 AudioWorklet, WASM, or automatic offline-render optimizer is required for the core.
 
-The runtime ships as one npm package when ready. A future recipe registry can
+The runtime ships as one npm package. A future recipe registry can
 distribute editable source without changing how engine fixes reach consumers.
 
 ## Naming and public claims
 
-AudioBits and `audiobits` are working identifiers. Package availability, domain
-ownership, and brand clearance are unresolved release decisions. Do not present
+AudioBits and `audiobits` are working identifiers. The package is available on npm; domain
+ownership and brand clearance are unresolved release decisions. Do not present
 an npm install command or website URL as an available product before verification.
 
 Describe measured or implemented behavior. Avoid promises of bit-identical audio,

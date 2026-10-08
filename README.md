@@ -4,9 +4,9 @@ Browser-native procedural sound for games and interactive applications. Build
 and vary sounds from editable JSON recipes, with no downloaded audio assets and
 zero runtime dependencies.
 
-**AudioBits 0.1.0 is prepared as the stable publishable candidate but has not yet been published to npm.** Eight bundled sounds: confirmation,
+**AudioBits 0.1.0 is publicly available on npm.** Eight bundled sounds: confirmation,
 impact, thruster, tactile click, gentle rejection, glass notification, whoosh and
-power-up. npm publication and site deployment are not enabled.
+power-up. Automated npm publication and site deployment are not enabled.
 
 ## Try the gallery
 
@@ -23,10 +23,11 @@ gesture. The site includes the development API documentation.
 
 ## Use the library
 
-For a separate browser application, build and verify a local candidate with
-`pnpm test:package`, then install its archive from
-`node_modules/.cache/audiobits-release/` using `npm install <archive-path>`.
-The package is not available from a confirmed npm release.
+For a separate browser application, install the registry package:
+
+```sh
+npm install audiobits
+```
 
 ```ts
 import { createAudio } from "audiobits";

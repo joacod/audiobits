@@ -2,10 +2,9 @@
 
 ## Current release state
 
-AudioBits `0.1.0` is prepared as the stable publishable candidate but has not yet
-been published to npm. Changesets prerelease mode has been exited, and only the
+AudioBits `0.1.0` is publicly available on npm. Changesets prerelease mode has been exited, and only the
 runtime package is publishable.
-npm publication and site deployment remain disabled. Root, site and example
+Automated npm publication and site deployment remain disabled. Root, site and example
 workspaces remain private.
 
 Prerelease verification target: current Chromium. Other browsers and operating
@@ -46,7 +45,7 @@ Recreate and review after any shipped-file change.
 
 ## Publication
 
-Activation requires a separately approved change: confirm npm identity, ownership
+Automated publication requires a separately approved change: confirm npm identity, ownership
 and bootstrap, configure protected production environments/reviewers and allowed
 refs. The runtime is already publishable and out of Changesets prerelease mode.
 Approve the verified stable archive bytes before publication. Prefer npm

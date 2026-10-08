@@ -5,7 +5,7 @@ description: Integrate AudioBits procedural sounds into a browser application, i
 
 # AudioBits integration
 
-This guide ships with AudioBits 0.1.0, prepared for stable publication but not yet published to npm. Confirm the installed
+This guide ships with the `audiobits` npm package. Confirm the installed
 package version and read `audiobits/capabilities.json` and
 `audiobits/schema.json` before choosing primitives. Package metadata describes
 shipped behavior, not registry availability. Prerelease verification target: current Chromium. Other browsers and operating
