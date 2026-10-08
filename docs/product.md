@@ -35,9 +35,9 @@ documentation. A pretty gallery or a passing mock suite alone is insufficient.
 
 Buses, lifecycle controls, a gallery, docs and an installed-version Skill exist.
 Eight bundled sounds now use the same primitives and recipe-aware TypeScript
-API. Review their listening quality before expanding the engine. Let sound behavior drive the showcase. Final automation
-includes Chromium, Firefox and WebKit; physical Safari/iOS, mobile listening and
-device interruption need separate evidence.
+API. Review their listening quality before expanding the engine. Let sound behavior drive the showcase. Prerelease verification target: current Chromium. Other browsers and operating
+systems are unverified and deliberately deferred. Listening and
+physical-device evidence remain separate.
 
 ## Boundaries
 

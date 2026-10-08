@@ -4,15 +4,11 @@ export default defineConfig({
   testDir: "./tests/browser",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 1 : 0,
+  retries: 0,
   failOnFlakyTests: !!process.env.CI,
-  use: { trace: process.env.CI ? "retain-on-first-failure" : "off" },
+  use: { trace: process.env.CI ? "retain-on-failure" : "off" },
   reporter: "list",
-  projects: [
-    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
-    { name: "firefox", use: { ...devices["Desktop Firefox"] } },
-    { name: "webkit", use: { ...devices["Desktop Safari"] } },
-  ],
+  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer: [
     {
       command: "pnpm --filter @audiobits/www start --port 3100",

@@ -6,25 +6,24 @@ a recurring evidence-document process is not required.
 
 ## Browser policy
 
-Playwright projects cover Chromium, Firefox and WebKit for the release candidate.
-Record the pinned Playwright version and actual engine versions with failures
-and release evidence. WebKit automation is not physical Safari/iOS evidence.
-Listening, background interruptions and device changes need separate review.
+Prerelease verification target: current Chromium. Other browsers and operating
+systems are unverified and deliberately deferred.
 
-Fix observed differences rather than adding hypothetical workarounds. Compare
-signal properties within each engine; native sample identity across engines is
-not guaranteed. Chromium remains the isolated packed-consumer browser gate.
+Current automated browser validation uses Chromium. Record the pinned Playwright
+and actual Chromium versions with release evidence. Listening, background
+interruptions and device changes need separate review. Compare signal properties
+within Chromium; native sample identity is not guaranteed.
 
 ## Checks by boundary
 
-| Boundary          | Evidence                                                                                                             |
-| ----------------- | -------------------------------------------------------------------------------------------------------------------- |
-| Pure recipe layer | Valid/invalid fixtures, unknown keys/versions, bounds, JSON round trip, immutable snapshot, stable issue paths       |
-| Compiler          | Parameter extrema, reference resolution, automation order, duration/release calculation, seeded choices              |
-| Native signal     | Matrix OfflineAudioContext: finite samples, non-silence, expected duration, energy regions, peak/headroom            |
-| Live engine       | Matrix AudioContext: gesture start, overlap, scheduled cancellation, stop/dispose, pending-start races, voice limits |
-| Site              | Keyboard controls, error recovery, mute/stop, route cleanup, development/release labels, example typechecking        |
-| Package           | Built ESM exports, declarations, metadata, tree-shaking check, SSR-safe import, isolated tarball consumer            |
+| Boundary          | Evidence                                                                                                               |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Pure recipe layer | Valid/invalid fixtures, unknown keys/versions, bounds, JSON round trip, immutable snapshot, stable issue paths         |
+| Compiler          | Parameter extrema, reference resolution, automation order, duration/release calculation, seeded choices                |
+| Native signal     | Chromium OfflineAudioContext: finite samples, non-silence, expected duration, energy regions, peak/headroom            |
+| Live engine       | Chromium AudioContext: gesture start, overlap, scheduled cancellation, stop/dispose, pending-start races, voice limits |
+| Site              | Keyboard controls, error recovery, mute/stop, route cleanup, development/release labels, example typechecking          |
+| Package           | Built ESM exports, declarations, metadata, tree-shaking check, SSR-safe import, isolated tarball consumer              |
 
 Offline rendering can test signal properties, but not autoplay, actual device
 interruption, page lifecycle, or live context cleanup. Mocks can test race logic,
@@ -76,8 +75,9 @@ claims. Check relative Markdown links. Preserve the license.
 Record the scope of review accurately: a local content review does not establish
 that remote Git history, hosted previews, or registry artifacts were inspected.
 
-## Real-device follow-up
+## Evidence limits
 
-After engine automation, perform real Safari/iOS and mobile listening/lifecycle
-checks. Exercise backgrounding, interruption, device changes and repeated user
-activation. Expand support claims only to the validated scope.
+Automated correctness, subjective listening quality and physical-device
+compatibility are separate evidence. Current Chromium automation does not
+establish physical-device support. Broader compatibility work is deliberately
+deferred and is not a prerelease gate.

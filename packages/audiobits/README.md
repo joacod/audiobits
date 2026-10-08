@@ -3,8 +3,8 @@
 Private, unreleased **0.1.0-rc.0** candidate. It includes confirmation, impact, thruster, tactile click, gentle rejection,
 glass notification, whoosh and power-up; schema-1 recipes; play/live controls; seeded variation; bounded
 voices; bus gain, mute and routing; native output taps; and explicit lifecycle APIs.
-Chromium, Firefox and Playwright WebKit are the automated candidate matrix.
-Physical Safari/iOS and mobile devices are not verified. Maintainer listening acceptance for the
+Prerelease verification target: current Chromium. Other browsers and operating
+systems are unverified and deliberately deferred. Maintainer listening acceptance for the
 unchanged sound definitions is recorded separately. Nothing has been published,
 and the final npm identifier and ownership remain unconfirmed.
 

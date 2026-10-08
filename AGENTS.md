@@ -1,68 +1,69 @@
-# Project instructions
+# AudioBits agent rules
 
-AudioBits is a browser-native application-audio library with a separate docs and
-sound gallery. Build sounds, not abstractions: read [architecture](docs/architecture.md)
-and affected code before changing it. The package is private and unreleased.
+AudioBits is a private, unreleased browser-audio project.
 
-## Product and architecture
+Complete the requested task with the smallest coherent change.
 
-- Keep one framework-independent runtime package, `packages/audiobits`, with
-  zero runtime dependencies. Use folders before speculative packages.
-- Recipes remain portable, versioned JSON data. No callbacks, native nodes, URLs,
-  expressions, UI metadata or application state. Runtime placement, host composition,
-  analyser output and presentation stay outside recipes.
-- Imports and validation are SSR-safe. Browser resources are lazy; activate in
-  an explicit user gesture and schedule with audio-context time.
-- Preserve definition/voice separation and explicit engine, voice, bus and graph
-  ownership. Native interop currently covers output/analyser taps with caller-owned
-  nodes; arbitrary managed graph interoperability is not promised.
-- Prove missing primitives with real target sounds; consider composition first.
-  Avoid DAW, sequencing, MIDI, recording, streaming, WebRTC, adapters, MCP,
-  worklets or WASM without an approved concrete requirement.
-- Sound quality and TypeScript usage matter more than feature count. Agents use
-  installed metadata/schema; update generated capabilities when behavior changes.
+## Scope contract
 
-## Lightweight architecture gate
+- Treat the user's request as the scope contract.
+- When a prompt provides Goal / Scope / Do not / Verification / Stop when,
+  those sections are authoritative.
+- Do not perform adjacent improvements, compatibility work, infrastructure
+  changes, documentation rewrites, refactors, cleanup, or feature work unless
+  required to complete the requested task.
+- Do not fix unrelated failures. Mention them briefly as deferred notes and
+  leave them unchanged.
+- Do not inspect the repository for additional work after the requested task
+  and focused verification are complete.
+- Preserve unrelated worktree changes.
+- Do not create plans, specs, ADRs, abstractions, or new process machinery
+  unless the task actually requires an architectural decision.
+- Do not modify CI, release infrastructure, package boundaries, or public APIs
+  unless the requested task explicitly concerns them.
+- Do not commit, push, branch, publish, or release unless explicitly requested.
 
-Ordinary sounds, tuning, UI, docs, tests, minor fixes and internal refactors can
-be implemented directly. Changes to schema/versioning/serialization, public API,
-ownership/lifecycle, bus/effect architecture, compiler/runtime or native interop
-contracts, package/distribution boundaries, compatibility or release policy require
-a short design rationale and approval before implementation. Record durable
-reasoning in `docs/architecture.md` or `docs/decisions/`. No formal specification
-framework or decision note for trivial choices is required.
+## Architecture boundaries
 
-## Implementation and delivery
+- `packages/audiobits` remains framework-independent and has zero runtime
+  dependencies unless explicitly reconsidered.
+- Recipes remain portable, serializable, versioned data and contain no UI or
+  application state.
+- Prove missing audio primitives with a concrete sound/use case before adding
+  them; prefer composition first.
+- Avoid speculative DAW, MIDI, recording, streaming, framework adapters, MCP,
+  AudioWorklet, WASM, and other scope expansion.
 
-- Keep changes small and scoped; preserve unexpected worktree changes.
-- Use exact direct versions, pnpm workspaces and `workspace:*`. Build the library
-  before consumers; the site uses public exports only.
-- Keep site deployment and npm release separate and disabled until explicit
-  artifact approval. Ask before destructive actions, commits, branches, pushes
-  and PRs unless already authorized.
-- Keep tracked content public: no private handoffs, credentials, personal details,
-  machine paths, diagnostics or captures. Use relative repository links and
-  inspect complete changed content before handoff.
-- Canonical docs: root README for onboarding, package README/site docs for API
-  usage, architecture for system boundaries, focused docs for contributor tasks.
-- Run appropriate scripts from [development](docs/development.md). Separate unit,
-  browser, signal, listening, performance and package evidence. Automated checks
-  do not establish pleasantness or real-device support.
-- Report files, behavior, exclusions, commands/results and remaining gaps. Follow
-  the selected scope and commit boundaries.
+## Verification discipline
 
-## Focus and verification
+- Run the smallest check set that can validate the requested change.
+- Chromium is the only prerelease browser verification target.
+- Do not perform Firefox, WebKit, Safari, device, OS, or compatibility work
+  unless explicitly requested.
+- Do not run `release:prepare` or equivalent release gates unless explicitly
+  asked to prepare/verify a release.
+- Never hide failures with sleeps, retries, timeout increases, weaker
+  assertions, ignored errors, or skips.
+- When investigating a flake, reproduce the violated product/test/environment
+  invariant directly.
+- CI environment setup belongs in centralized repository scripts, not
+  individual tests.
+- Automated Chromium tests do not establish subjective listening quality or
+  broader browser/device compatibility.
 
-- Finish the requested implementation first. Verification supports delivery; it must not become a separate compatibility or infrastructure project.
-- While unreleased, Chromium is the default browser target. Firefox, WebKit, other operating systems and physical-device checks are follow-up work unless explicitly requested for the current task.
-- Run the smallest useful checks: lint/typecheck for code, focused unit tests for changed logic, and affected Chromium tests for interactions. Reuse passing builds and checks unless later changes invalidate them.
-- Do not run `release:prepare`, repeated full suites, Docker/VM setup or broad compatibility investigations as routine task endings. Reserve release gates for an explicitly requested release-verification task.
-- Report failures outside the selected target briefly and defer them. Do not let them block scoped delivery or silently claim compatibility.
-- Keep assertions meaningful. Do not hide flakes with arbitrary waits, larger timeouts, more retries or weaker assertions; investigate only failures relevant to the agreed scope. CI retries remain diagnostic and flakes fail CI.
-- Stop once the requested work and its focused checks are complete. Automated checks do not establish listening quality or physical-device support.
+## Instruction hierarchy
 
-## Showcase boundaries
+- Read the nearest nested `AGENTS.md` before changing a subproject.
+- `docs/development.md` is the command/reference guide.
+- Read `docs/releases.md` only for an explicit release/publication task.
+- Do not load website design/Impeccable context unless the task involves
+  substantial `apps/www` design or UX work.
 
-- `/` is product discovery, `/sounds` is collection exploration, `/sounds/[slug]` is the sound workbench, and `/docs` remains Fumadocs reference documentation.
-- Presentation metadata stays outside recipes; visual dependencies stay inside `apps/www`.
-- Use real analyser output and a small set of reusable visualization families, not eight bespoke graphics projects.
+## Delivery
+
+- Stop once the requested work and focused verification are complete.
+- Keep tracked content public: no credentials, personal details, machine paths,
+  diagnostics, or captures. Inspect complete changed content before handoff.
+- Report what changed and which checks were run.
+- Mention directly relevant unresolved issues.
+- Mention unrelated discoveries only as deferred notes; do not act on them.

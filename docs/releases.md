@@ -1,223 +1,72 @@
 # Independent site and library releases
 
-Status: private candidate preparation is configured; publication and deployment
-remain disabled. Local evidence does not establish production readiness.
+## Current prerelease state
 
-## Two outputs from one repository
+The package is private, unreleased `0.1.0-rc.0` in Changesets `rc` mode.
+npm publication and site deployment remain disabled. Root, site and example
+workspaces remain private even when the runtime is approved for publication.
 
-| Output                  | Build input                                   | Release action               |
-| ----------------------- | --------------------------------------------- | ---------------------------- |
-| Documentation/demo site | Site and local library from the same checkout | Website deployment           |
-| npm runtime             | Validated archive of `packages/audiobits`     | Explicit package publication |
+Prerelease verification target: current Chromium. Other browsers and operating
+systems are unverified and deliberately deferred.
 
-Root, site, and example workspaces stay `private: true`. Initially keep the
-library private too; make it publishable only in the explicitly approved first
-release change. No branch merge, site deploy, or Changeset alone publishes npm.
+## Release verification
 
-Changesets records user-facing library changes. A docs-only edit has no library
-version bump. A library change updates affected examples and docs atomically,
-but deploying those changes is still separate from package publication.
-
-## Documentation channels
-
-Local development and previews consume `workspace:*` and identify the checkout
-as development/unreleased. Before the first npm release, any public site clearly
-states that the library is unreleased and offers no misleading npm installation.
-
-After the first release, stable documentation builds from a release-aligned ref.
-Docs-only fixes can deploy from that line without republishing the package. If
-main contains unreleased library changes, its site is a development preview with
-an explicit version/channel label; do not replace stable documentation with it.
-
-A minimal release branch plus host production-ref setting is sufficient; do not
-build a multi-version documentation router initially. Before an npm release,
-prepare both the package and matching stable site artifacts from the same source.
-If npm publication fails, retain the prior stable site. If the subsequent site
-deployment fails, retain its prior deployment and report the temporary mismatch.
-
-## First core release gate
-
-Release preparation verifies the implemented sound set and reasonable 0.1 API:
-
-- Eight working sounds with documented controls and cleanup behavior.
-- Focused unit tests and Chromium/Firefox/WebKit runtime/browser checks pass.
-- Listening review confirms the shipped sounds and control transitions.
-- Clean tarball consumption verifies ESM imports, declarations, and browser use.
-- Node import/recipe validation works without browser globals or side effects.
-- README and quick start describe only implemented, verified APIs.
-- Archive contents, license attribution, public docs, and diffs are reviewed.
-- Browser limitations and known issues are stated accurately.
-- Final npm identity, ownership, and naming decision are confirmed.
-- The exact artifact/version and publication action receive explicit approval.
-
-Run the final Chromium, Firefox and WebKit matrix before release. Listening and
-physical-device evidence remain separate. Never defer ownership, validation or
-failed-start handling because publication is disabled.
-
-## Publication workflow
-
-Prepare Changesets and release checks early, but leave publication disabled until
-the first core gate. Use a separately invoked, protected release workflow; build
-from a reviewed ref, run applicable checks, validate package contents, and publish
-only the intended runtime package. Serialize releases to avoid version races.
-
-Prefer npm trusted publishing/OIDC with provenance where supported. First-package
-bootstrap and trusted-publisher configuration depend on the final npm owner and
-registry setup; confirm the supported flow at release time. Do not fabricate an
-existing package configuration or store a long-lived token in the repository.
-
-Inspect source maps and generated metadata for private paths. Use a package
-file allowlist rather than shipping the whole repository. The repository Skill
-can be available separately; a compact guide may be included if deliberately
-listed and kept in sync with the installed version.
-
-## Failure and recovery
-
-Validate the built archive before publishing. A failed release must report
-whether the version actually exists before retrying; do not blindly resubmit.
-Published versions are immutable: correct defects with a new patch and, when
-appropriate and authorized, deprecate a broken version. Do not assume npm can
-be rolled back by overwriting a version.
-
-Website rollback restores a known deployment/ref without changing npm. Package
-release failures do not require rebuilding unrelated website content.
-
-## References
-
-- [Changesets](https://github.com/changesets/changesets)
-- [npm trusted publishing](https://docs.npmjs.com/trusted-publishers/)
-- [publint](https://publint.dev/)
-
-## Private candidate preparation
-
-Candidate scope follows the implemented runtime and curated sound set. The private candidate is
-`0.1.0-rc.0`; Changesets 3.0.3 applied the initial minor note in `rc` mode.
-It includes curated recipes, schema-1 oscillator/white-noise
-sources and filters, seeded variation, play/live controls, bounded voices,
-bus gain/mute/routing, explicit native interop and lifecycle APIs. Deferred
-features in the recipe study remain unavailable.
-
-Run the preparation gate from the repository root under the pinned Node version:
+Run this gate only when explicitly asked to prepare or verify a release candidate,
+under the Node and pnpm versions pinned in the repository:
 
 ```sh
 pnpm install --frozen-lockfile
-pnpm exec playwright install chromium firefox webkit
+pnpm exec playwright install chromium
 pnpm release:prepare
 ```
 
-`release:prepare` runs lint, types, units, the Chromium/Firefox/WebKit integration suite,
-and the isolated packed-package check. `pnpm test:package` is also a focused
-rehearsal: strict publint, a complete archive allowlist/content review, offline
-consumer install, Node imports without browser globals, declaration resolution,
-metadata versions, packaged Markdown examples, unused-import tree-shaking, and
-native Chromium playback/Stop/disposal of the exact quick start, production lifecycle and Skill host.
-It starts an ephemeral loopback server and requires the installed Chromium binary.
-No registry authentication, registry write or hosting account is used.
+On Linux, run [centralized audio setup](../scripts/ci/setup-linux-audio.sh) before
+browser verification. The gate runs lint, typechecking, units, production builds,
+Chromium integration and `test:package`. The package rehearsal includes strict
+publint, archive inventory, a clean offline consumer install, SSR-safe imports,
+TypeScript examples, tree-shaking and packed Chromium host checks. Automated
+correctness does not establish listening quality or physical-device support.
 
-On success the focused check retains the candidate archive and `evidence.json`
-in ignored `node_modules/.cache/audiobits-release/`. Evidence identifies the
-archive SHA-256, bytes, version, file inventory, source commit, dirty-source flag,
-Node and Chromium versions, and results. A dirty source commit is a baseline,
-not the candidate's complete source identity; the archive digest identifies the
-actual reviewed bytes. Recreate and review after any shipped-file change. Local
-artifacts and diagnostics must not enter Git.
+[The manual npm candidate workflow](../.github/workflows/npm-candidate.yml)
+runs this gate and uploads archive evidence. [The manual site candidate
+workflow](../.github/workflows/site-candidate.yml) prepares development site output
+independently. Neither workflow publishes or deploys; Next build output still
+needs provider packaging before deployment.
 
-The generated `audiobits/capabilities.json` derives recipe enums from the schema
-descriptor and version/status from the manifest. `pnpm test` rejects metadata
-or schema drift. Runtime capability inventory is deliberately compact and
-reviewed against focused API tests; it is not inferred from roadmap prose.
-The schema describes structure; `validateRecipe` also checks semantic and
-resource constraints. The archive deliberately ships its Skill, controlled
-sound reference, package README, and Changesets changelog.
+## Artifact and approval
 
-### Separate workflow contracts
+Successful package rehearsal retains the `.tgz` and `evidence.json` under ignored
+`node_modules/.cache/audiobits-release/`. Inspect the archive allowlist/content,
+version, SHA-256, source identity and dirty-source flag. Keep artifacts and
+local diagnostics out of Git. Obtain approval for the exact digest/version and
+publication action; listening acceptance is separate from artifact approval.
+Recreate and review after any shipped-file change.
 
-[The npm candidate workflow](../.github/workflows/npm-candidate.yml) is manually
-invoked, serialized in its own concurrency group, runs the full preparation
-gate, and uploads the reviewed archive/evidence. Its publication job is
-unconditionally disabled and fails closed if its guard alone is removed.
-It names the future `npm-production` environment and limits OIDC permission to
-that disabled job. The environment name does not establish configured reviewers
-or npm ownership. No publish command or production token is present.
+## Publication
 
-[The site candidate workflow](../.github/workflows/site-candidate.yml) is
-independently invoked and serialized. It prepares development site output
-without changing library versions. Its deployment job is likewise disabled;
-provider commands, account configuration and protected `site-production`
-reviewers remain release-time inputs. A Next build artifact needs provider
-packaging before deployment; uploading it does not establish deployability.
-Neither workflow invokes the other. A failed gate uploads no success candidate
-and reaches no production job. These are local-reviewed contracts, not evidence
-of a successful hosted run.
+Activation requires a separately approved change: confirm npm identity, ownership
+and bootstrap, configure protected production environments/reviewers and allowed
+refs, transition out of Changesets prerelease mode, and make only the runtime
+publishable. Rerun the gate and approve the resulting stable bytes. Prefer npm
+trusted publishing/OIDC where the confirmed bootstrap supports it; the disabled
+`npm-production` job alone requests `id-token: write`. It currently has no publish
+command. Configure publication to consume the approved archive.
 
-Default site builds label the private candidate Unreleased. After separately
-approved package activation, previews still label local output Development.
-A stable build additionally requires all of:
+Package publication and site deployment remain independent. After registry
+verification, stable site builds require `AUDIOBITS_DOCS_CHANNEL=stable`, a
+non-private nonzero stable package version, matching `AUDIOBITS_RELEASED_VERSION`,
+and `AUDIOBITS_DOCS_SOURCE` containing the reviewed full source commit SHA.
+These inputs attest release alignment; the build does not verify npm itself.
+Development/preview output remains labelled Development or Unreleased. Stable
+docs-only fixes use the confirmed version and release-aligned source line.
 
-- `AUDIOBITS_DOCS_CHANNEL=stable`.
-- A non-private package with a nonzero stable version (no prerelease suffix).
-- `AUDIOBITS_RELEASED_VERSION` matching the package version, supplied only after
-  successful registry verification of the approved artifact.
-- `AUDIOBITS_DOCS_SOURCE` containing the reviewed full source commit SHA.
+## Recovery
 
-Incorrect channel values, private/prerelease candidates, mismatched versions,
-and missing source identity fail the site build. These inputs are release
-attestations; the build does not query npm or prove publication itself. Channel
-and version labels on every API page derive from the same build metadata.
-For stable docs-only corrections, retain the confirmed package version and build
-from the release-aligned source line. Do not promote stable docs on a failed
-package publication. If site deployment fails, retain the previous deployment
-and report the mismatch; never republish npm to retry a site operation.
+If npm publication fails or its outcome is ambiguous, verify registry existence
+and integrity before retrying. Do not republish an already-published version;
+correct published defects with a new version. Retain the prior stable site when
+package publication fails.
 
-### Remaining activation inputs
-
-Before an actual release, confirm the final npm identifier, name availability,
-owner and first-package bootstrap method. Then configure required reviewers and
-allowed source refs for each production environment and confirm the selected
-hosting provider. Prefer npm trusted publishing where the confirmed bootstrap
-flow supports it; recheck [npm's current instructions](https://docs.npmjs.com/trusted-publishers/)
-at activation. No ownership or hosted URL is assumed by this candidate.
-
-Obtain approval for the exact digest/version, separately transition out of
-Changesets prerelease mode and make only the runtime publishable, then rerun
-and review the resulting stable archive. An approved RC digest does not identify
-those newly changed stable bytes. Configure publication to consume the approved
-archive, and verify registry existence/integrity before retrying any ambiguous
-failure. Keep the previously stable site on failure. Published defects require
-new versions; website rollback changes only the hosting deployment.
-
-Current PR checks and ignored archive evidence identify actual candidate bytes.
-The maintainer reported manual sound-quality acceptance for the current eight
-sounds on 2026-10-07. This is human-reported listening evidence; output devices,
-parameter/seed coverage and physical browser details were not specified. No tuning
-changes were requested. Exact release-artifact approval and production inputs
-remain unresolved.
-
-### Hosted validation and remaining gaps
-
-The 2026-10-07 [Linux CI repair run](https://github.com/joacod/audiobits/actions/runs/37678294832)
-passed lint, typechecking, 47 unit tests, production builds, the packed-consumer
-rehearsal and 94 Chromium/Firefox/WebKit browser checks. Eight checks skipped
-explicitly: six Firefox offline-checkpoint cases and two Chromium-only autoplay
-checks. Firefox finite rendering, live automation fallback, resource cleanup and
-public gallery workflows passed. Offline checkpoint signal coverage remains
-unavailable where the native APIs are absent.
-
-Repeated Linux execution reproduced a packed-host failure with nonzero output
-but an audio clock stalled at 11.6 ms. The null sink's default two-second buffering
-was unsuitable for live audio checks. Both CI workflows now use `norewinds=1`,
-which bounds its buffering to 50 ms. Signal, cleanup assertions and timeouts
-remain intact; live fallback coverage is independent of offline capability skips.
-
-The checks used Node 24.21.0, pnpm 12.9.1 and Playwright 1.63.0. The isolated
-archive rehearsal checks eight exports, installed authoring types, six packaged
-examples and three native Chromium hosts. Current PR checks and ignored archive
-evidence identify the exact candidate; the aggregate `release:prepare` invocation
-is recorded separately from individual CI commands.
-
-Local Firefox still fails before page creation with `Could not find profile folder`,
-matching the [reported macOS 27 launch issue](https://github.com/microsoft/playwright/issues/42768).
-Linux engine automation does not establish physical Safari/iOS or mobile support.
-Sound-quality listening acceptance is recorded above. Physical-device review and
-exact release-artifact approval remain follow-ups. Publication and deployment
-guards remain disabled.
+If site deployment fails, retain the prior deployment and report the mismatch.
+Retry or roll back hosting independently; never republish npm to retry a site
+operation.

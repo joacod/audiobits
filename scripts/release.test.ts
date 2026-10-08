@@ -109,3 +109,55 @@ test("release workflows prepare independently and keep production actions disabl
     site.jobs.prepare.steps.some(({ run }) => run === "pnpm build:site"),
   ).toBe(true);
 });
+
+test("normal CI keeps PR quality separate from main-only Chromium integration", async () => {
+  const { createRequire } = await import("node:module");
+  const require = createRequire(import.meta.url);
+  const { load } = createRequire(require.resolve("eslint/package.json"))(
+    "js-yaml",
+  );
+  const ci = load(readFileSync(".github/workflows/ci.yml", "utf8"));
+  expect(Object.keys(ci.on).sort()).toEqual(["pull_request", "push"]);
+  expect(ci.on.push.branches).toEqual(["main"]);
+  expect(Object.keys(ci.jobs).sort()).toEqual([
+    "chromium-integration",
+    "quality",
+  ]);
+  expect(ci.jobs.quality.if).toBeUndefined();
+  expect(
+    ci.jobs.quality.steps.flatMap(({ run }: { run?: string }) => run ?? []),
+  ).toEqual([
+    "pnpm install --frozen-lockfile",
+    "pnpm lint",
+    "pnpm typecheck",
+    "pnpm test",
+    "pnpm build",
+    "pnpm exec publint packages/audiobits --strict",
+  ]);
+  expect(ci.jobs["chromium-integration"].if).toBe(
+    "github.event_name == 'push' && github.ref == 'refs/heads/main'",
+  );
+  expect(
+    ci.jobs["chromium-integration"].steps.flatMap(
+      ({ run }: { run?: string }) => run ?? [],
+    ),
+  ).toEqual([
+    "pnpm install --frozen-lockfile",
+    "pnpm exec playwright install --with-deps chromium",
+    "bash scripts/ci/setup-linux-audio.sh",
+    "pnpm test:browser --project=chromium",
+  ]);
+  const candidate = load(
+    readFileSync(".github/workflows/npm-candidate.yml", "utf8"),
+  );
+  expect(
+    candidate.jobs.prepare.steps.find(({ run }: { run?: string }) =>
+      run?.includes("playwright install"),
+    )?.run,
+  ).toBe("pnpm exec playwright install --with-deps chromium");
+  const { default: browser } = await import("../playwright.config");
+  expect(browser.projects?.map(({ name }) => name)).toEqual(["chromium"]);
+  expect(browser.retries).toBe(0);
+  expect(browser.use?.trace).toBe(process.env.CI ? "retain-on-failure" : "off");
+  expect(metadata.browserMatrix).toEqual(["Chromium"]);
+});
