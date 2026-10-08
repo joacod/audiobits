@@ -7,7 +7,7 @@ Use [architecture](architecture.md) for system boundaries, the
 ## Setup
 
 Use the Node version in [.node-version](../.node-version) and the pnpm version
-in [package.json](../package.json). The root enforces Node 24 LTS. Direct
+in [package.json](../package.json). Direct
 versions are exact-pinned; the lockfile is shared by all four workspaces.
 
 ```sh
@@ -21,10 +21,8 @@ prevents site startup. A child failure stops the other process and returns a
 failure status; Ctrl+C stops both and their process groups on macOS/Linux.
 Windows process-tree termination has not been verified.
 
-The site uses Next.js with webpack, Fumadocs MDX, Tailwind, and Base UI
-buttons with labelled native controls. webpack is the verified path for this foundation; Turbopack's MDX
-worker failed in the validation environment. The eight-sound gallery and recipe editor use the existing stack; optional
-visualization libraries are not required. Changesets remain release work.
+The site uses Next.js with webpack and Fumadocs MDX. Website dependencies stay
+in `apps/www`; the runtime remains framework-independent.
 
 ## Local package edits
 
@@ -58,7 +56,7 @@ pnpm --filter @audiobits/vanilla dev
 | `pnpm test:package`    | Build, pack, isolated types/imports, tree-shaking and Chromium hosts |
 | `pnpm test:browser`    | Production builds, Chromium audio signal/lifecycle and UI checks     |
 | `pnpm release:prepare` | Explicit release only: quality, Chromium and package rehearsal       |
-| `pnpm changeset`       | Record a scoped runtime version note                                 |
+| `pnpm changeset`       | Record published-package changes, including relevant docs/metadata   |
 
 For browser checks, install the browser matching the pinned Playwright version:
 
@@ -84,21 +82,14 @@ those outputs.
 | CI harness            | Directly affected script checks and Chromium tests                   |
 | Explicit release      | `pnpm release:prepare`; see [release guide](releases.md)             |
 
-Prerelease verification target: current Chromium. Other browsers and operating
-systems are unverified and deliberately deferred. Do not provision compatibility
+Current Chromium is the only automated browser verification target. Other
+browsers and operating systems are unverified and deliberately deferred. Do not provision compatibility
 infrastructure or investigate unrelated failures for ordinary work. Full release
 preparation is reserved for an explicit release request.
 
-PR CI runs one quality job: install, lint, typecheck, unit/contract and generated
-artifact checks, production build and strict publint. Pushes to `main` run the
-same quality job plus a separate Chromium integration job. Normal CI has no
-path routing, browser matrix or packed-package rehearsal. Configure PR branch
-protection around quality; Chromium integration runs after merges to `main`.
-Candidate workflows are manual and remain separate from normal CI. The
-[production release workflow](releases.md) creates Version Packages PRs and
-directly publishes verified npm archives through OIDC after the maintainer merges
-the Version Packages PR, then verifies public availability and creates the Git
-tag and GitHub Release.
+Normal CI checks quality; pushes to `main` also run Chromium integration.
+Manual candidate workflows and package publication are described in the
+[release guide](releases.md).
 
 The browser suite owns ports 3100 and 4173; neither may already be occupied.
 [Centralized Linux audio setup](../scripts/ci/setup-linux-audio.sh) provisions
@@ -138,22 +129,18 @@ with Next.js. CI disables Next telemetry.
 
 `pnpm test:package` requires the Chromium binary matching pinned Playwright.
 It validates built ESM/declaration exports with strict publint, checks the
-14-file allowlist (runtime/declarations, schema/capabilities, manifest, license,
+package archive allowlist (runtime/declarations, schema/capabilities, manifest, license,
 README, changelog and Skill/reference), and installs that archive into a fresh
 system temporary directory using npm offline with install scripts disabled.
 Node imports and TypeScript NodeNext checks resolve only the installed package.
 They require no workspace source or browser globals.
 
-All packaged README/Skill TypeScript examples typecheck. The exact quick-start, production lifecycle
-and controlled sound hosts execute in Chromium from an ephemeral loopback server,
-covering silent load, gesture activation, finite nonzero signal, Stop and context
-closure. The test-owned analyser attaches on the running notification before
-the example schedules playback; bounded in-page observation survives delayed
-automation reads. Failure diagnostics include the example, audio clock, engine
-state and voice counts. Stop polls for silence and zero owned voices rather than
-assuming a fixed wall-clock delay. An unused public runtime import fully tree-shakes against a baseline.
-The temporary consumer is removed afterward; successful candidate archive and
-digest/evidence remain under ignored `node_modules/.cache/audiobits-release/`.
+Packaged README/Skill TypeScript examples typecheck. Quick-start, production
+lifecycle and controlled sound hosts execute in Chromium from an ephemeral
+loopback server, covering silent load, gesture activation, finite nonzero signal,
+Stop and context closure. An unused runtime import fully tree-shakes against a
+baseline. The temporary consumer is removed afterward; the archive and evidence
+remain under ignored `node_modules/.cache/audiobits-release/`.
 
 Schema, types and capabilities are generated during library build. Use
 `pnpm build:lib` after descriptor or version edits; `pnpm test` detects drift.
@@ -174,12 +161,9 @@ Ordinary changes use the scripts above; no formal specification CLI is required.
 ## Independent delivery
 
 The site consumes the local runtime without a version bump or npm publication.
-`pnpm build:site` includes the library build from the same checkout. Site hosting
-and deployment remain unconfigured. The
-[release workflow](releases.md) publishes npm packages through OIDC and finalizes
-GitHub Releases after public availability verification; website deployment
-remains separate. Label development documentation distinctly from a
-stable release.
+`pnpm build:site` includes the library build from the same checkout. Website
+delivery and npm publishing are independent. The website displays the package
+version from the manifest.
 
 ## Gallery examples
 

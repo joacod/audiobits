@@ -18,17 +18,17 @@ portable recipe data and copy a small integration example.
 
 ## Positioning
 
-Sound as code. Browser-native procedural synthesis with optional assets, portable
-versioned JSON recipes, typed controls and installed-version metadata.
+A procedural sound-effects library built on Web Audio, with portable versioned
+JSON recipes, typed controls and installed-version metadata.
 
 ## Capabilities and Constraints
 
 Eight bundled sounds exercise one-shots, sustained voices, play/live controls and
 seeded variation. One lazy engine per gallery session; real caller-owned native
 analyser data; no autoplay. Runtime remains independent of website dependencies.
-AudioBits 0.1.0 is prepared as the stable publishable candidate but has not yet
-been published to npm. Registry availability and device support must not be
-implied by the showcase. Fumadocs remains a separate reference experience.
+AudioBits is available on npm. Current Chromium is the only automated browser
+verification target; other browsers and physical-device compatibility remain
+unverified. Fumadocs remains a separate reference experience.
 
 ## Brand Commitments
 

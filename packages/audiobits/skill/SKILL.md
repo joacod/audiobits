@@ -8,8 +8,9 @@ description: Integrate AudioBits procedural sounds into a browser application, i
 This guide ships with the `audiobits` npm package. Confirm the installed
 package version and read `audiobits/capabilities.json` and
 `audiobits/schema.json` before choosing primitives. Package metadata describes
-shipped behavior, not registry availability. Prerelease verification target: current Chromium. Other browsers and operating
-systems are unverified and deliberately deferred.
+shipped behavior, not registry availability. Current Chromium is the only
+automated browser verification target. Other browsers and operating systems are
+unverified and deliberately deferred.
 
 Install with `npm install audiobits` and use a browser bundler. Follow the
 [package quick start](../README.md#quick-start) to play the bundled `confirmation`

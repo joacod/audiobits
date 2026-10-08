@@ -1,16 +1,15 @@
-# Independent site and library releases
+# Package publication and recovery
 
-## Current release state
+## Delivery boundaries
 
-AudioBits is publicly available on npm. Changesets prerelease mode has been exited, and only the
-runtime package is publishable.
+Only the runtime package is publishable.
 The [release workflow](../.github/workflows/release.yml) directly publishes npm releases
 through OIDC Trusted Publishing and then creates matching Git tags and GitHub
-Releases. Site deployment remains disabled. Root, site and example workspaces
+Releases. Root, site and example workspaces
 remain private.
 
-Prerelease verification target: current Chromium. Other browsers and operating
-systems are unverified and deliberately deferred.
+Current Chromium is the only automated browser verification target. Other
+browsers and operating systems are unverified and deliberately deferred.
 
 ## Release verification
 
@@ -33,8 +32,9 @@ correctness does not establish listening quality or physical-device support.
 [The manual npm candidate workflow](../.github/workflows/npm-candidate.yml)
 runs this gate and uploads archive evidence. [The manual site candidate
 workflow](../.github/workflows/site-candidate.yml) prepares development site output
-independently. Neither workflow publishes or deploys; Next build output still
-needs provider packaging before deployment.
+independently. These workflows prepare artifacts without publishing or deploying.
+The site candidate workflow is separate from the independently deployed
+[public website](https://audiobits.joacod.com/).
 
 ## Verified artifact
 
@@ -85,17 +85,14 @@ release are treated as complete.
 The maintainer must configure the npm Trusted Publisher for this repository and
 `release.yml`, with **`npm publish` permission enabled**, and enable GitHub
 Actions to create pull requests. These external settings are not configured by
-the repository. The workflow pins npm 11.19.0 and uses the repository's
+the repository. The workflow defines the npm version and uses the repository's
 Node/pnpm toolchain and centralized Linux/Chromium setup without dependency
 caches in the publish job.
 
-Package publication and site deployment remain independent. After registry
-verification, stable site builds require `AUDIOBITS_DOCS_CHANNEL=stable`, a
-non-private nonzero stable package version, matching `AUDIOBITS_RELEASED_VERSION`,
-and `AUDIOBITS_DOCS_SOURCE` containing the reviewed full source commit SHA.
-These inputs attest release alignment; the build does not verify npm itself.
-Development/preview output remains labelled Development or Unreleased. Stable
-docs-only fixes use the confirmed version and release-aligned source line.
+Package publication and website delivery are independent. The site reads its
+package version from `packages/audiobits/package.json`. Before delivering site
+changes, review the source and examples against the published API; a site build
+does not verify npm availability.
 
 ## Recovery
 

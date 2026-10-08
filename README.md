@@ -4,13 +4,16 @@ Browser-native procedural sound for games and interactive applications. Build
 and vary sounds from editable JSON recipes, with no downloaded audio assets and
 zero runtime dependencies.
 
-**AudioBits is publicly available on npm.** Eight bundled sounds: confirmation,
-impact, thruster, tactile click, gentle rejection, glass notification, whoosh and
-power-up. Automated npm publication and site deployment are not enabled.
+[Live website](https://audiobits.joacod.com/) ·
+[npm package](https://www.npmjs.com/package/audiobits)
+
+Eight bundled sounds: confirmation, impact, thruster, tactile click, gentle
+rejection, glass notification, whoosh and power-up.
 
 ## Try the gallery
 
-Use Node 24.21.0 and pnpm 12.9.1, as pinned in this repository:
+Use the Node version in [.node-version](.node-version) and the pnpm version
+in [package.json](package.json):
 
 ```sh
 pnpm install --frozen-lockfile
@@ -57,13 +60,12 @@ live controls, buses and caller-owned native output taps. Shared effects are
 deferred. [Development](docs/development.md) explains local package edits
 and checks; [architecture](docs/architecture.md) describes ownership and limits.
 
-## Verification and release status
+## Verification
 
-Prerelease verification target: current Chromium. Other browsers and operating
-systems are unverified and deliberately deferred. The maintainer reported listening
-acceptance for all eight sounds on 2026-10-07; devices and detailed coverage
-were not specified. [Release preparation](docs/releases.md) records the remaining gates
-and the separate publication/deployment approvals.
+Current Chromium is the only automated browser verification target. Other
+browsers and operating systems are unverified and deliberately deferred.
+Automated checks do not establish subjective listening quality or physical-device
+compatibility; see [validation](docs/validation.md) for evidence limits.
 
 ## License
 

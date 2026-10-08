@@ -1,17 +1,14 @@
-# Validation and acceptance design
+# Validation and acceptance
 
-Use existing unit, type, browser and packed-package checks. Historical acceptance
-is separate from new sound acceptance. Record meaningful results in the PR;
-a recurring evidence-document process is not required.
+Use unit, type, browser and packed-package checks for the affected boundary.
+Automated results and listening acceptance are separate evidence.
 
 ## Browser policy
 
-Prerelease verification target: current Chromium. Other browsers and operating
-systems are unverified and deliberately deferred.
+Current Chromium is the only automated browser verification target. Other
+browsers and operating systems are unverified and deliberately deferred.
 
-Current automated browser validation uses Chromium. Record the pinned Playwright
-and actual Chromium versions with release evidence. Listening, background
-interruptions and device changes need separate review. Compare signal properties
+Listening, background interruptions and device changes need separate review. Compare signal properties
 within Chromium; native sample identity is not guaranteed.
 
 ## Checks by boundary
@@ -22,14 +19,14 @@ within Chromium; native sample identity is not guaranteed.
 | Compiler          | Parameter extrema, reference resolution, automation order, duration/release calculation, seeded choices                |
 | Native signal     | Chromium OfflineAudioContext: finite samples, non-silence, expected duration, energy regions, peak/headroom            |
 | Live engine       | Chromium AudioContext: gesture start, overlap, scheduled cancellation, stop/dispose, pending-start races, voice limits |
-| Site              | Keyboard controls, error recovery, mute/stop, route cleanup, development/release labels, example typechecking          |
+| Site              | Keyboard controls, error recovery, mute/stop, route cleanup, package metadata, example typechecking                    |
 | Package           | Built ESM exports, declarations, metadata, tree-shaking check, SSR-safe import, isolated tarball consumer              |
 
 Offline rendering can test signal properties, but not autoplay, actual device
 interruption, page lifecycle, or live context cleanup. Mocks can test race logic,
 but the corresponding public workflow also needs a real browser check.
 
-## Initial measurable budgets
+## Signal and resource invariants
 
 Use these property and resource bounds with documented gain and concurrency.
 They do not establish subjective quality.
@@ -37,7 +34,7 @@ They do not establish subjective quality.
 - All rendered samples are finite. Curated single-voice default peaks remain
   below -6 dBFS at the master; eight simultaneous finite core voices must stay
   below 0 dBFS. Keep quality tuning and resource limits distinct.
-- Active and retiring voice counts obey [the architecture limits](architecture.md).
+- Active and retiring voice counts obey [package voice limits](../packages/audiobits/README.md#runtime-ownership).
   After finite tails, stop, or disposal, owned counts return to baseline.
 - Repeatedly trigger/stop 1000 voices in bounded batches in Chromium; no retained
   voice records or owned connection records after completion. This is a resource
@@ -45,9 +42,6 @@ They do not establish subjective quality.
 - Offline duration matches gate plus release/tail within one render quantum
   where applicable. Check the actual energy falloff with tolerances rather than
   exact sample equality.
-- Record package size, cold preparation time, and repeated-play scheduling cost
-  on a named test environment. Set numeric performance budgets from the first
-  measured baseline; do not invent universal latency or CPU guarantees.
 
 Document the number of simultaneous voices and default master settings used for
 peak checks. These checks do not guarantee clipping-free output for arbitrary
@@ -61,8 +55,8 @@ specified; automated checks remain separate from this acceptance.
 
 For each core sound, listen at default settings and control extrema, with
 repeated triggers, fast parameter changes, and stop during attack/sustain/release.
-Record who or what performed the review, browser, output device category, observed
-issues, and whether it passed. Do not record personal machine paths or identifiers.
+Identify the reviewer, browser, output device category and coverage when reporting
+acceptance. Do not record personal machine paths or identifiers.
 
 Review tonal character, transient smoothness, noise loop seams, fatigue, relative
 loudness, and usefulness of controls. A user listening report is valid evidence;
@@ -84,4 +78,4 @@ that remote Git history, hosted previews, or registry artifacts were inspected.
 Automated correctness, subjective listening quality and physical-device
 compatibility are separate evidence. Current Chromium automation does not
 establish physical-device support. Broader compatibility work is deliberately
-deferred and is not a prerelease gate.
+deferred.
