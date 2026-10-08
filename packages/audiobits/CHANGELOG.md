@@ -1,5 +1,12 @@
 # audiobits
 
+## 0.1.3
+
+### Patch Changes
+
+- 7aa39bd: Align the package README with published capabilities and add the public website
+  and relevant npm keywords to package metadata. Runtime behavior is unchanged.
+
 ## 0.1.2
 
 ### Patch Changes
