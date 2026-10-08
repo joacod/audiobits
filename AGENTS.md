@@ -50,3 +50,14 @@ framework or decision note for trivial choices is required.
   do not establish pleasantness or real-device support.
 - Report files, behavior, exclusions, commands/results and remaining gaps. Follow
   the selected scope and commit boundaries.
+
+## Verification discipline
+
+- Run the smallest evidence set that can falsify the change; do not default to `release:prepare`.
+- Showcase/docs work needs the full browser matrix only when audio-host/browser behavior changes.
+- Runtime, compiler, lifecycle, native interop and browser-harness changes require Chromium/Firefox/WebKit evidence before merge.
+- Release candidates require the complete release gate. Playwright retries are diagnostic; flakes fail CI.
+- Never repair flakes with arbitrary waits, larger timeouts, more retries, weaker assertions or browser skips. Reproduce and repair the violated product, test or environment invariant.
+- Capability skips require a genuinely unavailable capability and documented fallback coverage.
+- Keep CI audio/environment setup centralized, outside individual tests.
+- Automated browser checks do not establish listening quality or physical-device support.

@@ -5,6 +5,8 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
+  failOnFlakyTests: !!process.env.CI,
+  use: { trace: process.env.CI ? "retain-on-first-failure" : "off" },
   reporter: "list",
   projects: [
     { name: "chromium", use: { ...devices["Desktop Chrome"] } },

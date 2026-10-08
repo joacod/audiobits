@@ -1,4 +1,4 @@
-name: Foundation checks
+name: Repository checks
 on:
   push:
     branches: [main]
@@ -6,13 +6,29 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: foundation-${{ github.event.pull_request.number || github.ref }}
+  group: checks-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
+env:
+  NEXT_TELEMETRY_DISABLED: "1"
 jobs:
-  foundation:
+  scope:
     runs-on: ubuntu-latest
-    env:
-      NEXT_TELEMETRY_DISABLED: "1"
+    outputs:
+      chromium: ${{ steps.scope.outputs.chromium }}
+      cross-browser: ${{ steps.scope.outputs.cross-browser }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .node-version
+      - id: scope
+        run: node scripts/ci/select-checks.mjs
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+  quality:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4
@@ -24,17 +40,54 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
-      - run: pnpm exec playwright install --with-deps chromium firefox webkit
-      - name: Start a clocked audio sink for headless Firefox
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y pulseaudio
-          pulseaudio --start --exit-idle-time=-1
-          # The default null sink permits two-second buffers; keep its clock responsive.
-          pactl load-module module-null-sink sink_name=audiobits_ci norewinds=1
-          pactl set-default-sink audiobits_ci
+      - run: pnpm build
+      - run: pnpm exec publint packages/audiobits --strict
+  chromium-integration:
+    needs: scope
+    if: needs.scope.outputs.chromium == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: bash scripts/ci/setup-linux-audio.sh
+      - run: pnpm test:browser --project=chromium
+        id: browser
       - run: pnpm test:package
-        id: package
-      - run: pnpm test:browser
-        # Report independent browser failures even if the packed consumer fails.
-        if: success() || (failure() && steps.package.outcome == 'failure')
+        if: success() || (failure() && steps.browser.outcome == 'failure')
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: chromium-failures
+          path: test-results/
+          retention-days: 7
+  cross-browser:
+    needs: scope
+    if: needs.scope.outputs.cross-browser == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [firefox, webkit]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps ${{ matrix.browser }}
+      - run: bash scripts/ci/setup-linux-audio.sh
+      - run: pnpm test:browser --project=${{ matrix.browser }}
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: ${{ matrix.browser }}-failures
+          path: test-results/
+          retention-days: 7
