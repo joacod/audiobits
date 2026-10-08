@@ -1,5 +1,15 @@
 import { expect, test } from "vitest";
-import { readFileSync } from "node:fs";
+import {
+  readFileSync,
+  mkdtempSync,
+  mkdirSync,
+  writeFileSync,
+  rmSync,
+} from "node:fs";
+import { createHash } from "node:crypto";
+import { spawnSync } from "node:child_process";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
 import { documentationChannel } from "../apps/www/lib/documentation-channel";
 import {
   defineSound,
@@ -63,7 +73,7 @@ test("stable documentation cannot promote private, prerelease or mismatched cand
   ).toThrow();
 });
 
-test("release workflows prepare independently and keep production actions disabled", async () => {
+test("candidate workflows prepare independently and keep site deployment disabled", async () => {
   const { createRequire } = await import("node:module");
   const require = createRequire(import.meta.url);
   // Use the YAML parser already required by the installed ESLint toolchain.
@@ -90,18 +100,16 @@ test("release workflows prepare independently and keep production actions disabl
     readFileSync(".github/workflows/site-candidate.yml", "utf8"),
   );
   expect(npm.concurrency.group).not.toBe(site.concurrency.group);
-  for (const [workflow, action, environment] of [
-    [npm, "publish", "npm-production"],
-    [site, "deploy", "site-production"],
-  ] as const) {
+  expect(Object.keys(npm.jobs)).toEqual(["prepare"]);
+  for (const workflow of [npm, site]) {
     expect(Object.keys(workflow.on)).toEqual(["workflow_dispatch"]);
     expect(workflow.permissions.contents).toBe("read");
     expect(workflow.concurrency["cancel-in-progress"]).toBe(false);
-    expect(workflow.jobs[action].if).toBe("${{ false }}");
-    expect(workflow.jobs[action].needs).toBe("prepare");
-    expect(workflow.jobs[action].environment).toBe(environment);
-    expect(workflow.jobs[action].steps.at(-1)?.run).toContain("exit 1");
   }
+  expect(site.jobs.deploy.if).toBe("${{ false }}");
+  expect(site.jobs.deploy.needs).toBe("prepare");
+  expect(site.jobs.deploy.environment).toBe("site-production");
+  expect(site.jobs.deploy.steps.at(-1)?.run).toContain("exit 1");
   expect(
     npm.jobs.prepare.steps.some(({ run }) => run === "pnpm release:prepare"),
   ).toBe(true);
@@ -160,4 +168,205 @@ test("normal CI keeps PR quality separate from main-only Chromium integration", 
   expect(browser.retries).toBe(0);
   expect(browser.use?.trace).toBe(process.env.CI ? "retain-on-failure" : "off");
   expect(metadata.browserMatrix).toEqual(["Chromium"]);
+});
+
+test("production release isolates version PR permissions from verified npm staging", async () => {
+  const { createRequire } = await import("node:module");
+  const require = createRequire(import.meta.url);
+  const { load } = createRequire(require.resolve("eslint/package.json"))(
+    "js-yaml",
+  );
+  const source = readFileSync(".github/workflows/release.yml", "utf8");
+  const release = load(source);
+  expect(release.on.push.branches).toEqual(["main"]);
+  expect(release.on).toHaveProperty("workflow_dispatch");
+  expect(release.permissions).toEqual({});
+  expect(release.concurrency["cancel-in-progress"]).toBe(false);
+  expect(release.concurrency.group).toBe(
+    load(readFileSync(".github/workflows/npm-candidate.yml", "utf8"))
+      .concurrency.group,
+  );
+  expect(release.jobs["select-mode"].if).toBe(
+    "github.ref == 'refs/heads/main'",
+  );
+  expect(Object.keys(release.jobs).sort()).toEqual([
+    "select-mode",
+    "stage",
+    "version",
+  ]);
+  expect(release.jobs["select-mode"].permissions).toEqual({ contents: "read" });
+  expect(release.jobs.version.permissions).toEqual({
+    contents: "write",
+    "pull-requests": "write",
+  });
+  expect(release.jobs.stage.permissions).toEqual({
+    contents: "read",
+    "id-token": "write",
+  });
+  expect(release.jobs["select-mode"].outputs.mode).toBe(
+    "${{ steps.mode.outputs.mode }}",
+  );
+  expect(release.jobs["select-mode"].steps).toContainEqual({
+    uses: "changesets/action/select-mode@v2",
+    id: "mode",
+  });
+  expect(release.jobs.version.steps).toContainEqual({
+    uses: "changesets/action/version@v2",
+    with: { "pr-title": "Version Packages" },
+  });
+  for (const [job, mode] of [
+    ["version", "version"],
+    ["stage", "publish"],
+  ]) {
+    expect(release.jobs[job].needs).toBe("select-mode");
+    expect(release.jobs[job].if).toBe(
+      `needs.select-mode.outputs.mode == '${mode}'`,
+    );
+  }
+  for (const job of Object.values(release.jobs) as {
+    steps: { uses?: string; run?: string; with?: Record<string, unknown> }[];
+  }[]) {
+    expect(job.steps[0].uses).toBe("actions/checkout@v5");
+    expect(
+      job.steps.find(({ uses }) => uses === "pnpm/action-setup@v4"),
+    ).toBeDefined();
+    expect(
+      job.steps.find(({ uses }) => uses === "actions/setup-node@v5")?.with?.[
+        "node-version-file"
+      ],
+    ).toBe(".node-version");
+  }
+  const steps = release.jobs.stage.steps;
+  const runs = steps.flatMap(({ run }: { run?: string }) => run ?? []);
+  const gate = runs.indexOf("pnpm release:prepare");
+  const verify = runs.indexOf(
+    'node scripts/verify-release-artifact.mjs >> "$GITHUB_OUTPUT"',
+  );
+  const stage = runs.indexOf(
+    'npm stage publish "$RELEASE_ARCHIVE" --access public --tag latest',
+  );
+  expect(gate).toBeGreaterThan(-1);
+  expect(verify).toBe(gate + 1);
+  expect(stage).toBe(verify + 1);
+  expect(runs).toContain("npm install --global npm@11.19.0");
+  for (const setup of [
+    "pnpm exec playwright install --with-deps chromium",
+    "bash scripts/ci/setup-linux-audio.sh",
+  ]) {
+    expect(runs.indexOf(setup)).toBeGreaterThan(-1);
+    expect(runs.indexOf(setup)).toBeLessThan(gate);
+  }
+  expect(
+    steps.find(
+      ({ uses }: { uses?: string }) => uses === "actions/setup-node@v5",
+    ).with,
+  ).toEqual({
+    "node-version-file": ".node-version",
+    "registry-url": "https://registry.npmjs.org",
+  });
+  expect(
+    steps.find(({ id }: { id?: string }) => id === "artifact"),
+  ).toBeDefined();
+  expect(
+    steps.find(({ run }: { run?: string }) =>
+      run?.startsWith("npm stage publish"),
+    ).env.RELEASE_ARCHIVE,
+  ).toBe("${{ steps.artifact.outputs.archive }}");
+  expect(
+    steps.some(
+      ({
+        uses,
+        with: inputs,
+      }: {
+        uses?: string;
+        with?: Record<string, unknown>;
+      }) => uses?.includes("cache") || inputs?.cache !== undefined,
+    ),
+  ).toBe(false);
+  for (const name of ["select-mode", "version"]) {
+    const job = release.jobs[name];
+    expect(JSON.stringify(job)).not.toMatch(
+      /npm stage|npm publish|changeset publish|action\/publish/,
+    );
+  }
+  expect(source).not.toMatch(
+    /NPM_TOKEN|NODE_AUTH_TOKEN|npm publish|changeset publish|npm stage approve|git tag|gh release|action\/publish|create-github-releases|push-git-tags/,
+  );
+  const candidate = load(
+    readFileSync(".github/workflows/npm-candidate.yml", "utf8"),
+  );
+  for (const job of Object.values(candidate.jobs) as {
+    permissions?: Record<string, string>;
+  }[]) {
+    expect(job.permissions?.["id-token"]).toBeUndefined();
+  }
+});
+
+test("published package identifies the GitHub repository and monorepo directory", () => {
+  const manifest = JSON.parse(
+    readFileSync("packages/audiobits/package.json", "utf8"),
+  );
+  expect(manifest.repository).toEqual({
+    type: "git",
+    url: "https://github.com/joacod/audiobits.git",
+    directory: "packages/audiobits",
+  });
+});
+
+test("staging accepts only the retained archive matching clean release evidence", () => {
+  const root = mkdtempSync(join(tmpdir(), "audiobits-stage-test-"));
+  const directory = join(root, "node_modules/.cache/audiobits-release");
+  const manifest = JSON.parse(
+    readFileSync("packages/audiobits/package.json", "utf8"),
+  );
+  const archive = `audiobits-${manifest.version}.tgz`;
+  const bytes = Buffer.from("verified archive fixture");
+  const evidence = {
+    dirtySource: false,
+    version: manifest.version,
+    archive,
+    sha256: createHash("sha256").update(bytes).digest("hex"),
+  };
+  const run = () =>
+    spawnSync(
+      process.execPath,
+      [resolve("scripts/verify-release-artifact.mjs")],
+      { cwd: root, encoding: "utf8" },
+    );
+  const writeEvidence = (value: unknown) =>
+    writeFileSync(join(directory, "evidence.json"), JSON.stringify(value));
+  try {
+    mkdirSync(directory, { recursive: true });
+    mkdirSync(join(root, "packages/audiobits"), { recursive: true });
+    writeFileSync(
+      join(root, "packages/audiobits/package.json"),
+      JSON.stringify(manifest),
+    );
+    writeFileSync(join(directory, archive), bytes);
+    writeEvidence(evidence);
+    const valid = run();
+    expect(valid.status, valid.stderr).toBe(0);
+    expect(valid.stdout.trim()).toBe(
+      `archive=node_modules/.cache/audiobits-release/${archive}`,
+    );
+    for (const invalid of [
+      { ...evidence, dirtySource: true },
+      { ...evidence, dirtySource: undefined },
+      { ...evidence, version: "mismatched" },
+      { ...evidence, archive: "../other.tgz" },
+      { ...evidence, sha256: "mismatched" },
+    ]) {
+      writeEvidence(invalid);
+      const rejected = run();
+      expect(rejected.status).not.toBe(0);
+      expect(rejected.stdout).toBe("");
+    }
+    writeEvidence(evidence);
+    writeFileSync(join(directory, archive), "changed bytes");
+    expect(run().status).not.toBe(0);
+    rmSync(join(directory, archive));
+    expect(run().status).not.toBe(0);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
 });

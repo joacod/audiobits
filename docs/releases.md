@@ -4,8 +4,9 @@
 
 AudioBits is publicly available on npm. Changesets prerelease mode has been exited, and only the
 runtime package is publishable.
-Automated npm publication and site deployment remain disabled. Root, site and example
-workspaces remain private.
+The [release workflow](../.github/workflows/release.yml) stages npm releases for
+manual approval; it does not directly publish them. Site deployment remains
+disabled. Root, site and example workspaces remain private.
 
 Prerelease verification target: current Chromium. Other browsers and operating
 systems are unverified and deliberately deferred.
@@ -45,13 +46,26 @@ Recreate and review after any shipped-file change.
 
 ## Publication
 
-Automated publication requires a separately approved change: confirm npm identity, ownership
-and bootstrap, configure protected production environments/reviewers and allowed
-refs. The runtime is already publishable and out of Changesets prerelease mode.
-Approve the verified stable archive bytes before publication. Prefer npm
-trusted publishing/OIDC where the confirmed bootstrap supports it; the disabled
-`npm-production` job alone requests `id-token: write`. It currently has no publish
-command. Configure publication to consume the approved archive.
+The production flow is Changesets → Version Packages PR → release gate →
+automated npm staged publish → human 2FA approval. On pushes to `main` or a manual
+run on `main`, Changesets selects versioning when changesets are pending, staging
+when an unpublished version exists, or no action otherwise. The version job
+creates or updates **Version Packages** for maintainer review and merge.
+
+The staging job runs `pnpm release:prepare` from a clean GitHub-hosted checkout,
+checks clean-source evidence, matching package version, archive existence and
+SHA-256, then submits that exact verified tarball using `npm stage publish`.
+It ends when npm accepts the stage. The maintainer inspects the staged package
+and approves it separately with 2FA before it becomes public. No `NPM_TOKEN` or
+long-lived npm publishing secret is used; only the staging job has OIDC access.
+Git tags and GitHub Releases are not part of this workflow yet.
+
+Before activation, the maintainer must configure the npm Trusted Publisher for
+this repository and `release.yml`, allowing staged publishing, and enable
+GitHub Actions to create pull requests. These external settings are not
+configured by the repository. The workflow pins npm 11.19.0 and uses the
+repository's Node/pnpm toolchain and centralized Linux/Chromium setup without
+dependency caches in the staging job.
 
 Package publication and site deployment remain independent. After registry
 verification, stable site builds require `AUDIOBITS_DOCS_CHANNEL=stable`, a

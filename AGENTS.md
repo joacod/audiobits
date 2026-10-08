@@ -27,6 +27,20 @@ Complete the requested task with the smallest coherent change.
   versions in changelogs, release/migration/prerelease history and other
   version-specific records; never rewrite history during a normal version bump.
 
+## Changesets
+
+- Include a Changeset when a PR meaningfully changes the published package's
+  user-visible behavior, public API, exported recipes, runtime behavior or
+  package-shipped documentation, unless the user explicitly says not to.
+- Choose the smallest correct semver: patch for compatible bug fixes or shipped
+  package corrections; minor for new backward-compatible public functionality;
+  major for backward-incompatible public changes.
+- Website-only, CI/release infrastructure, tests-only, agent/process docs and
+  internal refactors without published behavior changes generally need no Changeset.
+- During ordinary feature/fix work, do not run `changeset version`, `npm publish`,
+  `npm stage publish` or `npm stage approve`. Release timing belongs to the
+  Version Packages PR and release workflow.
+
 ## Architecture boundaries
 
 - `packages/audiobits` remains framework-independent and has zero runtime
