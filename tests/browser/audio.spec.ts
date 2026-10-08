@@ -134,7 +134,7 @@ test("site gesture, mute, stop and route teardown close owned context", async ({
     page.getByRole("button", { name: "Mute", exact: true }),
   ).toHaveAttribute("aria-pressed", "true");
   await page.getByRole("button", { name: "Stop all" }).click();
-  await page.getByRole("link", { name: "Development docs" }).click();
+  await page.getByRole("link", { name: "Docs" }).click();
   await expect
     .poll(() =>
       page.evaluate(() =>
