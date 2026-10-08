@@ -2,37 +2,17 @@ import { execFileSync } from "node:child_process";
 import { appendFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 
-// Unknown paths fail conservatively toward the full matrix. UI and prose are
-// explicit exceptions; runtime/browser infrastructure always wins in mixed PRs.
+// Chromium is the routine pre-release target. Executable/package and unknown
+// paths receive browser checks; contributor prose alone does not.
 export function selectChecks(paths, main = false) {
-  let chromium = main;
-  let crossBrowser = main;
-  for (const path of paths) {
-    if (
-      /^apps\/www\/(app\/(sound-gallery|output-scope)\.tsx|lib\/raw-example\.ts)$/.test(
-        path,
-      )
-    ) {
-      chromium = true;
-      crossBrowser = true;
-    } else if (
-      /^(apps\/www\/|packages\/audiobits\/src\/recipes\/)/.test(path)
-    ) {
-      chromium = true;
-    } else if (/^(docs\/|.*\.md$|LICENSE$|\.github\/.*TEMPLATE)/.test(path)) {
-      continue;
-    } else {
-      chromium = true;
-      crossBrowser = true;
-    }
-  }
-  if (
-    paths.some((path) =>
-      /^packages\/audiobits\/(README\.md|skill\/)/.test(path),
-    )
-  )
-    chromium = true;
-  return { chromium, crossBrowser };
+  const chromium =
+    main ||
+    paths.some(
+      (path) =>
+        /^apps\/www\/|^packages\/audiobits\/(README\.md|skill\/)/.test(path) ||
+        !/^(docs\/|.*\.md$|LICENSE$|\.github\/.*TEMPLATE)/.test(path),
+    );
+  return { chromium };
 }
 
 if (
@@ -50,9 +30,6 @@ if (
         .split("\0")
         .filter(Boolean);
   const result = selectChecks(paths, main);
-  appendFileSync(
-    process.env.GITHUB_OUTPUT,
-    `chromium=${result.chromium}\ncross-browser=${result.crossBrowser}\n`,
-  );
+  appendFileSync(process.env.GITHUB_OUTPUT, `chromium=${result.chromium}\n`);
   console.log(JSON.stringify(result));
 }

@@ -1,16 +1,14 @@
 import { expect, test } from "vitest";
 import { selectChecks } from "./select-checks.mjs";
 
-test("main always receives every browser", () => {
+test("main always receives Chromium", () => {
   expect(selectChecks([], true)).toEqual({
     chromium: true,
-    crossBrowser: true,
   });
 });
 test("prose skips browsers, showcase and tuning use Chromium", () => {
   expect(selectChecks(["docs/development.md", "README.md"])).toEqual({
     chromium: false,
-    crossBrowser: false,
   });
   for (const path of [
     "apps/www/app/page.tsx",
@@ -21,10 +19,9 @@ test("prose skips browsers, showcase and tuning use Chromium", () => {
   ])
     expect(selectChecks([path])).toEqual({
       chromium: true,
-      crossBrowser: false,
     });
 });
-test("browser behavior and unknown paths cannot bypass the matrix", () => {
+test("browser behavior and unknown paths receive Chromium checks", () => {
   for (const path of [
     "packages/audiobits/src/runtime/engine.ts",
     "packages/audiobits/src/compiler/plan.ts",
@@ -40,6 +37,5 @@ test("browser behavior and unknown paths cannot bypass the matrix", () => {
   ])
     expect(selectChecks(["apps/www/app/page.tsx", path])).toEqual({
       chromium: true,
-      crossBrowser: true,
     });
 });

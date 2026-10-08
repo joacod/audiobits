@@ -51,13 +51,18 @@ framework or decision note for trivial choices is required.
 - Report files, behavior, exclusions, commands/results and remaining gaps. Follow
   the selected scope and commit boundaries.
 
-## Verification discipline
+## Focus and verification
 
-- Run the smallest evidence set that can falsify the change; do not default to `release:prepare`.
-- Showcase/docs work needs the full browser matrix only when audio-host/browser behavior changes.
-- Runtime, compiler, lifecycle, native interop and browser-harness changes require Chromium/Firefox/WebKit evidence before merge.
-- Release candidates require the complete release gate. Playwright retries are diagnostic; flakes fail CI.
-- Never repair flakes with arbitrary waits, larger timeouts, more retries, weaker assertions or browser skips. Reproduce and repair the violated product, test or environment invariant.
-- Capability skips require a genuinely unavailable capability and documented fallback coverage.
-- Keep CI audio/environment setup centralized, outside individual tests.
-- Automated browser checks do not establish listening quality or physical-device support.
+- Finish the requested implementation first. Verification supports delivery; it must not become a separate compatibility or infrastructure project.
+- While unreleased, Chromium is the default browser target. Firefox, WebKit, other operating systems and physical-device checks are follow-up work unless explicitly requested for the current task.
+- Run the smallest useful checks: lint/typecheck for code, focused unit tests for changed logic, and affected Chromium tests for interactions. Reuse passing builds and checks unless later changes invalidate them.
+- Do not run `release:prepare`, repeated full suites, Docker/VM setup or broad compatibility investigations as routine task endings. Reserve release gates for an explicitly requested release-verification task.
+- Report failures outside the selected target briefly and defer them. Do not let them block scoped delivery or silently claim compatibility.
+- Keep assertions meaningful. Do not hide flakes with arbitrary waits, larger timeouts, more retries or weaker assertions; investigate only failures relevant to the agreed scope. CI retries remain diagnostic and flakes fail CI.
+- Stop once the requested work and its focused checks are complete. Automated checks do not establish listening quality or physical-device support.
+
+## Showcase boundaries
+
+- `/` is product discovery, `/sounds` is collection exploration, `/sounds/[slug]` is the sound workbench, and `/docs` remains Fumadocs reference documentation.
+- Presentation metadata stays outside recipes; visual dependencies stay inside `apps/www`.
+- Use real analyser output and a small set of reusable visualization families, not eight bespoke graphics projects.
