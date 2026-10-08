@@ -12,7 +12,7 @@ test("site uses public exports and keyboard-operated Base UI playback", async ({
     page.getByRole("heading", { name: "Sound as code.", exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByText("Unreleased · 0.1.0-rc.0 · Local workspace package"),
+    page.getByText("Development · 0.1.0 · Local workspace package"),
   ).toBeVisible();
   const play = page.getByRole("button", { name: "Hear AudioBits" });
   await play.focus();
@@ -27,7 +27,9 @@ test("Fumadocs renders development MDX", async ({ page }) => {
     page.getByRole("heading", { name: "Quick start", exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByText("AudioBits is unreleased.", { exact: false }),
+    page.getByText("Development API · 0.1.0 · Local workspace package.", {
+      exact: false,
+    }),
   ).toBeVisible();
 });
 

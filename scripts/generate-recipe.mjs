@@ -32,7 +32,7 @@ const definitions = descriptor.$defs;
 const capabilities = {
   packageVersion: manifest.version,
   schemaVersion: definitions.OneShotRecipe.properties.schemaVersion.const,
-  status: manifest.private ? "unreleased" : "development",
+  status: manifest.private ? "unreleased" : "stable",
   recipe: {
     kinds: definitions.Recipe.anyOf.map(
       (node) => definitions[node.$ref.split("/").at(-1)].properties.kind.const,

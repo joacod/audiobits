@@ -161,7 +161,7 @@ callbacks never schedule audio.
 The broader `pnpm test:browser` suite supplies UI, native signal, resource and
 lifecycle regressions. Neither kind of automation establishes listening quality.
 CI installs Chromium and uses the centralized Linux audio setup. The runtime has zero runtime
-dependencies; all workspaces remain publication-guarded. See
+dependencies; only the runtime workspace is publishable. See
 [release preparation](releases.md) for the aggregate gate and activation boundary.
 
 Relative Markdown checks verify file targets, not remote links or heading anchors.

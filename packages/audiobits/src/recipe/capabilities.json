@@ -1,7 +1,7 @@
 {
-  "packageVersion": "0.1.0-rc.0",
+  "packageVersion": "0.1.0",
   "schemaVersion": 1,
-  "status": "unreleased",
+  "status": "stable",
   "recipe": {
     "kinds": ["one-shot", "sustained"],
     "sources": ["oscillator", "noise"],

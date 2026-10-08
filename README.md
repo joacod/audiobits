@@ -4,7 +4,7 @@ Browser-native procedural sound for games and interactive applications. Build
 and vary sounds from editable JSON recipes, with no downloaded audio assets and
 zero runtime dependencies.
 
-**Private, unreleased 0.1.0-rc.0 candidate.** Eight bundled sounds: confirmation,
+**AudioBits 0.1.0 is prepared as the stable publishable candidate but has not yet been published to npm.** Eight bundled sounds: confirmation,
 impact, thruster, tactile click, gentle rejection, glass notification, whoosh and
 power-up. npm publication and site deployment are not enabled.
 
