@@ -1,5 +1,11 @@
 # audiobits
 
+## 0.1.2
+
+### Patch Changes
+
+- 7f792f9: Clarify npm installation and the minimal confirmation-sound quick start in the shipped README and Skill, with nearby browser gesture and lifecycle guidance.
+
 ## 0.1.1
 
 ### Patch Changes
