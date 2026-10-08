@@ -268,6 +268,7 @@ test("production release isolates direct npm publication from GitHub finalizatio
   ).toEqual({
     "node-version-file": ".node-version",
     "registry-url": "https://registry.npmjs.org",
+    "package-manager-cache": false,
   });
   expect(
     steps.find(({ id }: { id?: string }) => id === "artifact"),
@@ -310,6 +311,20 @@ test("production release isolates direct npm publication from GitHub finalizatio
     GH_TOKEN: "${{ github.token }}",
     RELEASE_SHA: "${{ github.sha }}",
   });
+  expect(release.jobs["github-release"].steps).toEqual([
+    {
+      uses: "actions/checkout@v5",
+      with: { ref: "${{ github.sha }}" },
+    },
+    {
+      uses: "actions/setup-node@v5",
+      with: {
+        "node-version-file": ".node-version",
+        "package-manager-cache": false,
+      },
+    },
+    finalization,
+  ]);
   for (const [name, job] of Object.entries(release.jobs) as [
     string,
     { permissions: Record<string, string> },
