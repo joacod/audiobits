@@ -37,7 +37,8 @@ Complete the requested task with the smallest coherent change.
   major for backward-incompatible public changes.
 - Website-only, CI/release infrastructure, tests-only, agent/process docs and
   internal refactors without published behavior changes generally need no Changeset.
-- During ordinary feature/fix work, do not run `changeset version`, `npm publish`,
+- During ordinary feature/fix work, do not run `changeset version`,
+  `pnpm version-packages`, `npm publish`,
   or create Git tags/GitHub Releases manually. Release timing is controlled by
   the maintainer merging the Version Packages PR.
 

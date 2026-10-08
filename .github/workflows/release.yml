@@ -41,6 +41,7 @@ jobs:
       - uses: changesets/action/version@v2
         with:
           pr-title: Version Packages
+          script: pnpm version-packages
   publish:
     needs: select-mode
     if: needs.select-mode.outputs.mode == 'publish'

@@ -18,6 +18,7 @@
     "test:browser": "pnpm build && node scripts/build-audio-tests.mjs && playwright test",
     "test:package": "pnpm build:lib && node scripts/test-package.mjs",
     "changeset": "changeset",
+    "version-packages": "changeset version && node scripts/generate-recipe.mjs",
     "release:prepare": "pnpm lint && pnpm typecheck && pnpm test && pnpm test:browser && pnpm test:package"
   },
   "devDependencies": {
