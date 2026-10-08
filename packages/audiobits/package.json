@@ -3,6 +3,15 @@
   "version": "0.1.2",
   "description": "Procedural browser audio: versioned recipes, live controls, managed voices and buses.",
   "license": "MIT",
+  "homepage": "https://audiobits.joacod.com/",
+  "keywords": [
+    "web-audio",
+    "procedural-audio",
+    "sound-effects",
+    "sfx",
+    "game-audio",
+    "typescript"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/joacod/audiobits.git",

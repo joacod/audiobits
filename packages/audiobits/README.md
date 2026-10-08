@@ -1,10 +1,12 @@
 # AudioBits
 
+[Website and documentation](https://audiobits.joacod.com/)
+
 AudioBits is available on npm as `audiobits`. It includes confirmation, impact, thruster, tactile click, gentle rejection,
 glass notification, whoosh and power-up; schema-1 recipes; play/live controls; seeded variation; bounded
 voices; bus gain, mute and routing; native output taps; and explicit lifecycle APIs.
-Prerelease verification target: current Chromium. Other browsers and operating
-systems are unverified and deliberately deferred. Maintainer listening acceptance for the
+Current Chromium is the only automated browser verification target. Other
+browsers and operating systems are unverified and deliberately deferred. Maintainer listening acceptance for the
 unchanged sound definitions is recorded separately.
 
 ## Quick start
@@ -113,7 +115,7 @@ Schema version 1 supports:
 Depth is limited to 16, visited values to 10000, and diagnostics to 100.
 Source/filter frequencies must be below the owning context's Nyquist frequency
 at playback, including all mapping/variation extrema. Other effects,
-expression strings, sequencing, and continuous random modulation are rejected. These are the capabilities shipped in 0.1.0.
+expression strings, sequencing, and continuous random modulation are rejected.
 The generated schema is available as `recipeSchema` or `audiobits/schema.json`.
 
 ## Runtime ownership
@@ -210,21 +212,14 @@ promise identical oscillator/filter samples across browsers or sample rates.
 
 ## Noise ownership and bounds
 
-Each noise layer owns one mono, one-second buffer at context sample rate. The
-last 20 ms crossfades into the first 20 ms; looping resumes after that prefix,
-so the wrap follows an ordinary adjacent sample pair. The loop period is about
-0.98 seconds. Both finite and sustained noise loop this bounded resource.
-This treatment has signal evidence and maintainer listening acceptance;
-individual listening observations were not recorded. There is no shared noise cache or rendered-output cache.
+Each noise layer uses a bounded generated mono buffer at the context sample rate,
+looped with a crossfade for finite and sustained playback. Noise generation is
+reproducible for the same recipe, controls, seed and sample rate. There is no
+shared noise cache or rendered-output cache.
 
 Noise supports integer sample rates from 8000 through 192000 Hz. Unsupported
-rates fail with `noise-rate` before voice allocation. A layer retains at most
-768000 sample bytes (192000 at 48 kHz); generation temporarily uses one extra
-buffer of that size. A recipe has at most 16 layers, and existing voice limits
-bound concurrent buffers. The thruster owns ten nodes and one buffer per voice;
-with its default eight-voice limit plus one retiree, sample storage is at most
-1728000 bytes at 48 kHz. The engine master owns two additional nodes for independent gain and mute. These are
-owned sample-storage bounds, not measurements of all browser memory.
+rates fail with `noise-rate` before voice allocation. Recipe layer limits and
+engine/sound voice limits bound concurrent noise resources.
 
 Control updates allocate no new audio nodes or buffers. Finishing a voice clears
 its buffer-source references and disconnects owned nodes, including cancellation
@@ -309,9 +304,8 @@ and suspend on hide. Returning does not resume; a fresh gesture starts audio.
 Late activation after suspension is cancelled and cannot replay an old request.
 The engine also clears owned voices/effects on native interruption; automatic
 native recovery is suspended until a fresh `start()` request. Physical OS
-interruption still requires manual evidence. Step 04 passed maintainer manual
-verification on 2026-10-06. Browser/device details and individual observations
-were not supplied; automated checks remain separate from that acceptance.
+interruption still requires manual evidence. Automated checks do not establish
+physical-device compatibility.
 
 Buses provide gain, mute, and routing. Shared effects are deferred until
 multiple real sound requirements justify an API.

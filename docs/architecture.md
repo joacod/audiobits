@@ -2,8 +2,7 @@
 
 Canonical architecture for the stable AudioBits package published on npm. The
 [package reference](../packages/audiobits/README.md) documents exact API limits;
-[recipe model](recipe-model.md) owns data semantics. Durable rationale belongs in
-[decisions](decisions/001-authoring-and-experimental-effects.md).
+[recipe model](recipe-model.md) owns data semantics.
 
 ## Repository boundaries
 
@@ -16,10 +15,10 @@ packages/audiobits/
   src/compiler/            Internal execution plan and native graph construction
   src/runtime/             Engine, Sound, Voice, resource ownership
   src/recipes/             Curated recipes, separately exported
-  tests/                   Unit and browser-matrix audio checks
+  tests/                   Unit and type checks
+  skill/                   Installed-version consumer guidance
 examples/vanilla/          Private consumer using only public package exports
-  skill/                  Installed-version consumer guidance
-docs/                     Contributor design and roadmap
+docs/                     Contributor architecture and operational guides
 ```
 
 One runtime package owns its version and public exports. Do not split schema,
@@ -39,18 +38,21 @@ Recipe → validation / normalization → immutable reusable definition
 
 Validation and normalization are pure and do not instantiate browser resources.
 The plan is internal, not a second public language or a generic plugin backend.
-Initially execute with built-in Web Audio nodes, with bounded generated buffers
+Execute with built-in Web Audio nodes, with bounded generated buffers
 for noise. Do not introduce a pluggable compiler framework for hypothetical backends.
 
 Later offline rendering may use the same normalized recipe, but cache identity
 must include all audible inputs, seed, sample rate, channel configuration, and
 engine/schema semantics. Dynamic parameters and unbounded tails require explicit
-eligibility rules. No transparent optimizer is promised in the first release.
+eligibility rules. No transparent optimizer is implemented.
 
 ## Public surface
 
 The listed operations are implemented. Buses provide gain, mute, and routing;
-a shared effect API awaits multiple real requirements.
+a shared effect API awaits multiple real requirements. Add primitives only when
+a concrete sound or application requirement cannot be met by composition. An
+effect-specific bus setter would expand the API without a demonstrated shared
+effects requirement; native taps retain caller ownership.
 
 | Concept                    | Responsibility                                                     |
 | -------------------------- | ------------------------------------------------------------------ |
@@ -100,17 +102,15 @@ resume on navigation. The engine does not impose this policy on every game/app.
 
 ## Bounds and mixing
 
-Core defaults: maximum 32 active voices per engine and 8 per sound. New playback
-steals the oldest eligible voice with a 5 ms fade. Reject before allocation if
-limits are invalid. Keep at most one retiring voice beyond each applicable
-limit; further steals finish the oldest retiring voice before creating another.
-Counters distinguish active and retiring resources so the total remains bounded.
+Voice limits and default gains are documented in the package reference. Stealing
+fades the oldest eligible voice; keep at most one retiring voice beyond each
+applicable limit. Further steals finish the oldest retiring voice before creating
+another. Counters distinguish active and retiring resources so totals stay bounded.
+Reject invalid limits before allocation.
 
-The first core defaults master gain to -12 dB, with an explicit configurable
-range from -60 to 0 dB and mute represented separately. Recipe amplitudes
-are bounded, but overlapping signals can still sum beyond full scale. Test the
-curated sounds at documented concurrency; do not call a compressor a guaranteed
-limiter or silently normalize every voice.
+Recipe amplitudes are bounded, but overlapping signals can sum beyond full scale.
+Test curated sounds at documented concurrency; do not claim guaranteed limiting
+or silently normalize every voice.
 
 The runtime uses a tree of buses with one parent per bus, rejecting cycles and foreign
 contexts. Gain and mute are separate stages; a bus owns two gain nodes. Shared
@@ -150,7 +150,7 @@ promising native oscillator/filter sample identity across browsers.
 
 Schema version 1 is independent of package versioning. Contexts, buses, voices,
 spatial placement, UI, application state and host composition remain outside
-portable recipes. Once v1 is published or persisted, incompatible semantics
+portable recipes. Incompatible semantics for published or persisted v1 recipes
 require a new schema version. No placeholder migration framework is needed.
 
 ## Linear automation compatibility
