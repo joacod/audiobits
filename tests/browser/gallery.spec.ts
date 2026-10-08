@@ -240,9 +240,7 @@ test("keyboard workflow, narrow layout, reduced motion, and route teardown", asy
     ),
   ).toBe(true);
   await start.click();
-  await page
-    .getByRole("link", { name: "Development docs", exact: true })
-    .click();
+  await page.getByRole("link", { name: "Docs", exact: true }).click();
   await expect
     .poll(() =>
       page.evaluate(() =>
@@ -254,7 +252,7 @@ test("keyboard workflow, narrow layout, reduced motion, and route teardown", asy
     .toEqual(["closed"]);
 });
 
-test("documentation routes and links render the shipped development API", async ({
+test("documentation routes and links render the shipped package API", async ({
   page,
 }) => {
   for (const [slug, title] of [
@@ -273,12 +271,9 @@ test("documentation routes and links render the shipped development API", async 
     await expect(
       page
         .locator("main")
-        .getByText(
-          `Development API · ${manifest.version} · Local workspace package.`,
-          {
-            exact: true,
-          },
-        )
+        .getByText(`AudioBits API · ${manifest.version} · Available on npm.`, {
+          exact: true,
+        })
         .first(),
     ).toBeVisible();
     const targets = await page
@@ -658,7 +653,7 @@ test("homepage morphing keeps one engine and disposes it on docs navigation", as
   ).toBe(1);
   await page
     .getByRole("navigation", { name: "Main navigation" })
-    .getByRole("link", { name: "Development docs" })
+    .getByRole("link", { name: "Docs" })
     .click();
   await expect(
     page.getByRole("heading", { name: "Quick start", exact: true }),

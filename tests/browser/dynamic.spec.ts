@@ -199,7 +199,7 @@ for (const target of ["site", "vanilla"] as const) {
     await page.getByRole("button", { name: "Start thruster" }).click();
     await expect(state).toHaveText("Thruster: running");
     if (target === "site")
-      await page.getByRole("link", { name: "Development docs" }).click();
+      await page.getByRole("link", { name: "Docs" }).click();
     else
       await page.evaluate(() => {
         window.dispatchEvent(new Event("pagehide"));

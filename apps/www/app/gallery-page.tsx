@@ -27,9 +27,7 @@ export function GalleryPage({
           </svg>
         </Link>
         <Link href="/sounds">Sounds</Link>
-        <Link href="/docs">
-          {siteBuild.channel === "Stable" ? "Docs" : "Development docs"}
-        </Link>
+        <Link href="/docs">Docs</Link>
         <a href="https://github.com/joacod/audiobits">GitHub</a>
       </nav>
       <header className="gallery-intro">
@@ -53,7 +51,7 @@ export function GalleryPage({
                 : "Eight sounds. Play, compare and find your next interaction."}
           </p>
           <p className="gallery-channel">
-            {siteBuild.channel} · {siteBuild.version} · {siteBuild.source}
+            Available on npm · {siteBuild.version}
           </p>
         </div>
         {selected && (
@@ -198,17 +196,9 @@ hit.play({ parameters: { intensity: 0.8 } });`}</code>
       )}
       <footer className="showcase-footer">
         <h2>Bring sound to your next idea.</h2>
-        {siteBuild.channel === "Stable" ? (
-          <pre>
-            <code>npm install audiobits</code>
-          </pre>
-        ) : (
-          <p className="release-note">
-            AudioBits 0.1.0 is prepared for stable publication but has not yet
-            been published to npm. The npm install command will be available
-            after publication.
-          </p>
-        )}
+        <pre>
+          <code>npm install audiobits</code>
+        </pre>
         <div className="footer-links">
           <Link href="/docs">Get started</Link>
           <Link href="/sounds">Explore sounds</Link>

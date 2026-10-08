@@ -9,13 +9,18 @@ test("site uses public exports and keyboard-operated Base UI playback", async ({
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("http://127.0.0.1:3100");
+  await expect(page).toHaveTitle("AudioBits — Procedural browser audio");
+  await expect(page.locator(".showcase-footer pre")).toHaveText(
+    "npm install audiobits",
+  );
+  await expect(page.locator("main")).not.toContainText(
+    /Local workspace package|Development|unpublished|not yet been published|prepared for stable publication/,
+  );
   await expect(
     page.getByRole("heading", { name: "Sound as code.", exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByText(
-      `Development · ${manifest.version} · Local workspace package`,
-    ),
+    page.getByText(`Available on npm · ${manifest.version}`),
   ).toBeVisible();
   const play = page.getByRole("button", { name: "Hear AudioBits" });
   await play.focus();
@@ -24,18 +29,18 @@ test("site uses public exports and keyboard-operated Base UI playback", async ({
   expect(errors).toEqual([]);
 });
 
-test("Fumadocs renders development MDX", async ({ page }) => {
+test("Fumadocs renders package MDX", async ({ page }) => {
   await page.goto("http://127.0.0.1:3100/docs");
+  await expect(page.locator("main pre").first()).toContainText(
+    "npm install audiobits",
+  );
   await expect(
     page.getByRole("heading", { name: "Quick start", exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByText(
-      `Development API · ${manifest.version} · Local workspace package.`,
-      {
-        exact: false,
-      },
-    ),
+    page.getByText(`AudioBits API · ${manifest.version} · Available on npm.`, {
+      exact: false,
+    }),
   ).toBeVisible();
 });
 
