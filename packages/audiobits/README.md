@@ -326,4 +326,6 @@ The eight exports live in `audiobits/recipes`: `confirmation`, `impact`, `thrust
 Intensity controls impact, click and power-up; brightness controls glass; size
 controls whoosh; throttle is live on thruster. Other sounds have no parameters.
 New sound definitions use only schema-1 sources, filters and envelopes. Their
-signal and resource properties are tested; listening acceptance is still pending.
+signal and resource properties are tested; the current eight curated sounds have
+passed the maintainer listening gate in Chrome. Output devices and detailed
+listening coverage were not specified.
