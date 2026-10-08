@@ -140,7 +140,9 @@ for (const target of ["site", "vanilla"] as const) {
       });
     });
     await page.goto(
-      target === "site" ? "http://127.0.0.1:3100" : "http://127.0.0.1:4173",
+      target === "site"
+        ? "http://127.0.0.1:3100/sounds/confirmation"
+        : "http://127.0.0.1:4173",
     );
     await page.getByRole("button", { name: "Play confirmation" }).click();
     await page.evaluate(() => {
@@ -198,7 +200,9 @@ for (const target of ["site", "vanilla"] as const) {
     page,
   }) => {
     await page.goto(
-      target === "site" ? "http://127.0.0.1:3100" : "http://127.0.0.1:4173",
+      target === "site"
+        ? "http://127.0.0.1:3100/sounds/impact"
+        : "http://127.0.0.1:4173",
     );
     await page.getByRole("button", { name: "Play impact" }).click();
     await page.getByRole("slider", { name: /Effects volume/ }).fill("-6");

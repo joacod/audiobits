@@ -5,61 +5,34 @@ primary_target: "app/page.tsx"
 related_targets: ["app/gallery-page.tsx", "app/sound-gallery.tsx"]
 ---
 
-# Sonic specimen book
+# Sonic specimen book: route purposes
 
-Target: app/page.tsx, app/gallery-page.tsx and the /sounds collection. Mode: Experience.
-Seed key: 82c5699c. The user chose the sonic specimen book direction and code-first.
-
-## WORLD
-
-Warm paper and ink, editorial specimen typography, signal marks as living content.
-The visitor is a developer discovering procedural application audio. Play, morph,
-inspect, copy. The supplied brief settles product truth; no new commercial claims.
-
-## FIRST VIEWPORT
-
-A narrow masthead above oversized serif “Sound as code.” The sound itself occupies
-a full-width ink waveform strip, followed by a featured impact control and tiny
-current code. A silent default still reads as a working instrument. The collection
-begins below as ruled specimen entries rather than a dashboard of rounded cards.
-
-## SIGNATURE INTERACTION
-
-Playing produces a real native waveform; changing intensity changes the next hit.
-Thruster shows the live counterpart. One restrained React Bits click spark marks
-Play input, explicitly an interaction response rather than a simulated waveform.
-
-## REACH
-
-Warm material, serif headings, precise rules, native accessible controls and code
-panels carry home, collection and individual sound routes. Fumadocs stays separate.
-On phones the waveform keeps its width and controls sit in an intentional compact
-stack. No autoplay, hidden demo rendering, perpetual decorative loops or WebGL.
-
-## COUNTERWEIGHTS
-
-Signal bench: competitive on clarity, less distinctive for the audience; retains
-measurement discipline, not a CRT costume. Curved paper: competitive on visual
-identity, weaker control clarity. ASCII, passport, neon and lowbrow panel: declined
-for this audience/brief; retain committed typography, portable entry structure,
-one bounded motion and strict active-state clarity respectively, not their clothes.
-
-## RISK / UNRESOLVED
-
-Editorial form can hide the sound if code/editor density wins. Keep Play and morph
-controls ahead of disclosures. The maintainer reported sound-quality acceptance
-on 2026-10-07; physical-device evidence remains pending. Release installation must
-show unreleased status and stay gated.
+The supplied pre-release brief preserves the paper/ink/brass world and separates
+three journeys. Implementation is code-led; no new identity or concept selection
+is needed. Fumadocs remains the separate reading surface.
 
 ## Direction contract
 
-THESIS: A sonic specimen book makes sound itself explorable before long explanation.
-OWN-WORLD: Warm paper, dark green ink, brass active controls, self-hosted Fraunces
-headlines, square code panels and ruled entries. One prominent measured signal.
-STORY: Hear a hit, morph its intensity, explore eight sounds, inspect portable
-recipe data, then copy code or reach the calm documentation.
-FIRST VIEWPORT: Slim masthead, large “Sound as code.”, full-width native waveform,
-and the impact Play/intensity controls with a compact current-code sample.
-FORM: Sonic specimen book, grounded candidate 3; seed key 82c5699c. User approved
-this form and code-first. Controls and status remain ordinary accessible HTML.
-FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+THESIS: Hear procedural sound before inspecting its implementation.
+OWN-WORLD: Warm paper, green ink, brass playback, self-hosted Fraunces, fine rules
+and quiet code panels. Sound portraits are geometric linework, not stock imagery.
+STORY: Discover on `/`, explore on `/sounds`, customize on `/sounds/[slug]`, learn
+in `/docs`. Each route has its own density and purpose.
+FIRST VIEWPORT: Home pairs the glass-notification Play/brightness interaction with
+one thread field. Impact and thruster support it; a compact index links all eight.
+FORM: The established sonic specimen book (original seed 82c5699c), expanded by
+the supplied route brief. The collection uses a sticky monitor rail and mobile
+dock. Workbenches use pulse, harmonic or flow portraits and Base UI inspector tabs.
+
+## Interaction boundaries
+
+No autoplay. Real analyser samples drive active visuals; idle portraits are
+abstract geometry. Offscreen, hidden and reduced-motion states stop drawing.
+Seed belongs with playback. Recipe editing is opt-in, preserves drafts across
+tabs and retains last-valid playback. Code defaults to the small current example.
+
+## Scope
+
+No runtime architecture, dependency or Fumadocs redesign. Chromium is the current
+pre-release verification target. Listening acceptance is maintainer-reported;
+physical-device checks and broader compatibility are separate follow-ups.

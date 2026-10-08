@@ -1,7 +1,14 @@
+"use client";
+
 import Link from "next/link";
 import { Button } from "@base-ui/react/button";
-import type { Recipe } from "audiobits";
-import { RecipeTools } from "./recipe-tools";
+import { useState } from "react";
+import dynamic from "next/dynamic";
+import { OutputScope } from "./output-scope";
+import type { AudioEngine, Recipe } from "audiobits";
+const RecipeTools = dynamic(() =>
+  import("./recipe-tools").then((module) => module.RecipeTools),
+);
 import { PlaySpark } from "./play-spark";
 import { soundInfo, parameterLabel, parameterEndpoints } from "../lib/gallery";
 import type { SoundKind } from "../lib/gallery";
@@ -13,6 +20,9 @@ export function SoundCard({
   controls,
   playing,
   featured = false,
+  workbench = false,
+  discovery = false,
+  engine,
   rawSource,
   onPlay,
   onStop,
@@ -27,6 +37,9 @@ export function SoundCard({
   controls: Readonly<Record<string, number>>;
   playing?: string;
   featured?: boolean;
+  workbench?: boolean;
+  discovery?: boolean;
+  engine: AudioEngine | null;
   rawSource: string;
   onPlay(kind: SoundKind): Promise<void>;
   onStop(kind: SoundKind): void;
@@ -35,15 +48,42 @@ export function SoundCard({
   onSeed(kind: SoundKind, seed: number | null): void;
   onApply(kind: SoundKind, recipe: Recipe): void;
 }) {
+  const [seed, setSeed] = useState("42");
+  const seedValue = Number(seed);
+  const validSeed =
+    seed.trim() !== "" &&
+    Number.isInteger(seedValue) &&
+    seedValue >= 0 &&
+    seedValue <= 0xffffffff;
+  function changeSeed(value: string) {
+    setSeed(value);
+    const number = Number(value);
+    onSeed(
+      kind,
+      value.trim() !== "" &&
+        Number.isInteger(number) &&
+        number >= 0 &&
+        number <= 0xffffffff
+        ? number
+        : null,
+    );
+  }
   const info = soundInfo[kind];
   const sustained = recipe.kind === "sustained";
   const status = playing ?? (sustained ? "stopped" : "ready");
   return (
     <article
-      className={`sound-card ${featured ? "flagship-sound" : ""}`}
+      className={`sound-card ${featured ? "flagship-sound" : ""} ${workbench ? "sound-workbench" : "compact-sound"} ${discovery ? "discovery-sound" : ""}`}
       id={kind}
       key={kind}
     >
+      {(featured || workbench) && (
+        <OutputScope
+          engine={engine}
+          active={status === "running" || status === "playing"}
+          family={featured ? "threads" : info.visualFamily}
+        />
+      )}
       <div className="sound-preview">
         <h3>
           <Link href={`/sounds/${kind}`}>{info.title}</Link>
@@ -55,7 +95,8 @@ export function SoundCard({
             <Button
               className="play-action"
               disabled={
-                sustained && (status === "starting" || status === "running")
+                !ready ||
+                (sustained && (status === "starting" || status === "running"))
               }
               onClick={() => void onPlay(kind)}
             >
@@ -67,9 +108,12 @@ export function SoundCard({
               >
                 <path d="M3 1.5 12 7 3 12.5Z" fill="currentColor" />
               </svg>
-              {sustained ? "Start" : "Play"} {kind}
+              {featured
+                ? "Hear AudioBits"
+                : `${sustained ? "Start" : "Play"} ${kind}`}
             </Button>
           </PlaySpark>
+          {featured && <Link href="/sounds">Explore sounds</Link>}
           {sustained && (
             <Button onClick={() => onStop(kind)}>Stop {kind}</Button>
           )}
@@ -107,26 +151,56 @@ export function SoundCard({
           {info.title}: {status}
         </p>
       </div>
-      {featured ? (
-        <div className="flagship-code">
-          <p>Make it yours. Then take the code.</p>
-          <pre>
-            <code>{`const hit = audio.sound(impact);
-hit.play({
-  parameters: { intensity: ${controls.intensity?.toFixed(2)} }
-});`}</code>
-          </pre>
-          <Link href="/sounds/impact">Recipe, variation & full example</Link>
+      {!discovery && (
+        <div className="variation-controls">
+          <label>
+            Seed (next Play)
+            <input
+              aria-label={`${kind} seed`}
+              disabled={!ready}
+              type="number"
+              min="0"
+              max="4294967295"
+              step="1"
+              value={seed}
+              onChange={(event) => changeSeed(event.target.value)}
+            />
+          </label>
+          <div className="audio-controls">
+            <Button
+              disabled={!ready}
+              onClick={() =>
+                changeSeed(String(Math.floor(Math.random() * 0x100000000)))
+              }
+            >
+              Randomize {kind}
+            </Button>
+            <Button disabled={!ready} onClick={() => changeSeed("42")}>
+              Reset variation
+            </Button>
+          </div>
+          {!validSeed && (
+            <p role="alert">Seed must be an unsigned 32-bit integer.</p>
+          )}
         </div>
-      ) : (
+      )}
+      {workbench ? (
         <RecipeTools
           kind={kind}
+          recipe={recipe}
+          seed={validSeed ? seedValue : null}
           controls={controls}
           rawSource={rawSource}
-          onReset={onReset}
-          onSeed={onSeed}
+          onReset={() => {
+            onReset(kind);
+            changeSeed("42");
+          }}
           onApply={onApply}
         />
+      ) : (
+        <Link className="open-sound" href={`/sounds/${kind}`}>
+          Open {info.title.toLowerCase()} workbench
+        </Link>
       )}
     </article>
   );

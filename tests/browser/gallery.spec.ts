@@ -23,17 +23,22 @@ async function instrument(page: import("@playwright/test").Page) {
   });
 }
 
-test("recipe disclosures defer contents and preserve drafts across close and reopen", async ({
+test("collection stays light; inspector keeps drafts across tabs and opt-in editing", async ({
   page,
 }) => {
   await instrument(page);
   await page.goto("http://127.0.0.1:3100/sounds");
-  await expect(page.locator(".recipe-tools textarea")).toHaveCount(0);
-  await expect(page.locator(".recipe-tools pre")).toHaveCount(0);
-  const summary = page.locator("#impact summary");
+  await expect(page.locator("article.sound-card")).toHaveCount(8);
+  await expect(page.locator(".recipe-tools")).toHaveCount(0);
+  await page.getByRole("link", { name: "Impact", exact: true }).click();
+  await expect(
+    page.getByRole("tab", { name: "Code", exact: true }),
+  ).toHaveAttribute("aria-selected", "true");
+  await expect(page.locator("textarea")).toHaveCount(0);
+  await page.getByRole("tab", { name: "Recipe", exact: true }).click();
+  await expect(page.locator("textarea")).toHaveCount(0);
+  await page.getByRole("button", { name: "Edit recipe", exact: true }).click();
   const editor = page.getByRole("textbox", { name: "impact recipe JSON" });
-  await summary.click();
-  await expect(editor).toBeVisible();
   await editor.fill("{");
   await page
     .getByRole("button", { name: "Apply impact recipe", exact: true })
@@ -41,16 +46,19 @@ test("recipe disclosures defer contents and preserve drafts across close and reo
   await expect(page.locator("#impact [role=alert]")).toContainText(
     "Not applied",
   );
-  await summary.click();
-  await expect(page.locator(".recipe-tools textarea")).toHaveCount(0);
-  await summary.click();
+  await page.getByRole("tab", { name: "Code", exact: true }).click();
+  await expect(page.locator("textarea")).toHaveCount(0);
+  await page.getByRole("tab", { name: "Recipe", exact: true }).click();
   await expect(editor).toHaveValue("{");
   await expect(page.locator("#impact [role=alert]")).toContainText(
     "Not applied",
   );
-  await summary.click();
-  await page.getByRole("button", { name: "Reset impact", exact: true }).click();
-  await summary.click();
+  await page.getByRole("button", { name: "View recipe", exact: true }).click();
+  await page.getByRole("button", { name: "Edit recipe", exact: true }).click();
+  await expect(editor).toHaveValue("{");
+  await page
+    .getByRole("button", { name: "Restore impact recipe", exact: true })
+    .click();
   await expect(editor).not.toHaveValue("{");
   await expect(page.locator("#impact [role=alert]")).toHaveCount(0);
   expect(
@@ -66,7 +74,7 @@ test("gallery editing preserves last valid sound; copied values, seeds and resto
   page,
 }) => {
   await instrument(page);
-  await page.goto("http://127.0.0.1:3100/sounds");
+  await page.goto("http://127.0.0.1:3100/sounds/impact");
   expect(
     await page.evaluate(
       () =>
@@ -78,16 +86,20 @@ test("gallery editing preserves last valid sound; copied values, seeds and resto
     .getByRole("slider", { name: "Intensity", exact: true })
     .fill("0.83");
   await page.getByRole("spinbutton", { name: "impact seed" }).fill("7");
+  await page.getByRole("tab", { name: "Code", exact: true }).click();
   await page
-    .getByRole("button", { name: "Copy impact example", exact: true })
+    .getByRole("button", { name: "Copy impact code", exact: true })
     .click();
   const copied = await page.evaluate(
     () => (globalThis as unknown as { copiedExample: string }).copiedExample,
   );
   expect(copied).toContain('"intensity":0.83');
   expect(copied).toContain("seed: 7");
-  expect(copied).toContain("audio.dispose()");
-  await page.locator("#impact summary").click();
+  await expect(
+    page.getByRole("link", { name: "Production lifecycle", exact: true }),
+  ).toBeVisible();
+  await page.getByRole("tab", { name: "Recipe", exact: true }).click();
+  await page.getByRole("button", { name: "Edit recipe", exact: true }).click();
   const editor = page.getByRole("textbox", { name: "impact recipe JSON" });
   const bundled = await editor.inputValue();
   const input = JSON.parse(bundled);
@@ -108,17 +120,20 @@ test("gallery editing preserves last valid sound; copied values, seeds and resto
     .getByRole("button", { name: "Apply impact recipe", exact: true })
     .click();
   await expect(page.locator("#impact [role=alert]")).toHaveCount(0);
+  await page.getByRole("tab", { name: "Raw Web Audio", exact: true }).click();
   await expect(page.locator("#impact")).toContainText(
     "Restore the bundled recipe to view its raw comparison",
   );
+  await page.getByRole("tab", { name: "Code", exact: true }).click();
   await page
-    .getByRole("button", { name: "Copy impact example", exact: true })
+    .getByRole("button", { name: "Copy impact code", exact: true })
     .click();
   expect(
     await page.evaluate(
       () => (globalThis as unknown as { copiedExample: string }).copiedExample,
     ),
   ).toContain("-30");
+  await page.getByRole("tab", { name: "Recipe", exact: true }).click();
   await editor.fill("{");
   await page
     .getByRole("button", { name: "Apply impact recipe", exact: true })
@@ -137,16 +152,18 @@ test("gallery editing preserves last valid sound; copied values, seeds and resto
   await expect(
     page.getByRole("spinbutton", { name: "impact seed" }),
   ).toHaveValue("42");
+  await page.getByRole("tab", { name: "Raw Web Audio", exact: true }).click();
   await expect(
     page.getByRole("button", { name: "Copy raw impact example", exact: true }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Reset impact", exact: true }).click();
+
   await expect(
     page.getByRole("slider", { name: "Intensity", exact: true }),
   ).toHaveValue("0.5");
   await page.getByRole("spinbutton", { name: "impact seed" }).fill("-1");
+  await page.getByRole("tab", { name: "Code", exact: true }).click();
   await expect(
-    page.getByRole("button", { name: "Copy impact example", exact: true }),
+    page.getByRole("button", { name: "Copy impact code", exact: true }),
   ).toBeDisabled();
   await page.getByRole("button", { name: "Play impact", exact: true }).click();
   await expect(page.locator(".gallery-mixer > [role=alert]")).toContainText(
@@ -193,13 +210,16 @@ test("keyboard workflow, narrow layout, reduced motion, and route teardown", asy
   await expect(page.getByTestId("thruster-state")).toHaveText(
     "Thruster: stopped",
   );
+  await page.getByRole("tab", { name: "Recipe", exact: true }).click();
   await page
-    .getByRole("button", { name: "Reset thruster", exact: true })
+    .getByRole("button", { name: "Restore thruster recipe", exact: true })
     .focus();
   await page.keyboard.press("Enter");
   await expect(slider).toHaveValue("0.2");
+  await page.getByRole("tab", { name: "Code", exact: true }).focus();
+  await page.keyboard.press("Enter");
   await page
-    .getByRole("button", { name: "Copy thruster example", exact: true })
+    .getByRole("button", { name: "Copy thruster code", exact: true })
     .focus();
   await page.keyboard.press("Enter");
   expect(
@@ -207,8 +227,12 @@ test("keyboard workflow, narrow layout, reduced motion, and route teardown", asy
       () => (globalThis as unknown as { copiedExample: string }).copiedExample,
     ),
   ).toContain('"throttle":0.2');
-  await page.locator("summary").focus();
+  await page.getByRole("tab", { name: "Code", exact: true }).focus();
+  await page.keyboard.press("ArrowRight");
   await page.keyboard.press("Enter");
+  await expect(
+    page.getByRole("tab", { name: "Recipe", exact: true }),
+  ).toHaveAttribute("aria-selected", "true");
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,
@@ -476,17 +500,6 @@ test("all eight demos use parameter metadata and edited controls without allocat
   await expect(page.locator("#glass-notification label").first()).toContainText(
     "Brightness: 0.90",
   );
-  await page
-    .getByRole("button", {
-      name: "Copy glass-notification example",
-      exact: true,
-    })
-    .click();
-  expect(
-    await page.evaluate(
-      () => (globalThis as unknown as { copiedExample: string }).copiedExample,
-    ),
-  ).toContain('"brightness":0.9');
   expect(
     await page.evaluate(
       () =>
@@ -494,7 +507,20 @@ test("all eight demos use parameter metadata and edited controls without allocat
           .galleryContexts.length,
     ),
   ).toBe(0);
-  await page.locator("#whoosh summary").click();
+  for (const kind of [
+    "tactile-click",
+    "gentle-rejection",
+    "glass-notification",
+    "power-up",
+  ]) {
+    await page
+      .getByRole("button", { name: `Play ${kind}`, exact: true })
+      .click();
+  }
+  await expect(page.locator(".gallery-mixer > [role=alert]")).toHaveCount(0);
+  await page.getByRole("link", { name: "Whoosh", exact: true }).click();
+  await page.getByRole("tab", { name: "Recipe", exact: true }).click();
+  await page.getByRole("button", { name: "Edit recipe", exact: true }).click();
   const editor = page.getByRole("textbox", { name: "whoosh recipe JSON" });
   const recipe = JSON.parse(await editor.inputValue());
   recipe.parameters.size = { min: -1, max: 2, default: 0.5, mode: "play" };
@@ -512,25 +538,16 @@ test("all eight demos use parameter metadata and edited controls without allocat
   await size.fill("1.7");
   await page.getByRole("button", { name: "Play whoosh", exact: true }).click();
   await expect(page.getByRole("status")).toHaveText("Audio: running");
+  await page.getByRole("tab", { name: "Code", exact: true }).click();
   await page
-    .getByRole("button", { name: "Copy whoosh example", exact: true })
+    .getByRole("button", { name: "Copy whoosh code", exact: true })
     .click();
   const copied = await page.evaluate(
     () => (globalThis as unknown as { copiedExample: string }).copiedExample,
   );
   expect(copied).toContain('"size":1.7');
   expect(copied).toContain('"detail":15');
-  for (const kind of [
-    "tactile-click",
-    "gentle-rejection",
-    "glass-notification",
-    "power-up",
-  ]) {
-    await page
-      .getByRole("button", { name: `Play ${kind}`, exact: true })
-      .click();
-  }
-  await expect(page.locator(".gallery-mixer > [role=alert]")).toHaveCount(0);
+  await page.getByRole("tab", { name: "Recipe", exact: true }).click();
   await page
     .getByRole("button", { name: "Restore whoosh recipe", exact: true })
     .click();
@@ -576,9 +593,9 @@ test("showcase uses native output, bounded seeded variation and simple current c
   );
   expect(seed).toBeGreaterThanOrEqual(0);
   expect(seed).toBeLessThanOrEqual(0xffffffff);
-  await page.locator("#whoosh summary").click();
+
   await page
-    .getByRole("button", { name: "Copy simple whoosh code", exact: true })
+    .getByRole("button", { name: "Copy whoosh code", exact: true })
     .click();
   let copied = await page.evaluate(
     () => (globalThis as unknown as { copiedExample: string }).copiedExample,
@@ -586,6 +603,7 @@ test("showcase uses native output, bounded seeded variation and simple current c
   expect(copied).toContain('import { whoosh } from "audiobits/recipes"');
   expect(copied).toContain('"size":0.9');
   expect(copied).toContain(`seed: ${seed}`);
+  await page.getByRole("tab", { name: "Recipe", exact: true }).click();
   await page
     .getByRole("button", { name: "Copy whoosh recipe", exact: true })
     .click();
@@ -601,7 +619,10 @@ test("homepage morphing keeps one engine and disposes it on docs navigation", as
   await instrument(page);
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("http://127.0.0.1:3100");
-  const play = page.getByRole("button", { name: "Play impact", exact: true });
+  const play = page.getByRole("button", {
+    name: "Hear AudioBits",
+    exact: true,
+  });
   const bounds = await play.boundingBox();
   expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(844);
   expect(
@@ -610,11 +631,14 @@ test("homepage morphing keeps one engine and disposes it on docs navigation", as
     ),
   ).toBe(true);
   await page
-    .getByRole("slider", { name: "Intensity", exact: true })
+    .getByRole("slider", { name: "Brightness", exact: true })
     .fill("0.83");
-  await expect(page.locator(".flagship-code pre")).toContainText(
-    "intensity: 0.83",
+  await expect(page.locator("article.sound-card")).toHaveCount(3);
+  await expect(page.locator(".recipe-tools")).toHaveCount(0);
+  await expect(page.locator("#glass-notification label")).toContainText(
+    "Brightness: 0.83",
   );
+  await expect(page.locator(".collection-teaser a")).toHaveCount(9);
   await play.click();
   await page
     .getByRole("button", { name: "Start thruster", exact: true })
@@ -642,4 +666,85 @@ test("homepage morphing keeps one engine and disposes it on docs navigation", as
       ),
     )
     .toBe("closed");
+});
+
+for (const width of [375, 430]) {
+  test(`workbench inspector and mobile dock fit ${width}px without covering controls`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 844 });
+    await page.goto("http://127.0.0.1:3100/sounds/impact");
+    await expect(
+      page.getByRole("tab", { name: "Code", exact: true }),
+    ).toBeVisible();
+    for (const tab of ["Code", "Recipe", "Raw Web Audio"]) {
+      await page.getByRole("tab", { name: tab, exact: true }).click();
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth,
+        ),
+      ).toBe(true);
+      const panel = page.getByRole("tabpanel", { name: tab, exact: true });
+      expect(
+        await panel.evaluate(
+          (element) => element.getBoundingClientRect().right <= innerWidth,
+        ),
+      ).toBe(true);
+    }
+    const levels = page.getByRole("button", { name: "Levels", exact: true });
+    await levels.click();
+    await expect(
+      page.getByRole("slider", { name: "Effects volume" }),
+    ).toBeVisible();
+    await page.getByRole("slider", { name: "Effects volume" }).fill("-12");
+    await page.getByRole("button", { name: "Less", exact: true }).click();
+    await page.getByRole("tab", { name: "Recipe", exact: true }).click();
+    await page
+      .getByRole("button", { name: "Edit recipe", exact: true })
+      .click();
+    const apply = page.getByRole("button", {
+      name: "Apply impact recipe",
+      exact: true,
+    });
+    await apply.scrollIntoViewIfNeeded();
+    expect(
+      await apply.evaluate((element) => {
+        const rect = element.getBoundingClientRect();
+        return element.contains(
+          document.elementFromPoint(
+            rect.x + rect.width / 2,
+            rect.y + rect.height / 2,
+          ),
+        );
+      }),
+    ).toBe(true);
+  });
+}
+
+test("desktop monitor stays visible and offscreen portraits stop drawing without stopping audio", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("http://127.0.0.1:3100/sounds");
+  await page.locator("#power-up").scrollIntoViewIfNeeded();
+  const monitor = page.getByRole("complementary", { name: "Audio monitor" });
+  const bounds = await monitor.boundingBox();
+  expect(bounds!.y).toBeGreaterThanOrEqual(0);
+  expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(900);
+  await page.goto("http://127.0.0.1:3100/sounds/thruster");
+  const portrait = page.getByRole("img", {
+    name: "flow sound portrait; driven by live output",
+  });
+  await page
+    .getByRole("button", { name: "Start thruster", exact: true })
+    .click();
+  await expect
+    .poll(async () => Number(await portrait.getAttribute("data-peak")))
+    .toBeGreaterThan(0);
+  await page.locator(".showcase-footer").scrollIntoViewIfNeeded();
+  await expect(portrait).toHaveAttribute("data-peak", "0");
+  await expect(page.getByTestId("thruster-state")).toHaveText(
+    "Thruster: running",
+  );
+  await page.getByRole("button", { name: "Stop all", exact: true }).click();
 });

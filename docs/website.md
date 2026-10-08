@@ -2,7 +2,8 @@
 
 The gallery uses a demo registry outside recipes and controls derived from accepted
 parameter declarations. One engine owns the mounted session. Selected raw comparisons
-cover the original trio; new sounds use the same bounded recipe editor and lifecycle.
+cover the original trio; every detail route uses the same bounded recipe editor
+and lifecycle.
 A caller-owned analyser displays live output with reduced-motion handling.
 No visualization dependency or extra audio context is required.
 
@@ -18,22 +19,46 @@ The first screen should communicate procedural sound through one compelling
 example and a small amount of code. Keep navigation direct: Sounds, Docs, and
 the repository link once verified. No login, paid service, or backend is needed.
 
-## Gallery structure
+## Route purposes
 
-Each sound has a stable slug, short description, intended use, playback control,
-at most three meaningful primary controls, reset, and a copyable example. Advanced
-recipe data and raw Web Audio comparison sit behind explicit tabs or disclosure.
-Continuous sounds have an obvious Stop action and never depend on hover to stop.
+| Route            | Purpose                  | Primary content                                                                              |
+| ---------------- | ------------------------ | -------------------------------------------------------------------------------------------- |
+| `/`              | Discover                 | Glass-notification hero, impact/thruster moments, code/data story, compact eight-sound index |
+| `/sounds`        | Explore                  | Eight light sound entries; Play/Stop, semantic parameters, variation and workbench links     |
+| `/sounds/[slug]` | Understand and customize | Sound portrait, playback controls, seed, Code / Recipe / Raw Web Audio inspector             |
+| `/docs`          | Learn and reference      | Fumadocs navigation, API and lifecycle examples                                              |
 
-The copy action copies the current parameter values and seed where applicable.
-Examples include required setup and cleanup, with shared boilerplate identified
-consistently. Raw Web Audio comparisons must produce comparable behavior and
-include equivalent cleanup; do not inflate the comparison to advertise a ratio.
+The home keeps three interactive sounds, without recipe editors. The collection
+uses a sticky desktop audio-monitor rail; phones use a compact bottom dock with
+Mute, Stop all and expandable levels. Safe-area padding and scroll space keep
+controls reachable. The monitor presents the existing route-owned engine; it does
+not introduce a layout-global audio singleton. Current/last sound and engine state
+remain visible. The actual waveform reads the master output with display gain.
 
-Use a small JSON/parameter playground initially, validated through AudioBits.
-Display path-specific validation errors and retain the last valid sound until a
-new recipe is accepted. Do not evaluate arbitrary JavaScript or embed a heavy
-IDE before a concrete authoring need appears.
+Workbench variation controls sit beside playback. Reset variation restores seed
+42 only. The inspector defaults to the simple current AudioBits example; production
+lifecycle guidance links to Fumadocs. Recipe is read-only until Edit recipe is
+chosen. Drafts and validation errors survive tab changes; applying invalid input
+preserves last-valid playback. Restore returns the bundled recipe, parameters and
+seed. JSON is limited to 32 KiB and never evaluated as JavaScript.
+
+Raw Web Audio is directly available as a tab for confirmation, impact and thruster.
+The comparison covers the bundled definition, with fair gain, release and cleanup;
+after editing, restore the bundled recipe to view its raw comparison. Copied code
+tracks the current valid recipe, parameters and seed. No generic size benchmark is
+claimed. The inspector is loaded separately from collection/home controls.
+
+## Visualization families
+
+Website metadata assigns pulse portraits to impact, tactile click and gentle
+rejection; harmonic bands to confirmation, glass notification and power-up; and
+flowing lines to thruster and whoosh. The home uses one large thread treatment,
+informed by [React Bits Waves](https://reactbits.dev/backgrounds/waves), rewritten
+as bounded native canvas linework without its noise engine or an added dependency.
+Static geometry is an abstract sound portrait, not fabricated signal measurement.
+Displacement/expansion follows actual analyser samples; the monitor is the literal
+waveform. Both stop animation offscreen, while hidden or under reduced motion.
+Visual failure leaves playback independent. No paid/Pro component is included.
 
 ## Visual direction
 

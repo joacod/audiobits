@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { memo, useMemo, useState } from "react";
 import { Button } from "@base-ui/react/button";
+import { Tabs } from "@base-ui/react/tabs";
 import { validateRecipe } from "audiobits";
 import type { Recipe } from "audiobits";
 import {
@@ -16,41 +17,35 @@ import type { SoundKind } from "../lib/gallery";
 
 export const RecipeTools = memo(function RecipeTools({
   kind,
+  recipe,
+  seed,
   controls,
   rawSource,
   onApply,
-  onSeed,
   onReset,
 }: {
   kind: SoundKind;
+  recipe: Recipe;
+  seed: number | null;
   controls: Readonly<Record<string, number>>;
   rawSource: string;
   onApply(kind: SoundKind, recipe: Recipe): void;
-  onSeed(kind: SoundKind, seed: number | null): void;
-  onReset(kind: SoundKind): void;
+  onReset(): void;
 }) {
-  const [recipe, setRecipe] = useState<Recipe>(sounds[kind]);
-  const [draft, setDraft] = useState(() =>
-    JSON.stringify(sounds[kind], null, 2),
-  );
-  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState(() => JSON.stringify(recipe, null, 2));
+  const [editing, setEditing] = useState(false);
   const [issues, setIssues] = useState<string[]>([]);
-  const [seed, setSeed] = useState("42");
   const [copyState, setCopyState] = useState("");
-  const seedValue = Number(seed);
-  const validSeed =
-    seed.trim() !== "" &&
-    Number.isInteger(seedValue) &&
-    seedValue >= 0 &&
-    seedValue <= 0xffffffff;
-  const exampleSeed = validSeed ? seedValue : 42;
-  const example = useMemo(
-    () => libraryExample(recipe, controls, exampleSeed),
-    [recipe, controls, exampleSeed],
-  );
   const original = useMemo(
     () => JSON.stringify(recipe) === JSON.stringify(sounds[kind]),
     [recipe, kind],
+  );
+  const example = useMemo(
+    () =>
+      original
+        ? quickExample(kind, controls, seed ?? 42)
+        : libraryExample(recipe, controls, seed ?? 42),
+    [original, kind, recipe, controls, seed],
   );
   function apply() {
     if (new TextEncoder().encode(draft).byteLength > 32768) {
@@ -68,11 +63,12 @@ export const RecipeTools = memo(function RecipeTools({
         return;
       }
       if (result.recipe.kind !== sounds[kind].kind) {
-        setIssues(["$: Keep this card's one-shot or sustained playback kind."]);
+        setIssues([
+          "$: Keep this sound's one-shot or sustained playback kind.",
+        ]);
         return;
       }
       onApply(kind, result.recipe);
-      setRecipe(result.recipe);
       setIssues([]);
       setCopyState("Recipe applied. Play to hear the new definition.");
     } catch (cause) {
@@ -83,12 +79,9 @@ export const RecipeTools = memo(function RecipeTools({
   }
   function restore() {
     onApply(kind, sounds[kind]);
-    onReset(kind);
-    setRecipe(sounds[kind]);
+    onReset();
     setDraft(JSON.stringify(sounds[kind], null, 2));
     setIssues([]);
-    setSeed("42");
-    onSeed(kind, 42);
     setCopyState("Bundled recipe and defaults restored.");
   }
   async function copy(text: string) {
@@ -103,152 +96,103 @@ export const RecipeTools = memo(function RecipeTools({
   }
   return (
     <div className="recipe-tools">
-      <label>
-        Seed (next Play)
-        <input
-          aria-label={`${kind} seed`}
-          type="number"
-          min="0"
-          max="4294967295"
-          step="1"
-          value={seed}
-          onChange={(event) => {
-            setSeed(event.target.value);
-            const value = Number(event.target.value);
-            onSeed(
-              kind,
-              event.target.value.trim() !== "" &&
-                Number.isInteger(value) &&
-                value >= 0 &&
-                value <= 0xffffffff
-                ? value
-                : null,
-            );
-            setCopyState("");
-          }}
-        />
-      </label>
-      {!validSeed && (
-        <p role="alert">Seed must be an unsigned 32-bit integer.</p>
-      )}
-      <Button disabled={!validSeed} onClick={() => void copy(example)}>
-        Copy {kind} example
-      </Button>
-      <Button
-        onClick={() => {
-          const next = Math.floor(Math.random() * 0x100000000);
-          setSeed(String(next));
-          onSeed(kind, next);
-          setCopyState("New seed chosen. Play to hear this variation.");
-        }}
-      >
-        Randomize {kind}
-      </Button>
-      <Button onClick={() => void copy(JSON.stringify(recipe, null, 2))}>
-        Copy {kind} recipe
-      </Button>
-      <Button onClick={restore}>Reset {kind}</Button>
-      <p aria-live="polite">{copyState}</p>
-      <details onToggle={(event) => setOpen(event.currentTarget.open)}>
-        <summary>Recipe &amp; code · {kind}</summary>
-        {open && (
-          <>
-            {original && (
-              <div className="quick-code">
-                <h4>Start with a sound</h4>
-                <pre>
-                  <code>{quickExample(kind, controls, exampleSeed)}</code>
-                </pre>
+      <Tabs.Root defaultValue="code">
+        <Tabs.List aria-label="Sound inspector" className="inspector-tabs">
+          <Tabs.Tab value="code">Code</Tabs.Tab>
+          <Tabs.Tab value="recipe">Recipe</Tabs.Tab>
+          {hasRawComparison(kind) && (
+            <Tabs.Tab value="raw">Raw Web Audio</Tabs.Tab>
+          )}
+        </Tabs.List>
+        <Tabs.Panel value="code">
+          <h3>Take this sound.</h3>
+          <p>Current parameters and seed. Mixer settings are separate.</p>
+          <Button disabled={seed === null} onClick={() => void copy(example)}>
+            Copy {kind} code
+          </Button>
+          <pre>
+            <code>{example}</code>
+          </pre>
+          <Link href="/docs/lifecycle">Production lifecycle</Link>
+        </Tabs.Panel>
+        <Tabs.Panel value="recipe">
+          <div className="audio-controls">
+            <Button onClick={() => void copy(JSON.stringify(recipe, null, 2))}>
+              Copy {kind} recipe
+            </Button>
+            <Button aria-pressed={editing} onClick={() => setEditing(!editing)}>
+              {editing ? "View recipe" : "Edit recipe"}
+            </Button>
+            <Button onClick={restore}>Restore {kind} recipe</Button>
+          </div>
+          {editing ? (
+            <>
+              <label>
+                Recipe JSON (32 KiB maximum)
+                <textarea
+                  aria-label={`${kind} recipe JSON`}
+                  spellCheck={false}
+                  value={draft}
+                  onChange={(event) => setDraft(event.target.value)}
+                />
+              </label>
+              <Button onClick={apply}>Apply {kind} recipe</Button>
+            </>
+          ) : (
+            <pre>
+              <code>{JSON.stringify(recipe, null, 2)}</code>
+            </pre>
+          )}
+          {!!issues.length && (
+            <div role="alert">
+              <p>Not applied. The last valid recipe remains playable.</p>
+              <ul>
+                {issues.map((issue, i) => (
+                  <li key={i}>{issue}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </Tabs.Panel>
+        {hasRawComparison(kind) && (
+          <Tabs.Panel value="raw">
+            <h3>Raw Web Audio · bundled {kind}</h3>
+            <p>
+              Equivalent dry sound, seeded noise, live smoothing, release and
+              cleanup for the bundled definition. Both examples use -12 dB
+              master gain. Voice stealing is outside this single-voice
+              comparison.
+            </p>
+            {original ? (
+              <>
                 <Button
-                  disabled={!validSeed}
+                  disabled={seed === null}
                   onClick={() =>
-                    void copy(quickExample(kind, controls, exampleSeed))
+                    void copy(
+                      `${rawSource}\n${rawHost(kind, Object.values(controls)[0] ?? 0, seed ?? 42)}`,
+                    )
                   }
                 >
-                  Copy simple {kind} code
+                  Copy raw {kind} example
                 </Button>
-                <p>
-                  For visibility, SPA navigation, suspension and disposal, see{" "}
-                  <Link href="/docs/lifecycle">Production lifecycle</Link>.
-                </p>
-              </div>
-            )}
-            <label>
-              Recipe JSON (32 KiB maximum)
-              <textarea
-                aria-label={`${kind} recipe JSON`}
-                spellCheck={false}
-                value={draft}
-                onChange={(event) => setDraft(event.target.value)}
-              />
-            </label>
-            <div className="audio-controls">
-              <Button onClick={apply}>Apply {kind} recipe</Button>
-              <Button onClick={restore}>Restore {kind} recipe</Button>
-            </div>
-            {!!issues.length && (
-              <div role="alert">
-                <p>Not applied. The last valid recipe remains playable.</p>
-                <ul>
-                  {issues.map((issue, i) => (
-                    <li key={i}>{issue}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            <h4>Production lifecycle · current configuration</h4>
-            <p>
-              The sound parameters and seed below match the next Play. Global
-              mixer settings are separate.
-            </p>
-            <pre>
-              <code>{example}</code>
-            </pre>
-            {hasRawComparison(kind) && (
-              <>
-                <h4>Raw Web Audio · bundled {kind}</h4>
-                <p>
-                  Equivalent dry sound, seeded noise, live smoothing, release,
-                  and cleanup for the bundled definition. Both examples use -12
-                  dB master gain. Voice stealing is outside this single-voice
-                  comparison.
-                </p>
-                {original ? (
-                  <>
-                    <Button
-                      onClick={() =>
-                        void copy(
-                          `${rawSource}\n${rawHost(kind, Object.values(controls)[0] ?? 0, seedValue)}`,
-                        )
-                      }
-                      disabled={!validSeed}
-                    >
-                      Copy raw {kind} example
-                    </Button>
-                    <pre>
-                      <code>
-                        {rawSource}
-                        {"\n"}
-                        {rawHost(
-                          kind,
-                          Object.values(controls)[0] ?? 0,
-                          validSeed ? seedValue : 42,
-                        )}
-                      </code>
-                    </pre>
-                  </>
-                ) : (
-                  <p>
-                    Restore the bundled recipe to view its raw comparison.
-                    Edited recipes are represented by the current AudioBits
-                    example above.
-                  </p>
-                )}
+                <pre>
+                  <code>
+                    {rawSource}
+                    {"\n"}
+                    {rawHost(kind, Object.values(controls)[0] ?? 0, seed ?? 42)}
+                  </code>
+                </pre>
               </>
+            ) : (
+              <p>
+                Restore the bundled recipe to view its raw comparison. Edited
+                recipes are represented by the current AudioBits code.
+              </p>
             )}
-          </>
+          </Tabs.Panel>
         )}
-      </details>
+      </Tabs.Root>
+      <p aria-live="polite">{copyState}</p>
     </div>
   );
 });

@@ -118,7 +118,7 @@ test("site gesture, mute, stop and route teardown close owned context", async ({
     };
     Object.assign(globalThis, { ownedContexts: contexts });
   });
-  await page.goto("http://127.0.0.1:3100");
+  await page.goto("http://127.0.0.1:3100/sounds/confirmation");
   await expect(page.getByRole("status")).toHaveText("Audio: idle");
   expect(
     await page.evaluate(

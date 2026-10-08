@@ -14,7 +14,7 @@ test("site uses public exports and keyboard-operated Base UI playback", async ({
   await expect(
     page.getByText("Unreleased · 0.1.0-rc.0 · Local workspace package"),
   ).toBeVisible();
-  const play = page.getByRole("button", { name: "Play confirmation" });
+  const play = page.getByRole("button", { name: "Hear AudioBits" });
   await play.focus();
   await page.keyboard.press("Enter");
   await expect(page.getByRole("status")).toHaveText("Audio: running");

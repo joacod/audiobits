@@ -18,7 +18,7 @@ pnpm dev
 ```
 
 Open [the local gallery](http://127.0.0.1:3000/sounds). Press Play, change the
-controls or seed, edit a recipe, and copy its code. Audio starts only from a user
+controls or seed, then open a sound workbench to edit its recipe and copy code. Audio starts only from a user
 gesture. The site includes the development API documentation.
 
 ## Use the library
