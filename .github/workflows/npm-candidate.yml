@@ -34,16 +34,3 @@ jobs:
           name: release-browser-failures
           path: test-results/
           retention-days: 7
-  publish:
-    # Activation requires a separately approved change and protected environment.
-    if: ${{ false }}
-    needs: prepare
-    runs-on: ubuntu-latest
-    environment: npm-production
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - run: |
-          echo "Publication disabled: confirm identity, ownership, bootstrap and exact archive approval."
-          exit 1

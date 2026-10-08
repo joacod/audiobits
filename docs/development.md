@@ -94,7 +94,9 @@ artifact checks, production build and strict publint. Pushes to `main` run the
 same quality job plus a separate Chromium integration job. Normal CI has no
 path routing, browser matrix or packed-package rehearsal. Configure PR branch
 protection around quality; Chromium integration runs after merges to `main`.
-Candidate workflows are manual and remain separate from normal CI.
+Candidate workflows are manual and remain separate from normal CI. The
+[production release workflow](releases.md) creates Version Packages PRs and
+stages verified npm archives for human 2FA approval.
 
 The browser suite owns ports 3100 and 4173; neither may already be occupied.
 [Centralized Linux audio setup](../scripts/ci/setup-linux-audio.sh) provisions
@@ -170,10 +172,11 @@ Ordinary changes use the scripts above; no formal specification CLI is required.
 ## Independent delivery
 
 The site consumes the local runtime without a version bump or npm publication.
-`pnpm build:site` includes the library build from the same checkout. No hosting
-provider, deployment credentials, npm workflow, or publication target is enabled.
-Future delivery must keep [site deployment and npm releases](releases.md)
-separate and label development documentation distinctly from a stable release.
+`pnpm build:site` includes the library build from the same checkout. Site hosting
+and deployment remain unconfigured. The
+[release workflow](releases.md) stages npm packages for manual approval; website
+deployment remains separate. Label development documentation distinctly from a
+stable release.
 
 ## Gallery examples
 

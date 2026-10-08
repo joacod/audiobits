@@ -1,0 +1,77 @@
+name: Release packages
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions: {}
+concurrency:
+  group: audiobits-npm-release
+  cancel-in-progress: false
+jobs:
+  select-mode:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      mode: ${{ steps.mode.outputs.mode }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .node-version
+      - run: pnpm install --frozen-lockfile
+      - uses: changesets/action/select-mode@v2
+        id: mode
+  version:
+    needs: select-mode
+    if: needs.select-mode.outputs.mode == 'version'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .node-version
+      - run: pnpm install --frozen-lockfile
+      - uses: changesets/action/version@v2
+        with:
+          pr-title: Version Packages
+  stage:
+    needs: select-mode
+    if: needs.select-mode.outputs.mode == 'publish'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .node-version
+          registry-url: https://registry.npmjs.org
+      - run: npm install --global npm@11.19.0
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: bash scripts/ci/setup-linux-audio.sh
+      - run: pnpm release:prepare
+      - name: Verify retained release artifact
+        id: artifact
+        run: node scripts/verify-release-artifact.mjs >> "$GITHUB_OUTPUT"
+      - name: Stage verified package for human approval
+        env:
+          RELEASE_ARCHIVE: ${{ steps.artifact.outputs.archive }}
+        run: npm stage publish "$RELEASE_ARCHIVE" --access public --tag latest
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: release-browser-failures
+          path: test-results/
+          retention-days: 7
