@@ -1,6 +1,6 @@
 # Architecture design
 
-Canonical architecture for the stable `0.1.0` package prepared for publication. The
+Canonical architecture for the stable AudioBits package published on npm. The
 [package reference](../packages/audiobits/README.md) documents exact API limits;
 [recipe model](recipe-model.md) owns data semantics. Durable rationale belongs in
 [decisions](decisions/001-authoring-and-experimental-effects.md).

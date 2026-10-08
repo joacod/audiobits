@@ -1,5 +1,11 @@
 # audiobits
 
+## 0.1.1
+
+### Patch Changes
+
+- Correct stale unpublished-package wording and document registry installation with `npm install audiobits`. Runtime behavior is unchanged.
+
 ## 0.1.0
 
 ### Minor Changes

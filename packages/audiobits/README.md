@@ -1,19 +1,19 @@
 # AudioBits
 
-AudioBits **0.1.0** is prepared for stable publication but has not yet been published to npm. It includes confirmation, impact, thruster, tactile click, gentle rejection,
+AudioBits is available on npm as `audiobits`. It includes confirmation, impact, thruster, tactile click, gentle rejection,
 glass notification, whoosh and power-up; schema-1 recipes; play/live controls; seeded variation; bounded
 voices; bus gain, mute and routing; native output taps; and explicit lifecycle APIs.
 Prerelease verification target: current Chromium. Other browsers and operating
 systems are unverified and deliberately deferred. Maintainer listening acceptance for the
-unchanged sound definitions is recorded separately. Nothing has been published,
-and the npm identifier remains `audiobits`.
+unchanged sound definitions is recorded separately.
 
-## Try locally
+## Install
 
-Install the reviewed archive into your own private consumer with
-`npm install /path/to/audiobits-0.1.0.tgz`. This is a local file install,
-not an instruction to install an existing registry package. Use a browser
-bundler and call `play()` directly from a gesture handler. Surface rejection
+```sh
+npm install audiobits
+```
+
+Use a browser bundler and call `play()` directly from a gesture handler. Surface rejection
 with `void play().catch(showError)` and retry from a fresh gesture.
 
 ```ts

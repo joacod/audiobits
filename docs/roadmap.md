@@ -1,12 +1,10 @@
 # Product finish roadmap
 
 The recipe/runtime foundation and eight-sound gallery are implemented. AudioBits
-`0.1.0` is prepared as the stable publishable candidate but has not yet been
-published to npm. Publication and deployment remain disabled. Architecture stays
+is publicly available on npm. Automated publication and deployment remain disabled. Architecture stays
 fixed unless a real sound or experience is blocked by the existing vocabulary.
 
-1. **First npm release:** approve and publish the exact npm artifact in a separate
-   explicit release task.
+1. **First npm release:** `audiobits@0.1.0` is publicly available on npm.
 2. **Deploy/promote audiobits.dev:** approve site deployment and promotion in a
    separate explicit task.
 3. **Gather real-world feedback:** let concrete sound and application requirements
