@@ -1,6 +1,6 @@
 {
   "name": "audiobits",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Procedural browser audio: versioned recipes, live controls, managed voices and buses.",
   "license": "MIT",
   "repository": {
