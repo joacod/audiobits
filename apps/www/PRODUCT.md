@@ -18,8 +18,8 @@ portable recipe data and copy a small integration example.
 
 ## Positioning
 
-Sound as code. Browser-native procedural synthesis with optional assets, portable
-versioned JSON recipes, typed controls and installed-version metadata.
+A procedural sound-effects library built on Web Audio, with portable versioned
+JSON recipes, typed controls and installed-version metadata.
 
 ## Capabilities and Constraints
 

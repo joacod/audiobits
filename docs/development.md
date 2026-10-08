@@ -56,7 +56,7 @@ pnpm --filter @audiobits/vanilla dev
 | `pnpm test:package`    | Build, pack, isolated types/imports, tree-shaking and Chromium hosts |
 | `pnpm test:browser`    | Production builds, Chromium audio signal/lifecycle and UI checks     |
 | `pnpm release:prepare` | Explicit release only: quality, Chromium and package rehearsal       |
-| `pnpm changeset`       | Record a scoped runtime version note                                 |
+| `pnpm changeset`       | Record published-package changes, including relevant docs/metadata   |
 
 For browser checks, install the browser matching the pinned Playwright version:
 
@@ -129,7 +129,7 @@ with Next.js. CI disables Next telemetry.
 
 `pnpm test:package` requires the Chromium binary matching pinned Playwright.
 It validates built ESM/declaration exports with strict publint, checks the
-14-file allowlist (runtime/declarations, schema/capabilities, manifest, license,
+package archive allowlist (runtime/declarations, schema/capabilities, manifest, license,
 README, changelog and Skill/reference), and installs that archive into a fresh
 system temporary directory using npm offline with install scripts disabled.
 Node imports and TypeScript NodeNext checks resolve only the installed package.
