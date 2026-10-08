@@ -58,9 +58,8 @@ and checks; [architecture](docs/architecture.md) describes ownership and limits.
 
 ## Verification and release status
 
-Automated checks target Chromium, Firefox and Playwright WebKit; the packed
-consumer rehearsal uses Chromium. This is engine automation, not physical
-Safari/iOS or mobile-device evidence. The maintainer reported listening
+Prerelease verification target: current Chromium. Other browsers and operating
+systems are unverified and deliberately deferred. The maintainer reported listening
 acceptance for all eight sounds on 2026-10-07; devices and detailed coverage
 were not specified. [Release preparation](docs/releases.md) records the remaining gates
 and the separate publication/deployment approvals.

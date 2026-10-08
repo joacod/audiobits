@@ -56,80 +56,76 @@ pnpm --filter @audiobits/vanilla dev
 | `pnpm format`          | Format in-scope source/configuration/onboarding files                |
 | `pnpm test`            | Supervisor, recipe/runtime/release checks; schema/metadata drift     |
 | `pnpm test:package`    | Build, pack, isolated types/imports, tree-shaking and Chromium hosts |
-| `pnpm test:browser`    | Production builds, three-engine audio signal/lifecycle and UI checks |
-| `pnpm release:prepare` | Lint, types, units, browser suite and isolated candidate rehearsal   |
+| `pnpm test:browser`    | Production builds, Chromium audio signal/lifecycle and UI checks     |
+| `pnpm release:prepare` | Explicit release only: quality, Chromium and package rehearsal       |
 | `pnpm changeset`       | Record a scoped runtime version note                                 |
 
 For browser checks, install the browser matching the pinned Playwright version:
 
 ```sh
-pnpm exec playwright install chromium firefox webkit
+pnpm exec playwright install chromium
 pnpm test:browser
 ```
 
-## Verification tiers
+## Verification by task
 
-| Change                            | Required local evidence                                                        |
-| --------------------------------- | ------------------------------------------------------------------------------ |
-| Docs/copy only                    | `pnpm lint` (executable docs also need their consumer checks)                  |
-| Showcase CSS/layout               | Lint, `pnpm typecheck`, `pnpm build:site`, desktop/mobile visual check         |
-| Showcase interaction              | Above plus `pnpm test:browser --project=chromium`                              |
-| Sound parameter tuning            | `pnpm test`, relevant signal checks, Chromium listening workflow               |
-| Runtime/compiler/recipe execution | `pnpm test` plus affected Chromium tests; package check when packaging changes |
-| Browser lifecycle/native interop  | Affected Chromium tests                                                        |
-| Package exports/build             | `pnpm test:package`                                                            |
-| CI/browser harness                | Scope-selection tests plus affected Chromium checks                            |
-| Explicit release candidate        | `pnpm release:prepare`                                                         |
+Run the smallest check set that can falsify the requested change. Build the
+library before consumers; reuse passing builds unless subsequent edits invalidate
+those outputs.
 
-While the package is unreleased, Chromium is the routine target. Complete the
-requested implementation and its focused checks before optional compatibility
-work. Firefox, WebKit, physical devices and other operating systems are deferred
-unless explicitly requested; do not provision Docker/VMs or investigate unrelated
-browser failures to finish an ordinary change.
+| Change                | Verification                                                         |
+| --------------------- | -------------------------------------------------------------------- |
+| Prose/docs            | `pnpm lint`; relevant docs/build or executable-example check         |
+| Visual CSS/layout     | Lint, `pnpm typecheck`, `pnpm build:site`, focused visual inspection |
+| Website interaction   | Above plus affected Chromium test(s)                                 |
+| Sound tuning          | Focused unit/signal checks; Chromium and listening when relevant     |
+| Runtime/compiler      | Focused units plus affected Chromium integration                     |
+| Package exports/build | `pnpm test:package` (includes static verification)                   |
+| CI harness            | Directly affected script checks and Chromium tests                   |
+| Explicit release      | `pnpm release:prepare`; see [release guide](releases.md)             |
 
-Tier 1 is the independent `quality` CI job: lint/format, types, unit/contract and
-generated-artifact drift checks, then production builds and strict publint.
-Tier 2 is `chromium-integration`: representative integration plus the existing
-packed Chromium consumer. These are the routine PR/main checks. Tier 3 is an
-optional workflow-dispatch Firefox/WebKit matrix. Tier 4 is the separately invoked
-release gate, including archive inventory and digest evidence. The latter tiers
-are future release/compatibility work, not the default ending of an agent task.
+Prerelease verification target: current Chromium. Other browsers and operating
+systems are unverified and deliberately deferred. Do not provision compatibility
+infrastructure or investigate unrelated failures for ordinary work. Full release
+preparation is reserved for an explicit release request.
 
-[Scope selection](../scripts/ci/select-checks.mjs) sends showcase, runtime,
-package, harness and unknown paths to Chromium. Contributor Markdown alone skips
-browser checks; executable package documentation retains its consumer check.
-Existing browser tests and assertions remain available for later compatibility
-work. Configure branch protection for the routine quality and applicable Chromium
-checks; this workflow does not change repository protection settings.
+PR CI runs one quality job: install, lint, typecheck, unit/contract and generated
+artifact checks, production build and strict publint. Pushes to `main` run the
+same quality job plus a separate Chromium integration job. Normal CI has no
+path routing, browser matrix or packed-package rehearsal. Configure PR branch
+protection around quality; Chromium integration runs after merges to `main`.
+Candidate workflows are manual and remain separate from normal CI.
 
-CI cancels superseded runs and avoids duplicate feature-branch push runs. Each
-browser job installs only its matching engine. The suite owns ports 3100 and
-4173; neither may already be occupied. [Linux audio setup](../scripts/ci/setup-linux-audio.sh)
-provides PulseAudio with a clocked null sink. `norewinds=1` bounds buffering to
-50 ms instead of two seconds. This supplies a deterministic output clock, not
-physical speakers or listening evidence. Keep environment setup in that script.
+The browser suite owns ports 3100 and 4173; neither may already be occupied.
+[Centralized Linux audio setup](../scripts/ci/setup-linux-audio.sh) provisions
+PulseAudio with a clocked null sink. `norewinds=1` bounds buffering to 50 ms.
+Run it before Chromium checks on Linux. This provides an output clock, not
+physical speakers or listening evidence. Do not duplicate setup or workarounds
+inside individual tests. CI retains failure traces and uploads browser artifacts
+for seven days; healthy runs retain no traces.
 
 ### Flake investigation
 
-A first-run failure cannot become green through retry: CI uses one diagnostic
-retry, `failOnFlakyTests`, and a retained first-failure trace. Failed jobs upload
-bounded browser artifacts for seven days. Healthy runs retain no traces.
+A flaky test is a failed test. Playwright uses zero retries locally and in CI.
 
-Isolate and repeat the failing case, classify it as a product race, test race,
-capability difference, environment deficiency or infrastructure instability,
-then identify and fix the violated invariant. Add deterministic reproduction
-where possible; rerun the narrow check before broader evidence.
+1. Isolate the failing test and reproduce it intentionally.
+2. Classify the failure as a product race, test race, CI environment issue or
+   unsupported capability.
+3. Identify the violated invariant and fix that layer.
+4. Add deterministic regression coverage where practical.
+5. Run the smallest evidence needed to validate the fix.
 
 ```sh
-pnpm exec playwright test tests/browser/gallery.spec.ts --project=chromium --repeat-each=5
+pnpm exec playwright test tests/browser/gallery.spec.ts --project=chromium --repeat-each=10
 ```
 
-Do not fix flakes with arbitrary sleeps, larger global timeouts, more retries,
-removed/weaker assertions, catch-and-ignore, force-clicks, browser-name skips,
-disabled tests or blanket serialization. Capability skips must document an actual
-unavailable capability outside the compatibility promise and retain meaningful
-fallback coverage. The gallery hydration regression holds client JavaScript to
-prove stateful SSR controls cannot accept input before hydration owns their state.
+The pre-hydration slider regression is the model: hold client JavaScript to prove
+stateful SSR controls cannot accept input before hydration owns their state.
+Do not hide failures with `page.waitForTimeout`, arbitrary sleeps, global timeout
+increases, automatic retries, weaker/removed assertions, caught/ignored failures,
+force-clicks through invalid states, Chromium skips, errors turned into warnings,
+disabled tests, unrelated-test serialization or compatibility hacks. Any such
+change requires explicit justification tied to actual system behavior.
 
 Keep `NODE_ENV` unset for normal local commands; unrelated values can interfere
 with Next.js. CI disables Next telemetry.
@@ -164,7 +160,7 @@ callbacks never schedule audio.
 
 The broader `pnpm test:browser` suite supplies UI, native signal, resource and
 lifecycle regressions. Neither kind of automation establishes listening quality.
-CI installs the engines selected by the evidence tier. The runtime has zero runtime
+CI installs Chromium and uses the centralized Linux audio setup. The runtime has zero runtime
 dependencies; all workspaces remain publication-guarded. See
 [release preparation](releases.md) for the aggregate gate and activation boundary.
 

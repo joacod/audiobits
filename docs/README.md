@@ -2,7 +2,8 @@
 
 Start with [architecture](architecture.md) for system boundaries and
 [development](development.md) for local work. Ordinary changes need no formal
-specification. Architecture changes use the gate in [AGENTS.md](../AGENTS.md).
+specification. Read [root agent rules](../AGENTS.md) and the nearest nested `AGENTS.md`
+for scope and subproject boundaries.
 
 | Document                                             | Role                                                |
 | ---------------------------------------------------- | --------------------------------------------------- |

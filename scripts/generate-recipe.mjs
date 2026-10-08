@@ -70,7 +70,7 @@ const capabilities = {
   ],
   experimentalRuntime: [],
   browserGate: "Chromium",
-  browserMatrix: ["Chromium", "Firefox", "WebKit"],
+  browserMatrix: ["Chromium"],
   schemaNote:
     "Structural schema only; validateRecipe also enforces semantic and resource limits. Playback checks context sample rate.",
 };
