@@ -1,6 +1,6 @@
 # Product scope
 
-The runtime foundation is implemented. AudioBits `0.1.0` is publicly available on npm.
+The runtime foundation is implemented. AudioBits is publicly available on npm.
 
 ## Purpose
 

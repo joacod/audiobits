@@ -1,6 +1,6 @@
 # Recipe model and runtime contract
 
-Canonical schema-1 semantics for the stable `0.1.0` package published on npm. Exact executable
+Canonical schema-1 semantics for the stable AudioBits package published on npm. Exact executable
 limits are in the [package reference](../packages/audiobits/README.md).
 The schema is published; authoring sketches are not capabilities.
 

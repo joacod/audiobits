@@ -1,5 +1,6 @@
 import { requireOfflineCheckpoints } from "./offline-capabilities";
 import { expect, test } from "@playwright/test";
+import manifest from "../../packages/audiobits/package.json" with { type: "json" };
 import { resolve } from "node:path";
 
 async function instrument(page: import("@playwright/test").Page) {
@@ -272,9 +273,12 @@ test("documentation routes and links render the shipped development API", async 
     await expect(
       page
         .locator("main")
-        .getByText("Development API · 0.1.1 · Local workspace package.", {
-          exact: true,
-        })
+        .getByText(
+          `Development API · ${manifest.version} · Local workspace package.`,
+          {
+            exact: true,
+          },
+        )
         .first(),
     ).toBeVisible();
     const targets = await page

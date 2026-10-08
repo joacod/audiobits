@@ -22,6 +22,10 @@ Complete the requested task with the smallest coherent change.
 - Do not modify CI, release infrastructure, package boundaries, or public APIs
   unless the requested task explicitly concerns them.
 - Do not commit, push, branch, publish, or release unless explicitly requested.
+- Derive the current `audiobits` version from `packages/audiobits/package.json`
+  or generated metadata instead of hardcoding it in prose or tests. Keep exact
+  versions in changelogs, release/migration/prerelease history and other
+  version-specific records; never rewrite history during a normal version bump.
 
 ## Architecture boundaries
 

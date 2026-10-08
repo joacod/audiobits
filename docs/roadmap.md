@@ -1,7 +1,7 @@
 # Product finish roadmap
 
 The recipe/runtime foundation and eight-sound gallery are implemented. AudioBits
-`0.1.0` is publicly available on npm. Automated publication and deployment remain disabled. Architecture stays
+is publicly available on npm. Automated publication and deployment remain disabled. Architecture stays
 fixed unless a real sound or experience is blocked by the existing vocabulary.
 
 1. **First npm release:** `audiobits@0.1.0` is publicly available on npm.

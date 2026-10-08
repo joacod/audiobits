@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import manifest from "../../packages/audiobits/package.json" with { type: "json" };
 
 test("site uses public exports and keyboard-operated Base UI playback", async ({
   page,
@@ -12,7 +13,9 @@ test("site uses public exports and keyboard-operated Base UI playback", async ({
     page.getByRole("heading", { name: "Sound as code.", exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByText("Development · 0.1.1 · Local workspace package"),
+    page.getByText(
+      `Development · ${manifest.version} · Local workspace package`,
+    ),
   ).toBeVisible();
   const play = page.getByRole("button", { name: "Hear AudioBits" });
   await play.focus();
@@ -27,9 +30,12 @@ test("Fumadocs renders development MDX", async ({ page }) => {
     page.getByRole("heading", { name: "Quick start", exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByText("Development API · 0.1.1 · Local workspace package.", {
-      exact: false,
-    }),
+    page.getByText(
+      `Development API · ${manifest.version} · Local workspace package.`,
+      {
+        exact: false,
+      },
+    ),
   ).toBeVisible();
 });
 

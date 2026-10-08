@@ -2,7 +2,7 @@
 
 ## Current release state
 
-AudioBits `0.1.0` is publicly available on npm. Changesets prerelease mode has been exited, and only the
+AudioBits is publicly available on npm. Changesets prerelease mode has been exited, and only the
 runtime package is publishable.
 Automated npm publication and site deployment remain disabled. Root, site and example
 workspaces remain private.
