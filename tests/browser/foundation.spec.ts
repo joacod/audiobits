@@ -10,7 +10,7 @@ test("site uses public exports and keyboard-operated Base UI playback", async ({
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("http://127.0.0.1:3100");
   await expect(page).toHaveTitle(
-    "AudioBits: Procedural Sound Effects for the Web",
+    "AudioBits | Procedural Sound Effects for the Web",
   );
   await expect(page.locator(".landing-footer pre")).toHaveText(
     "npm install audiobits",

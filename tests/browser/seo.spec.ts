@@ -23,7 +23,7 @@ test("public pages expose unique metadata and content without JavaScript", async
   const routes = [
     {
       path: "/",
-      title: "AudioBits: Procedural Sound Effects for the Web",
+      title: "AudioBits | Procedural Sound Effects for the Web",
       description:
         "Hear, customize, and integrate procedural sound effects generated in your browser with Web Audio.",
     },

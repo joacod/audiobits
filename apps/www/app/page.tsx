@@ -6,7 +6,7 @@ import { siteBuild } from "../lib/site-build";
 import "./landing.css";
 
 export const metadata: Metadata = {
-  title: { absolute: "AudioBits: Procedural Sound Effects for the Web" },
+  title: { absolute: "AudioBits | Procedural Sound Effects for the Web" },
   alternates: { canonical: "/" },
 };
 
