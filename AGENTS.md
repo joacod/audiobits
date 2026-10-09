@@ -4,6 +4,13 @@ AudioBits is a browser-audio project with a public npm package.
 
 Complete the requested task with the smallest coherent change.
 
+## Public-facing writing
+
+- Do not use em dashes as separators in user-facing copy, SEO metadata,
+  documentation, or READMEs, including the root and npm package READMEs.
+- Use a colon, comma, period, parentheses, or a separate sentence as appropriate.
+  Use a vertical bar for page-title separators when needed.
+
 ## Scope contract
 
 - Treat the user's request as the scope contract.

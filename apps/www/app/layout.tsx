@@ -7,7 +7,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "AudioBits — Procedural Sound Effects for the Web",
+    default: "AudioBits: Procedural Sound Effects for the Web",
     template: "%s | AudioBits",
   },
   description:
