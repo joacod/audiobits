@@ -1,8 +1,10 @@
 # Controlled sound and routing
 
 Call `play()` directly from a gesture. Surface rejected promises, bind Stop,
-and call `dispose()` when the host unmounts. See the package reference for
-bus limits and caller-owned native nodes.
+and call `dispose()` when the host unmounts. See the
+[bus guide](https://audiobits.joacod.com/docs/buses) and
+[native ownership guide](https://audiobits.joacod.com/docs/native), checking options
+against the installed package's exported types and capabilities.
 
 ```ts
 import { createAudio } from "audiobits";

@@ -28,13 +28,20 @@ export async function dispose() {
 ```
 
 `audio.bus(name, parent = audio.master)` reuses a live named bus. Use
-`setParent()` to move it. Cycles and foreign/disposed buses are rejected.
+`setParent()` to move it; another lookup does not reparent an existing bus.
+Names contain 1–64 characters and cannot be blank. Cycles and foreign/disposed
+buses are rejected before changing a route; setting the same parent adds no
+connection. Playback defaults to master and rejects foreign/disposed buses
+before allocation or stealing.
 `setGainDb()` accepts -60–0 dB and ramps of 0–10 seconds (default 5 ms).
-`setMuted()` ramps independently over 5 ms. Master defaults to -12 dB.
+`setMuted()` ramps independently over 5 ms, preserving gain automation.
+`audio.setMuted()` controls master mute, including a setting made before startup.
+Master defaults to -12 dB.
 
 ## Ownership
 
 Non-master bus disposal recursively finalizes routed voices and descendants.
+Disposal is idempotent; a later lookup of the name creates a fresh bus.
 Dispose master through the engine. Native nodes and routing stay outside recipe
 JSON. The gallery's mixer is separate from copied sound examples.
 

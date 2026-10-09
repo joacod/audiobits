@@ -33,6 +33,9 @@ Mappings target source frequency, filter frequency, or layer gain, with linear
 or exponential control-to-target conversion. Live targets ramp linearly from
 their current value over smoothing time. Layer gain ramps in linear amplitude;
 the envelope remains independent. Automation points use play-only controls.
+Exponential mappings require positive endpoints; mapping ranges may descend,
+while random ranges must be ordered. Variation is sampled once per property per
+voice, rather than continuously.
 
 `voice.set()` validates all keys before any update. Unknown names, invalid
 numbers, out-of-range values, and play-only updates fail atomically. Updates

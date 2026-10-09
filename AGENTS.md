@@ -27,6 +27,16 @@ Complete the requested task with the smallest coherent change.
   versions in changelogs, release/migration/prerelease history and other
   version-specific records; never rewrite history during a normal version bump.
 
+## README maintenance
+
+The root and npm READMEs are human-facing introductions for discovery,
+installation, first use, and links, not reference manuals. A feature does not
+by itself justify a README edit: new content must materially help a first-time
+reader understand, install, or use AudioBits. Keep detailed contracts in existing
+website docs; code, generated metadata, and tests define executable behavior.
+Keep runnable examples, gesture activation, cleanup, and browser evidence limits
+accurate. Briefly justify substantial README additions in the relevant PR.
+
 ## Changesets
 
 - Include a Changeset when a PR meaningfully changes the published package's

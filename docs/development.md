@@ -1,7 +1,7 @@
 # Local development
 
 Use [architecture](architecture.md) for system boundaries, the
-[package reference](../packages/audiobits/README.md) for usage and
+[website documentation](https://audiobits.joacod.com/docs) for usage and
 [validation](validation.md) for evidence expectations.
 
 ## Setup
@@ -135,8 +135,8 @@ system temporary directory using npm offline with install scripts disabled.
 Node imports and TypeScript NodeNext checks resolve only the installed package.
 They require no workspace source or browser globals.
 
-Packaged README/Skill TypeScript examples typecheck. Quick-start, production
-lifecycle and controlled sound hosts execute in Chromium from an ephemeral
+Packaged README/Skill TypeScript examples typecheck. The canonical README quick
+start and Skill controlled sound host execute in Chromium from an ephemeral
 loopback server, covering silent load, gesture activation, finite nonzero signal,
 Stop and context closure. An unused runtime import fully tree-shakes against a
 baseline. The temporary consumer is removed afterward; the archive and evidence

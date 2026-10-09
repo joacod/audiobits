@@ -19,8 +19,13 @@ sounds without browser activation, then invoke `start()` synchronously inside
 a user gesture and await it before `play()`. Surface failures and allow a fresh
 gesture retry. Never queue playback across Stop, hiding, or disposal.
 
-Use the [package quick start and API reference](../README.md) for activation,
-validation, ownership, limits, seeded replay, and native interop. Read the
+Use the installed package's exported types, schema, capabilities, and actual
+version to determine supported options and limits. The current website may
+postdate an older installed package. Consult the [API guide](https://audiobits.joacod.com/docs/api),
+[lifecycle](https://audiobits.joacod.com/docs/lifecycle),
+[seeded replay](https://audiobits.joacod.com/docs/parameters), and
+[native interop](https://audiobits.joacod.com/docs/native) for human-readable guidance,
+checking it against the installed contracts. Read the
 [controlled sound example](references/controls.md) for live thruster and bus setup.
 
 Keep recipe data JSON-only. Run `validateRecipe` for semantic validation;

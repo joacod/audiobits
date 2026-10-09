@@ -34,7 +34,7 @@ They do not establish subjective quality.
 - All rendered samples are finite. Curated single-voice default peaks remain
   below -6 dBFS at the master; eight simultaneous finite core voices must stay
   below 0 dBFS. Keep quality tuning and resource limits distinct.
-- Active and retiring voice counts obey [package voice limits](../packages/audiobits/README.md#runtime-ownership).
+- Active and retiring voice counts obey [voice ownership invariants](architecture.md#bounds-and-mixing).
   After finite tails, stop, or disposal, owned counts return to baseline.
 - Repeatedly trigger/stop 1000 voices in bounded batches in Chromium; no retained
   voice records or owned connection records after completion. This is a resource

@@ -37,6 +37,7 @@ frame and pause updates when hidden or reduced motion is requested.
 
 Caller-created nodes, sources, and events remain caller-owned. Stop unmanaged
 sources explicitly; `stopAll()` covers only managed voices. Dispose or disconnect
-your nodes before engine teardown. Native graphs are not serializable recipes.
+your nodes before engine teardown. Native graphs are not serializable recipes. Closing the engine context
+invalidates retained native handles without transferring their ownership.
 The vanilla workspace demonstrates a continuous analyser readout; the gallery
 uses textual playing-state feedback without an additional visualization library.
