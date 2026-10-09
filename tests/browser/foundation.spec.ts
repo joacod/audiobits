@@ -9,7 +9,9 @@ test("site uses public exports and keyboard-operated Base UI playback", async ({
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("http://127.0.0.1:3100");
-  await expect(page).toHaveTitle("AudioBits — Procedural browser audio");
+  await expect(page).toHaveTitle(
+    "AudioBits | Procedural Sound Effects for the Web",
+  );
   await expect(page.locator(".landing-footer pre")).toHaveText(
     "npm install audiobits",
   );

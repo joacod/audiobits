@@ -4,6 +4,11 @@ AudioBits is a browser-audio project with a public npm package.
 
 Complete the requested task with the smallest coherent change.
 
+## Public-facing writing
+
+- Do not use em dashes in user-facing copy, SEO metadata,
+  documentation, or READMEs, including the root and npm package READMEs.
+
 ## Scope contract
 
 - Treat the user's request as the scope contract.
