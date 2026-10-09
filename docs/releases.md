@@ -8,8 +8,7 @@ through OIDC Trusted Publishing and then creates matching Git tags and GitHub
 Releases. Root, site and example workspaces
 remain private.
 
-Current Chromium is the only automated browser verification target. Other
-browsers and operating systems are unverified and deliberately deferred.
+Follow the [browser policy](validation.md#browser-policy).
 
 ## Release verification
 

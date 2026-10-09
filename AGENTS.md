@@ -66,7 +66,7 @@ accurate. Briefly justify substantial README additions in the relevant PR.
 ## Verification discipline
 
 - Run the smallest check set that can validate the requested change.
-- Current Chromium is the only automated browser verification target.
+- Follow [browser verification policy](docs/validation.md#browser-policy).
 - Do not perform Firefox, WebKit, Safari, device, OS, or compatibility work
   unless explicitly requested.
 - Do not run `release:prepare` or equivalent release gates unless explicitly
@@ -77,8 +77,6 @@ accurate. Briefly justify substantial README additions in the relevant PR.
   invariant directly.
 - CI environment setup belongs in centralized repository scripts, not
   individual tests.
-- Automated Chromium tests do not establish subjective listening quality or
-  broader browser/device compatibility.
 
 ## Instruction hierarchy
 

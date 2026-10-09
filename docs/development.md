@@ -82,12 +82,11 @@ those outputs.
 | CI harness            | Directly affected script checks and Chromium tests                   |
 | Explicit release      | `pnpm release:prepare`; see [release guide](releases.md)             |
 
-Current Chromium is the only automated browser verification target. Other
-browsers and operating systems are unverified and deliberately deferred. Do not provision compatibility
-infrastructure or investigate unrelated failures for ordinary work. Full release
-preparation is reserved for an explicit release request.
+Follow the [browser policy](validation.md#browser-policy). Do not provision
+compatibility infrastructure or investigate unrelated failures for ordinary work.
+Full release preparation is reserved for an explicit release request.
 
-Normal CI checks quality; pushes to `main` also run Chromium integration.
+Pull requests and pushes to `main` run quality and full Chromium integration.
 The independent package publication flow is described in the
 [release guide](releases.md).
 
