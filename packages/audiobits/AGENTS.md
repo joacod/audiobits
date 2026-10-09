@@ -15,8 +15,8 @@ Read root `AGENTS.md` first.
 - Native output/analyser taps use caller-owned nodes; arbitrary managed graph
   interoperability is not promised.
 - Read [architecture](../../docs/architecture.md) before changing these contracts.
-- Do not add compatibility hacks for browsers outside the current Chromium
-  prerelease target unless explicitly requested.
+- Current Chromium is the only automated browser verification target. Do not
+  add compatibility hacks for other browsers unless explicitly requested.
 
 ## Recipes
 

@@ -47,7 +47,7 @@ because their human purposes differ.
 
 ## Verification
 
-- Chromium is the only prerelease browser target.
+- Current Chromium is the only automated browser verification target.
 - Copy/content-only changes: run only relevant static/build checks.
 - Visual-only changes: lint/typecheck/build plus focused visual inspection.
 - Changed website interaction: run the affected Chromium Playwright test(s).

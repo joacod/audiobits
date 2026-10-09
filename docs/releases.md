@@ -13,8 +13,9 @@ browsers and operating systems are unverified and deliberately deferred.
 
 ## Release verification
 
-Run this gate only when explicitly asked to prepare or verify a release candidate,
-under the Node and pnpm versions pinned in the repository:
+Use `pnpm release:prepare` as the explicit release verification entry point.
+Run it only when asked to prepare or verify a release candidate, under the Node
+and pnpm versions pinned in the repository:
 
 ```sh
 pnpm install --frozen-lockfile
@@ -28,13 +29,6 @@ Chromium integration and `test:package`. The package rehearsal includes strict
 publint, archive inventory, a clean offline consumer install, SSR-safe imports,
 TypeScript examples, tree-shaking and packed Chromium host checks. Automated
 correctness does not establish listening quality or physical-device support.
-
-[The manual npm candidate workflow](../.github/workflows/npm-candidate.yml)
-runs this gate and uploads archive evidence. [The manual site candidate
-workflow](../.github/workflows/site-candidate.yml) prepares development site output
-independently. These workflows prepare artifacts without publishing or deploying.
-The site candidate workflow is separate from the independently deployed
-[public website](https://audiobits.joacod.com/).
 
 ## Verified artifact
 
