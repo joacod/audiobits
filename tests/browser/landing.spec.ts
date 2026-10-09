@@ -32,6 +32,27 @@ for (const width of [375, 768, 1440]) {
           .getByRole("link", { name, exact: true }),
       ).toBeVisible();
     }
+    const previews = page.locator(".landing-sound-entry");
+    const structures: string[] = [];
+    for (const [kind, family, shape, count] of [
+      ["impact", "pulse", "ellipse", 4],
+      ["glass-notification", "harmonic", "path", 4],
+      ["whoosh", "flow", "path", 6],
+    ] as const) {
+      const entry = previews
+        .filter({ has: page.locator(`svg.preview-${family}`) })
+        .first();
+      await expect(entry).toHaveAttribute("href", `/sounds/${kind}`);
+      const svg = entry.locator("svg");
+      await expect(svg).toHaveAttribute("aria-hidden", "true");
+      await expect(svg.locator(shape)).toHaveCount(count);
+      structures.push(await svg.innerHTML());
+      await entry.click();
+      await expect(page).toHaveURL(`${home}/sounds/${kind}`);
+      await expect(page.locator(".sound-workbench")).toBeVisible();
+      await page.goto(home);
+    }
+    expect(new Set(structures).size).toBe(3);
     await page.screenshot({
       path: testInfo.outputPath(`landing-${width}.png`),
       fullPage: true,

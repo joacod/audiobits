@@ -33,7 +33,7 @@ export function drawIdle(
   paint.globalAlpha = 1;
 }
 
-export type VisualFamily = "pulse" | "harmonic" | "flow" | "threads";
+export type VisualFamily = "pulse" | "harmonic" | "flow";
 
 /** Abstract sound portraits, not a calibrated scope. Displacement uses real output. */
 export function drawPortrait(
@@ -64,7 +64,7 @@ export function drawPortrait(
       paint.stroke();
     }
   } else {
-    const lines = family === "threads" ? 28 : family === "harmonic" ? 12 : 20;
+    const lines = family === "harmonic" ? 12 : 20;
     for (let line = 0; line < lines; line++) {
       paint.globalAlpha = 0.25 + (line / lines) * 0.6;
       paint.beginPath();

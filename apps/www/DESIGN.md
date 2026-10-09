@@ -1,6 +1,6 @@
 ---
 name: AudioBits showcase
-description: A sonic specimen book for browser-native sound as code.
+description: A sonic playground with the precision of a developer tool.
 colors:
   paper: "#f3f0e6"
   ink: "#243c32"
@@ -105,7 +105,7 @@ components:
 
 **Creative North Star: "A sonic playground with the precision of a developer tool"**
 
-The sonic specimen book treats browser audio as something to hear, change and inspect. Warm paper, dark green ink and self-hosted Fraunces headings give the showcase a tactile editorial character; ordinary HTML controls keep the instrument precise.
+The sonic playground treats browser audio as something to hear, change and inspect. Warm paper, dark green ink and self-hosted Fraunces headings give the showcase a tactile editorial character; ordinary HTML controls keep the instrument precise.
 
 A dedicated editorial landing pairs an expressive headline with a dark green
 sound stage and brass signal. Ruled entries and restrained code panels carry
@@ -153,7 +153,7 @@ terminal chrome.
 
 - **Display:** primary page heading, with a fluid size and balanced wrapping.
 - **Headline:** section headings, with a smaller fluid scale.
-- **Title:** specimen names; mobile titles resolve to (2rem), while the desktop featured title uses (2.2rem).
+- **Title:** specimen names; collection titles use (2.5rem) on desktop and (2rem) on mobile.
 - **Body:** explanatory text with a maximum measure of (70ch); specimen descriptions use (0.9rem).
 - **Label:** labelled controls with tabular numerals; utility captions and status use the observed (0.75–0.8rem) range.
 - **Code:** snippets use a spacious line height; the editable recipe field uses (0.85rem).
@@ -181,7 +181,7 @@ column; code scrolls internally rather than widening the page.
 At (760px) and below, gutters become (1rem), layouts become one column, and the
 monitor becomes a fixed bottom dock. Levels expands volume; Mute and Stop remain
 visible. Bottom safe-area padding and (12rem) page clearance keep the last content
-reachable. Sound portraits are (13rem) high, with a compact (9rem) home portrait.
+reachable. Workbench sound portraits are (13rem) high on mobile and (20rem) on desktop.
 
 ## Elevation & Depth
 
@@ -217,8 +217,8 @@ motion removes transitions. Play produces an eight-ray click response lasting
 ### Cards / Containers
 
 Sound specimens are ruled entries, not enclosed cards. A desktop entry has
-(2.5rem) vertical padding; a mobile entry has (2rem). The featured entry omits
-the top divider and tightens spacing. Code panels use code paper, the control
+(2.5rem) vertical padding; a mobile entry has (2rem). The workbench omits
+the top divider. Code panels use code paper, the control
 radius, overflow scrolling and no shadow.
 
 ### Inputs / Fields
