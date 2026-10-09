@@ -240,8 +240,8 @@
     }
   ],
   "narrative": {
-    "northStar": "Sonic specimen book",
-    "overview": "The sonic specimen book treats browser audio as something to hear, change and inspect. Warm paper, dark green ink and self-hosted Fraunces headings give the showcase a tactile editorial character; ordinary HTML controls keep the instrument precise.\n\nRuled entries and restrained code panels carry the system across the home, collection and individual sound pages. Signal is living content derived from native audio output, and brass marks the controls that initiate playback or hold a pressed state. The separate Fumadocs reference experience keeps its own styling.",
+    "northStar": "A sonic playground with the precision of a developer tool",
+    "overview": "The sonic specimen book treats browser audio as something to hear, change and inspect. Warm paper, dark green ink and self-hosted Fraunces headings give the showcase a tactile editorial character; ordinary HTML controls keep the instrument precise.\n\nA dedicated editorial landing pairs an expressive headline with a dark green sound stage and brass signal. Ruled entries and restrained code panels carry the collection and individual sound pages. Signal is living content derived from native audio output, and brass marks the controls that initiate playback or hold a pressed state. The separate Fumadocs reference experience keeps its own styling.",
     "keyCharacteristics": [
       "Warm paper and green ink, with brass for playback and pressed controls.",
       "Serif headings above practical sans-serif controls and monospace code.",

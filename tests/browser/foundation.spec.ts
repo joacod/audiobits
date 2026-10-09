@@ -10,22 +10,27 @@ test("site uses public exports and keyboard-operated Base UI playback", async ({
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("http://127.0.0.1:3100");
   await expect(page).toHaveTitle("AudioBits — Procedural browser audio");
-  await expect(page.locator(".showcase-footer pre")).toHaveText(
+  await expect(page.locator(".landing-footer pre")).toHaveText(
     "npm install audiobits",
   );
   await expect(page.locator("main")).not.toContainText(
     /Local workspace package|Development|unpublished|not yet been published|prepared for stable publication/,
   );
   await expect(
-    page.getByRole("heading", { name: "Sound as code.", exact: true }),
+    page.getByRole("heading", {
+      name: "Make interfaces sound alive.",
+      exact: true,
+    }),
   ).toBeVisible();
   await expect(
     page.getByText(`Available on npm · ${manifest.version}`),
   ).toBeVisible();
-  const play = page.getByRole("button", { name: "Hear AudioBits" });
+  const play = page.getByRole("button", { name: "Play glass" });
   await play.focus();
   await page.keyboard.press("Enter");
-  await expect(page.getByRole("status")).toHaveText("Audio: running");
+  await expect(page.getByTestId("landing-playback-state")).toHaveText(
+    "Glass notification: playing",
+  );
   expect(errors).toEqual([]);
 });
 

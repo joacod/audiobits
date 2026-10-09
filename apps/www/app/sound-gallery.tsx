@@ -11,6 +11,7 @@ import Link from "next/link";
 
 import { SoundCard } from "./sound-card";
 import { AudioMonitor } from "./audio-monitor";
+import { LandingExperience } from "./landing-experience";
 import { soundInfo, soundKinds, sounds, parametersFor } from "../lib/gallery";
 import type { SoundKind } from "../lib/gallery";
 import { createAudio } from "audiobits";
@@ -33,11 +34,11 @@ const subscribeHydration = () => () => {};
 export function SoundGallery({
   rawSource,
   selected,
-  home = false,
+  landing = false,
 }: {
   rawSource: string;
   selected?: SoundKind;
-  home?: boolean;
+  landing?: boolean;
 }) {
   const definitions = useRef<Partial<Record<SoundKind, Sound>>>({});
   const voices = useRef<Partial<Record<SoundKind, Voice>>>({});
@@ -177,6 +178,7 @@ export function SoundGallery({
       }
       setStarted(engine);
       setCurrent(kind);
+      if (landing) engine.stopAll({ tails: "cut" });
       const voice = definition.play({
         seed,
         bus: route.current,
@@ -211,18 +213,37 @@ export function SoundGallery({
   const active = Object.values(playing).some(
     (value) => value === "running" || value === "playing",
   );
-  const kinds: SoundKind[] = selected
-    ? [selected]
-    : home
-      ? ["glass-notification", "impact", "thruster"]
-      : soundKinds;
+  if (landing) {
+    return (
+      <LandingExperience
+        engine={started}
+        ready={ready}
+        controls={controls}
+        playing={playing}
+        error={error}
+        muted={muted}
+        onPlay={play}
+        onStop={() => {
+          stopAll();
+          setError("");
+          setPlaying(
+            Object.fromEntries(soundKinds.map((kind) => [kind, "stopped"])),
+          );
+        }}
+        onUpdateControl={updateControl}
+        onMute={() => {
+          const next = !muted;
+          audio.current?.setMuted(next);
+          setMuted(next);
+        }}
+      />
+    );
+  }
+  const kinds: SoundKind[] = selected ? [selected] : soundKinds;
   return (
-    <section
-      className={home ? "discovery-session" : "lab-session"}
-      aria-label={home ? "Hear AudioBits" : "Sound lab"}
-    >
+    <section className="lab-session" aria-label="Sound lab">
       <div className="session-sounds">
-        {!home && !selected && (
+        {!selected && (
           <nav className="sound-index" aria-label="Sound collection">
             {soundKinds.map((kind) => (
               <Link
@@ -235,7 +256,7 @@ export function SoundGallery({
             ))}
           </nav>
         )}
-        {kinds.map((kind, index) => (
+        {kinds.map((kind) => (
           <SoundCard
             key={kind}
             kind={kind}
@@ -250,9 +271,7 @@ export function SoundGallery({
             onReset={resetControl}
             onSeed={setSeed}
             onApply={applyRecipe}
-            featured={home && index === 0}
             workbench={!!selected}
-            discovery={home}
             engine={started}
           />
         ))}

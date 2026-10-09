@@ -614,16 +614,13 @@ test("showcase uses native output, bounded seeded variation and simple current c
   expect(JSON.parse(copied).schemaVersion).toBe(1);
 });
 
-test("homepage morphing keeps one engine and disposes it on docs navigation", async ({
+test("homepage stage shares one engine, copies settings and disposes on navigation", async ({
   page,
 }) => {
   await instrument(page);
-  await page.setViewportSize({ width: 390, height: 844 });
+  await page.setViewportSize({ width: 375, height: 844 });
   await page.goto("http://127.0.0.1:3100");
-  const play = page.getByRole("button", {
-    name: "Hear AudioBits",
-    exact: true,
-  });
+  const play = page.getByRole("button", { name: "Play glass", exact: true });
   const bounds = await play.boundingBox();
   expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(844);
   expect(
@@ -631,19 +628,67 @@ test("homepage morphing keeps one engine and disposes it on docs navigation", as
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
   ).toBe(true);
+  expect(
+    await page.evaluate(
+      () =>
+        (globalThis as unknown as { galleryContexts: AudioContext[] })
+          .galleryContexts.length,
+    ),
+  ).toBe(0);
   await page
     .getByRole("slider", { name: "Brightness", exact: true })
     .fill("0.83");
-  await expect(page.locator("article.sound-card")).toHaveCount(3);
+  await expect(page.locator(".stage-parameter")).toContainText("0.83");
   await expect(page.locator(".recipe-tools")).toHaveCount(0);
-  await expect(page.locator("#glass-notification label")).toContainText(
-    "Brightness: 0.83",
+  await expect(page.locator(".landing-sound-entry")).toHaveCount(4);
+  await page.getByRole("button", { name: "Copy code", exact: true }).click();
+  expect(
+    await page.evaluate(
+      () => (globalThis as unknown as { copiedExample: string }).copiedExample,
+    ),
+  ).toContain('"brightness":0.83');
+  await play.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByTestId("landing-playback-state")).toHaveText(
+    "Glass notification: playing",
   );
-  await expect(page.locator(".collection-teaser a")).toHaveCount(9);
-  await play.click();
+  await expect(page.getByTestId("landing-playback-state")).toHaveText(
+    "Glass notification: ready",
+  );
+  await page
+    .getByRole("button", { name: /^Thruster(?: Sustained)?$/, exact: true })
+    .click();
   await page
     .getByRole("button", { name: "Start thruster", exact: true })
     .click();
+  await expect(page.getByTestId("landing-playback-state")).toHaveText(
+    "Thruster: running",
+  );
+  await expect
+    .poll(() =>
+      page
+        .locator(".stage-signal canvas")
+        .getAttribute("data-peak")
+        .then(Number),
+    )
+    .toBeGreaterThan(0);
+  await page.getByRole("slider", { name: "Throttle" }).focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(page.getByRole("slider", { name: "Throttle" })).toHaveValue(
+    "0.21",
+  );
+  await page.getByRole("button", { name: "Mute", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Mute", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("button", { name: "Stop", exact: true }).click();
+  await expect(page.getByTestId("landing-playback-state")).toHaveText(
+    "Thruster: stopped",
+  );
+  await expect(page.locator(".stage-signal canvas")).toHaveAttribute(
+    "data-peak",
+    "0",
+  );
   expect(
     await page.evaluate(
       () =>
