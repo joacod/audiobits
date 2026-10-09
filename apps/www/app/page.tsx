@@ -1,8 +1,14 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { SoundGallery } from "./sound-gallery";
 import { soundInfo, type SoundKind } from "../lib/gallery";
 import { siteBuild } from "../lib/site-build";
 import "./landing.css";
+
+export const metadata: Metadata = {
+  title: { absolute: "AudioBits — Procedural Sound Effects for the Web" },
+  alternates: { canonical: "/" },
+};
 
 const preview: SoundKind[] = [
   "glass-notification",

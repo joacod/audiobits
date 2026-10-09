@@ -1,12 +1,17 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { RootProvider } from "fumadocs-ui/provider/next";
+import { siteUrl } from "../lib/site-url";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "AudioBits — Procedural browser audio",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "AudioBits — Procedural Sound Effects for the Web",
+    template: "%s | AudioBits",
+  },
   description:
-    "Procedural browser audio. Explore eight sounds and get started with the npm package.",
+    "Hear, customize, and integrate procedural sound effects generated in your browser with Web Audio.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
