@@ -241,7 +241,7 @@
   ],
   "narrative": {
     "northStar": "A sonic playground with the precision of a developer tool",
-    "overview": "The sonic specimen book treats browser audio as something to hear, change and inspect. Warm paper, dark green ink and self-hosted Fraunces headings give the showcase a tactile editorial character; ordinary HTML controls keep the instrument precise.\n\nA dedicated editorial landing pairs an expressive headline with a dark green sound stage and brass signal. Ruled entries and restrained code panels carry the collection and individual sound pages. Signal is living content derived from native audio output, and brass marks the controls that initiate playback or hold a pressed state. The separate Fumadocs reference experience keeps its own styling.",
+    "overview": "The sonic playground treats browser audio as something to hear, change and inspect. Warm paper, dark green ink and self-hosted Fraunces headings give the showcase a tactile editorial character; ordinary HTML controls keep the instrument precise.\n\nA dedicated editorial landing pairs an expressive headline with a dark green sound stage and brass signal. Ruled entries and restrained code panels carry the collection and individual sound pages. Signal is living content derived from native audio output, and brass marks the controls that initiate playback or hold a pressed state. The separate Fumadocs reference experience keeps its own styling.",
     "keyCharacteristics": [
       "Warm paper and green ink, with brass for playback and pressed controls.",
       "Serif headings above practical sans-serif controls and monospace code.",
@@ -266,7 +266,7 @@
       }
     ],
     "dos": [
-      "Do keep Play, parameter labels and visible playback status ahead of recipe disclosures.",
+      "Do keep Play, parameter labels and visible playback status ahead of the inspector.",
       "Do use the paper, ink and brass roles consistently across showcase routes.",
       "Do collapse specimen columns at the established mobile breakpoint and retain usable code overflow.",
       "Do label native controls, retain visible focus, and respect reduced motion.",

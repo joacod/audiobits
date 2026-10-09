@@ -19,9 +19,7 @@ export function SoundCard({
   recipe,
   controls,
   playing,
-  featured = false,
   workbench = false,
-  discovery = false,
   engine,
   rawSource,
   onPlay,
@@ -36,9 +34,7 @@ export function SoundCard({
   recipe: Recipe;
   controls: Readonly<Record<string, number>>;
   playing?: string;
-  featured?: boolean;
   workbench?: boolean;
-  discovery?: boolean;
   engine: AudioEngine | null;
   rawSource: string;
   onPlay(kind: SoundKind): Promise<void>;
@@ -73,15 +69,15 @@ export function SoundCard({
   const status = playing ?? (sustained ? "stopped" : "ready");
   return (
     <article
-      className={`sound-card ${featured ? "flagship-sound" : ""} ${workbench ? "sound-workbench" : "compact-sound"} ${discovery ? "discovery-sound" : ""}`}
+      className={`sound-card ${workbench ? "sound-workbench" : "compact-sound"}`}
       id={kind}
       key={kind}
     >
-      {(featured || workbench) && (
+      {workbench && (
         <OutputScope
           engine={engine}
           active={status === "running" || status === "playing"}
-          family={featured ? "threads" : info.visualFamily}
+          family={info.visualFamily}
         />
       )}
       <div className="sound-preview">
@@ -108,12 +104,9 @@ export function SoundCard({
               >
                 <path d="M3 1.5 12 7 3 12.5Z" fill="currentColor" />
               </svg>
-              {featured
-                ? "Hear AudioBits"
-                : `${sustained ? "Start" : "Play"} ${kind}`}
+              {`${sustained ? "Start" : "Play"} ${kind}`}
             </Button>
           </PlaySpark>
-          {featured && <Link href="/sounds">Explore sounds</Link>}
           {sustained && (
             <Button onClick={() => onStop(kind)}>Stop {kind}</Button>
           )}
@@ -151,39 +144,37 @@ export function SoundCard({
           {info.title}: {status}
         </p>
       </div>
-      {!discovery && (
-        <div className="variation-controls">
-          <label>
-            Seed (next Play)
-            <input
-              aria-label={`${kind} seed`}
-              disabled={!ready}
-              type="number"
-              min="0"
-              max="4294967295"
-              step="1"
-              value={seed}
-              onChange={(event) => changeSeed(event.target.value)}
-            />
-          </label>
-          <div className="audio-controls">
-            <Button
-              disabled={!ready}
-              onClick={() =>
-                changeSeed(String(Math.floor(Math.random() * 0x100000000)))
-              }
-            >
-              Randomize {kind}
-            </Button>
-            <Button disabled={!ready} onClick={() => changeSeed("42")}>
-              Reset variation
-            </Button>
-          </div>
-          {!validSeed && (
-            <p role="alert">Seed must be an unsigned 32-bit integer.</p>
-          )}
+      <div className="variation-controls">
+        <label>
+          Seed (next Play)
+          <input
+            aria-label={`${kind} seed`}
+            disabled={!ready}
+            type="number"
+            min="0"
+            max="4294967295"
+            step="1"
+            value={seed}
+            onChange={(event) => changeSeed(event.target.value)}
+          />
+        </label>
+        <div className="audio-controls">
+          <Button
+            disabled={!ready}
+            onClick={() =>
+              changeSeed(String(Math.floor(Math.random() * 0x100000000)))
+            }
+          >
+            Randomize {kind}
+          </Button>
+          <Button disabled={!ready} onClick={() => changeSeed("42")}>
+            Reset variation
+          </Button>
         </div>
-      )}
+        {!validSeed && (
+          <p role="alert">Seed must be an unsigned 32-bit integer.</p>
+        )}
+      </div>
       {workbench ? (
         <RecipeTools
           kind={kind}
