@@ -144,15 +144,30 @@ for (const target of ["site", "vanilla"] as const) {
     await page.goto(
       target === "site" ? "http://127.0.0.1:3100" : "http://127.0.0.1:4173",
     );
+    expect(
+      await page.evaluate(
+        () =>
+          (globalThis as unknown as { contexts: AudioContext[] }).contexts
+            .length,
+      ),
+    ).toBe(0);
+    if (target === "site")
+      await page
+        .getByRole("button", { name: "Impact One-shot", exact: true })
+        .click();
     await page
       .getByRole("slider", { name: "Intensity", exact: true })
       .fill("1");
     for (let i = 0; i < 3; i++)
       await page.getByRole("button", { name: "Play impact" }).click();
+    if (target === "site")
+      await page
+        .getByRole("button", { name: "Thruster Sustained", exact: true })
+        .click();
     await page.getByRole("button", { name: "Start thruster" }).click();
     const state =
       target === "site"
-        ? page.getByTestId("thruster-state")
+        ? page.getByTestId("landing-playback-state")
         : page.locator("#thruster-state");
     await expect(state).toHaveText("Thruster: running");
     await expect(
@@ -169,16 +184,26 @@ for (const target of ["site", "vanilla"] as const) {
       ),
     ).toBe(count);
     expect(count).toBe(8);
-    await page.getByRole("button", { name: "Stop thruster" }).click();
+    await page
+      .getByRole("button", {
+        name: target === "site" ? "Stop" : "Stop thruster",
+        exact: true,
+      })
+      .click();
     await expect(state).toHaveText("Thruster: stopped");
     await page.getByRole("button", { name: "Start thruster" }).click();
     await expect(state).toHaveText("Thruster: running");
-    await page.getByRole("button", { name: "Stop all" }).click();
+    await page
+      .getByRole("button", {
+        name: target === "site" ? "Stop" : "Stop all",
+        exact: true,
+      })
+      .click();
     await expect(state).toHaveText("Thruster: stopped");
     if (target === "site")
       await expect(
         page
-          .getByRole("region", { name: "Procedural sound gallery" })
+          .getByRole("region", { name: "Interactive sound stage" })
           .getByRole("alert"),
       ).toHaveCount(0);
     else await expect(page.getByRole("alert")).toBeEmpty();
@@ -192,7 +217,18 @@ for (const target of ["site", "vanilla"] as const) {
       });
       document.dispatchEvent(new Event("visibilitychange"));
     });
-    await expect(state).toHaveText("Thruster: stopped");
+    await expect(state).toHaveText(
+      target === "site" ? "Thruster: ready" : "Thruster: stopped",
+    );
+    await expect
+      .poll(() =>
+        page.evaluate(() =>
+          (globalThis as unknown as { contexts: AudioContext[] }).contexts.map(
+            (context) => context.state,
+          ),
+        ),
+      )
+      .toEqual(["suspended"]);
     await page.evaluate(() => {
       Reflect.deleteProperty(document, "hidden");
     });

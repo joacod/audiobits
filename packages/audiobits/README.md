@@ -60,6 +60,6 @@ and limits. Exported types, `audiobits/schema.json`, and
 still requires `validateRecipe()`. Integration guidance also ships in the
 [AudioBits Skill](skill/SKILL.md).
 
-Current Chromium is the only automated browser verification target. Other
-browsers and operating systems are unverified. Automated checks do not establish
-subjective listening quality or physical-device compatibility.
+Automated browser checks cover current Chromium; other browsers and operating
+systems remain unverified. They do not establish listening quality or
+physical-device compatibility.

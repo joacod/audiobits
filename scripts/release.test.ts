@@ -73,7 +73,7 @@ test("stable documentation cannot promote private, prerelease or mismatched cand
   ).toThrow();
 });
 
-test("normal CI keeps PR quality separate from main-only Chromium integration", async () => {
+test("normal CI runs quality and full Chromium integration on PRs and main", async () => {
   const { createRequire } = await import("node:module");
   const require = createRequire(import.meta.url);
   const { load } = createRequire(require.resolve("eslint/package.json"))(
@@ -97,9 +97,7 @@ test("normal CI keeps PR quality separate from main-only Chromium integration", 
     "pnpm build",
     "pnpm exec publint packages/audiobits --strict",
   ]);
-  expect(ci.jobs["chromium-integration"].if).toBe(
-    "github.event_name == 'push' && github.ref == 'refs/heads/main'",
-  );
+  expect(ci.jobs["chromium-integration"].if).toBeUndefined();
   expect(
     ci.jobs["chromium-integration"].steps.flatMap(
       ({ run }: { run?: string }) => run ?? [],
@@ -110,6 +108,15 @@ test("normal CI keeps PR quality separate from main-only Chromium integration", 
     "bash scripts/ci/setup-linux-audio.sh",
     "pnpm test:browser --project=chromium",
   ]);
+  expect(ci.jobs["chromium-integration"].steps).toContainEqual({
+    uses: "actions/upload-artifact@v4",
+    if: "failure()",
+    with: {
+      name: "chromium-failures",
+      path: "test-results/",
+      "retention-days": 7,
+    },
+  });
   const { default: browser } = await import("../playwright.config");
   expect(browser.projects?.map(({ name }) => name)).toEqual(["chromium"]);
   expect(browser.retries).toBe(0);

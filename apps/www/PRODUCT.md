@@ -26,9 +26,7 @@ JSON recipes, typed controls and installed-version metadata.
 Eight bundled sounds exercise one-shots, sustained voices, play/live controls and
 seeded variation. One lazy engine per landing or gallery session; real caller-owned native
 analyser data; no autoplay. Runtime remains independent of website dependencies.
-AudioBits is available on npm. Current Chromium is the only automated browser
-verification target; other browsers and physical-device compatibility remain
-unverified. Fumadocs remains a separate reference experience.
+AudioBits is available on npm. Fumadocs remains a separate reference experience.
 
 ## Brand Commitments
 

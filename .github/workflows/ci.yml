@@ -27,7 +27,6 @@ jobs:
       - run: pnpm build
       - run: pnpm exec publint packages/audiobits --strict
   chromium-integration:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5

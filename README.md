@@ -48,9 +48,6 @@ to Stop and await `dispose()` when the host is removed. See the
 - Contribute: [local development and checks](docs/development.md),
   [architecture](docs/architecture.md), and [recipe invariants](docs/recipe-model.md).
 
-Current Chromium is the only automated browser verification target. Other
-browsers and operating systems are unverified. Automated checks do not establish
-subjective listening quality or physical-device compatibility; see
-[validation](docs/validation.md).
+See [browser verification and evidence limits](docs/validation.md#browser-policy).
 
 [MIT license](LICENSE).
