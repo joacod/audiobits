@@ -35,7 +35,18 @@ reserve capacity. Invalid options fail before stealing or graph allocation.
 
 Engine and per-sound limits are integers from 1–128. Oldest-voice stealing uses a
 5 ms output fade with at most one extra retiring voice. `audio.counts` separates
-reservations from retirees. At most 32 buses, including master, may be live.
+active/stopping reservations from retirees. Stopping voices retain capacity until
+cleanup; further steals finalize the previous retiree before creating another.
+`masterGainDb` accepts -60–0 dB; playback gain and pan default to 0.
+At most 32 buses, including master, may be live.
+
+## Errors
+
+`AudioBitsError` exposes `code` and validation `issues`. Invalid recipes use
+`invalid-recipe`; invalid controls use `invalid-control` and invalid seeds use
+`invalid-seed`. Playback before activation uses `not-ready`; failed activation
+uses retryable `start-failed`. See [Lifecycle](/docs/lifecycle) for gesture retry
+and cleanup. Control updates on a stopped or completed voice use `ended-voice`.
 
 ## Guides
 

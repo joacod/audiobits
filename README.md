@@ -1,32 +1,16 @@
 # AudioBits
 
-Browser-native procedural sound for games and interactive applications. Build
-and vary sounds from editable JSON recipes, with no downloaded audio assets and
-zero runtime dependencies.
+Browser-native procedural sound for games and interactive applications. Play
+bundled sounds or vary editable JSON recipes, with no downloaded audio assets
+and zero runtime dependencies.
 
-[Live website](https://audiobits.joacod.com/) ·
-[npm package](https://www.npmjs.com/package/audiobits)
+[Try the live gallery](https://audiobits.joacod.com/sounds) ·
+[npm package](https://www.npmjs.com/package/audiobits) ·
+[Documentation](https://audiobits.joacod.com/docs)
 
-Eight bundled sounds: confirmation, impact, thruster, tactile click, gentle
-rejection, glass notification, whoosh and power-up.
+## First playback
 
-## Try the gallery
-
-Use the Node version in [.node-version](.node-version) and the pnpm version
-in [package.json](package.json):
-
-```sh
-pnpm install --frozen-lockfile
-pnpm dev
-```
-
-Open [the local gallery](http://127.0.0.1:3000/sounds). Press Play, change the
-controls or seed, then open a sound workbench to edit its recipe and copy code. Audio starts only from a user
-gesture. The site includes the development API documentation.
-
-## Use the library
-
-For a separate browser application, install the registry package:
+Install in a browser application with a bundler:
 
 ```sh
 npm install audiobits
@@ -38,6 +22,7 @@ import { confirmation } from "audiobits/recipes";
 
 const audio = createAudio();
 const sound = audio.sound(confirmation);
+
 export async function play() {
   await audio.start();
   sound.play();
@@ -50,23 +35,22 @@ export async function dispose() {
 }
 ```
 
-Bind `play()` to a click handler and surface rejected activation, for example
-`void play().catch(showError)`. Stop cuts voices and effect tails; dispose when
-the host is removed. Use the [production lifecycle example](packages/audiobits/README.md#production-lifecycle)
-to handle pending activation, hiding and navigation.
+Construction is silent. Bind `play()` directly to a click handler and surface
+activation failures, for example `void play().catch(console.error)`. Bind `stop()`
+to Stop and await `dispose()` when the host is removed. See the
+[lifecycle guide](https://audiobits.joacod.com/docs/lifecycle) for hiding and navigation.
 
-The [package reference](packages/audiobits/README.md) covers recipe validation,
-live controls, buses and caller-owned native output taps. Shared effects are
-deferred. [Development](docs/development.md) explains local package edits
-and checks; [architecture](docs/architecture.md) describes ownership and limits.
+## Learn more
 
-## Verification
+- [Recipes and bundled sounds](https://audiobits.joacod.com/docs/recipes),
+  [controls and seeded replay](https://audiobits.joacod.com/docs/parameters), and
+  [routing](https://audiobits.joacod.com/docs/buses).
+- Contribute: [local development and checks](docs/development.md),
+  [architecture](docs/architecture.md), and [recipe invariants](docs/recipe-model.md).
 
 Current Chromium is the only automated browser verification target. Other
-browsers and operating systems are unverified and deliberately deferred.
-Automated checks do not establish subjective listening quality or physical-device
-compatibility; see [validation](docs/validation.md) for evidence limits.
+browsers and operating systems are unverified. Automated checks do not establish
+subjective listening quality or physical-device compatibility; see
+[validation](docs/validation.md).
 
-## License
-
-[MIT](LICENSE).
+[MIT license](LICENSE).

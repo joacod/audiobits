@@ -207,7 +207,16 @@ try {
       examples.push({ name, file, index, code: match[1] });
     }
   }
-  assert.equal(examples.length, 6, "Review any new documentation example");
+  const quickStarts = examples.filter(({ file }) => file === "README.md");
+  assert.equal(
+    quickStarts.length,
+    1,
+    "README must ship one canonical quick start",
+  );
+  assert.ok(
+    examples.some(({ file }) => file === "skill/references/controls.md"),
+    "Skill must ship its controlled sound example",
+  );
   run(
     process.execPath,
     [
@@ -254,26 +263,10 @@ try {
   );
   evidence.treeShaking = true;
   // Execute exact packaged host examples, adding only caller-owned signal probes.
-  for (const example of examples.filter(
-    ({ file, index }) => file !== "README.md" || index <= 1,
-  )) {
-    // The minimal quick start supplies setup and gesture-body statements;
-    // the host owns its click handler, Stop action and teardown.
-    const hostCode =
-      example.file === "README.md" && example.index === 0
-        ? example.code.replace(
-            "await audio.start();\nsound.play();",
-            `export async function play() {
-  await audio.start();
-  sound.play();
-}
-export function stop() { audio.stopAll({ tails: "cut" }); }
-export async function dispose() { await audio.dispose(); }`,
-          )
-        : example.code;
+  for (const example of examples) {
     await writeFile(
       join(consumer, `${example.name}-browser.ts`),
-      `${hostCode}
+      `${example.code}
 let context: AudioContext | undefined;
 let analyser: AnalyserNode | undefined;
 let detach: (() => void) | undefined;
@@ -350,9 +343,7 @@ Object.assign(globalThis, { probe });`,
     });
     browser = await chromium.launch();
     evidence.chromium = browser.version();
-    for (const example of examples.filter(
-      ({ file, index }) => file !== "README.md" || index <= 1,
-    )) {
+    for (const example of examples) {
       const page = await browser.newPage();
       const errors = [];
       page.on("pageerror", (error) => errors.push(error.message));

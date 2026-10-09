@@ -1,8 +1,11 @@
 # Architecture design
 
-Canonical architecture for the stable AudioBits package published on npm. The
-[package reference](../packages/audiobits/README.md) documents exact API limits;
-[recipe model](recipe-model.md) owns data semantics.
+Architecture and ownership invariants for AudioBits contributors. The
+[website API reference](https://audiobits.joacod.com/docs/api) explains public usage.
+Exported [API declarations](../packages/audiobits/src/runtime/engine.ts),
+[runtime implementation](../packages/audiobits/src/runtime/engine.ts), and generated
+[schema and capabilities](../packages/audiobits/src/recipe/) define supported
+contracts; [recipe model](recipe-model.md) explains data and compatibility invariants.
 
 ## Repository boundaries
 
@@ -102,7 +105,9 @@ resume on navigation. The engine does not impose this policy on every game/app.
 
 ## Bounds and mixing
 
-Voice limits and default gains are documented in the package reference. Stealing
+Voice options and defaults come from the exported declarations and
+[runtime validation](../packages/audiobits/src/runtime/engine.ts); the
+[API guide](https://audiobits.joacod.com/docs/api#playback-options) explains usage. Stealing
 fades the oldest eligible voice; keep at most one retiring voice beyond each
 applicable limit. Further steals finish the oldest retiring voice before creating
 another. Counters distinguish active and retiring resources so totals stay bounded.

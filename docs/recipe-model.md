@@ -1,8 +1,11 @@
 # Recipe model and runtime contract
 
-Canonical schema-1 semantics for the stable AudioBits package published on npm. Exact executable
-limits are in the [package reference](../packages/audiobits/README.md).
-The schema is published; authoring sketches are not capabilities.
+Schema-1 semantic and compatibility invariants for AudioBits contributors.
+Structural contracts come from the generated [recipe declarations](../packages/audiobits/src/recipe/generated.ts)
+and [schema](../packages/audiobits/src/recipe/schema.json). Contextual constraints
+and executable semantics come from [validation](../packages/audiobits/src/recipe/validate.ts),
+the compiler/runtime, and [tests](../packages/audiobits/tests/).
+Authoring sketches are not capabilities.
 
 ## Data boundary
 
@@ -20,8 +23,9 @@ Do not create an empty migration framework before a real migration exists.
 ## Structural reference
 
 Use the exported `recipeSchema`, `audiobits/schema.json`, and generated TypeScript
-declarations for fields and structural limits. The package reference describes
-supported sources, filters, envelopes and controls. Layer effects process their
+declarations for fields and structural limits. The
+[recipe guide](https://audiobits.joacod.com/docs/recipes) explains supported sources,
+filters, envelopes and controls. Layer effects process their
 layer before all layer outputs sum into recipe effects. Resource limits constrain
 allocation; they are not quality recommendations.
 
@@ -54,18 +58,17 @@ supports only `PointValue`, while envelopes and filter Q remain numeric.
 A mapping normalizes a named control within its declared min/max and maps it to
 the target range. Exponential mapping requires positive endpoints. Variation is
 uniform and sampled once per property per voice. Automation starts at time zero,
-has strictly increasing timestamps, and is limited to 128 points across the
-recipe. Exponential automation likewise requires positive resolved values.
+has strictly increasing timestamps, and has a bounded point budget. Exponential automation likewise requires positive resolved values.
 One-shot automation ends no later than gate close; sustained automation is an
 onset sequence of at most 60 seconds, then holds its final value.
 
 Frequency values are Hz, gain values dB, time seconds, and pan `[-1, 1]`.
-Frequency targets accept `[20, 20000]`; context-dependent checks reject values
-at or above Nyquist before allocating a voice. Playback gain/pan are numeric
+Frequency targets obey the generated bounds; context-dependent checks reject
+values at or above Nyquist before allocating a voice. Playback gain/pan are numeric
 options; transposition is not supported.
 
 Parameter declarations carry `min`, `max`, `default`, and `mode` (`play` or
-`live`). Live declarations also carry `smoothing` seconds in `[0.005, 1]`.
+`live`). Live declarations also carry bounded `smoothing` seconds.
 References must exist; supplied parameter names and values must be valid.
 Out-of-range values are rejected, not silently clamped. A mapping inside an
 automation point may reference only a `play` parameter, preventing ambiguity
@@ -83,8 +86,13 @@ An explicit unsigned 32-bit seed at play time reproduces variation choices and
 noise generation for the same normalized recipe and sample rate. Normalize
 property traversal deterministically. The implementation uses xorshift32 (shifts 13/17/5), mapping public seed zero internally
 to `0x6d2b79f5`, and rejects invalid seeds. Known-vector tests protect the stream.
-The [package reference](../packages/audiobits/README.md) specifies traversal,
-per-layer noise streams, sample-rate bounds, and resource ownership.
+The [compiler traversal](../packages/audiobits/src/compiler/plan.ts) resolves root
+effects, then layers in array order: gain, filters, source frequency, and noise
+seed. Automation points follow time order. Each variation consumes one draw;
+each noise layer consumes one draw for its own stream. Property insertion order
+must not affect replay. [Randomness and noise tests](../packages/audiobits/tests/dynamic.test.ts)
+protect these choices; [noise generation](../packages/audiobits/src/compiler/values.ts)
+and [graph ownership](../packages/audiobits/src/compiler/graph.ts) define buffer bounds and cleanup.
 Without a seed, the engine chooses a fresh one and exposes it on the voice for
 replay. Do not call unseeded randomness while rendering a seeded sound.
 
@@ -95,7 +103,7 @@ modulation, which is deferred.
 ## Effects
 
 The model supports a lowpass/highpass/bandpass filter with frequency and Q.
-Q is bounded to `[0.1, 20]`. Saturation remains unimplemented; listening has not
+Q obeys the generated bounds. Saturation remains unimplemented; listening has not
 established a need for it. Do not ship placeholder descriptors for unsupported effects.
 
 Shared effects are deferred; bus gain, mute and routing remain runtime
@@ -112,7 +120,7 @@ schema language. A build-time generator dependency is acceptable if its concrete
 benefit is demonstrated; keep it out of runtime dependencies.
 
 Validation returns all independent issues within bounded input size; cap input
-depth at 16, visited values at 10000, and issues at 100. Stop traversal on budget
+depth, visited values, and diagnostics using the validator's budgets. Stop traversal on budget
 exhaustion with a resource-limit issue. Detect cycles in JavaScript input before
 serialization and reject non-finite values before normalization.
 

@@ -8,7 +8,11 @@ description: Define a reusable sound with bounded versioned JSON data.
 A recipe is data, not a native graph or code.
 `defineSound()` throws on invalid data and returns a deeply frozen snapshot.
 `validateRecipe()` returns path-specific issues without throwing for invalid input.
-Both work without browser globals.
+Both work without browser globals. `validateRecipe(unknown)` returns
+`{ ok: true, recipe }` or `{ ok: false, issues }`. Each issue has `code`, `path`,
+and `message`; paths use JSON bracket notation such as `$["layers"][0]["id"]`.
+Inputs must be plain JSON data. The snapshot is copied, so later input mutations
+cannot change an existing definition.
 
 ```ts
 import { defineSound, validateRecipe } from "audiobits";
@@ -43,6 +47,15 @@ filters. Layer gains are -60–0 dB; frequencies are 20–20000 Hz and must be b
 the context's Nyquist frequency at play time. Filters are limited to eight across
 the recipe; frequency automation to 128 points. Gain automation, expression
 strings, file fetches, and sequencing are unsupported.
+
+One-shot duration ends the gate, excluding release and bounded filter tails.
+Attack and decay must fit within the gate, including the minimum effective
+attack; zero decay ramps directly to sustain. Frequency automation begins at
+zero, uses increasing times, and ends by gate close. Sustained automation is an
+onset sequence of at most 60 seconds, then holds its final value. All mapping
+and variation extrema must satisfy target bounds and playback Nyquist checks.
+Noise requires integer context sample rates from 8000 through 192000 Hz;
+unsupported rates fail with `noise-rate` before voice allocation.
 
 Validation rejects unknown fields and versions, non-finite numbers, accessors,
 cycles, depth beyond 16, more than 10000 visited values, and invalid parameter
