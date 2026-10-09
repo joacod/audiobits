@@ -73,51 +73,6 @@ test("stable documentation cannot promote private, prerelease or mismatched cand
   ).toThrow();
 });
 
-test("candidate workflows prepare independently and keep site deployment disabled", async () => {
-  const { createRequire } = await import("node:module");
-  const require = createRequire(import.meta.url);
-  // Use the YAML parser already required by the installed ESLint toolchain.
-  const { load } = createRequire(require.resolve("eslint/package.json"))(
-    "js-yaml",
-  ) as {
-    load(source: string): {
-      on: Record<string, unknown>;
-      permissions: { contents: string };
-      concurrency: { group: string; "cancel-in-progress": boolean };
-      jobs: Record<
-        string,
-        {
-          if?: string;
-          needs?: string;
-          environment?: string;
-          steps: { run?: string }[];
-        }
-      >;
-    };
-  };
-  const npm = load(readFileSync(".github/workflows/npm-candidate.yml", "utf8"));
-  const site = load(
-    readFileSync(".github/workflows/site-candidate.yml", "utf8"),
-  );
-  expect(npm.concurrency.group).not.toBe(site.concurrency.group);
-  expect(Object.keys(npm.jobs)).toEqual(["prepare"]);
-  for (const workflow of [npm, site]) {
-    expect(Object.keys(workflow.on)).toEqual(["workflow_dispatch"]);
-    expect(workflow.permissions.contents).toBe("read");
-    expect(workflow.concurrency["cancel-in-progress"]).toBe(false);
-  }
-  expect(site.jobs.deploy.if).toBe("${{ false }}");
-  expect(site.jobs.deploy.needs).toBe("prepare");
-  expect(site.jobs.deploy.environment).toBe("site-production");
-  expect(site.jobs.deploy.steps.at(-1)?.run).toContain("exit 1");
-  expect(
-    npm.jobs.prepare.steps.some(({ run }) => run === "pnpm release:prepare"),
-  ).toBe(true);
-  expect(
-    site.jobs.prepare.steps.some(({ run }) => run === "pnpm build:site"),
-  ).toBe(true);
-});
-
 test("normal CI keeps PR quality separate from main-only Chromium integration", async () => {
   const { createRequire } = await import("node:module");
   const require = createRequire(import.meta.url);
@@ -155,14 +110,6 @@ test("normal CI keeps PR quality separate from main-only Chromium integration", 
     "bash scripts/ci/setup-linux-audio.sh",
     "pnpm test:browser --project=chromium",
   ]);
-  const candidate = load(
-    readFileSync(".github/workflows/npm-candidate.yml", "utf8"),
-  );
-  expect(
-    candidate.jobs.prepare.steps.find(({ run }: { run?: string }) =>
-      run?.includes("playwright install"),
-    )?.run,
-  ).toBe("pnpm exec playwright install --with-deps chromium");
   const { default: browser } = await import("../playwright.config");
   expect(browser.projects?.map(({ name }) => name)).toEqual(["chromium"]);
   expect(browser.retries).toBe(0);
@@ -182,10 +129,7 @@ test("production release isolates direct npm publication from GitHub finalizatio
   expect(release.on).toHaveProperty("workflow_dispatch");
   expect(release.permissions).toEqual({});
   expect(release.concurrency["cancel-in-progress"]).toBe(false);
-  expect(release.concurrency.group).toBe(
-    load(readFileSync(".github/workflows/npm-candidate.yml", "utf8"))
-      .concurrency.group,
-  );
+  expect(release.concurrency.group).toBe("audiobits-npm-release");
   expect(release.jobs["select-mode"].if).toBe(
     "github.ref == 'refs/heads/main'",
   );
@@ -341,14 +285,6 @@ test("production release isolates direct npm publication from GitHub finalizatio
     'readFileSync("packages/audiobits/CHANGELOG.md", "utf8")',
   );
   expect(helper).not.toMatch(/npm publish|npm stage|NPM_TOKEN|NODE_AUTH_TOKEN/);
-  const candidate = load(
-    readFileSync(".github/workflows/npm-candidate.yml", "utf8"),
-  );
-  for (const job of Object.values(candidate.jobs) as {
-    permissions?: Record<string, string>;
-  }[]) {
-    expect(job.permissions?.["id-token"]).toBeUndefined();
-  }
 });
 
 test("automated versioning regenerates metadata only after Changesets succeeds", () => {

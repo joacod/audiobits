@@ -88,7 +88,7 @@ infrastructure or investigate unrelated failures for ordinary work. Full release
 preparation is reserved for an explicit release request.
 
 Normal CI checks quality; pushes to `main` also run Chromium integration.
-Manual candidate workflows and package publication are described in the
+The independent package publication flow is described in the
 [release guide](releases.md).
 
 The browser suite owns ports 3100 and 4173; neither may already be occupied.
