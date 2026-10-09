@@ -24,7 +24,7 @@ JSON recipes, typed controls and installed-version metadata.
 ## Capabilities and Constraints
 
 Eight bundled sounds exercise one-shots, sustained voices, play/live controls and
-seeded variation. One lazy engine per gallery session; real caller-owned native
+seeded variation. One lazy engine per landing or gallery session; real caller-owned native
 analyser data; no autoplay. Runtime remains independent of website dependencies.
 AudioBits is available on npm. Current Chromium is the only automated browser
 verification target; other browsers and physical-device compatibility remain
@@ -57,7 +57,9 @@ adequate contrast, reduced motion, mute and explicit Stop. No sound-only feedbac
 
 ## Route purposes
 
-- `/`: persuade through a glass-notification hero and two supporting sound moments.
+- `/`: persuade through a single interactive sound stage, then connect the selected
+  sound and controls to copyable integration code. Glass, Impact and Thruster
+  share one session; a compact four-sound preview leads to the collection.
 - `/sounds`: operate a light sound collection with a persistent audio monitor.
 - `/sounds/[slug]`: understand and customize one sound with playback variation and a tabbed inspector.
 - `/docs`: read the calm Fumadocs reference; marketing components do not enter it.

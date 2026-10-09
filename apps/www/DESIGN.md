@@ -103,11 +103,13 @@ components:
 
 ## Overview
 
-**Creative North Star: "Sonic specimen book"**
+**Creative North Star: "A sonic playground with the precision of a developer tool"**
 
 The sonic specimen book treats browser audio as something to hear, change and inspect. Warm paper, dark green ink and self-hosted Fraunces headings give the showcase a tactile editorial character; ordinary HTML controls keep the instrument precise.
 
-Ruled entries and restrained code panels carry the system across the home, collection and individual sound pages. Signal is living content derived from native audio output, and brass marks the controls that initiate playback or hold a pressed state. The separate Fumadocs reference experience keeps its own styling.
+A dedicated editorial landing pairs an expressive headline with a dark green
+sound stage and brass signal. Ruled entries and restrained code panels carry
+the collection and individual sound pages. Signal is living content derived from native audio output, and brass marks the controls that initiate playback or hold a pressed state. The separate Fumadocs reference experience keeps its own styling.
 
 **Key Characteristics:**
 
@@ -161,9 +163,15 @@ terminal chrome.
 ## Layout
 
 The page uses a centered content area of (76rem), with side gutters calculated as
-`max(1.5rem, calc((100vw - 76rem) / 2))`. The masthead wraps. Home pairs a glass
-interaction with fine ink threads, then two supporting sounds. The eight-sound
-teaser is a compact two-column typographic index, collapsing to one on phones.
+`max(1.5rem, calc((100vw - 76rem) / 2))`. The masthead wraps. The landing pairs a large, balanced headline with a concise
+product explanation, links and installation command. Its full-width dark stage
+holds three selectors, a measured-signal portrait and a compact control area.
+The connected workflow pairs three verbs with code reflecting the selected sound
+and values. A four-sound ruled preview, short differentiators and an ink footer
+complete discovery. At (760px) and below the stage stacks with a (96px) portrait,
+keeping Play within the first screen at a (375px × 844px) viewport. The preview
+uses two columns below (1000px). Landing styles live in a dedicated stylesheet
+under `.landing`; collection, workbench and Fumadocs keep their layouts.
 
 Collection and workbench pair flexible sound content with an (18rem) monitor rail
 and a (3rem) gap. From (761px) to (1000px), the rail is (16rem) and gap (1.5rem).
@@ -234,7 +242,11 @@ the wordmark occupies its own row; masthead link boxes use the implemented
 
 The monitor pairs an ink waveform with current/last sound, engine state, effects
 volume, Mute and Stop all. Portraits use paper and ink with three reusable forms:
-pulse ellipses, harmonic bands and flowing lines. The home has one thread field.
+pulse ellipses, harmonic bands and flowing lines. The landing reuses these
+families on ink with a brass signal; its selectors switch sound without playback.
+Switching cuts current voices. Play retriggers one-shots; sustained sound has
+explicit Start and Stop, with live throttle. Brightness and intensity apply on
+the next Play. Mute, visible playback state and inline errors remain in the stage.
 Static portrait geometry is illustrative; live displacement follows native output.
 The monitor is the literal waveform, with labelled display gain. Both stop drawing
 offscreen, while hidden and under reduced motion.
@@ -263,7 +275,8 @@ Seed, Randomize and Reset variation belong with playback, above the inspector.
 - **Don't** replace waveform data with a decorative looping signal.
 - **Don't** apply the showcase stylesheet as a redesign of the separate Fumadocs reference experience.
 
-Source of truth: [global styles](app/globals.css), [gallery](app/gallery-page.tsx),
+Source of truth: [global styles](app/globals.css), [landing styles](app/landing.css),
+[landing](app/page.tsx), [sound stage](app/landing-experience.tsx), [gallery](app/gallery-page.tsx),
 [sound specimens](app/sound-card.tsx), [output scope](app/output-scope.tsx) and
 [Play response](app/play-spark.tsx). This record describes the showcase, not the
 separate Fumadocs theme. Small utility captions and the mobile masthead's (32px)
