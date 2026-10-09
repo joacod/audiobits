@@ -1,5 +1,11 @@
 # audiobits
 
+## 0.1.4
+
+### Patch Changes
+
+- 5340645: Simplify the package README to a tested quick start and direct detailed guidance to the website docs. Clarify installed-version authority in the shipped integration Skill.
+
 ## 0.1.3
 
 ### Patch Changes
