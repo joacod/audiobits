@@ -100,6 +100,33 @@ const probe = (page: Page) =>
     };
   });
 
+test("idle showcase controls stay silent and never read activation-only getters", async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on("pageerror", (cause) => errors.push(cause.message));
+  await instrument(page);
+  const start = page.getByRole("button", {
+    name: "Start thruster",
+    exact: true,
+  });
+  await expect(start).toBeEnabled();
+  await page.getByRole("button", { name: "Mute", exact: true }).click();
+  await page.getByRole("button", { name: "Stop all", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Release thruster", exact: true })
+    .click();
+  await page.getByRole("slider", { name: "Throttle", exact: true }).fill("0.8");
+  expect((await probe(page)).contexts).toEqual([]);
+  expect(errors).toEqual([]);
+  await page.getByRole("button", { name: "Mute", exact: true }).click();
+  await start.click();
+  await expect(page.locator(".flight-state")).toHaveText("Thruster: running");
+  await page.getByRole("button", { name: "Stop all", exact: true }).click();
+  await expect(page.locator(".flight-state")).toHaveText("Thruster: stopped");
+  expect(errors).toEqual([]);
+});
+
 test("showcase pointer, keyboard, impact, mute and navigation own their lifecycle", async ({
   page,
 }) => {

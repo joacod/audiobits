@@ -11,7 +11,7 @@ export function OutputScope({
   active,
   family,
 }: {
-  engine: AudioEngine | null;
+  engine: AudioEngine | null | (() => AudioEngine | null);
   active: boolean;
   family?: VisualFamily;
 }) {
@@ -38,13 +38,14 @@ export function OutputScope({
       surface.dataset.peak = "0";
     };
     clear();
-    if (!engine || !active || engine.state !== "running") return;
+    const audio = typeof engine === "function" ? engine() : engine;
+    if (!audio || !active || audio.state !== "running") return;
     const motion = matchMedia("(prefers-reduced-motion: reduce)");
     let analyser: AnalyserNode;
     let detach: () => void;
     // Optional display failure must leave the already-running sound alone.
     try {
-      const native = engine.native;
+      const native = audio.native;
       analyser = native.context.createAnalyser();
       analyser.fftSize = 1024;
       detach = native.connect(analyser);
@@ -59,7 +60,7 @@ export function OutputScope({
         !visible ||
         document.hidden ||
         motion.matches ||
-        engine.state !== "running"
+        audio.state !== "running"
       ) {
         clear();
         return;

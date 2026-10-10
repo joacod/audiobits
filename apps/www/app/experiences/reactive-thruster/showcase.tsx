@@ -1,10 +1,17 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { mountThruster } from "../../../../../catalog/reactive-thruster/host";
 import { OutputScope } from "../../output-scope";
 
 type Host = ReturnType<typeof mountThruster>;
+const subscribeHydration = () => () => {};
 export function ThrusterShowcase({
   sources,
 }: {
@@ -14,13 +21,17 @@ export function ThrusterShowcase({
   const craft = useRef<HTMLDivElement>(null);
   const meter = useRef<HTMLOutputElement>(null);
   const host = useRef<Host | null>(null);
-  const [engine, setEngine] = useState<Host["audio"] | null>(null);
+  const readEngine = useCallback(() => host.current?.audio ?? null, []);
   const [state, setState] = useState("stopped");
   const [active, setActive] = useState(false);
   const [muted, setMuted] = useState(false);
   const [error, setError] = useState("");
   const [throttle, setThrottle] = useState(0.2);
-  const [ready, setReady] = useState(false);
+  const ready = useSyncExternalStore(
+    subscribeHydration,
+    () => true,
+    () => false,
+  );
   const [copyState, setCopyState] = useState("");
   useEffect(() => {
     const current = mountThruster(pad.current!, {
@@ -43,8 +54,6 @@ export function ThrusterShowcase({
       },
     });
     host.current = current;
-    setEngine(current.audio);
-    setReady(true);
     return () => {
       host.current = null;
       void current.dispose().catch(console.error);
@@ -162,7 +171,7 @@ export function ThrusterShowcase({
           </p>
           {error && <p role="alert">{error}</p>}
           <OutputScope
-            engine={engine}
+            engine={readEngine}
             active={active && !muted}
             family="flow"
           />
