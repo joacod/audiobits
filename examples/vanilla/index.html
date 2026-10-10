@@ -35,7 +35,28 @@
           value="0.5"
       /></label>
       <button id="impact">Play impact</button>
-      <h2>Thruster</h2>
+      <h2>Reactive thruster</h2>
+      <p id="pointer-help">
+        Hold and drag in the pad. Faster movement increases thrust; release
+        stops it. You can also use Start, the Throttle slider, and Stop with the
+        keyboard.
+      </p>
+      <div
+        id="pointer-thruster"
+        role="region"
+        aria-label="Pointer thruster"
+        aria-describedby="pointer-help"
+        style="
+          touch-action: none;
+          user-select: none;
+          border: 2px solid;
+          padding: 3rem;
+          max-width: 30rem;
+        "
+      >
+        Drag here
+      </div>
+      <p>Motion throttle: <output id="motion-throttle">0.00</output></p>
       <label
         >Throttle
         <input

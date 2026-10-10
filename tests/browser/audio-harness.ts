@@ -1,3 +1,4 @@
+import { reactiveThruster } from "../../catalog/reactive-thruster/recipe";
 // Browser-only test bundle. Internal compiler access does not add a public API.
 import { compile } from "../../packages/audiobits/src/compiler/plan";
 import { createGraph } from "../../packages/audiobits/src/compiler/graph";
@@ -202,14 +203,19 @@ Object.assign(globalThis, { blockedActivation });
 
 async function dynamicSignal(
   rate: number,
-  kind: "impact" | "thruster",
+  kind: "impact" | "thruster" | "reactive-thruster",
   control: number,
   update = false,
   cancel = false,
   count = 1,
   stopAt = 2.2,
 ) {
-  const recipe = kind === "impact" ? impact : thruster;
+  const recipe =
+    kind === "impact"
+      ? impact
+      : kind === "reactive-thruster"
+        ? reactiveThruster
+        : thruster;
   const name = kind === "impact" ? "intensity" : "throttle";
   const context = new OfflineAudioContext(1, rate * 3, rate);
   let finished = 0;
@@ -229,7 +235,7 @@ async function dynamicSignal(
   const graph = graphs[0];
   if (cancel) graphs.forEach((graph) => graph.stop());
   const pauses: Promise<void>[] = [];
-  if (kind === "thruster" && !cancel) {
+  if (kind !== "impact" && !cancel) {
     if (update) {
       for (const [time, value] of [
         [0.4, 1],
@@ -262,16 +268,26 @@ async function dynamicSignal(
     delta = 0,
     seamDelta = 0,
     seamRms = 0,
-    steadyRms = 0;
+    steadyRms = 0,
+    differenceEnergy = 0,
+    releaseEnergy = 0,
+    afterRelease = 0;
   let checksum = 2166136261;
   const bits = new Uint32Array(data.buffer);
   for (let i = 0; i < data.length; i++) {
     require(Number.isFinite(data[i]), "Nonfinite dynamic output");
     peak = Math.max(peak, Math.abs(data[i]));
     energy += data[i] ** 2;
+    if (i / rate > stopAt + 0.02 && i / rate < stopAt + 0.15)
+      releaseEnergy += data[i] ** 2;
+    if (i / rate > stopAt + 0.32)
+      afterRelease = Math.max(afterRelease, Math.abs(data[i]));
     if (i < rate * 0.05) onset = Math.max(onset, Math.abs(data[i]));
     if (i > rate * 2.5) tail = Math.max(tail, Math.abs(data[i]));
-    if (i) delta = Math.max(delta, Math.abs(data[i] - data[i - 1]));
+    if (i) {
+      delta = Math.max(delta, Math.abs(data[i] - data[i - 1]));
+      differenceEnergy += (data[i] - data[i - 1]) ** 2;
+    }
     // First loop wraps at onset + 1 s, subsequent loops have 0.98 s period.
     if (Math.abs(i / rate - 1.05) < 0.025) {
       if (i) seamDelta = Math.max(seamDelta, Math.abs(data[i] - data[i - 1]));
@@ -294,6 +310,9 @@ async function dynamicSignal(
     seamRms: Math.sqrt(seamRms / (rate * 0.05)),
     steadyRms: Math.sqrt(steadyRms / (rate * 0.05)),
     checksum,
+    brightness: energy > 0 ? differenceEnergy / energy : 0,
+    releaseEnergy,
+    afterRelease,
     finished,
   };
 }

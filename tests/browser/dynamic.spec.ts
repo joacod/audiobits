@@ -183,7 +183,7 @@ for (const target of ["site", "vanilla"] as const) {
         () => (globalThis as unknown as { sources: unknown[] }).sources.length,
       ),
     ).toBe(count);
-    expect(count).toBe(8);
+    expect(count).toBe(target === "vanilla" ? 9 : 8);
     await page
       .getByRole("button", {
         name: target === "site" ? "Stop" : "Stop thruster",
