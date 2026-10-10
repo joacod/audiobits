@@ -1,0 +1,171 @@
+@layer components {
+  .energy-showcase .energy-intro {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 3rem;
+    align-items: end;
+    padding: 3rem 0;
+  }
+  .energy-showcase h1 {
+    font-size: clamp(3rem, 6vw, 5.25rem);
+  }
+  .energy-showcase .energy-stage {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    background: var(--ink);
+    color: var(--paper);
+    --focus: var(--signal);
+    --instrument-signal-fg: var(--signal);
+    --instrument-signal-surface: transparent;
+    --instrument-signal-caption: #cfdbcf;
+    --instrument-signal-rule: #768b7d;
+  }
+  .energy-showcase .energy-pad {
+    position: relative;
+    min-height: 32rem;
+    background: transparent;
+    color: var(--signal);
+    border: 0;
+    border-right: 1px solid #768b7d;
+    touch-action: none;
+    user-select: none;
+    cursor: pointer;
+    overflow: hidden;
+  }
+  .energy-showcase .energy-core {
+    position: absolute;
+    width: 17rem;
+    height: 17rem;
+    top: 45%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border: 1px solid currentColor;
+    border-radius: 50%;
+    background: repeating-radial-gradient(
+      circle,
+      transparent 0 24px,
+      #768b7d 25px 26px,
+      transparent 27px 40px
+    );
+  }
+  .energy-showcase .energy-core span {
+    position: absolute;
+    inset: 25%;
+    border-radius: 50%;
+    background: var(--signal);
+    opacity: calc(0.15 + var(--charge) * 0.85);
+    transform: scale(calc(0.35 + var(--charge) * 0.65));
+    box-shadow: 0 0 calc(var(--charge) * 70px) var(--signal);
+    transition:
+      opacity 80ms,
+      transform 80ms;
+  }
+  .energy-showcase .energy-pad[data-full="true"] .energy-core {
+    border-width: 3px;
+  }
+  .energy-showcase .energy-pad[data-state="stopped"] .energy-core span {
+    opacity: 0.15;
+  }
+  .energy-showcase .energy-readout {
+    position: absolute;
+    bottom: 2rem;
+    left: 0;
+    right: 0;
+    font-size: 3rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .energy-showcase .energy-readout small {
+    display: block;
+    font-size: 1rem;
+  }
+  .energy-showcase .energy-controls {
+    padding: 2rem;
+    min-width: 0;
+  }
+  .energy-showcase h2 {
+    font-size: clamp(2rem, 4vw, 3.4rem);
+  }
+  .energy-showcase .energy-controls button:not(.play-action) {
+    color: var(--paper);
+    border-color: #768b7d;
+  }
+  .energy-showcase .audio-controls {
+    flex-wrap: wrap;
+    margin: 1rem 0;
+  }
+  .energy-showcase input {
+    display: block;
+    width: 100%;
+    accent-color: var(--signal);
+  }
+  .energy-showcase .sound-portrait {
+    background: transparent;
+    color: var(--paper);
+  }
+  .energy-showcase .sound-portrait canvas {
+    height: 8rem;
+    color: var(--signal);
+  }
+  .energy-showcase .sound-portrait figcaption {
+    color: #cfdbcf;
+    border-color: #768b7d;
+  }
+  .energy-showcase .energy-safety {
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    background: var(--paper);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .energy-showcase .energy-source {
+    max-width: 70ch;
+    padding: 3rem 0;
+  }
+  .energy-showcase pre {
+    max-width: 100%;
+    overflow: auto;
+    background: var(--code);
+    padding: 1.25rem;
+    font-size: 0.8rem;
+  }
+  .energy-showcase details {
+    padding: 1rem 0;
+    border-top: 1px solid var(--rule);
+  }
+  .energy-showcase summary {
+    cursor: pointer;
+    padding: 0.5rem 0;
+  }
+  @media (max-width: 760px) {
+    .energy-showcase .energy-intro,
+    .energy-showcase .energy-stage {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+    .energy-showcase .energy-pad {
+      min-height: 25rem;
+      border-right: 0;
+    }
+    .energy-showcase .energy-core {
+      width: 15rem;
+      height: 15rem;
+      top: 40%;
+    }
+    .energy-showcase .energy-controls {
+      padding: 1.5rem;
+    }
+    .energy-showcase .energy-safety > span {
+      max-width: 20ch;
+      font-size: 0.8rem;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .energy-showcase .energy-core span {
+      transform: none;
+      transition: none;
+    }
+  }
+}

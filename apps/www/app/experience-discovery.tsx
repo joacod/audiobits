@@ -1,5 +1,8 @@
 import Link from "next/link";
-import { reactiveThrusterExperience as experience } from "../lib/experiences";
+import {
+  reactiveThrusterExperience as experience,
+  energyChargeExperience,
+} from "../lib/experiences";
 import "./experiences/reactive-thruster/showcase.css";
 
 export function ExperienceDiscovery() {
@@ -15,7 +18,11 @@ export function ExperienceDiscovery() {
           small runtime, ready for both.
         </p>
       </div>
-      <Link href={experience.href}>Try the reactive thruster</Link>
+      <div>
+        <Link href={experience.href}>Try the reactive thruster</Link>
+        <br />
+        <Link href={energyChargeExperience.href}>Try energy charge</Link>
+      </div>
     </section>
   );
 }

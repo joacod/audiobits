@@ -93,6 +93,13 @@ try {
       join(consumer, name),
     );
   }
+  await mkdir(join(consumer, "energy-charge"));
+  for (const name of ["recipe.ts", "progress.ts", "host.ts", "index.html"]) {
+    await copyFile(
+      join(root, "catalog/energy-charge", name),
+      join(consumer, "energy-charge", name),
+    );
+  }
   run(
     process.execPath,
     [
@@ -106,6 +113,7 @@ try {
       "--target",
       "ES2022",
       "host.ts",
+      "energy-charge/host.ts",
     ],
     consumer,
   );
@@ -354,10 +362,34 @@ Object.assign(globalThis, { probe });`,
     dts: false,
     clean: false,
   });
+  await build({
+    entry: [join(consumer, "energy-charge/host.ts")],
+    format: "esm",
+    platform: "browser",
+    target: "es2022",
+    outDir: join(browserOutput, "energy-charge"),
+    dts: false,
+    clean: false,
+  });
+  const energyHtml = (
+    await readFile(join(consumer, "energy-charge/index.html"), "utf8")
+  ).replace('"./host.ts"', '"./energy-charge/host.js"');
   const thrusterHtml = (
     await readFile(join(consumer, "index.html"), "utf8")
   ).replace('"./host.ts"', '"./host.js"');
   const server = createServer(async (request, response) => {
+    if (request.url === "/energy") {
+      response.setHeader("Content-Type", "text/html");
+      response.end(energyHtml);
+      return;
+    }
+    if (request.url === "/energy-charge/host.js") {
+      response.setHeader("Content-Type", "text/javascript");
+      response.end(
+        await readFile(join(browserOutput, "energy-charge/host.js")),
+      );
+      return;
+    }
     if (request.url === "/thruster") {
       response.setHeader("Content-Type", "text/html");
       response.end(thrusterHtml);
@@ -419,6 +451,59 @@ Object.assign(globalThis, { probe });`,
       assert.deepEqual(errors, []);
       evidence.browser.push({
         file: "catalog/reactive-thruster/index.html",
+        independentHost: true,
+        closed: true,
+      });
+      await page.close();
+    }
+    {
+      const page = await browser.newPage();
+      const errors = [];
+      page.on("pageerror", (error) => errors.push(error.message));
+      await page.addInitScript(() => {
+        globalThis.energyContexts = [];
+        const Native = globalThis.AudioContext;
+        globalThis.AudioContext = class extends Native {
+          constructor() {
+            super();
+            globalThis.energyContexts.push(this);
+          }
+        };
+      });
+      await page.goto(`http://127.0.0.1:${server.address().port}/energy`);
+      assert.deepEqual(
+        await page.evaluate(() => globalThis.energyContexts.length),
+        0,
+      );
+      await page
+        .getByRole("button", { name: "Start charge", exact: true })
+        .click();
+      await expect(page.locator("#status")).toHaveText("running");
+      for (const value of ["1", "0.3", "0.3", "0.8"]) {
+        await page
+          .getByRole("slider", { name: "Charge", exact: true })
+          .fill(value);
+        await expect(page.locator("#status")).toHaveText("running");
+      }
+      await page.getByRole("button", { name: "Release charge" }).click();
+      await expect(page.locator("#status")).toHaveText("stopped");
+      await page
+        .getByRole("button", { name: "Start charge", exact: true })
+        .click();
+      await expect(page.locator("#status")).toHaveText("running");
+      await page.getByRole("button", { name: "Stop all" }).click();
+      await expect(page.locator("#status")).toHaveText("stopped");
+      await page.evaluate(() =>
+        globalThis.window.dispatchEvent(new globalThis.Event("pagehide")),
+      );
+      await expect
+        .poll(() =>
+          page.evaluate(() => globalThis.energyContexts.map((c) => c.state)),
+        )
+        .toEqual(["closed"]);
+      assert.deepEqual(errors, []);
+      evidence.browser.push({
+        file: "catalog/energy-charge/index.html",
         independentHost: true,
         closed: true,
       });

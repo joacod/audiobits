@@ -7,3 +7,12 @@ export const reactiveThrusterExperience = {
   relatedSounds: ["thruster", "impact"],
   sourceFiles: ["recipe.ts", "pointer.ts", "host.ts", "index.html"],
 } as const;
+
+export const energyChargeExperience = {
+  title: "Energy charge",
+  href: "/experiences/energy-charge",
+  description: "Hold to build energy. Shape the sound with progress.",
+  controls: ["Hold to charge", "Progress"],
+  relatedSounds: [],
+  sourceFiles: ["recipe.ts", "progress.ts", "host.ts", "index.html"],
+} as const;

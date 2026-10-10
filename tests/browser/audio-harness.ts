@@ -1,3 +1,4 @@
+import { energyCharge } from "../../catalog/energy-charge/recipe";
 import { reactiveThruster } from "../../catalog/reactive-thruster/recipe";
 // Browser-only test bundle. Internal compiler access does not add a public API.
 import { compile } from "../../packages/audiobits/src/compiler/plan";
@@ -203,7 +204,7 @@ Object.assign(globalThis, { blockedActivation });
 
 async function dynamicSignal(
   rate: number,
-  kind: "impact" | "thruster" | "reactive-thruster",
+  kind: "impact" | "thruster" | "reactive-thruster" | "energy-charge",
   control: number,
   update = false,
   cancel = false,
@@ -215,22 +216,26 @@ async function dynamicSignal(
       ? impact
       : kind === "reactive-thruster"
         ? reactiveThruster
-        : thruster;
-  const name = kind === "impact" ? "intensity" : "throttle";
+        : kind === "energy-charge"
+          ? energyCharge
+          : thruster;
+  const name =
+    kind === "impact"
+      ? "intensity"
+      : kind === "energy-charge"
+        ? "charge"
+        : "throttle";
   const context = new OfflineAudioContext(1, rate * 3, rate);
   let finished = 0;
+  let stoppedAt = stopAt;
+  const plan = compile(recipe, { [name]: control }, 42);
+  const releaseDuration =
+    Math.max(...recipe.layers.map((layer) => layer.envelope.release)) +
+    plan.filterTail;
   const graphs = Array.from({ length: count }, () =>
-    createGraph(
-      context,
-      context.destination,
-      compile(recipe, { [name]: control }, 42),
-      0.05,
-      -12,
-      0,
-      () => {
-        finished++;
-      },
-    ),
+    createGraph(context, context.destination, plan, 0.05, -12, 0, () => {
+      finished++;
+    }),
   );
   const graph = graphs[0];
   if (cancel) graphs.forEach((graph) => graph.stop());
@@ -245,7 +250,7 @@ async function dynamicSignal(
       ]) {
         pauses.push(
           context.suspend(time).then(() => {
-            graph.set({ throttle: value });
+            graph.set({ [name]: value });
             return context.resume();
           }),
         );
@@ -253,6 +258,7 @@ async function dynamicSignal(
     }
     pauses.push(
       context.suspend(stopAt).then(() => {
+        stoppedAt = context.currentTime;
         graph.stop();
         return context.resume();
       }),
@@ -280,10 +286,11 @@ async function dynamicSignal(
     energy += data[i] ** 2;
     if (i / rate > stopAt + 0.02 && i / rate < stopAt + 0.15)
       releaseEnergy += data[i] ** 2;
-    if (i / rate > stopAt + 0.32)
+    if (i / rate > stoppedAt + releaseDuration)
       afterRelease = Math.max(afterRelease, Math.abs(data[i]));
     if (i < rate * 0.05) onset = Math.max(onset, Math.abs(data[i]));
-    if (i > rate * 2.5) tail = Math.max(tail, Math.abs(data[i]));
+    if (i / rate > Math.max(2.5, stoppedAt + releaseDuration))
+      tail = Math.max(tail, Math.abs(data[i]));
     if (i) {
       delta = Math.max(delta, Math.abs(data[i] - data[i - 1]));
       differenceEnergy += (data[i] - data[i - 1]) ** 2;
