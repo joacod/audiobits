@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Energy charge</title>
+  <h1>Energy charge</h1>
+  <p>Start, then supply progress. Full charge holds until release.</p>
+  <button id="start">Start charge</button>
+  <button id="release">Release charge</button>
+  <button id="stop">Stop all</button>
+  <button id="mute" aria-pressed="false">Mute</button>
+  <label
+    >Charge
+    <input id="charge" type="range" min="0" max="1" step="0.01" value="0"
+  /></label>
+  <p id="status" role="status">stopped</p>
+  <p id="error" role="alert"></p>
+  <script type="module">
+    import { mountEnergyCharge } from "./host.ts";
+    const slider = document.querySelector("#charge");
+    const error = document.querySelector("#error");
+    const host = mountEnergyCharge({
+      state(value) {
+        document.querySelector("#status").textContent = value;
+        if (value === "starting") error.textContent = "";
+      },
+      error(cause) {
+        error.textContent = `${String(cause)}. Try Start charge again.`;
+      },
+    });
+    document.querySelector("#start").onclick = () =>
+      host.start(Number(slider.value));
+    slider.oninput = () => host.setCharge(Number(slider.value));
+    document.querySelector("#release").onclick = host.release;
+    document.querySelector("#stop").onclick = host.stop;
+    let muted = false;
+    document.querySelector("#mute").onclick = (event) => {
+      muted = !muted;
+      host.mute(muted);
+      event.target.setAttribute("aria-pressed", String(muted));
+    };
+    // In an SPA, call await host.dispose() when removing the view.
+  </script>
+</html>
