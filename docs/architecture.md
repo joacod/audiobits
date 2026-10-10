@@ -21,6 +21,7 @@ packages/audiobits/
   tests/                   Unit and type checks
   skill/                   Installed-version consumer guidance
 examples/vanilla/          Private consumer using only public package exports
+catalog/                  Portable examples verified against the built package
 docs/                     Contributor architecture and operational guides
 ```
 
