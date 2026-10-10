@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ExperienceDiscovery } from "./experience-discovery";
 import { SoundGallery } from "./sound-gallery";
 import { siteBuild, rawExampleSource } from "../lib/site-build";
 import { soundInfo, soundKinds } from "../lib/gallery";
@@ -54,6 +55,7 @@ export function GalleryPage({ selected }: { selected?: SoundKind }) {
           </nav>
         )}
       </header>
+      {!selected && <ExperienceDiscovery />}
       <SoundGallery
         key={selected ?? "collection"}
         rawSource={selected ? rawExampleSource() : ""}

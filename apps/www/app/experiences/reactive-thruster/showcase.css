@@ -1,0 +1,232 @@
+@layer components {
+  .thruster-showcase .thruster-intro {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 3rem;
+    align-items: end;
+    padding: 3rem 0;
+  }
+  .thruster-showcase .thruster-intro h1 {
+    font-size: clamp(3rem, 6vw, 5.25rem);
+  }
+  .thruster-showcase .thruster-intro p {
+    max-width: 38ch;
+  }
+  .thruster-showcase .flight-stage {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    background: var(--ink);
+    color: var(--paper);
+    --focus: var(--signal);
+    --instrument-signal-fg: var(--signal);
+    --instrument-signal-surface: transparent;
+    --instrument-signal-caption: #cfdbcf;
+    --instrument-signal-rule: #768b7d;
+  }
+  .thruster-showcase .flight-pad {
+    position: relative;
+    min-height: 32rem;
+    overflow: hidden;
+    touch-action: none;
+    cursor: grab;
+    border-right: 1px solid #768b7d;
+    user-select: none;
+  }
+  .thruster-showcase .flight-pad[data-state="running"] {
+    cursor: grabbing;
+  }
+  .thruster-showcase .flight-orbit {
+    position: absolute;
+    inset: 12% 10%;
+    border: 1px solid #768b7d;
+    border-radius: 50%;
+    transform: rotate(-25deg);
+  }
+  .thruster-showcase .flight-orbit::after {
+    content: "";
+    position: absolute;
+    inset: 15%;
+    border: 1px solid #768b7d;
+    border-radius: 50%;
+  }
+  .thruster-showcase .flight-craft {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 6rem;
+    transform: translate(-50%, -50%);
+    color: var(--signal);
+    --thrust: 0;
+  }
+  .thruster-showcase .flight-craft svg {
+    width: 100%;
+    fill: var(--ink);
+    stroke: currentColor;
+    stroke-width: 2;
+  }
+  .thruster-showcase .exhaust {
+    fill: var(--signal);
+    stroke: none;
+    transform-origin: 50px 87px;
+    transform: scaleY(calc(0.2 + var(--thrust) * 1.4));
+    opacity: 0;
+    transition: opacity 280ms ease-out;
+  }
+  .thruster-showcase .flight-pad[data-state="running"] .exhaust {
+    opacity: 0.9;
+  }
+  .thruster-showcase .flight-invitation {
+    position: absolute;
+    bottom: 1.5rem;
+    left: 1.5rem;
+    right: 1.5rem;
+    font-family: "Fraunces", Georgia, serif;
+    font-size: 1.5rem;
+  }
+  .thruster-showcase .flight-readout {
+    position: absolute;
+    top: 1.5rem;
+    left: 1.5rem;
+    display: flex;
+    gap: 1rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .thruster-showcase .flight-controls {
+    padding: 2rem;
+    min-width: 0;
+  }
+  .thruster-showcase .flight-controls h2 {
+    font-size: 2.25rem;
+    margin-top: 0;
+  }
+  .thruster-showcase .flight-controls .audio-controls {
+    flex-wrap: wrap;
+    margin: 1.5rem 0;
+  }
+  .thruster-showcase .flight-controls button:not(.play-action) {
+    color: var(--paper);
+    border-color: #768b7d;
+  }
+  .thruster-showcase .flight-controls button:not(.play-action):hover:enabled {
+    background: #344e40;
+  }
+  .thruster-showcase .flight-controls input {
+    display: block;
+    width: 100%;
+    accent-color: var(--signal);
+  }
+  .thruster-showcase .flight-controls .output-scope {
+    margin-top: 1.5rem;
+  }
+  .thruster-showcase .flight-controls .sound-portrait {
+    background: transparent;
+    color: var(--paper);
+  }
+  .thruster-showcase .flight-controls .sound-portrait canvas {
+    height: 8rem;
+    color: var(--signal);
+  }
+  .thruster-showcase .flight-controls .sound-portrait figcaption {
+    border-color: #768b7d;
+  }
+  .thruster-showcase .flight-state {
+    font-variant-numeric: tabular-nums;
+  }
+  .thruster-showcase .flight-safety {
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    background: var(--paper);
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .thruster-showcase .thruster-source {
+    padding: 4rem 0 2rem;
+    max-width: 70ch;
+  }
+  .thruster-showcase .thruster-source h2,
+  .thruster-showcase .thruster-related h2 {
+    font-size: clamp(2rem, 4vw, 3.4rem);
+  }
+  .thruster-showcase .thruster-source pre {
+    max-width: 100%;
+    overflow: auto;
+    padding: 1.25rem;
+    background: var(--code);
+    font-size: 0.8rem;
+  }
+  .thruster-showcase .thruster-source details {
+    border-top: 1px solid var(--rule);
+    padding: 1rem 0;
+  }
+  .thruster-showcase .thruster-source summary {
+    cursor: pointer;
+    padding: 0.5rem 0;
+  }
+  .thruster-showcase .thruster-related {
+    border-top: 1px solid var(--rule);
+    padding: 2rem 0;
+  }
+  .foundation .experience-discovery {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+    padding: 2rem 0;
+    margin: 2rem 0;
+    border-block: 1px solid var(--rule);
+  }
+  .foundation .experience-discovery h2 {
+    font-size: clamp(2rem, 4vw, 3.4rem);
+    margin: 0 0 0.75rem;
+  }
+  .foundation .experience-discovery p {
+    max-width: 55ch;
+  }
+  .foundation .experience-discovery a {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    font-weight: 600;
+  }
+  @media (max-width: 760px) {
+    .thruster-showcase .thruster-intro,
+    .thruster-showcase .flight-stage {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+    .thruster-showcase .thruster-intro {
+      padding: 2rem 0;
+    }
+    .thruster-showcase .flight-pad {
+      min-height: 20rem;
+      border-right: 0;
+      border-bottom: 1px solid #768b7d;
+    }
+    .thruster-showcase .flight-controls {
+      padding: 1.5rem;
+    }
+    .thruster-showcase .flight-safety > span {
+      max-width: 18ch;
+      font-size: 0.8rem;
+    }
+    .foundation .experience-discovery {
+      flex-direction: column;
+      align-items: start;
+      gap: 0.5rem;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .thruster-showcase .flight-craft {
+      left: 50% !important;
+      top: 50% !important;
+    }
+    .thruster-showcase .exhaust {
+      transform: none;
+    }
+  }
+}
