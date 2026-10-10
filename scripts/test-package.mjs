@@ -87,6 +87,28 @@ try {
     join(consumer, "index.ts"),
     'import { createAudio, defineSound, validateRecipe } from "audiobits"; import { confirmation, impact, thruster } from "audiobits/recipes"; const audio = createAudio(); const recipe = defineSound(confirmation); audio.sound(recipe); const dynamic = () => { const voice = audio.sound(thruster).play({ seed: 42, parameters: { throttle: 0.2 } }); voice.set({ throttle: 1 }); const bus = audio.bus("effects"); bus.setGainDb(-6, 0.1); bus.setMuted(true); bus.setParent(audio.master); audio.sound(impact).play({ bus }); const analyser = audio.native.context.createAnalyser(); const detach = audio.native.connect(analyser); detach(); analyser.disconnect(); audio.stopAll({ tails: "cut" }); bus.dispose(); const seed: number = voice.seed; audio.sound(impact).play({ parameters: { intensity: 1 }, seed }); voice.stop(); }; void dynamic; console.log(validateRecipe(recipe)); void audio.dispose();\n',
   );
+  for (const name of ["recipe.ts", "pointer.ts", "host.ts", "index.html"]) {
+    await copyFile(
+      join(root, "catalog/reactive-thruster", name),
+      join(consumer, name),
+    );
+  }
+  run(
+    process.execPath,
+    [
+      resolve("node_modules/typescript/bin/tsc"),
+      "--noEmit",
+      "--strict",
+      "--module",
+      "ESNext",
+      "--moduleResolution",
+      "Bundler",
+      "--target",
+      "ES2022",
+      "host.ts",
+    ],
+    consumer,
+  );
   await writeFile(
     join(consumer, "authoring.types.ts"),
     (await readFile("packages/audiobits/tests/authoring.types.ts", "utf8"))
@@ -323,7 +345,24 @@ Object.assign(globalThis, { probe });`,
       clean: false,
     });
   }
+  await build({
+    entry: [join(consumer, "host.ts")],
+    format: "esm",
+    platform: "browser",
+    target: "es2022",
+    outDir: browserOutput,
+    dts: false,
+    clean: false,
+  });
+  const thrusterHtml = (
+    await readFile(join(consumer, "index.html"), "utf8")
+  ).replace('"./host.ts"', '"./host.js"');
   const server = createServer(async (request, response) => {
+    if (request.url === "/thruster") {
+      response.setHeader("Content-Type", "text/html");
+      response.end(thrusterHtml);
+      return;
+    }
     const name = request.url?.slice(1);
     if (name && /^[a-z0-9.-]+\.js$/.test(name)) {
       response.setHeader("Content-Type", "text/javascript");
@@ -343,6 +382,48 @@ Object.assign(globalThis, { probe });`,
     });
     browser = await chromium.launch();
     evidence.chromium = browser.version();
+    {
+      const page = await browser.newPage();
+      const errors = [];
+      page.on("pageerror", (error) => errors.push(error.message));
+      await page.addInitScript(() => {
+        globalThis.thrusterContexts = [];
+        const Native = globalThis.AudioContext;
+        globalThis.AudioContext = class extends Native {
+          constructor() {
+            super();
+            globalThis.thrusterContexts.push(this);
+          }
+        };
+      });
+      await page.goto(`http://127.0.0.1:${server.address().port}/thruster`);
+      await page
+        .getByRole("button", { name: "Start thruster", exact: true })
+        .click();
+      await expect(page.locator("#status")).toHaveText("running");
+      await page.getByRole("slider", { name: "Throttle" }).fill("0.8");
+      await expect(page.locator("#pad")).toHaveText("Thrust 80%");
+      await page.getByRole("button", { name: "Play impact" }).click();
+      await page.getByRole("button", { name: "Stop all" }).click();
+      await expect(page.locator("#status")).toHaveText("stopped");
+      await page.evaluate(() =>
+        globalThis.window.dispatchEvent(new globalThis.Event("pagehide")),
+      );
+      await expect
+        .poll(() =>
+          page.evaluate(() =>
+            globalThis.thrusterContexts.map((context) => context.state),
+          ),
+        )
+        .toEqual(["closed"]);
+      assert.deepEqual(errors, []);
+      evidence.browser.push({
+        file: "catalog/reactive-thruster/index.html",
+        independentHost: true,
+        closed: true,
+      });
+      await page.close();
+    }
     for (const example of examples) {
       const page = await browser.newPage();
       const errors = [];

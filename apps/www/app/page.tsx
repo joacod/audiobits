@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ExperienceDiscovery } from "./experience-discovery";
 import { SoundGallery } from "./sound-gallery";
 import { soundInfo, type SoundKind } from "../lib/gallery";
 import { siteBuild } from "../lib/site-build";
@@ -56,6 +57,7 @@ export default function Home() {
         </div>
       </header>
       <SoundGallery rawSource="" landing />
+      <ExperienceDiscovery />
       <section
         className="landing-collection"
         aria-labelledby="collection-heading"

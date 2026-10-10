@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Reactive thruster</title>
+  <style>
+    body {
+      max-width: 50rem;
+      margin: 2rem auto;
+      padding: 1rem;
+      font: 1rem system-ui;
+    }
+    #pad {
+      touch-action: none;
+      padding: 5rem 1rem;
+      background: #243c32;
+      color: #f3f0e6;
+      text-align: center;
+    }
+    button,
+    input {
+      min-height: 44px;
+    }
+    :focus-visible {
+      outline: 3px solid #715600;
+      outline-offset: 4px;
+    }
+  </style>
+  <h1>Move to hear the thrust.</h1>
+  <p>Drag on the pad. Faster movement adds thrust. Release to coast.</p>
+  <div id="pad">Drag here to activate audio</div>
+  <button id="start">Start thruster</button>
+  <button id="release">Release thruster</button>
+  <button id="impact">Play impact</button>
+  <button id="stop">Stop all</button>
+  <button id="mute" aria-pressed="false">Mute</button>
+  <label
+    >Throttle
+    <input id="throttle" type="range" min="0" max="1" step="0.01" value="0.2"
+  /></label>
+  <p id="status" role="status">Stopped</p>
+  <p id="error" role="alert"></p>
+  <script type="module">
+    import { mountThruster } from "./host.ts";
+    const error = document.querySelector("#error");
+    const host = mountThruster(document.querySelector("#pad"), {
+      state(value) {
+        document.querySelector("#status").textContent = value;
+        if (value === "starting") error.textContent = "";
+      },
+      error(cause) {
+        error.textContent = `${String(cause)}. Try Start again.`;
+      },
+      throttle(value) {
+        document.querySelector("#pad").textContent =
+          `Thrust ${Math.round(value * 100)}%`;
+      },
+      output() {},
+    });
+    document.querySelector("#start").onclick = () =>
+      host.start(Number(document.querySelector("#throttle").value));
+    document.querySelector("#release").onclick = host.release;
+    document.querySelector("#stop").onclick = host.stop;
+    document.querySelector("#impact").onclick = () => {
+      error.textContent = "";
+      void host.impact();
+    };
+    document.querySelector("#throttle").oninput = (event) =>
+      host.setThrottle(Number(event.target.value));
+    let muted = false;
+    document.querySelector("#mute").onclick = (event) => {
+      muted = !muted;
+      host.mute(muted);
+      event.target.setAttribute("aria-pressed", String(muted));
+    };
+    // For an SPA, also call await host.dispose() when removing this view.
+  </script>
+</html>

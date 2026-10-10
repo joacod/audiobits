@@ -21,6 +21,28 @@ cancellation, lost capture, blur, and hiding stop the voice. Generation checks
 prevent a cancelled activation from playing later. Start/Stop plus a standard
 range input offer the same sound without precise pointer movement.
 
+## Complete interactive example
+
+The [interactive showcase](https://audiobits.joacod.com/experiences/reactive-thruster)
+uses [host.ts](host.ts) with the same recipe and pointer integration. Copy
+`recipe.ts`, `pointer.ts`, `host.ts`, and [index.html](index.html) into one folder:
+
+```sh
+npm install audiobits
+npm install --save-dev vite typescript
+npx vite
+```
+
+Open the local Vite URL. The HTML binds pointer and keyboard controls, one-shot
+impact, Mute, Stop, and recoverable activation errors. The host owns a shared
+engine, suspends on hide, and closes on page teardown. In an SPA, call
+`await host.dispose()` when removing the view.
+
+Website experience metadata lives outside recipes in `apps/www/lib/experiences.ts`:
+route, controls, related bundled sounds, and canonical source filenames. Future
+experiences can use the same source-file pattern without changing `SoundRecipe`
+or forcing an interaction into a standalone sound workbench.
+
 ## Minimal host
 
 Use a surface with `touch-action: none`, a Start button, a Stop button, a range

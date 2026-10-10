@@ -1,6 +1,10 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "paths": {
+      "audiobits": ["./node_modules/audiobits"],
+      "audiobits/recipes": ["./node_modules/audiobits/dist/recipes/index.js"]
+    },
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "jsx": "react-jsx",
     "allowJs": true,
