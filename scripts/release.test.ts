@@ -106,6 +106,7 @@ test("normal CI runs quality and full Chromium integration on PRs and main", asy
     "pnpm install --frozen-lockfile",
     "pnpm exec playwright install --with-deps chromium",
     "bash scripts/ci/setup-linux-audio.sh",
+    "pnpm test:package",
     "pnpm test:browser --project=chromium",
   ]);
   expect(ci.jobs["chromium-integration"].steps).toContainEqual({
