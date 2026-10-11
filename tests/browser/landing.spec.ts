@@ -10,7 +10,7 @@ for (const width of [375, 768, 1440]) {
     await page.goto(home);
     await expect(page.locator("h1")).toHaveCount(1);
     await expect(
-      page.getByRole("button", { name: "Play glass", exact: true }),
+      page.getByRole("button", { name: "Hold to charge", exact: true }),
     ).toBeEnabled();
     await page.evaluate(() => document.fonts.ready);
     expect(
@@ -19,11 +19,14 @@ for (const width of [375, 768, 1440]) {
       ),
     ).toBe(true);
     const bounds = await page
-      .getByRole("button", { name: "Play glass", exact: true })
+      .getByRole("button", { name: "Hold to charge", exact: true })
       .boundingBox();
     expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(900);
     await expect(page.locator(".landing-install")).toHaveText(
       "npm install audiobits",
+    );
+    await expect(page.locator(".charge-binding code")).toContainText(
+      "voice.set({ charge:",
     );
     for (const name of ["Sounds", "Docs", "GitHub"]) {
       await expect(
@@ -32,6 +35,9 @@ for (const width of [375, 768, 1440]) {
           .getByRole("link", { name, exact: true }),
       ).toBeVisible();
     }
+    await expect(
+      page.getByRole("link", { name: "Open energy charge", exact: true }),
+    ).toHaveAttribute("href", "/experiences/energy-charge");
     const previews = page.locator(".landing-sound-entry");
     const structures: string[] = [];
     for (const [kind, family, shape, count] of [
@@ -65,7 +71,7 @@ for (const width of [375, 768, 1440]) {
   });
 }
 
-test("landing recovers from blocked activation and cancels pending Play on selection", async ({
+test("landing recovers from blocked activation and cancels a pending start", async ({
   page,
 }) => {
   await page.addInitScript(() => {
@@ -94,38 +100,36 @@ test("landing recovers from blocked activation and cancels pending Play on selec
     Object.assign(globalThis, { landingContexts: contexts });
   });
   await page.goto(home);
-  const play = page.getByRole("button", { name: "Play glass", exact: true });
-  await play.click();
-  await expect(page.locator(".landing-stage [role=alert]")).toContainText(
-    "Retry Play",
+  const start = page.getByRole("button", {
+    name: "Start charge",
+    exact: true,
+  });
+  await start.click();
+  await expect(page.locator(".charge-hero [role=alert]")).toContainText(
+    "Try Start charge again",
   );
-  await expect(page.getByTestId("landing-playback-state")).toContainText(
-    "error",
+  await expect(page.getByTestId("landing-playback-state")).toHaveText(
+    "Charge: stopped",
   );
-  await play.click();
-  await expect(page.getByTestId("landing-playback-state")).toContainText(
-    "starting",
+  await start.click();
+  await expect(page.getByTestId("landing-playback-state")).toHaveText(
+    "Charge: starting",
   );
-  await page
-    .getByRole("button", { name: "Impact One-shot", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Stop", exact: true }).click();
   await page.evaluate(() =>
     (globalThis as unknown as { releaseStart(): void }).releaseStart(),
   );
   await expect(page.getByTestId("landing-playback-state")).toHaveText(
-    "Impact: stopped",
+    "Charge: stopped",
   );
-  await expect(page.locator(".landing-stage [role=alert]")).toHaveCount(0);
-  await expect(page.locator(".stage-signal canvas")).toHaveAttribute(
-    "data-peak",
+  await expect(page.locator(".charge-hero [role=alert]")).toHaveCount(0);
+  await expect(page.locator(".charge-rings")).toHaveAttribute(
+    "data-level",
     "0",
   );
-  await page.getByRole("button", { name: "Play impact", exact: true }).click();
+  await start.click();
   await expect(page.getByTestId("landing-playback-state")).toHaveText(
-    "Impact: playing",
-  );
-  await expect(page.getByTestId("landing-playback-state")).toHaveText(
-    "Impact: ready",
+    "Charge: running",
   );
   expect(
     await page.evaluate(
@@ -136,33 +140,42 @@ test("landing recovers from blocked activation and cancels pending Play on selec
   ).toBe(1);
 });
 
-test("reduced motion preserves keyboard playback, selection and live control", async ({
+test("reduced motion preserves keyboard hold, manual charge and focus", async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto(home);
-  const thruster = page.getByRole("button", {
-    name: "Thruster Sustained",
-    exact: true,
-  });
-  await thruster.focus();
-  await page.keyboard.press("Space");
-  await page
-    .getByRole("button", { name: "Start thruster", exact: true })
-    .focus();
-  await page.keyboard.press("Enter");
+  const pad = page.getByRole("button", { name: "Hold to charge", exact: true });
+  await pad.focus();
+  await page.keyboard.down("Space");
+  await expect(pad).toHaveAttribute("data-full", "true");
   await expect(page.getByTestId("landing-playback-state")).toHaveText(
-    "Thruster: running",
+    "Charge: running",
   );
-  await expect(page.locator(".stage-signal canvas")).toHaveAttribute(
-    "data-peak",
+  await expect(page.locator(".charge-rings")).toHaveAttribute(
+    "data-renderer",
+    "css",
+  );
+  await expect(page.locator(".charge-rings")).toHaveAttribute(
+    "data-level",
     "0",
   );
-  await page.getByRole("slider", { name: "Throttle" }).focus();
+  await page.keyboard.up("Space");
+  await expect(page.getByTestId("landing-playback-state")).toHaveText(
+    "Charge: stopped",
+  );
+  const slider = page.getByRole("slider", { name: "Charge", exact: true });
+  await slider.focus();
   await page.keyboard.press("End");
-  await expect(page.getByRole("slider", { name: "Throttle" })).toHaveValue("1");
-  await expect(page.locator(".workflow-code pre")).toContainText(
-    '"throttle":1',
+  await expect(slider).toHaveValue("1");
+  await expect(page.locator(".charge-binding code")).toHaveText(
+    "voice.set({ charge: 1.00 })",
+  );
+  const start = page.getByRole("button", { name: "Start charge", exact: true });
+  await start.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByTestId("landing-playback-state")).toHaveText(
+    "Charge: running",
   );
   const stop = page.getByRole("button", { name: "Stop", exact: true });
   await stop.focus();
@@ -171,17 +184,22 @@ test("reduced motion preserves keyboard playback, selection and live control", a
   ).toBe("solid");
   await page.keyboard.press("Enter");
   await expect(page.getByTestId("landing-playback-state")).toHaveText(
-    "Thruster: stopped",
+    "Charge: stopped",
   );
 });
 
-test("rapid retriggers and changing selection leave no orphaned native sources", async ({
+test("release, cancellation and navigation leave no orphaned charge sources", async ({
   page,
 }) => {
   await page.addInitScript(() => {
     const Native = AudioContext;
     const sources: { ended: boolean }[] = [];
+    const contexts: AudioContext[] = [];
     globalThis.AudioContext = class extends Native {
+      constructor() {
+        super();
+        contexts.push(this);
+      }
       createOscillator() {
         const source = super.createOscillator();
         const record = { ended: false };
@@ -201,19 +219,30 @@ test("rapid retriggers and changing selection leave no orphaned native sources",
         return source;
       }
     };
-    Object.assign(globalThis, { landingSources: sources });
+    Object.assign(globalThis, {
+      landingSources: sources,
+      landingContexts: contexts,
+    });
   });
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(home);
-  const play = page.getByRole("button", { name: "Play glass", exact: true });
-  await play.click();
-  await expect(page.getByTestId("landing-playback-state")).toContainText(
-    "playing",
+  expect(
+    await page.evaluate(
+      () =>
+        (globalThis as unknown as { landingContexts: unknown[] })
+          .landingContexts.length,
+    ),
+  ).toBe(0);
+  const pad = page.getByRole("button", { name: "Hold to charge", exact: true });
+  await pad.focus();
+  await page.keyboard.down("Enter");
+  await expect(page.getByTestId("landing-playback-state")).toHaveText(
+    "Charge: running",
   );
-  await play.click();
-  await play.click();
-  await page
-    .getByRole("button", { name: "Thruster Sustained", exact: true })
-    .click();
+  await page.keyboard.up("Enter");
+  await expect(page.getByTestId("landing-playback-state")).toHaveText(
+    "Charge: stopped",
+  );
   await expect
     .poll(() =>
       page.evaluate(() =>
@@ -223,11 +252,38 @@ test("rapid retriggers and changing selection leave no orphaned native sources",
       ),
     )
     .toBe(true);
-  await page
-    .getByRole("button", { name: "Start thruster", exact: true })
-    .click();
+  const box = (await pad.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
   await expect(page.getByTestId("landing-playback-state")).toHaveText(
-    "Thruster: running",
+    "Charge: running",
+  );
+  await pad.dispatchEvent("pointercancel", { pointerId: 99 });
+  await expect(page.getByTestId("landing-playback-state")).toHaveText(
+    "Charge: running",
+  );
+  await page.mouse.up();
+  await expect(page.getByTestId("landing-playback-state")).toHaveText(
+    "Charge: stopped",
+  );
+  const touch = await page.context().newCDPSession(page);
+  await touch.send("Input.dispatchTouchEvent", {
+    type: "touchStart",
+    touchPoints: [{ x: box.x + box.width / 2, y: box.y + box.height / 2 }],
+  });
+  await expect(page.getByTestId("landing-playback-state")).toHaveText(
+    "Charge: running",
+  );
+  await touch.send("Input.dispatchTouchEvent", {
+    type: "touchCancel",
+    touchPoints: [],
+  });
+  await expect(page.getByTestId("landing-playback-state")).toHaveText(
+    "Charge: stopped",
+  );
+  await page.getByRole("button", { name: "Start charge", exact: true }).click();
+  await expect(page.getByTestId("landing-playback-state")).toHaveText(
+    "Charge: running",
   );
   expect(
     await page.evaluate(() =>
@@ -236,9 +292,10 @@ test("rapid retriggers and changing selection leave no orphaned native sources",
       ).landingSources.some((source) => !source.ended),
     ),
   ).toBe(true);
-  await page
-    .getByRole("button", { name: "Impact One-shot", exact: true })
-    .click();
+  await page.evaluate(() => window.dispatchEvent(new Event("blur")));
+  await expect(page.getByTestId("landing-playback-state")).toHaveText(
+    "Charge: stopped",
+  );
   await expect
     .poll(() =>
       page.evaluate(() =>
@@ -248,7 +305,40 @@ test("rapid retriggers and changing selection leave no orphaned native sources",
       ),
     )
     .toBe(true);
+  await page.getByRole("button", { name: "Start charge", exact: true }).click();
   await expect(page.getByTestId("landing-playback-state")).toHaveText(
-    "Impact: stopped",
+    "Charge: running",
   );
+  await page.evaluate(() => {
+    Object.defineProperty(document, "hidden", {
+      configurable: true,
+      value: true,
+    });
+    document.dispatchEvent(new Event("visibilitychange"));
+  });
+  await expect(page.getByTestId("landing-playback-state")).toHaveText(
+    "Charge: stopped",
+  );
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        (
+          globalThis as unknown as { landingContexts: AudioContext[] }
+        ).landingContexts.map((context) => context.state),
+      ),
+    )
+    .toEqual(["suspended"]);
+  await page
+    .getByRole("navigation", { name: "Main navigation" })
+    .getByRole("link", { name: "Docs" })
+    .click();
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        (
+          globalThis as unknown as { landingContexts: AudioContext[] }
+        ).landingContexts.map((context) => context.state),
+      ),
+    )
+    .toEqual(["closed"]);
 });

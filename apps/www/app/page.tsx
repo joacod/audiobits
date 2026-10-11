@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ChargeHero } from "./charge-hero";
 import { ExperienceDiscovery } from "./experience-discovery";
-import { SoundGallery } from "./sound-gallery";
 import { soundInfo, type SoundKind } from "../lib/gallery";
 import { siteBuild } from "../lib/site-build";
 import "./landing.css";
+import "./charge-hero.css";
 
 export const metadata: Metadata = {
   title: { absolute: "AudioBits | Procedural Sound Effects for the Web" },
@@ -36,27 +37,7 @@ export default function Home() {
         <Link href="/docs">Docs</Link>
         <a href="https://github.com/joacod/audiobits">GitHub</a>
       </nav>
-      <header className="landing-intro">
-        <h1>
-          Make interfaces <em>sound alive.</em>
-        </h1>
-        <div className="landing-intro-copy">
-          <p>
-            Procedural sound effects for the web. Play, customize, and ship
-            sounds as code. No required audio assets.
-          </p>
-          <div className="landing-links">
-            <Link href="/sounds">
-              Explore the sounds <span aria-hidden="true">↗</span>
-            </Link>
-            <Link href="/docs">
-              Start building <span aria-hidden="true">↗</span>
-            </Link>
-          </div>
-          <code className="landing-install">npm install audiobits</code>
-        </div>
-      </header>
-      <SoundGallery rawSource="" landing />
+      <ChargeHero />
       <ExperienceDiscovery />
       <section
         className="landing-collection"
