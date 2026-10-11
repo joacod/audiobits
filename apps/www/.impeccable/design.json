@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-08T00:00:00Z",
+  "generatedAt": "2026-10-11T12:00:00Z",
   "title": "Design System: AudioBits showcase",
   "extensions": {
     "colorMeta": {
@@ -115,6 +115,76 @@
           "oklch(84% 0.0957 87.44)",
           "oklch(95% 0.0957 87.44)"
         ]
+      },
+      "focus-bench": {
+        "role": "neutral",
+        "displayName": "Dark ochre",
+        "tonalRamp": [
+          "oklch(15% 0.0957 87.44)",
+          "oklch(27% 0.0957 87.44)",
+          "oklch(38% 0.0957 87.44)",
+          "oklch(50% 0.0957 87.44)",
+          "oklch(61% 0.0957 87.44)",
+          "oklch(73% 0.0957 87.44)",
+          "oklch(84% 0.0957 87.44)",
+          "oklch(95% 0.0957 87.44)"
+        ]
+      },
+      "instrument-line": {
+        "role": "neutral",
+        "displayName": "Instrument line",
+        "tonalRamp": [
+          "oklch(15% 0.028 150)",
+          "oklch(27% 0.028 150)",
+          "oklch(38% 0.028 150)",
+          "oklch(50% 0.028 150)",
+          "oklch(61% 0.028 150)",
+          "oklch(73% 0.028 150)",
+          "oklch(84% 0.028 150)",
+          "oklch(95% 0.028 150)"
+        ]
+      },
+      "instrument-quiet": {
+        "role": "neutral",
+        "displayName": "Pale instrument green",
+        "tonalRamp": [
+          "oklch(15% 0.02 145)",
+          "oklch(27% 0.02 145)",
+          "oklch(38% 0.02 145)",
+          "oklch(50% 0.02 145)",
+          "oklch(61% 0.02 145)",
+          "oklch(73% 0.02 145)",
+          "oklch(84% 0.02 145)",
+          "oklch(95% 0.02 145)"
+        ]
+      },
+      "instrument-well": {
+        "role": "neutral",
+        "displayName": "Instrument well",
+        "tonalRamp": [
+          "oklch(15% 0.03 165)",
+          "oklch(27% 0.03 165)",
+          "oklch(38% 0.03 165)",
+          "oklch(50% 0.03 165)",
+          "oklch(61% 0.03 165)",
+          "oklch(73% 0.03 165)",
+          "oklch(84% 0.03 165)",
+          "oklch(95% 0.03 165)"
+        ]
+      },
+      "instrument-hover": {
+        "role": "neutral",
+        "displayName": "Instrument hover",
+        "tonalRamp": [
+          "oklch(15% 0.032 165)",
+          "oklch(27% 0.032 165)",
+          "oklch(38% 0.032 165)",
+          "oklch(50% 0.032 165)",
+          "oklch(61% 0.032 165)",
+          "oklch(73% 0.032 165)",
+          "oklch(84% 0.032 165)",
+          "oklch(95% 0.032 165)"
+        ]
       }
     },
     "typographyMeta": {
@@ -124,11 +194,23 @@
       },
       "headline": {
         "displayName": "Headline",
-        "purpose": "Section headings."
+        "purpose": "Catalog and experience page headings."
+      },
+      "section": {
+        "displayName": "Section",
+        "purpose": "Homepage section headings."
       },
       "title": {
         "displayName": "Title",
         "purpose": "Sound specimen headings."
+      },
+      "wordmark": {
+        "displayName": "Wordmark",
+        "purpose": "Shared header name."
+      },
+      "nav": {
+        "displayName": "Navigation",
+        "purpose": "Shared header links."
       },
       "body": {
         "displayName": "Body",
@@ -201,11 +283,20 @@
       "css": ".ds-editor{font-family:Arial,sans-serif;color:var(--ink, #243c32);display:block;font-size:.9rem}.ds-editor textarea{display:block;width:100%;min-height:24rem;padding:.75rem;border:1px solid var(--rule, #b8c1b3);border-radius:4px;background:var(--paper, #f3f0e6);color:var(--ink, #243c32);caret-color:var(--ink, #243c32);font-family:monospace;font-size:.85rem;font-variant-numeric:tabular-nums;scrollbar-color:var(--quiet, #536257) var(--paper, #f3f0e6)}.ds-editor textarea:focus-visible{outline:3px solid var(--focus, #715600);outline-offset:4px;}"
     },
     {
-      "name": "Masthead",
+      "name": "Site header",
       "kind": "nav",
-      "description": "Wrapping wordmark and reference links, with a separate mobile wordmark row.",
-      "html": "<nav class=\"ds-nav\" aria-label=\"Main navigation\"><a class=\"ds-wordmark\" href=\"#\">AudioBits <svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M12 1v22M1 12h22M4 4l16 16M4 20 20 4\" stroke=\"currentColor\" stroke-width=\"2\"/></svg></a><a href=\"#sounds\">Sounds</a><a href=\"#docs\">Development docs</a></nav>",
-      "css": ".ds-nav{font-family:Arial,sans-serif;color:var(--ink, #243c32);display:flex;gap:2rem;align-items:center;padding:1rem 0;border-bottom:1px solid var(--ink, #243c32)}.ds-nav a{color:inherit;display:inline-flex;min-height:44px;align-items:center;font-size:.9rem;text-decoration:none}.ds-nav a:hover{text-decoration-thickness:2px}.ds-nav a:focus-visible{outline:3px solid var(--focus, #715600);outline-offset:4px;}.ds-nav .ds-wordmark{margin-right:auto;font-size:1.4rem;font-weight:700;letter-spacing:-.035em;gap:.75rem}@media(max-width:760px){.ds-nav{gap:1rem;flex-wrap:wrap}.ds-nav .ds-wordmark{flex-basis:100%}.ds-nav a{min-height:32px}}"
+      "refersTo": "site-header",
+      "description": "Shared ink header for showcase routes. Catalog points at the sound collection.",
+      "html": "<header class=\"ds-header\"><nav class=\"ds-nav\" aria-label=\"Main navigation\"><a class=\"ds-wordmark\" href=\"#\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><circle class=\"ds-core\" cx=\"12\" cy=\"12\" r=\"3.1\"/><circle cx=\"12\" cy=\"12\" r=\"7.25\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"/><circle cx=\"12\" cy=\"12\" r=\"11\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"/></svg>AudioBits</a><div class=\"ds-links\"><a href=\"#\" aria-current=\"page\">Home</a><a href=\"#sounds\">Catalog</a><a href=\"#docs\">Docs</a><a href=\"#github\">GitHub</a></div></nav></header>",
+      "css": ".ds-header{background:var(--ink,#243c32);color:var(--paper,#f3f0e6);font-family:Arial,sans-serif}.ds-nav{display:flex;flex-wrap:wrap;align-items:center;gap:.25rem 1rem;padding:.35rem 1.5rem}.ds-links{display:flex;flex-wrap:wrap;gap:.15rem 1.1rem;margin-left:auto}.ds-nav a{color:var(--paper,#f3f0e6);display:inline-flex;align-items:center;gap:.45rem;min-height:44px;font-size:.95rem;text-decoration:none}.ds-nav a:hover{color:var(--signal,#ecce82)}.ds-nav a[aria-current=page]{color:var(--signal,#ecce82);text-decoration:underline;text-underline-offset:.45rem}.ds-nav a:focus-visible{outline:3px solid var(--signal,#ecce82);outline-offset:4px}.ds-wordmark{font-family:Fraunces,Georgia,serif;font-size:1.35rem;font-weight:520;letter-spacing:-.03em}.ds-wordmark:hover{color:var(--paper,#f3f0e6)}.ds-core{fill:var(--accent,#e0b856)}.ds-wordmark:hover .ds-core{fill:var(--signal,#ecce82)}@media(max-width:760px){.ds-links{flex-basis:100%;margin-left:0}}"
+    },
+    {
+      "name": "Install command",
+      "kind": "custom",
+      "refersTo": "install-command",
+      "description": "Exact npm install command on code paper, with a copy control.",
+      "html": "<div class=\"ds-install\"><code>npm install audiobits</code><button type=\"button\">Copy</button></div>",
+      "css": ".ds-install{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem .75rem;font-family:Arial,sans-serif}.ds-install code{background:var(--code,#e8e6db);color:var(--ink,#243c32);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.85rem;line-height:1.4;padding:.5rem .75rem;border-radius:4px}.ds-install button{min-height:44px;padding:.5rem .9rem;border:1px solid var(--instrument-line,#768b7d);border-radius:4px;background:transparent;color:var(--paper,#f3f0e6);font-size:.875rem;cursor:pointer}.ds-install button:hover{background:var(--signal,#ecce82);color:var(--ink,#243c32);border-color:var(--signal,#ecce82)}.ds-install button:focus-visible{outline:3px solid var(--signal,#ecce82);outline-offset:4px}"
     },
     {
       "name": "Specimen entry",
@@ -240,43 +331,50 @@
     }
   ],
   "narrative": {
-    "northStar": "A sonic playground with the precision of a developer tool",
-    "overview": "The sonic playground treats browser audio as something to hear, change and inspect. Warm paper, dark green ink and self-hosted Fraunces headings give the showcase a tactile editorial character; ordinary HTML controls keep the instrument precise.\n\nA dedicated editorial landing pairs an expressive headline with a dark green sound stage and brass signal. Ruled entries and restrained code panels carry the collection and individual sound pages. Signal is living content derived from native audio output, and brass marks the controls that initiate playback or hold a pressed state. The separate Fumadocs reference experience keeps its own styling.",
+    "northStar": "The charge housing",
+    "overview": "The homepage is one mineral-green housing. The header and the Energy Charge hero share that field, so the instrument is the first thing a visitor can hold. Warm paper is reserved for labels, code, and the footer plate. Brass marks charge and primary playback. Pale signal marks action and focus while the ground is green.\n\nCatalog and experience routes keep their paper benches and their existing workbench layouts. They share the same header, type, controls, and tokens. Documentation stays on Fumadocs and does not inherit the housing. Fraunces remains the voice because the charge numeral and the headline already use it.",
     "keyCharacteristics": [
-      "Warm paper and green ink, with brass for playback and pressed controls.",
-      "Serif headings above practical sans-serif controls and monospace code.",
-      "Ruled specimens and flat surfaces instead of floating cards.",
-      "Measured waveform and a bounded Play response; no idle decorative motion."
+      "Mineral-green housing on the homepage, warm paper on catalog and experience benches.",
+      "Brass for charge, Play, and pressed controls. Pale signal for housing focus, current navigation, and primary text actions.",
+      "Fraunces for the voice, Arial for controls, monospace only for code.",
+      "Hairline rules and flat surfaces. No cards, glass, neon, or shadows.",
+      "One live Energy Charge engine on the homepage. Supporting previews stay static."
     ],
     "rules": [
       {
-        "name": "The Brass State Rule",
-        "body": "Use brass for Play and pressed controls; keep ordinary actions on paper with a fine rule.",
+        "name": "The Housing Rule",
+        "body": "The homepage ground is ink. Paper is for labels, code, and the footer plate. Do not paint the catalog or a workbench as a second dark marketing page.",
         "section": "colors"
       },
       {
-        "name": "The Specimen Heading Rule",
-        "body": "Use Fraunces for sound and section headings, sans-serif for controls and explanation, and monospace for code.",
+        "name": "The Brass State Rule",
+        "body": "Use brass for Play, the hold meter, and pressed controls. Ordinary actions stay transparent with a fine rule.",
+        "section": "colors"
+      },
+      {
+        "name": "The Voice Rule",
+        "body": "Fraunces is for the voice and the charge numeral. Arial is for controls. Monospace is only for code.",
         "section": "typography"
       },
       {
         "name": "The Ruled Surface Rule",
-        "body": "Separate specimens with fine rules and tonal surfaces; do not add floating-card shadows.",
+        "body": "Separate sections and specimens with hairline rules. Do not add floating-card shadows, glass, or a second decorative field behind the charge well.",
         "section": "elevation"
       }
     ],
     "dos": [
-      "Do keep Play, parameter labels and visible playback status ahead of the inspector.",
-      "Do use the paper, ink and brass roles consistently across showcase routes.",
-      "Do collapse specimen columns at the established mobile breakpoint and retain usable code overflow.",
-      "Do label native controls, retain visible focus, and respect reduced motion.",
-      "Do use real audio output for the waveform and a silent idle baseline."
+      "Do keep Hold to charge as the homepage's primary action, with Explore the catalog and Start building as the text actions.",
+      "Do take the package version from generated metadata.",
+      "Do keep keyboard and touch targets at least (44px), including header, copy, and footer actions.",
+      "Do reset paper-surface focus to ochre wherever the housing has switched focus to signal.",
+      "Do let code wrap or scroll inside its own panel."
     ],
     "donts": [
-      "Don't introduce neon, glass, SaaS gradients, noisy effects or a DAW interface.",
-      "Don't turn a specimen entry into a floating rounded card.",
-      "Don't replace waveform data with a decorative looping signal.",
-      "Don't apply the showcase stylesheet as a redesign of the separate Fumadocs reference experience."
+      "Don't mount a second live audio engine on the homepage.",
+      "Don't autoplay, rotate the hero, or add a decorative effect that competes with the charge well.",
+      "Don't restyle Fumadocs with the showcase housing.",
+      "Don't invent performance, package-size, adoption, or popularity claims.",
+      "Don't replace Fraunces on the charge numeral or the homepage headline. The face is part of the instrument."
     ]
   }
 }

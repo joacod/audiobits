@@ -9,6 +9,7 @@ import {
 } from "react";
 import Link from "next/link";
 import { mountEnergyCharge } from "../../../catalog/energy-charge/host";
+import { ArrowIcon } from "./arrow-icon";
 import { ChargeRings } from "./charge-rings";
 
 const subscribeHydration = () => () => {};
@@ -25,6 +26,8 @@ export function ChargeHero() {
   const [state, setState] = useState("stopped");
   const [muted, setMuted] = useState(false);
   const [error, setError] = useState("");
+  const [copyState, setCopyState] = useState("");
+  const copyTimer = useRef(0);
   const ready = useSyncExternalStore(
     subscribeHydration,
     () => true,
@@ -59,9 +62,20 @@ export function ChargeHero() {
     return () => {
       endHold();
       host.current = null;
+      window.clearTimeout(copyTimer.current);
       void current.dispose().catch(console.error);
     };
   }, [endHold]);
+  async function copyInstall() {
+    window.clearTimeout(copyTimer.current);
+    try {
+      await navigator.clipboard.writeText("npm install audiobits");
+      setCopyState("Copied");
+      copyTimer.current = window.setTimeout(() => setCopyState(""), 2400);
+    } catch {
+      setCopyState("Copy failed. Select the command to copy.");
+    }
+  }
   function publish(value: number) {
     progress.current = value;
     host.current?.setCharge(value);
@@ -104,14 +118,30 @@ export function ChargeHero() {
           control as code.
         </p>
         <div className="landing-links">
-          <Link href="/experiences/energy-charge">
-            Open energy charge <span aria-hidden="true">↗</span>
+          <Link className="landing-primary" href="/sounds">
+            Explore the catalog <ArrowIcon />
           </Link>
           <Link href="/docs">
-            Documentation <span aria-hidden="true">↗</span>
+            Start building <ArrowIcon />
+          </Link>
+          <Link className="landing-quiet" href="/experiences/energy-charge">
+            Open energy charge <ArrowIcon />
           </Link>
         </div>
-        <code className="landing-install">npm install audiobits</code>
+        <div className="install-line">
+          <code className="landing-install">npm install audiobits</code>
+          <button
+            type="button"
+            className="copy-install"
+            aria-label="Copy install command"
+            onClick={() => void copyInstall()}
+          >
+            {copyState === "Copied" ? "Copied" : "Copy"}
+          </button>
+          <p className="copy-status" role="status" aria-live="polite">
+            {copyState === "Copied" ? "Install command copied." : copyState}
+          </p>
+        </div>
       </div>
       <div className="charge-stage">
         <div

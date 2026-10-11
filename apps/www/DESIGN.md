@@ -1,6 +1,6 @@
 ---
 name: AudioBits showcase
-description: A sonic playground with the precision of a developer tool.
+description: A charge housing for procedural browser sound, with the precision of a developer tool.
 colors:
   paper: "#f3f0e6"
   ink: "#243c32"
@@ -10,6 +10,11 @@ colors:
   signal: "#ecce82"
   code: "#e8e6db"
   focus: "#715600"
+  focus-bench: "#715600"
+  instrument-line: "#768b7d"
+  instrument-quiet: "#cfdbcf"
+  instrument-well: "#1a2c24"
+  instrument-hover: "#344e40"
 typography:
   display:
     fontFamily: "Fraunces, Georgia, serif"
@@ -23,16 +28,29 @@ typography:
     fontWeight: 450
     lineHeight: 1.12
     letterSpacing: "-0.025em"
+  section:
+    fontFamily: "Fraunces, Georgia, serif"
+    fontSize: "clamp(1.65rem, 2.6vw, 2.2rem)"
+    fontWeight: 450
+    lineHeight: 1.15
   title:
     fontFamily: "Fraunces, Georgia, serif"
     fontSize: "2.5rem"
     fontWeight: 450
     lineHeight: 1.15
     letterSpacing: "-0.02em"
+  wordmark:
+    fontFamily: "Fraunces, Georgia, serif"
+    fontSize: "1.35rem"
+    fontWeight: 520
+    letterSpacing: "-0.03em"
   body:
     fontFamily: "Arial, sans-serif"
     fontSize: "1rem"
     lineHeight: 1.55
+  nav:
+    fontFamily: "Arial, sans-serif"
+    fontSize: "0.95rem"
   button:
     fontFamily: "Arial, sans-serif"
     fontSize: "0.875rem"
@@ -41,9 +59,9 @@ typography:
     fontFamily: "Arial, sans-serif"
     fontSize: "0.9rem"
   code:
-    fontFamily: "monospace"
-    fontSize: "0.8rem"
-    lineHeight: 1.7
+    fontFamily: "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
+    fontSize: "0.8125rem"
+    lineHeight: 1.6
 rounded:
   control: "4px"
 spacing:
@@ -51,9 +69,8 @@ spacing:
   control-gap: "0.75rem"
   base: "1rem"
   gutter-min: "1.5rem"
-  specimen-padding: "2.5rem"
-  column-gap: "3rem"
-  story-padding: "5rem"
+  section: "2.25rem"
+  column-gap: "1.5rem"
 components:
   button-play:
     backgroundColor: "{colors.accent}"
@@ -71,18 +88,25 @@ components:
     padding: "0.5rem 0.9rem"
   button-secondary-hover:
     backgroundColor: "{colors.code}"
-  input-number:
-    backgroundColor: "{colors.paper}"
-    textColor: "{colors.ink}"
+  button-housing:
+    backgroundColor: "transparent"
+    textColor: "{colors.paper}"
+    typography: "{typography.button}"
     rounded: "{rounded.control}"
-    padding: "0.4rem 0.6rem"
-    width: "8rem"
-  recipe-editor:
-    backgroundColor: "{colors.paper}"
+    padding: "0.5rem 0.9rem"
+  button-housing-hover:
+    backgroundColor: "{colors.instrument-hover}"
+    textColor: "{colors.paper}"
+  install-command:
+    backgroundColor: "{colors.code}"
     textColor: "{colors.ink}"
+    typography: "{typography.code}"
     rounded: "{rounded.control}"
-    padding: "0.75rem"
-    width: "100%"
+    padding: "0.5rem 0.75rem"
+  site-header:
+    backgroundColor: "{colors.ink}"
+    textColor: "{colors.paper}"
+    typography: "{typography.nav}"
   specimen-entry:
     backgroundColor: "{colors.paper}"
     textColor: "{colors.ink}"
@@ -103,192 +127,127 @@ components:
 
 ## Overview
 
-**Creative North Star: "A sonic playground with the precision of a developer tool"**
+**Creative North Star: "The charge housing"**
 
-The sonic playground treats browser audio as something to hear, change and inspect. Warm paper, dark green ink and self-hosted Fraunces headings give the showcase a tactile editorial character; ordinary HTML controls keep the instrument precise.
+The homepage is one mineral-green housing. The header and the Energy Charge hero share that field, so the instrument is the first thing a visitor can hold. Warm paper is reserved for labels, code, and the footer plate. Brass marks charge and primary playback. Pale signal marks action and focus while the ground is green.
 
-A dedicated editorial landing pairs an expressive headline with a full-width
-ink Energy Charge hero. Rings accumulate with charge, and edge brightness
-follows measured output when motion is allowed. Brass marks the hold meter,
-Start charge, and pressed Mute. A labelled `voice.set({ charge })` excerpt
-sits with the instrument. Ruled entries and restrained code panels carry the
-collection and individual sound pages. The separate Fumadocs reference
-experience keeps its own styling.
+Catalog and experience routes keep their paper benches and their existing workbench layouts. They share the same header, type, controls, and tokens. Documentation stays on Fumadocs and does not inherit the housing. Fraunces remains the voice because the charge numeral and the headline already use it.
 
 **Key Characteristics:**
 
-- Warm paper and green ink, with brass for playback and pressed controls.
-- Serif headings above practical sans-serif controls and monospace code.
-- Ruled specimens and flat surfaces instead of floating cards.
-- Charge rings follow interaction progress. The monitor waveform follows native output. No invented waveform and no idle looping signal.
+- Mineral-green housing on the homepage, warm paper on catalog and experience benches.
+- Brass for charge, Play, and pressed controls. Pale signal for housing focus, current navigation, and primary text actions.
+- Fraunces for the voice, Arial for controls, monospace only for code.
+- Hairline rules and flat surfaces. No cards, glass, neon, or shadows.
+- One live Energy Charge engine on the homepage. Supporting previews stay static.
 
 ## Colors
 
-Warm mineral neutrals support green ink and a restrained brass interaction accent.
-The frontmatter records the normative CSS values.
+The palette is oxidized green, warm paper, and brass. The frontmatter records the normative CSS values. Showcase colors are declared on `.foundation`, so the document light and dark themes do not repaint these routes.
 
 ### Primary
 
-- **Brass** (`accent`): Play and pressed controls, including the selected Mute state.
-- **Pale signal brass** (`signal`): Play hover and the waveform drawn on ink.
+- **Brass** (`accent`): Play, pressed controls, the hold meter, and the wordmark core.
+- **Pale signal brass** (`signal`): primary text actions, current navigation, housing focus, play hover, and the waveform on ink.
 
 ### Neutral
 
-- **Warm paper** (`paper`): page, monitor and editable fields.
-- **Green ink** (`ink`): main text, structural rules, slider accent and dark signal surfaces.
-- **Quiet green** (`quiet`): captions, supporting text and scrollbars.
-- **Sage rule** (`rule`): specimen dividers and ordinary control borders.
-- **Code paper** (`code`): code panels and secondary action hover.
-- **Dark ochre** (`focus`): visible focus outlines and the bounded click spark.
+- **Green ink** (`ink`): homepage ground, shared header, main text on paper, and dark signal surfaces.
+- **Warm paper** (`paper`): catalog and experience pages, code chips, editable fields, and the homepage footer plate.
+- **Quiet green** (`quiet`): supporting text on paper, including the npm version line.
+- **Pale instrument green** (`instrument-quiet`): supporting text and static portrait strokes on the housing.
+- **Sage rule** (`rule`): dividers and ordinary control borders on paper.
+- **Instrument line** (`instrument-line`): hairline rules and quiet control borders on the housing.
+- **Code paper** (`code`): code panels, the install chip, and secondary hover on paper.
+- **Instrument well** (`instrument-well`): the charge well and the hold control's inner disc.
+- **Instrument hover** (`instrument-hover`): secondary control hover on the housing.
+- **Dark ochre** (`focus` and `focus-bench`): focus on paper. The housing and header switch focus to pale signal, and the paper footer restores ochre through `focus-bench`.
 
-**The Brass State Rule.** Use brass for Play and pressed controls; keep ordinary actions on paper with a fine rule.
+**The Housing Rule.** The homepage ground is ink. Paper is for labels, code, and the footer plate. Do not paint the catalog or a workbench as a second dark marketing page.
+
+**The Brass State Rule.** Use brass for Play, the hold meter, and pressed controls. Ordinary actions stay transparent with a fine rule.
 
 ## Typography
 
-**Display Font:** Fraunces, with Georgia and serif fallbacks; self-hosted variable face.
+**Display Font:** Fraunces, with Georgia and serif fallbacks. The variable face is self-hosted.
 **Body Font:** Arial, with sans-serif fallback.
-**Code Font:** monospace.
+**Code Font:** ui-monospace, with SFMono, Menlo, Consolas, and monospace fallbacks.
 
-The expressive serif carries sound character; practical sans-serif text keeps
-controls legible. Code remains plain and inspectable rather than decorated with
-terminal chrome.
+Fraunces carries the headline, section titles, the wordmark, and the charge numeral. Arial keeps controls and explanation plain. Code is inspectable and does not use terminal chrome.
 
 ### Hierarchy
 
-- **Display:** primary page heading, with a fluid size and balanced wrapping.
-- **Headline:** section headings, with a smaller fluid scale.
-- **Title:** specimen names; collection titles use (2.5rem) on desktop and (2rem) on mobile.
-- **Body:** explanatory text with a maximum measure of (70ch); specimen descriptions use (0.9rem).
-- **Label:** labelled controls with tabular numerals; utility captions and status use the observed (0.75–0.8rem) range.
-- **Code:** snippets use a spacious line height; the editable recipe field uses (0.85rem).
+- **Display:** the homepage headline and other primary page headings. Fluid size, tight leading, balanced wrapping.
+- **Headline:** catalog and experience page headings.
+- **Section:** homepage section headings, a smaller fluid scale than the page headline.
+- **Title:** sound names on the collection. Landing use-column and preview titles are smaller than the collection title.
+- **Wordmark:** Fraunces at (1.35rem) and weight (520). Hover does not recolor the word. The brass core brightens to signal.
+- **Body:** explanation at (1rem) with a maximum measure of (70ch). Housing support copy uses pale instrument green.
+- **Navigation and label:** header links at (0.95rem). Control labels use the observed (0.9rem) range, with tabular numerals where a value changes.
+- **Code:** showcase `pre` uses (0.8125rem), line-height (1.6), and tab size (2). The install chip uses (0.85rem). Long lines wrap or scroll inside the panel.
 
-**The Specimen Heading Rule.** Use Fraunces for sound and section headings, sans-serif for controls and explanation, and monospace for code.
+**The Voice Rule.** Fraunces is for the voice and the charge numeral. Arial is for controls. Monospace is only for code.
 
 ## Layout
 
-The page uses a centered content area of (76rem), with side gutters calculated as
-`max(1.5rem, calc((100vw - 76rem) / 2))`. The masthead wraps. The landing pairs a large, balanced headline with a concise
-product explanation, links to the energy charge experience and documentation, and the installation command. Its full-width ink hero holds the charge well: concentric rings, Hold to charge with a brass progress meter, playback status, the live `voice.set({ charge })` binding, a Charge slider, and Start charge, Release charge, Mute and Stop.
-Experience links, a four-sound ruled preview, short differentiators and an ink footer
-complete discovery. At (900px) and below the hero stacks. At (760px) and below the
-well is at most (22rem), keeping Hold to charge within the first screen at a
-(375px × 844px) viewport. The preview uses two columns below (1000px). Landing
-styles live in dedicated stylesheets under `.landing`; collection, workbench and
-Fumadocs keep their layouts.
+Showcase pages use a content width of (76rem). The gutter is `max(1.5rem, calc((100vw - 76rem) / 2))`, and (1rem) below (760px). Full-bleed bands cancel that gutter with an equal negative margin.
 
-Collection and workbench pair flexible sound content with an (18rem) monitor rail
-and a (3rem) gap. From (761px) to (1000px), the rail is (16rem) and gap (1.5rem).
-The monitor sticks (1rem) below the viewport top. Inspector content fills its
-column; code scrolls internally rather than widening the page.
+The homepage order is header, Energy Charge hero, three short use columns, a static catalog preview, and a paper footer. The hero is two columns above (900px): copy on the left, the charge well on the right. At (900px) and below it stacks, with the copy directly above the well. At (760px) and below the well is at most (22rem), so Hold to charge stays in the first screen at (375px) by (900px). Use columns and the three sound previews stay three-across until (760px), then stack. Experience rows become two columns at that same breakpoint.
 
-At (760px) and below, gutters become (1rem), layouts become one column, and the
-monitor becomes a fixed bottom dock. Levels expands volume; Mute and Stop remain
-visible. Bottom safe-area padding and (12rem) page clearance keep the last content
-reachable. Workbench sound portraits are (13rem) high on mobile and (20rem) on desktop.
+The shared header is an ink band. On the homepage its background is transparent so it joins the housing. On catalog and experience routes it is a solid ink band over the paper bench. At (760px) and below, the links wrap onto their own row. Every header link has a (44px) minimum height.
+
+Collection and workbench layouts are unchanged: a flexible sound column, an (18rem) monitor rail, and a (3rem) gap. From (761px) to (1000px) the rail is (16rem). At (760px) and below the monitor becomes a fixed bottom dock.
 
 ## Elevation & Depth
 
-The showcase uses no box shadows. Fine rules, paper/code tonal changes and solid
-ink bands supply depth. The monitor remains opaque paper; it uses stacking
-order rather than a floating shadow. Signal drawing and the click spark are
-content/state feedback, not surface elevation.
+The showcase uses no box shadows. Depth comes from the ink housing, the paper footer plate, code paper, and hairline rules. The charge well is a radial disc, not a raised card. The monitor uses stacking order and stays opaque.
 
-**The Ruled Surface Rule.** Separate specimens with fine rules and tonal surfaces; do not add floating-card shadows.
+**The Ruled Surface Rule.** Separate sections and specimens with hairline rules. Do not add floating-card shadows, glass, or a second decorative field behind the charge well.
 
 ## Shapes
 
-Specimens and signal bands keep rectangular silhouettes. Fine (1px) borders
-separate entries and define ordinary controls. Buttons, numeric fields, recipe
-editors and code panels share a modest (4px) control radius. Avoid promoting
-that small functional radius into a rounded-card treatment.
+The signature geometry is the concentric ring: the wordmark, the charge well, and the energy-charge preview mark. Specimens, buttons, and code stay rectangular. Controls, numeric fields, and code panels share a (4px) radius. Do not turn that radius into a rounded card.
 
 ## Components
 
 ### Buttons
 
-Compact, explicit actions. Play and pressed controls use brass and medium-bold
-text (600); ordinary actions are transparent with a sage border. Both share a
-minimum height of (44px), compact padding and the control radius. Play hover uses
-pale signal brass; ordinary hover uses code paper and an ink border. Disabled
-buttons have opacity (0.5) and a default cursor.
+Play and pressed controls use brass, ink text, and weight (600). Ordinary paper actions are transparent with a sage border and hover to code paper. Housing actions are transparent with an instrument-line border, paper text, and an instrument-hover fill. The minimum height is (44px). Disabled buttons use opacity (0.5). Background and border changes take (160ms) ease-out. Reduced motion removes transitions.
 
-All focusable showcase elements use a dark-ochre (3px) outline offset by (4px).
-On the ink hero, focus uses pale signal brass so the outline stays visible.
-Background and border changes transition over (160ms), with `ease-out`; reduced
-motion removes transitions. Play produces an eight-ray click response lasting
-(360ms), suppressed for reduced motion and hidden documents.
+Focus on paper is a dark-ochre (3px) outline offset by (4px). Focus on the header and the homepage is pale signal at the same width and offset. The hold control uses pale signal with an (8px) offset.
 
-### Cards / Containers
+### Install command
 
-Sound specimens are ruled entries, not enclosed cards. A desktop entry has
-(2.5rem) vertical padding; a mobile entry has (2rem). The workbench omits
-the top divider. Code panels use code paper, the control
-radius, overflow scrolling and no shadow.
-
-### Inputs / Fields
-
-Ranges remain native with green-ink accent, labelled values and tabular numerals.
-General ranges have a maximum width of (28rem) and a (44px) high input box.
-Numeric seed fields use paper, a sage border and a width of (8rem). Recipe
-editors use the same material, monospace type and a minimum height of (18rem).
-Recipe validation feedback uses a bordered text alert rather than sound alone.
+`npm install audiobits` is a code-paper chip. The Copy control writes that exact string and announces "Install command copied." The empty announcement does not take layout space. The footer repeats the same command as plain code, without a second copy button.
 
 ### Navigation
 
-The masthead pairs a bold sans-serif wordmark with a simple inline SVG signal
-mark and quiet text links. Navigation links omit underlines in the masthead;
-ordinary links elsewhere retain offset underlines that thicken on hover. The
-collection index is a wrapping list between rules, rather than chips. On mobile,
-the wordmark occupies its own row; masthead link boxes use the implemented
-(32px) minimum height.
+One header serves the homepage, the catalog, and both experience routes. The links are Home, Catalog, Docs, and GitHub. Catalog points at `/sounds` until a catalog URL exists. The current page is underlined in signal. Docs uses the Fumadocs sidebar instead of this header.
 
-### Audio Monitor and Portraits
+### Catalog preview
 
-The monitor pairs an ink waveform with current/last sound, engine state, effects
-volume, Mute and Stop all. Portraits use paper and ink with three reusable forms:
-pulse ellipses, harmonic bands and flowing lines. Collection previews and
-workbench portraits use these families. The homepage hero does not. Its rings
-follow charge from 0 to 1, including while muted. When motion is allowed, edge
-brightness follows the caller-owned analyser. Reduced motion, narrow viewports
-and a failed WebGL context keep the CSS rings without a continuous loop. Hold,
-Space and Enter reach full charge in three seconds. Release leaves the tail.
-Stop cuts it. Start charge, Release charge and the Charge slider are the
-manual path. Mute, visible playback state and an inline activation error stay
-in the hero. Static portrait geometry elsewhere is illustrative; live
-displacement follows native output. The monitor is the literal waveform, with
-labelled display gain. Drawing stops offscreen, while hidden and under reduced
-motion.
+The homepage preview is static. Two experience rows and three portrait links point at the live pages. Portraits keep the pulse, harmonic, and flow drawings. Nothing in that section starts audio.
 
-### Inspector
+### Audio monitor, workbench, and inspector
 
-Base UI tabs put Code, Recipe and available Raw Web Audio side by side. Selected
-tabs use ink on paper's inverse; tabs have (48px) targets. Code defaults to the
-small current example and links to production lifecycle. Recipe editing is opt-in.
-Seed, Randomize and Reset variation belong with playback, above the inspector.
+Collection and workbench behavior is unchanged. The monitor waveform reads native output. Portraits on those pages remain the paper-and-ink pulse, harmonic, and flow forms. Inspector tabs, recipe editing, and playback controls keep their existing paper-bench treatment.
 
 ## Do's and Don'ts
 
 ### Do:
 
-- **Do** keep Play, parameter labels and visible playback status ahead of the inspector.
-- **Do** use the paper, ink and brass roles consistently across showcase routes.
-- **Do** collapse specimen columns at the established mobile breakpoint and retain usable code overflow.
-- **Do** label native controls, retain visible focus, and respect reduced motion.
-- **Do** use real audio output for the waveform and a silent idle baseline.
+- **Do** keep Hold to charge as the homepage's primary action, with Explore the catalog and Start building as the text actions.
+- **Do** take the package version from generated metadata.
+- **Do** keep keyboard and touch targets at least (44px), including header, copy, and footer actions.
+- **Do** reset paper-surface focus to ochre wherever the housing has switched focus to signal.
+- **Do** let code wrap or scroll inside its own panel.
 
 ### Don't:
 
-- **Don't** introduce neon, glass, SaaS gradients, noisy effects or a DAW interface.
-- **Don't** turn a specimen entry into a floating rounded card.
-- **Don't** replace waveform data with a decorative looping signal.
-- **Don't** apply the showcase stylesheet as a redesign of the separate Fumadocs reference experience.
+- **Don't** mount a second live audio engine on the homepage.
+- **Don't** autoplay, rotate the hero, or add a decorative effect that competes with the charge well.
+- **Don't** restyle Fumadocs with the showcase housing.
+- **Don't** invent performance, package-size, adoption, or popularity claims.
+- **Don't** replace Fraunces on the charge numeral or the homepage headline. The face is part of the instrument.
 
-Source of truth: [global styles](app/globals.css), [landing styles](app/landing.css),
-[hero styles](app/charge-hero.css), [landing](app/page.tsx),
-[charge hero](app/charge-hero.tsx), [charge rings](app/charge-rings.tsx),
-[gallery](app/gallery-page.tsx),
-[sound specimens](app/sound-card.tsx), [output scope](app/output-scope.tsx) and
-[Play response](app/play-spark.tsx). This record describes the showcase, not the
-separate Fumadocs theme. Small utility captions and the mobile masthead's (32px)
-link boxes are observed implementation details, not a mandate for new surfaces
-or proof of touch/device acceptance.
+Source of truth: [global styles](app/globals.css), [landing styles](app/landing.css), [hero styles](app/charge-hero.css), [header](app/site-header.tsx), [landing](app/page.tsx), and [charge hero](app/charge-hero.tsx). This record describes the showcase, not the Fumadocs theme.

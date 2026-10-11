@@ -99,7 +99,7 @@ test("showcase pointer, keyboard, impact, mute and navigation own their lifecycl
     const p = await probe(page);
     expect(p.sources - p.ended).toBeLessThanOrEqual(9);
   }
-  await page.getByRole("link", { name: "Sounds", exact: true }).click();
+  await page.getByRole("link", { name: "Catalog", exact: true }).click();
   await expect
     .poll(async () => (await probe(page)).contexts)
     .toEqual(["closed"]);
@@ -222,7 +222,7 @@ test("discovery links, narrow touch input and reduced motion remain usable", asy
   });
   await expect(page.locator(".flight-state")).toHaveText("Thruster: stopped");
   await expect(page.locator("canvas")).toHaveAttribute("data-peak", "0");
-  await page.getByRole("link", { name: "Sounds", exact: true }).click();
+  await page.getByRole("link", { name: "Catalog", exact: true }).click();
   await expect(
     page.getByRole("link", { name: "Try the reactive thruster" }),
   ).toBeVisible();

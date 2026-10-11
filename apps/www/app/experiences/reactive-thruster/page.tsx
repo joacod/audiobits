@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { SiteHeader } from "../../site-header";
 import { reactiveThrusterExperience as experience } from "../../../lib/experiences";
 import { ThrusterShowcase } from "./showcase";
 import "./showcase.css";
@@ -20,14 +21,7 @@ export default function Page() {
   }));
   return (
     <main className="foundation thruster-showcase">
-      <nav className="masthead" aria-label="Main navigation">
-        <Link className="wordmark" href="/">
-          AudioBits
-        </Link>
-        <Link href="/sounds">Sounds</Link>
-        <Link href="/docs">Docs</Link>
-        <a href="https://github.com/joacod/audiobits">GitHub</a>
-      </nav>
+      <SiteHeader />
       <header className="thruster-intro">
         <h1>
           Give movement

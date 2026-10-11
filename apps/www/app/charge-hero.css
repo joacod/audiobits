@@ -38,10 +38,55 @@
     margin-top: 1.5rem;
   }
   .landing .charge-hero .landing-links a {
+    color: var(--paper);
+  }
+  .landing .charge-hero .landing-links a.landing-primary {
     color: var(--signal);
+  }
+  .landing .charge-hero .landing-links a.landing-quiet {
+    color: var(--instrument-quiet);
+    font-weight: 500;
   }
   .landing .charge-hero .landing-install {
     color: var(--ink);
+  }
+  .landing .install-line {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+    margin-top: 0.75rem;
+  }
+  .landing .install-line .landing-install {
+    margin-top: 0;
+    font-family: var(--font-code);
+    user-select: all;
+  }
+  .landing .copy-install {
+    color: var(--paper);
+    border-color: var(--instrument-line);
+    background: transparent;
+  }
+  .landing .charge-hero .copy-install:enabled:hover {
+    color: var(--ink);
+    background: var(--signal);
+    border-color: var(--signal);
+  }
+  .landing .copy-status {
+    flex-basis: 100%;
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--instrument-quiet);
+  }
+  .landing .copy-status:empty {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
   .landing .charge-stage {
     min-width: 0;
