@@ -68,7 +68,7 @@ test("hold keyboard and pointer reach full without completing; cancellation cuts
   await page.keyboard.up("Space");
   await expect(page.locator(".energy-state")).toHaveText("Charge: stopped");
   const box = (await pad.boundingBox())!;
-  await page.mouse.move(box.x + 40, box.y + 40);
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   await page.mouse.down();
   await expect(page.locator(".energy-state")).toHaveText("Charge: running");
   await pad.dispatchEvent("pointercancel", { pointerId: 99 });
