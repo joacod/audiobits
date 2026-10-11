@@ -217,7 +217,7 @@ Fraunces carries the headline, section titles, the wordmark, and the charge nume
 
 Showcase pages use a content width of (76rem). The gutter is `max(1.5rem, calc((100vw - 76rem) / 2))`, and (1rem) below (760px). Full-bleed bands cancel that gutter with an equal negative margin.
 
-The homepage order is header, Energy Charge hero, three short use columns, a static catalog preview, and a paper footer. The hero is two columns above (900px): copy on the left, the charge well on the right. At (900px) and below it stacks, with the copy directly above the well. At (760px) and below the well is at most (22rem), so Hold to charge stays in the first screen at (375px) by (900px). Use columns and the three sound previews stay three-across until (760px), then stack. Experience rows become two columns at that same breakpoint.
+The homepage order is header, Energy Charge hero, three short use columns, a static catalog preview, and a paper footer. The hero is two columns above (900px): copy on the left, the charge well on the right. At (900px) and below it stacks, with the copy directly above the well. At (760px) and below the well is at most (22rem). At (420px) and below it is at most (19rem), so the full ring stays in the first screen at (375px) by (844px). Use columns and the three sound previews stay three-across until (760px), then stack. Experience rows become two columns at that same breakpoint.
 
 The shared header is an ink band. On the homepage its background is transparent so it joins the housing. On catalog routes it is a solid ink band over the paper bench. At (760px) and below, the links wrap onto their own row. Every header link has a (44px) minimum height.
 

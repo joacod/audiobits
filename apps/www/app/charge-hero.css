@@ -313,6 +313,11 @@
       font-size: 2rem;
     }
   }
+  @media (max-width: 420px) {
+    .landing .charge-well {
+      width: min(100%, 19rem);
+    }
+  }
   @media (prefers-reduced-motion: reduce) {
     .landing .charge-rings {
       animation: none;
