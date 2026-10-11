@@ -99,7 +99,10 @@ test("showcase pointer, keyboard, impact, mute and navigation own their lifecycl
     const p = await probe(page);
     expect(p.sources - p.ended).toBeLessThanOrEqual(9);
   }
-  await page.getByRole("link", { name: "Catalog", exact: true }).click();
+  await page
+    .getByRole("navigation", { name: "Main navigation" })
+    .getByRole("link", { name: "Catalog", exact: true })
+    .click();
   await expect
     .poll(async () => (await probe(page)).contexts)
     .toEqual(["closed"]);
@@ -169,9 +172,13 @@ test("copy actions return every complete canonical source file and report clipbo
   page,
 }) => {
   await instrument(page);
+  const interaction = page.getByRole("tabpanel", {
+    name: "Complete interaction",
+  });
+  await page.getByRole("tab", { name: "Complete interaction" }).click();
+  await expect(interaction).toBeVisible();
   for (const name of ["recipe.ts", "pointer.ts", "host.ts", "index.html"]) {
-    await page.locator("summary").filter({ hasText: name }).click();
-    await page
+    await interaction
       .getByRole("button", { name: `Copy ${name}`, exact: true })
       .click();
     const copied = await page.evaluate(
@@ -186,7 +193,9 @@ test("copy actions return every complete canonical source file and report clipbo
       throw new Error("denied");
     };
   });
-  await page.getByRole("button", { name: "Copy host.ts", exact: true }).click();
+  await interaction
+    .getByRole("button", { name: "Copy host.ts", exact: true })
+    .click();
   await expect(
     page.getByRole("status").filter({ hasText: "Copy unavailable" }),
   ).toBeVisible();
@@ -222,7 +231,14 @@ test("discovery links, narrow touch input and reduced motion remain usable", asy
   });
   await expect(page.locator(".flight-state")).toHaveText("Thruster: stopped");
   await expect(page.locator("canvas")).toHaveAttribute("data-peak", "0");
-  await page.getByRole("link", { name: "Catalog", exact: true }).click();
+  await expect(page.locator(".thruster-ribbons")).toHaveAttribute(
+    "data-renderer",
+    "canvas",
+  );
+  await page
+    .getByRole("navigation", { name: "Main navigation" })
+    .getByRole("link", { name: "Catalog", exact: true })
+    .click();
   await expect(page).toHaveURL("http://127.0.0.1:3100/catalog");
   await expect(
     page.getByRole("link", { name: "Open reactive thruster", exact: true }),

@@ -498,6 +498,9 @@ test("unknown catalog slugs stay 404 while older sound routes stay available", a
   expect((await request.get(`${home}/sounds/impact`)).status()).toBe(200);
   expect((await request.get(`${home}/catalog/not-a-sound`)).status()).toBe(404);
   expect((await request.get(`${home}/catalog/energy-charge`)).status()).toBe(
-    404,
+    200,
   );
+  expect(
+    (await request.get(`${home}/catalog/reactive-thruster`)).status(),
+  ).toBe(200);
 });

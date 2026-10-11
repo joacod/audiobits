@@ -85,7 +85,7 @@ export async function instrument(
       },
     });
   }, activation);
-  await page.goto(`http://127.0.0.1:3100/experiences/${route}`);
+  await page.goto(`http://127.0.0.1:3100/catalog/${route}`);
 }
 export const probe = (page: Page) =>
   page.evaluate(() => {

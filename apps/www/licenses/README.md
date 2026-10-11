@@ -13,6 +13,13 @@ Showcase assets and adaptations stay in this website workspace.
   The original clock cycle, pointer parallax, click burst, noise and three.js
   renderer are not included. Same [license](react-bits.txt): MIT with Commons
   Clause, copyright 2026 David Haz. Website-only. Not shipped in the package.
+- [React Bits Ribbons](https://reactbits.dev/animations/ribbons): free
+  component, adapted in `app/thruster-ribbons.tsx` so the trail follows the
+  thruster play-surface point, throttle, and measured output. The published
+  window listeners, independent cursor chase, and continuous demo loop are not
+  included. Same [license](react-bits.txt): MIT with Commons Clause, copyright
+  2026 David Haz. Website-only. Not shipped in the package or the independent
+  catalog.
 - [React Bits Waves](https://github.com/DavidHDev/react-bits/blob/main/src/ts-default/Backgrounds/Waves/Waves.tsx):
   inspected as the hero linework reference. The bounded portrait painter is an
   independent native-canvas implementation driven by AudioBits samples; no Waves

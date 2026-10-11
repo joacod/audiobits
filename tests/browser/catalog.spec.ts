@@ -70,7 +70,15 @@ test("catalog lists both groups once and links to the current pages", async ({
   ).toBeVisible();
   await expect(page.locator("[data-audio-session]")).toHaveCount(1);
   await index.getByRole("link", { name: "Energy charge", exact: true }).click();
-  await expect(page).toHaveURL(`${home}/experiences/energy-charge`);
+  await expect(page).toHaveURL(`${home}/catalog/energy-charge`);
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Energy charge", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page
+      .getByRole("navigation", { name: "Catalog" })
+      .getByRole("link", { name: "Energy charge", exact: true }),
+  ).toHaveAttribute("aria-current", "page");
   await page.goto(catalog);
   await page
     .getByRole("link", { name: "Open impact workbench", exact: true })

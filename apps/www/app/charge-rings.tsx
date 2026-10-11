@@ -82,8 +82,11 @@ const reducedQuery = "(prefers-reduced-motion: reduce)";
 
 function publishLevel(surface: HTMLDivElement, peak: number) {
   const level = peak < 0.0008 ? 0 : peak;
-  surface.dataset.level = level === 0 ? "0" : level.toFixed(4);
-  surface.style.setProperty("--level", level.toFixed(4));
+  const text = level === 0 ? "0" : level.toFixed(4);
+  surface.dataset.level = text;
+  surface.style.setProperty("--level", text);
+  const canvas = surface.querySelector("canvas");
+  if (canvas) canvas.dataset.peak = text;
 }
 
 export function ChargeRings({
@@ -345,7 +348,7 @@ export function ChargeRings({
         />
       ))}
       <span className="charge-core" />
-      <canvas ref={canvas} />
+      <canvas ref={canvas} data-peak="0" />
     </div>
   );
 }

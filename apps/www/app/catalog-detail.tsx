@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { CatalogLayout } from "./catalog-layout";
-import { catalogEntries } from "../lib/catalog";
+import { bundledCatalogEntry, catalogEntries } from "../lib/catalog";
 import type { CatalogEntry } from "../lib/catalog";
 import { siteBuild } from "../lib/site-build";
 
@@ -73,7 +73,7 @@ function sourceLabel(entry: CatalogEntry) {
   }
   return (
     <>
-      Interactive experience. Source{" "}
+      Independent catalog source, not an audiobits/recipes export.{" "}
       {entry.source.files.map((file, index) => (
         <span key={file}>
           {index > 0 ? ", " : null}
@@ -92,9 +92,17 @@ function CatalogRelated({ entry }: { entry: CatalogEntry }) {
   const index = group.findIndex((item) => item.slug === entry.slug);
   const previous = group[(index - 1 + group.length) % group.length];
   const next = group[(index + 1) % group.length];
+  const showNext = next && next !== previous;
   const rest = group.filter(
     (item) => item.slug !== entry.slug && item !== previous && item !== next,
   );
+  const relatedSounds =
+    entry.category === "experience"
+      ? entry.relatedSounds.flatMap((slug) => {
+          const sound = bundledCatalogEntry(slug);
+          return sound ? [sound] : [];
+        })
+      : [];
   const heading =
     entry.category === "bundled" ? "Related sounds" : "Related experiences";
   return (
@@ -104,7 +112,7 @@ function CatalogRelated({ entry }: { entry: CatalogEntry }) {
         {previous && (
           <Link href={previous.href}>Previous: {previous.title}</Link>
         )}
-        {next && <Link href={next.href}>Next: {next.title}</Link>}
+        {showNext && next && <Link href={next.href}>Next: {next.title}</Link>}
         {rest.length > 0 && (
           <ul>
             {rest.map((item) => (
@@ -115,6 +123,15 @@ function CatalogRelated({ entry }: { entry: CatalogEntry }) {
           </ul>
         )}
       </nav>
+      {relatedSounds.length > 0 && (
+        <nav aria-label="Related sounds">
+          {relatedSounds.map((sound) => (
+            <Link key={sound.slug} href={sound.href}>
+              {sound.title}
+            </Link>
+          ))}
+        </nav>
+      )}
       <nav className="catalog-docs" aria-label="Documentation">
         <Link href="/docs/recipes">Recipes</Link>
         <Link href="/docs/parameters">Parameters</Link>

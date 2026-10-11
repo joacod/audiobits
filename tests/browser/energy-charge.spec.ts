@@ -45,7 +45,10 @@ test("progress moves both ways on one voice, holds full, releases and tears down
       return p.sources === p.ended;
     })
     .toBe(true);
-  await page.getByRole("link", { name: "Catalog", exact: true }).click();
+  await page
+    .getByRole("navigation", { name: "Main navigation" })
+    .getByRole("link", { name: "Catalog", exact: true })
+    .click();
   await expect
     .poll(async () => (await probe(page)).contexts)
     .toEqual(["closed"]);
@@ -133,9 +136,17 @@ test("canonical source copying, clipboard denial, narrow touch and reduced motio
   await page.setViewportSize({ width: 390, height: 844 });
   await page.emulateMedia({ reducedMotion: "reduce" });
   await instrument(page, "normal", "energy-charge");
+  const interaction = page.getByRole("tabpanel", {
+    name: "Complete interaction",
+  });
+  await page.getByRole("tab", { name: "Complete interaction" }).click();
+  await expect(interaction).toBeVisible();
+  await expect(page.locator(".charge-rings")).toHaveAttribute(
+    "data-renderer",
+    "css",
+  );
   for (const name of ["recipe.ts", "progress.ts", "host.ts", "index.html"]) {
-    await page.locator("summary").filter({ hasText: name }).click();
-    await page
+    await interaction
       .getByRole("button", { name: `Copy ${name}`, exact: true })
       .click();
     expect(
@@ -149,7 +160,9 @@ test("canonical source copying, clipboard denial, narrow touch and reduced motio
       throw new Error("denied");
     };
   });
-  await page.getByRole("button", { name: "Copy host.ts", exact: true }).click();
+  await interaction
+    .getByRole("button", { name: "Copy host.ts", exact: true })
+    .click();
   await expect(
     page.getByRole("status").filter({ hasText: "Copy unavailable" }),
   ).toBeVisible();
