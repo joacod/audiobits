@@ -185,9 +185,9 @@ test("canonical source copying, clipboard denial, narrow touch and reduced motio
     touchPoints: [],
   });
   await expect(page.locator(".energy-state")).toHaveText("Charge: stopped");
-  await page.goto("http://127.0.0.1:3100/sounds");
+  await page.goto("http://127.0.0.1:3100/catalog");
   await expect(
-    page.getByRole("link", { name: "Try energy charge" }),
+    page.getByRole("link", { name: "Open energy charge", exact: true }),
   ).toBeVisible();
 });
 

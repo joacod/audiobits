@@ -425,6 +425,9 @@
   }
 
   @media (max-width: 760px) {
+    .foundation.catalog-page:not(:has(.catalog-detail)) {
+      padding-bottom: calc(9rem + env(safe-area-inset-bottom));
+    }
     .foundation.catalog-page .catalog-menu {
       display: inline-flex;
       flex: none;

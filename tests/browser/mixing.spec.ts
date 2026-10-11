@@ -141,7 +141,7 @@ for (const target of ["site", "vanilla"] as const) {
     });
     await page.goto(
       target === "site"
-        ? "http://127.0.0.1:3100/sounds/confirmation"
+        ? "http://127.0.0.1:3100/catalog/confirmation"
         : "http://127.0.0.1:4173",
     );
     await page.getByRole("button", { name: "Play confirmation" }).click();
@@ -201,7 +201,7 @@ for (const target of ["site", "vanilla"] as const) {
   }) => {
     await page.goto(
       target === "site"
-        ? "http://127.0.0.1:3100/sounds/impact"
+        ? "http://127.0.0.1:3100/catalog/impact"
         : "http://127.0.0.1:4173",
     );
     await page.getByRole("button", { name: "Play impact" }).click();
@@ -212,11 +212,9 @@ for (const target of ["site", "vanilla"] as const) {
     if (target === "vanilla")
       await expect(page.locator("#level")).toContainText("Output peak:");
     if (target === "site")
-      await expect(
-        page
-          .getByRole("region", { name: "Procedural sound gallery" })
-          .getByRole("alert"),
-      ).toHaveCount(0);
+      await expect(page.locator(".catalog-transport [role=alert]")).toHaveCount(
+        0,
+      );
     else await expect(page.getByRole("alert")).toBeEmpty();
   });
 }

@@ -6,7 +6,6 @@ import {
   catalogEntriesByCategory,
   experienceDetailDescription,
 } from "../../apps/www/lib/catalog";
-import { soundInfo, soundKinds } from "../../apps/www/lib/gallery";
 import { siteUrl } from "../../apps/www/lib/site-url";
 
 const home = "http://127.0.0.1:3100";
@@ -39,12 +38,6 @@ test("public pages expose unique metadata and content without JavaScript", async
       description:
         "Browse interactive experiences and bundled sounds. Play a recipe, then open its workbench or the full example.",
     },
-    {
-      path: "/sounds",
-      title: "Sound collection | AudioBits",
-      description:
-        "Explore the bundled procedural sound effects. Play, compare, and customize sounds for interfaces and games, then open their code workbenches.",
-    },
     ...catalogEntriesByCategory("experience").map((entry) => ({
       path: entry.href,
       title: `${entry.title} | AudioBits`,
@@ -54,11 +47,6 @@ test("public pages expose unique metadata and content without JavaScript", async
       path: entry.href,
       title: `${entry.title} | AudioBits`,
       description: bundledDetailDescription(entry),
-    })),
-    ...soundKinds.map((slug) => ({
-      path: `/sounds/${slug}`,
-      title: `${soundInfo[slug].title} sound workbench | AudioBits`,
-      description: `${soundInfo[slug].description} ${soundInfo[slug].use}. Play, customize, and integrate with AudioBits.`,
     })),
     ...docs.map((doc) => ({ ...doc, title: `${doc.title} | AudioBits` })),
   ];
@@ -94,12 +82,17 @@ test("public pages expose unique metadata and content without JavaScript", async
       await expect(page.locator("main")).toContainText("npm install audiobits");
       await expect(page.locator('a[href="/docs"]').first()).toBeAttached();
     }
-  }
-  await page.goto(`${home}/sounds`);
-  for (const slug of soundKinds) {
-    await expect(
-      page.locator(`a[href="/sounds/${slug}"]`).first(),
-    ).toBeAttached();
+    expect(
+      await page.locator('a[href^="/sounds"], a[href^="/experiences"]').count(),
+      route.path,
+    ).toBe(0);
+    if (route.path === "/catalog") {
+      for (const entry of catalogEntries) {
+        await expect(
+          page.locator(`a[href="${entry.href}"]`).first(),
+        ).toBeAttached();
+      }
+    }
   }
 });
 
@@ -131,8 +124,6 @@ test("crawl files cover exactly the public pages and invalid routes stay 404", a
     "/",
     "/catalog",
     ...catalogEntries.map((entry) => entry.href),
-    "/sounds",
-    ...soundKinds.map((slug) => `/sounds/${slug}`),
     ...docs.map((doc) => doc.path),
   ];
   expect(urls.sort()).toEqual(
@@ -143,15 +134,43 @@ test("crawl files cover exactly the public pages and invalid routes stay 404", a
   expect(xml).not.toMatch(/lastmod|image:|video:/);
   for (const url of urls) {
     expect(new URL(url!).origin).toBe(siteUrl);
-    const response = await request.get(`${home}${new URL(url!).pathname}`);
+    const response = await request.get(`${home}${new URL(url!).pathname}`, {
+      maxRedirects: 0,
+    });
     expect(response.status(), url!).toBe(200);
   }
-  for (const path of [
-    "/sounds/not-a-sound",
+  const legacy = [
+    ["/sounds", "/catalog"],
+    ...catalogEntries.map((entry) => [`/sounds/${entry.slug}`, entry.href]),
+    ["/experiences/energy-charge", "/catalog/energy-charge"],
+    ["/experiences/reactive-thruster", "/catalog/reactive-thruster"],
+  ] as const;
+  for (const [from, to] of legacy) {
+    const response = await request.get(`${home}${from}?kept=1`, {
+      maxRedirects: 0,
+    });
+    expect(response.status(), from).toBe(308);
+    const location = new URL(response.headers().location ?? "", home);
+    expect(location.pathname, from).toBe(to);
+    expect(location.search, from).toBe("?kept=1");
+    const followed = await request.get(`${home}${from}`);
+    expect(followed.status(), from).toBe(200);
+    expect(new URL(followed.url()).pathname, from).toBe(to);
+  }
+  const legacyMissing = await request.get(`${home}/sounds/not-a-sound`, {
+    maxRedirects: 0,
+  });
+  expect(legacyMissing.status()).toBe(308);
+  expect(new URL(legacyMissing.headers().location ?? "", home).pathname).toBe(
     "/catalog/not-a-sound",
+  );
+  expect((await request.get(`${home}/sounds/not-a-sound`)).status()).toBe(404);
+  for (const path of [
+    "/catalog/not-a-sound",
+    "/experiences/not-a-page",
     "/docs/not-a-page",
   ]) {
-    const response = await request.get(`${home}${path}`);
+    const response = await request.get(`${home}${path}`, { maxRedirects: 0 });
     expect(response.status(), path).toBe(404);
   }
 });

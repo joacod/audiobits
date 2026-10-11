@@ -8,6 +8,7 @@ import {
   useSyncExternalStore,
 } from "react";
 import Link from "next/link";
+import { energyChargeExperience } from "../lib/experiences";
 import { mountEnergyCharge } from "../../../catalog/energy-charge/host";
 import { ArrowIcon } from "./arrow-icon";
 import { ChargeRings } from "./charge-rings";
@@ -124,7 +125,7 @@ export function ChargeHero() {
           <Link href="/docs">
             Start building <ArrowIcon />
           </Link>
-          <Link className="landing-quiet" href="/experiences/energy-charge">
+          <Link className="landing-quiet" href={energyChargeExperience.href}>
             Open energy charge <ArrowIcon />
           </Link>
         </div>

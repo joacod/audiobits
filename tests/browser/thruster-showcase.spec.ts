@@ -246,5 +246,5 @@ test("discovery links, narrow touch input and reduced motion remain usable", asy
   await page.goto("http://127.0.0.1:3100");
   await expect(
     page.getByRole("link", { name: "Reactive thruster" }),
-  ).toHaveAttribute("href", "/experiences/reactive-thruster");
+  ).toHaveAttribute("href", "/catalog/reactive-thruster");
 });

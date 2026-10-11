@@ -164,23 +164,6 @@
     width: 14px;
     height: 14px;
   }
-  .foundation .gallery-intro {
-    padding: 2.5rem 0 1rem;
-  }
-  .foundation .intro-line {
-    display: flex;
-    gap: 1.5rem;
-    align-items: baseline;
-    justify-content: space-between;
-    margin-top: 1rem;
-  }
-  .foundation .intro {
-    font-size: 1.05rem;
-  }
-  .foundation .gallery-channel {
-    color: var(--quiet);
-    font-size: 0.75rem;
-  }
   .foundation button {
     display: inline-flex;
     align-items: center;
@@ -303,36 +286,8 @@
     color: var(--signal);
     margin-top: 0.75rem;
   }
-  .foundation .sound-card {
-    display: grid;
-    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
-    gap: 3rem;
-    padding: 2.5rem 0;
-    border-top: 1px solid var(--rule);
-    scroll-margin-top: 7rem;
-  }
-  .foundation .sound-preview,
   .foundation .recipe-tools {
     min-width: 0;
-  }
-  .foundation .sound-preview h3 a {
-    text-decoration: none;
-  }
-  .foundation .sound-preview h3 a:hover {
-    text-decoration: underline;
-  }
-  .foundation .sound-use {
-    font-size: 0.75rem;
-    color: var(--quiet);
-    margin: 0.6rem 0;
-  }
-  .foundation .sound-preview > p:not(.sound-use) {
-    font-size: 0.9rem;
-  }
-  .foundation .sound-preview [aria-live] {
-    color: var(--quiet);
-    font-size: 0.8rem;
-    margin-bottom: 0;
   }
   .foundation .morph-endpoints {
     display: flex;
@@ -362,19 +317,6 @@
     border-radius: var(--control-radius);
     scrollbar-color: var(--quiet) var(--code);
     scrollbar-width: thin;
-  }
-  .foundation .sound-index {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.25rem 1.75rem;
-    border-block: 1px solid var(--rule);
-    padding: 1rem 0;
-  }
-  .foundation .sound-index a {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
-    font-size: 0.9rem;
   }
   .foundation .recipe-tools {
     display: block;
@@ -446,47 +388,6 @@
     color: var(--focus);
     z-index: 1;
   }
-  .foundation dl {
-    margin: 2rem 0;
-  }
-  .foundation dl > div {
-    display: grid;
-    grid-template-columns: 1fr 1.4fr;
-    gap: 3rem;
-    padding: 1.25rem 0;
-    border-top: 1px solid var(--rule);
-  }
-  .foundation dt {
-    font-family: var(--font-display);
-    font-size: 1.5rem;
-  }
-  .foundation dd {
-    color: var(--quiet);
-  }
-  .foundation .showcase-footer {
-    margin: 1rem 0 0;
-    border-top: 1px solid var(--ink);
-    padding: 3rem 0 0;
-  }
-  .foundation .showcase-footer h2 {
-    font-size: clamp(2rem, 4vw, 3rem);
-  }
-  .foundation .footer-links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 2rem;
-    margin: 1.5rem 0;
-  }
-  .foundation .footer-links a {
-    min-height: 44px;
-    display: inline-flex;
-    align-items: center;
-  }
-  .foundation .footer-fineprint {
-    color: var(--quiet);
-    font-size: 0.75rem;
-    margin-top: 2rem;
-  }
   @media (max-width: 760px) {
     .foundation {
       --gutter: 1rem;
@@ -495,16 +396,6 @@
     .foundation .site-nav-links {
       flex-basis: 100%;
       margin-left: 0;
-    }
-    .foundation .gallery-intro {
-      padding-top: 1.75rem;
-    }
-    .foundation .intro-line {
-      display: block;
-      margin-top: 0.75rem;
-    }
-    .foundation .gallery-channel {
-      margin-bottom: 1rem;
     }
     .foundation .gallery-mixer {
       grid-template-columns: auto 1fr;
@@ -532,22 +423,6 @@
       gap: 0.25rem;
       font-size: 0.7rem;
     }
-    .foundation .sound-card {
-      grid-template-columns: minmax(0, 1fr);
-      gap: 1.5rem;
-      padding: 2rem 0;
-      scroll-margin-top: 9rem;
-    }
-    .foundation .sound-preview h3 {
-      font-size: 2rem;
-    }
-    .foundation dl > div {
-      grid-template-columns: minmax(0, 1fr);
-      gap: 0.5rem;
-    }
-    .foundation .showcase-footer {
-      padding-top: 2rem;
-    }
   }
   @media (prefers-reduced-motion: reduce) {
     .foundation *,
@@ -562,15 +437,6 @@
 
 @layer components {
   @media (max-width: 760px) {
-    .foundation .gallery-intro {
-      padding: 1.25rem 0 0.25rem;
-    }
-    .foundation .intro-line {
-      margin-top: 0.5rem;
-    }
-    .foundation .gallery-channel {
-      margin-bottom: 0.5rem;
-    }
     .foundation .gallery-mixer {
       padding-block: 0.5rem;
       row-gap: 0;
@@ -586,15 +452,6 @@
 }
 
 @layer components {
-  .foundation .lab-session {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 18rem;
-    gap: 3rem;
-    align-items: start;
-  }
-  .foundation .session-sounds {
-    min-width: 0;
-  }
   .foundation .audio-monitor {
     display: flex;
     flex-direction: column;
@@ -631,16 +488,6 @@
   .foundation .monitor-expand {
     display: none;
   }
-  .foundation .compact-sound {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 0.75rem;
-  }
-  .foundation .compact-sound .sound-preview {
-    max-width: 42rem;
-  }
-  .foundation .compact-sound .sound-preview > p:not(.sound-use) {
-    max-width: 60ch;
-  }
   .foundation .variation-controls {
     display: flex;
     gap: 1rem;
@@ -655,32 +502,6 @@
   }
   .foundation .variation-controls p {
     flex-basis: 100%;
-  }
-  .foundation .open-sound {
-    justify-self: start;
-    padding-block: 0.75rem;
-  }
-  .foundation .sound-workbench {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 1.5rem;
-    padding-top: 0;
-    border-top: 0;
-  }
-  .foundation .sound-workbench .sound-preview h3,
-  .foundation .sound-workbench .sound-preview > p:not([aria-live]) {
-    display: none;
-  }
-  .foundation .workbench-nav {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem 2rem;
-    margin-block: 1rem 2rem;
-  }
-  .foundation .workbench-nav a {
-    padding-block: 0.5rem;
-  }
-  .foundation .workbench-nav a:first-child {
-    margin-right: auto;
   }
   .foundation .sound-portrait {
     background: var(--paper);
@@ -727,19 +548,7 @@
   .foundation .recipe-tools textarea {
     min-height: 24rem;
   }
-  @media (max-width: 1000px) and (min-width: 761px) {
-    .foundation .lab-session {
-      grid-template-columns: minmax(0, 1fr) 16rem;
-      gap: 1.5rem;
-    }
-  }
   @media (max-width: 760px) {
-    .foundation {
-      padding-bottom: calc(12rem + env(safe-area-inset-bottom));
-    }
-    .foundation .lab-session {
-      display: block;
-    }
     .foundation .audio-monitor {
       position: fixed;
       inset: auto 0 0;
@@ -809,17 +618,11 @@
     .foundation .sound-portrait canvas {
       height: 13rem;
     }
-    .foundation .sound-card {
-      scroll-margin-top: 1rem;
-    }
     .foundation .inspector-tabs {
       gap: 0;
     }
     .foundation .inspector-tabs button {
       padding-inline: 0.65rem;
-    }
-    .foundation .workbench-nav {
-      gap: 0.5rem 1rem;
     }
   }
 }

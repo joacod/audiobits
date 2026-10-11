@@ -37,7 +37,7 @@ for (const width of [375, 768, 1440]) {
     }
     await expect(
       page.getByRole("link", { name: "Open energy charge", exact: true }),
-    ).toHaveAttribute("href", "/experiences/energy-charge");
+    ).toHaveAttribute("href", "/catalog/energy-charge");
     const previews = page.locator(".landing-sound-entry");
     const structures: string[] = [];
     for (const [kind, family, shape, count] of [
@@ -48,14 +48,14 @@ for (const width of [375, 768, 1440]) {
       const entry = previews
         .filter({ has: page.locator(`svg.preview-${family}`) })
         .first();
-      await expect(entry).toHaveAttribute("href", `/sounds/${kind}`);
+      await expect(entry).toHaveAttribute("href", `/catalog/${kind}`);
       const svg = entry.locator(`svg.preview-${family}`);
       await expect(svg).toHaveAttribute("aria-hidden", "true");
       await expect(svg.locator(shape)).toHaveCount(count);
       structures.push(await svg.innerHTML());
       await entry.click();
-      await expect(page).toHaveURL(`${home}/sounds/${kind}`);
-      await expect(page.locator(".sound-workbench")).toBeVisible();
+      await expect(page).toHaveURL(`${home}/catalog/${kind}`);
+      await expect(page.locator(".catalog-bench")).toBeVisible();
       await page.goto(home);
     }
     expect(new Set(structures).size).toBe(3);
