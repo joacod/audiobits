@@ -57,10 +57,14 @@ adequate contrast, reduced motion, mute and explicit Stop. No sound-only feedbac
 
 ## Route purposes
 
-- `/`: persuade by holding Energy Charge. One voice follows progress, the rings
-  show that charge, and a labelled `voice.set({ charge })` excerpt shows the
-  same value. Links open the full energy charge experience and the docs. A
-  compact four-sound preview leads to the collection.
-- `/sounds`: operate a light sound collection with a persistent audio monitor.
+- `/`: persuade on a first visit. A short explanation sits with one Energy
+  Charge instrument. Hold is the proof. The page then distinguishes the
+  installable package, eight bundled recipes, and two copy-paste examples, and
+  previews Energy Charge, Reactive Thruster, and three bundled sounds without
+  starting them. Catalog, documentation, and `npm install audiobits` stay in
+  reach. No second live engine.
+- `/sounds`: operate a light sound collection with a persistent audio monitor. The shared header's Catalog item points here.
 - `/sounds/[slug]`: understand and customize one sound with playback variation and a tabbed inspector.
+- `/experiences/energy-charge`: open the complete charge host and copy that page.
+- `/experiences/reactive-thruster`: open the complete movement host and copy that page.
 - `/docs`: read the calm Fumadocs reference; marketing components do not enter it.

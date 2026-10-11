@@ -28,7 +28,7 @@ for (const width of [375, 768, 1440]) {
     await expect(page.locator(".charge-binding code")).toContainText(
       "voice.set({ charge:",
     );
-    for (const name of ["Sounds", "Docs", "GitHub"]) {
+    for (const name of ["Home", "Catalog", "Docs", "GitHub"]) {
       await expect(
         page
           .getByRole("navigation", { name: "Main navigation" })
@@ -49,7 +49,7 @@ for (const width of [375, 768, 1440]) {
         .filter({ has: page.locator(`svg.preview-${family}`) })
         .first();
       await expect(entry).toHaveAttribute("href", `/sounds/${kind}`);
-      const svg = entry.locator("svg");
+      const svg = entry.locator(`svg.preview-${family}`);
       await expect(svg).toHaveAttribute("aria-hidden", "true");
       await expect(svg.locator(shape)).toHaveCount(count);
       structures.push(await svg.innerHTML());
@@ -65,7 +65,7 @@ for (const width of [375, 768, 1440]) {
     });
     await page.screenshot({ path: testInfo.outputPath(`hero-${width}.png`) });
     await page
-      .getByRole("link", { name: "Explore the full collection" })
+      .getByRole("link", { name: "Explore the catalog", exact: true })
       .click();
     await expect(page.locator("article.sound-card")).toHaveCount(8);
   });

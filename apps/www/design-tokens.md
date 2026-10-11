@@ -1,57 +1,36 @@
-# Gallery design tokens
+# Showcase design tokens
 
-The gallery's tokens and component styles live in [app/globals.css](app/globals.css).
-They apply to the homepage, sound gallery, and individual sound pages. Fumadocs
-continues to own the documentation theme and the gallery's surface, background,
-and border colors.
+Showcase color, type, and motion tokens live on `.foundation` in
+[app/globals.css](app/globals.css). They cover the homepage, the shared header,
+the sound gallery, and individual sound pages. Fumadocs keeps its own theme.
+The document light and dark classes do not repaint `.foundation`.
 
 ## Source of truth
 
-CSS custom properties are the source of truth. The stylesheet declares the
-Tailwind-compatible layer order `theme, tokens, base, components, utilities`.
-Gallery tokens live in `tokens`, the body reset in `base`, and gallery styles in
-`components`. Tailwind utilities can override component styles when needed.
-No generated token files or additional build tools are required.
+CSS custom properties on `.foundation` are the source of truth. The stylesheet
+declares the layer order `theme, tokens, base, components, utilities`. The
+showcase custom properties are set inside the `components` layer, on
+`.foundation`, so they do not leak into documentation pages.
 
-- `--instrument-space-*` supplies the shared spacing scale.
-- `--instrument-color-*` names action backgrounds, text on actions, focus rings,
-  and slider accents. Focus and slider colors initially reuse the action color
-  but can change independently.
-- `--instrument-control-*`, `--instrument-field-radius`, and
-  `--instrument-card-radius` define shared control sizes, padding, disabled
-  opacity, and corner radii.
-- `--instrument-text-*` and `--instrument-weight-*` define repeated text styles.
-- `--instrument-border-width`, `--instrument-focus-*`, and
-  `--instrument-layer-mixer` define border, focus, and sticky mixer behavior.
-- Page padding is scoped to `.foundation`; card padding is scoped to
-  `.sound-card`. The narrow-screen rules override these local tokens.
+Shared roles:
+
+- `--paper`, `--ink`, `--quiet`, `--rule`, `--accent`, `--signal`, and `--code` are the palette.
+- `--focus` is the outline color. Paper surfaces use dark ochre. The header and the homepage set it to `--signal`.
+- `--focus-bench` keeps the ochre value so a paper footer can restore it after the housing overrides `--focus`.
+- `--instrument-line`, `--instrument-quiet`, `--instrument-well`, and `--instrument-hover` are the housing line, support text, charge well, and housing hover.
+- `--font-display`, `--font-ui`, and `--font-code` name Fraunces, Arial, and the monospace stack.
+- `--gutter`, `--gap`, `--control-radius`, and `--motion-ui` set the page inset, the base gap, the (4px) control radius, and the (160ms) control transition.
+
+The homepage does not invent a second palette. `.foundation.landing` uses ink as the ground and paper as the text color, then the footer plate reverses that pair. Catalog and experience pages keep paper as the ground.
+
+Hero geometry, ring color mixes, and one-off fluid sizes stay local to [app/charge-hero.css](app/charge-hero.css) and [app/landing.css](app/landing.css). Do not add a token for a value that appears once.
 
 ## Updating styles
 
-Reuse an existing token before adding one. Add a semantic role for a repeated
-product decision; keep one-off values, such as the fluid title size and recipe
-editor height, local. Do not create a token for every declaration or duplicate
-Fumadocs' theme palette.
+Reuse an existing token before adding one. Add a semantic role only for a repeated product decision. Keep Fumadocs colors out of this file.
 
-Use the existing `.dark` theme mechanism for any future gallery color overrides.
-Check action foreground/background pairs and focus visibility in both themes.
-An alias overridden by theme should be redeclared alongside its source token
-when it needs to follow that override.
+Do not theme the showcase by overriding these tokens under `.dark`. A future color change belongs on `.foundation`, with an explicit local override for the housing or the paper bench. Check focus on both surfaces: signal must be visible on ink, and ochre must be visible on paper.
 
-Buttons retain their selected state through `aria-pressed`. Hover feedback is
-limited to enabled buttons. Within `.audio-controls`, `gap` owns spacing and
-button margins are zero; standalone buttons retain their original margins.
-Playback buttons use `.play-action` for the filled accent treatment; supporting
-actions use neutral borders and hover surfaces. Sound panels place playback
-beside recipe tools on wide screens and stack in DOM order at narrow widths.
-The sticky mixer groups its actions and volume side by side on wide screens.
-The existing reduced-motion override remains scoped to the gallery.
+Buttons keep a pressed state with `aria-pressed`. Hover applies to enabled buttons. Playback uses `.play-action`. Reduced motion removes showcase transitions and the charge ring loop.
 
-Impeccable work targets these custom gallery surfaces. Leave Fumadocs routes,
-components, MDX content, and shared theme definitions unchanged unless explicitly
-requested; see [the website instructions](AGENTS.md). When changing this shared
-stylesheet, also check a documentation page for unintended visual changes.
-
-Verify changes with `pnpm build:site` and `pnpm lint`, then inspect the homepage
-at desktop and narrow widths in light and dark themes. Check keyboard focus,
-selected and disabled states, recipe disclosures, and horizontal overflow.
+When this stylesheet changes, check a documentation page as well as the homepage. The docs page should still follow Fumadocs in both document themes.

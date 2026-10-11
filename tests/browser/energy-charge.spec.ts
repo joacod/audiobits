@@ -45,7 +45,7 @@ test("progress moves both ways on one voice, holds full, releases and tears down
       return p.sources === p.ended;
     })
     .toBe(true);
-  await page.getByRole("link", { name: "Sounds", exact: true }).click();
+  await page.getByRole("link", { name: "Catalog", exact: true }).click();
   await expect
     .poll(async () => (await probe(page)).contexts)
     .toEqual(["closed"]);

@@ -27,14 +27,23 @@
     --signal: #ecce82;
     --code: #e8e6db;
     --focus: #715600;
+    --focus-bench: #715600;
+    --instrument-line: #768b7d;
+    --instrument-quiet: #cfdbcf;
+    --instrument-well: #1a2c24;
+    --instrument-hover: #344e40;
+    --font-display: "Fraunces", Georgia, serif;
+    --font-ui: Arial, sans-serif;
+    --font-code: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     --gutter: max(1.5rem, calc((100vw - 76rem) / 2));
     --gap: 1.5rem;
     --control-radius: 4px;
+    --motion-ui: 160ms;
     background: var(--paper);
     color: var(--ink);
     min-height: 100vh;
     padding: 0 var(--gutter) 3rem;
-    font-family: Arial, sans-serif;
+    font-family: var(--font-ui);
     font-size: 1rem;
     line-height: 1.55;
     color-scheme: light;
@@ -64,7 +73,7 @@
   .foundation h1,
   .foundation h2,
   .foundation h3 {
-    font-family: "Fraunces", Georgia, serif;
+    font-family: var(--font-display);
     font-weight: 450;
     text-wrap: balance;
   }
@@ -93,26 +102,67 @@
   .foundation em {
     font-weight: 400;
   }
-  .foundation .masthead {
+  .foundation .site-header {
+    margin: 0 calc(var(--gutter) * -1);
+    padding: 0 var(--gutter);
+    background: var(--ink);
+    color: var(--paper);
+    color-scheme: dark;
+    --focus: var(--signal);
+  }
+  .foundation .site-nav {
     display: flex;
-    gap: 2rem;
+    flex-wrap: wrap;
     align-items: center;
-    padding: 1rem 0;
-    border-bottom: 1px solid var(--ink);
+    gap: 0.25rem 1rem;
+    padding: 0.35rem 0;
   }
-  .foundation .masthead a {
+  .foundation .site-nav-links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.15rem 1.1rem;
+    margin-left: auto;
+  }
+  .foundation .site-header a {
     display: inline-flex;
-    min-height: 44px;
     align-items: center;
-    font-size: 0.9rem;
+    min-height: 44px;
+    gap: 0.45rem;
+    color: var(--paper);
+    font-size: 0.95rem;
     text-decoration: none;
+    transition: color var(--motion-ui) ease-out;
   }
-  .foundation .masthead .wordmark {
-    margin-right: auto;
-    font-size: 1.4rem;
-    font-weight: 700;
-    letter-spacing: -0.035em;
-    gap: 0.75rem;
+  .foundation .site-header a:hover {
+    color: var(--signal);
+  }
+  .foundation .site-header a[aria-current="page"] {
+    color: var(--signal);
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.45rem;
+  }
+  .foundation .site-header .wordmark {
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    font-weight: 520;
+    letter-spacing: -0.03em;
+    color: var(--paper);
+  }
+  .foundation .site-header .wordmark:hover {
+    color: var(--paper);
+  }
+  .foundation .site-header .mark-core {
+    fill: var(--accent);
+  }
+  .foundation .site-header .wordmark:hover .mark-core {
+    fill: var(--signal);
+  }
+  .foundation .arrow-icon {
+    flex: none;
+    width: 14px;
+    height: 14px;
   }
   .foundation .gallery-intro {
     padding: 2.5rem 0 1rem;
@@ -145,8 +195,8 @@
     font-size: 0.875rem;
     line-height: 1.3;
     transition:
-      background 160ms ease-out,
-      border-color 160ms ease-out;
+      background var(--motion-ui) ease-out,
+      border-color var(--motion-ui) ease-out;
   }
   .foundation button:enabled:hover {
     background: var(--code);
@@ -296,13 +346,19 @@
     font-size: 0.75rem;
     color: var(--quiet);
   }
+  .foundation pre,
+  .foundation code,
+  .foundation textarea {
+    font-family: var(--font-code);
+  }
   .foundation pre {
     background: var(--code);
     padding: 1.25rem;
     max-width: 100%;
     overflow: auto;
-    font-size: 0.8rem;
-    line-height: 1.7;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    tab-size: 2;
     border-radius: var(--control-radius);
     scrollbar-color: var(--quiet) var(--code);
     scrollbar-width: thin;
@@ -362,7 +418,6 @@
     border: 1px solid var(--rule);
     border-radius: var(--control-radius);
     background: var(--paper);
-    font-family: monospace;
     font-size: 0.85rem;
     scrollbar-color: var(--quiet) var(--paper);
   }
@@ -402,7 +457,7 @@
     border-top: 1px solid var(--rule);
   }
   .foundation dt {
-    font-family: "Fraunces", Georgia, serif;
+    font-family: var(--font-display);
     font-size: 1.5rem;
   }
   .foundation dd {
@@ -437,16 +492,9 @@
       --gutter: 1rem;
       --gap: 1rem;
     }
-    .foundation .masthead {
-      gap: 1rem;
-      flex-wrap: wrap;
-    }
-    .foundation .masthead .wordmark {
+    .foundation .site-nav-links {
       flex-basis: 100%;
-      min-height: 32px;
-    }
-    .foundation .masthead a {
-      min-height: 32px;
+      margin-left: 0;
     }
     .foundation .gallery-intro {
       padding-top: 1.75rem;

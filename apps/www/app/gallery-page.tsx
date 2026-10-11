@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ExperienceDiscovery } from "./experience-discovery";
+import { SiteHeader } from "./site-header";
 import { SoundGallery } from "./sound-gallery";
 import { siteBuild, rawExampleSource } from "../lib/site-build";
 import { soundInfo, soundKinds } from "../lib/gallery";
@@ -8,21 +9,7 @@ import type { SoundKind } from "../lib/gallery";
 export function GalleryPage({ selected }: { selected?: SoundKind }) {
   return (
     <main className="foundation showcase-collection">
-      <nav className="masthead" aria-label="Main navigation">
-        <Link href="/" className="wordmark">
-          AudioBits
-          <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
-            <path
-              d="M12 1v22M1 12h22M4 4l16 16M4 20 20 4"
-              stroke="currentColor"
-              strokeWidth="2"
-            />
-          </svg>
-        </Link>
-        <Link href="/sounds">Sounds</Link>
-        <Link href="/docs">Docs</Link>
-        <a href="https://github.com/joacod/audiobits">GitHub</a>
-      </nav>
+      <SiteHeader current="catalog" />
       <header className="gallery-intro">
         <h1>
           {selected ? soundInfo[selected].title : "The sound collection."}
