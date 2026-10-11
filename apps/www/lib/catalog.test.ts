@@ -44,10 +44,14 @@ test("catalog index covers every current entry once, in collection order", () =>
 
 test("catalog entries derive links and playback from website metadata", () => {
   const [charge, reactive] = catalogEntries;
+  expect(energyChargeExperience.href).toBe("/experiences/energy-charge");
+  expect(reactiveThrusterExperience.href).toBe(
+    "/experiences/reactive-thruster",
+  );
   expect(charge).toMatchObject({
     title: energyChargeExperience.title,
     description: energyChargeExperience.description,
-    href: energyChargeExperience.href,
+    href: "/catalog/energy-charge",
     controls: energyChargeExperience.controls,
     source: { files: energyChargeExperience.sourceFiles },
     preview: { family: "charge" },
@@ -55,7 +59,7 @@ test("catalog entries derive links and playback from website metadata", () => {
   expect(reactive).toMatchObject({
     title: reactiveThrusterExperience.title,
     description: reactiveThrusterExperience.description,
-    href: reactiveThrusterExperience.href,
+    href: "/catalog/reactive-thruster",
     controls: reactiveThrusterExperience.controls,
     source: { files: reactiveThrusterExperience.sourceFiles },
     preview: { family: "thruster" },
@@ -93,6 +97,6 @@ test("catalog entries derive links and playback from website metadata", () => {
   });
   expect(experienceThruster).toMatchObject({
     category: "experience",
-    href: "/experiences/reactive-thruster",
+    href: "/catalog/reactive-thruster",
   });
 });

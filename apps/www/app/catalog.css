@@ -517,6 +517,7 @@
   }
   .foundation.catalog-page .catalog-bench {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: 1rem 1.75rem;
     min-width: 0;
     margin-top: 0.5rem;
@@ -599,6 +600,198 @@
     border-top: 1px solid var(--rule);
     padding-top: 0.75rem;
   }
+  .foundation.catalog-page .catalog-charge-stage,
+  .foundation.catalog-page .catalog-thruster-stage {
+    min-width: 0;
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .foundation.catalog-page .catalog-charge-stage {
+    padding: 1.25rem 1rem 1rem;
+  }
+  .foundation.catalog-page .catalog-charge-stage ::selection,
+  .foundation.catalog-page .flight-pad ::selection {
+    background: var(--signal);
+    color: var(--ink);
+  }
+  .foundation.catalog-page .catalog-charge-well {
+    position: relative;
+    width: min(100%, 28rem);
+    aspect-ratio: 1;
+    margin-inline: auto;
+    background: radial-gradient(
+      circle,
+      var(--instrument-well) 0%,
+      transparent 72%
+    );
+  }
+  .foundation.catalog-page .catalog-charge-well .charge-hold {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 1;
+    width: clamp(11rem, 46%, 15.5rem);
+    aspect-ratio: 1;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    touch-action: none;
+    user-select: none;
+    color: var(--paper);
+    background:
+      radial-gradient(circle, rgb(26 44 36 / 0.92) 0 62%, transparent 64%),
+      conic-gradient(
+        from -90deg,
+        var(--accent) calc(var(--charge) * 1turn),
+        rgb(118 139 125 / 0.55) 0
+      );
+  }
+  .foundation.catalog-page .catalog-charge-well .charge-hold:enabled:hover {
+    color: var(--signal);
+    border: 0;
+    background:
+      radial-gradient(circle, rgb(26 44 36 / 0.92) 0 62%, transparent 64%),
+      conic-gradient(
+        from -90deg,
+        var(--signal) calc(var(--charge) * 1turn),
+        rgb(118 139 125 / 0.55) 0
+      );
+  }
+  .foundation.catalog-page .catalog-charge-well .charge-hold:focus-visible {
+    outline: 3px solid var(--signal);
+    outline-offset: 8px;
+  }
+  .foundation.catalog-page .catalog-charge-well .charge-percent {
+    font-family: Fraunces, Georgia, serif;
+    font-size: clamp(2rem, 4vw, 3.4rem);
+    font-weight: 450;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+    line-height: 0.9;
+  }
+  .foundation.catalog-page .catalog-charge-well .charge-hold-label {
+    margin-top: 0.45rem;
+    color: var(--paper);
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+  .foundation.catalog-page .flight-pad {
+    position: relative;
+    min-height: 24rem;
+    overflow: hidden;
+    touch-action: none;
+    cursor: grab;
+    user-select: none;
+    background:
+      radial-gradient(
+        circle at var(--x, 50%) var(--y, 46%),
+        rgb(224 184 86 / calc(0.08 + var(--thrust, 0) * 0.42)) 0%,
+        transparent 34%
+      ),
+      var(--ink);
+  }
+  .foundation.catalog-page .flight-pad[data-state="running"] {
+    cursor: grabbing;
+  }
+  .foundation.catalog-page .thruster-ribbons,
+  .foundation.catalog-page .thruster-ribbons canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+  .foundation.catalog-page .flight-craft {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    z-index: 2;
+    width: 1.15rem;
+    height: 1.15rem;
+    border-radius: 50%;
+    transform: translate(-50%, -50%) scale(calc(0.85 + var(--thrust, 0) * 0.7));
+    background: var(--accent);
+    pointer-events: none;
+  }
+  .foundation.catalog-page .flight-craft::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 50%;
+    width: 0.4rem;
+    height: calc(1.4rem + var(--thrust, 0) * 7.5rem);
+    transform: translateX(-50%);
+    background: linear-gradient(to top, transparent, var(--accent));
+    opacity: 0.9;
+  }
+  .foundation.catalog-page
+    .flight-pad:has(.thruster-ribbons[data-renderer="webgl"])
+    .flight-craft::before {
+    opacity: 0;
+  }
+  .foundation.catalog-page .flight-craft::after {
+    content: "";
+    position: absolute;
+    inset: 0.28rem;
+    border-radius: 50%;
+    background: var(--signal);
+  }
+  .foundation.catalog-page .flight-invitation,
+  .foundation.catalog-page .flight-readout {
+    position: absolute;
+    z-index: 2;
+    margin: 0;
+    pointer-events: none;
+    color: var(--paper);
+  }
+  .foundation.catalog-page .flight-invitation {
+    right: 1.25rem;
+    bottom: 1.1rem;
+    left: 1.25rem;
+    font-family: Fraunces, Georgia, serif;
+    font-size: clamp(1.45rem, 2vw, 1.8rem);
+    font-weight: 450;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+  .foundation.catalog-page .flight-readout {
+    top: 1rem;
+    left: 1.25rem;
+    display: flex;
+    gap: 0.75rem;
+    color: var(--instrument-quiet);
+    font-variant-numeric: tabular-nums;
+  }
+  .foundation.catalog-page .flight-readout output {
+    color: var(--signal);
+    font-weight: 700;
+  }
+  .foundation.catalog-page .catalog-playback p {
+    max-width: 62ch;
+  }
+  .foundation.catalog-page .catalog-source-tools {
+    min-width: 0;
+  }
+  .foundation.catalog-page .catalog-source-note,
+  .foundation.catalog-page .catalog-source-tools p {
+    max-width: 68ch;
+  }
+  .foundation.catalog-page .catalog-source-files {
+    display: grid;
+    gap: 0.85rem;
+    margin: 0.5rem 0 1rem;
+  }
+  .foundation.catalog-page .catalog-source-files p {
+    margin: 0.2rem 0;
+  }
+  .foundation.catalog-page .catalog-source-tools pre {
+    max-height: 16rem;
+  }
   .foundation.catalog-page .catalog-detail .inspector-tabs {
     margin-bottom: 0.75rem;
   }
@@ -620,6 +813,7 @@
     border-top: 1px solid var(--rule);
   }
   .foundation.catalog-page .catalog-related nav[aria-label="Related entries"],
+  .foundation.catalog-page .catalog-related nav[aria-label="Related sounds"],
   .foundation.catalog-page .catalog-docs {
     display: flex;
     flex-wrap: wrap;
@@ -668,6 +862,15 @@
     .foundation.catalog-page .catalog-detail .catalog-toolbar {
       justify-content: flex-end;
       min-height: 44px;
+    }
+    .foundation.catalog-page .flight-pad {
+      min-height: 16rem;
+    }
+    .foundation.catalog-page .catalog-charge-well {
+      width: min(100%, 16rem);
+    }
+    .foundation.catalog-page .catalog-detail .catalog-transport label {
+      margin: 0.15rem 0 0;
     }
     .foundation.catalog-page .catalog-stage .sound-portrait canvas {
       height: 8.5rem;

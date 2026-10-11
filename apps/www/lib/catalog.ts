@@ -20,6 +20,7 @@ export type ExperienceCatalogEntry = CatalogEntryBase & {
   controls: readonly string[];
   preview: { family: "charge" | "thruster" };
   source: { files: readonly string[] };
+  relatedSounds: readonly string[];
 };
 
 export type BundledCatalogEntry = CatalogEntryBase & {
@@ -77,10 +78,11 @@ export const catalogEntries: readonly CatalogEntry[] = [
     title: item.experience.title,
     description: item.experience.description,
     category: "experience",
-    href: item.experience.href,
+    href: `/catalog/${item.slug}`,
     controls: item.experience.controls,
     preview: { family: item.preview },
     source: { files: item.experience.sourceFiles },
+    relatedSounds: item.experience.relatedSounds,
   })),
   ...bundledOrder.map((slug): BundledCatalogEntry => {
     const demo = demos[slug];
@@ -114,6 +116,15 @@ export function bundledCatalogEntry(slug: string) {
   return entry?.category === "bundled" ? entry : undefined;
 }
 
+export function experienceCatalogEntry(slug: string) {
+  const entry = catalogEntries.find((item) => item.slug === slug);
+  return entry?.category === "experience" ? entry : undefined;
+}
+
 export function bundledDetailDescription(entry: BundledCatalogEntry) {
   return `${entry.description} ${entry.use}. Play, customize, and copy the current sound.`;
+}
+
+export function experienceDetailDescription(entry: ExperienceCatalogEntry) {
+  return `${entry.description} Copy the independent source or the complete interaction.`;
 }

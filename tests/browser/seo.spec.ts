@@ -2,7 +2,9 @@ import { expect, test } from "@playwright/test";
 import { readFileSync, readdirSync } from "node:fs";
 import {
   bundledDetailDescription,
+  catalogEntries,
   catalogEntriesByCategory,
+  experienceDetailDescription,
 } from "../../apps/www/lib/catalog";
 import { soundInfo, soundKinds } from "../../apps/www/lib/gallery";
 import { siteUrl } from "../../apps/www/lib/site-url";
@@ -43,6 +45,11 @@ test("public pages expose unique metadata and content without JavaScript", async
       description:
         "Explore the bundled procedural sound effects. Play, compare, and customize sounds for interfaces and games, then open their code workbenches.",
     },
+    ...catalogEntriesByCategory("experience").map((entry) => ({
+      path: entry.href,
+      title: `${entry.title} | AudioBits`,
+      description: experienceDetailDescription(entry),
+    })),
     ...catalogEntriesByCategory("bundled").map((entry) => ({
       path: entry.href,
       title: `${entry.title} | AudioBits`,
@@ -123,7 +130,7 @@ test("crawl files cover exactly the public pages and invalid routes stay 404", a
   const paths = [
     "/",
     "/catalog",
-    ...catalogEntriesByCategory("bundled").map((entry) => entry.href),
+    ...catalogEntries.map((entry) => entry.href),
     "/sounds",
     ...soundKinds.map((slug) => `/sounds/${slug}`),
     ...docs.map((doc) => doc.path),
@@ -142,7 +149,6 @@ test("crawl files cover exactly the public pages and invalid routes stay 404", a
   for (const path of [
     "/sounds/not-a-sound",
     "/catalog/not-a-sound",
-    "/catalog/energy-charge",
     "/docs/not-a-page",
   ]) {
     const response = await request.get(`${home}${path}`);
