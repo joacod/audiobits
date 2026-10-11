@@ -3,7 +3,7 @@ version: 1
 slug: "app-page-tsx"
 primary_target: "app/page.tsx"
 related_targets:
-  ["app/gallery-page.tsx", "app/site-header.tsx", "app/sound-gallery.tsx"]
+  ["app/charge-hero.tsx", "app/site-header.tsx", "app/catalog/page.tsx"]
 ---
 
 # Charge housing: homepage

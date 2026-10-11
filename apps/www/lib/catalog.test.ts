@@ -44,10 +44,8 @@ test("catalog index covers every current entry once, in collection order", () =>
 
 test("catalog entries derive links and playback from website metadata", () => {
   const [charge, reactive] = catalogEntries;
-  expect(energyChargeExperience.href).toBe("/experiences/energy-charge");
-  expect(reactiveThrusterExperience.href).toBe(
-    "/experiences/reactive-thruster",
-  );
+  expect(energyChargeExperience.href).toBe("/catalog/energy-charge");
+  expect(reactiveThrusterExperience.href).toBe("/catalog/reactive-thruster");
   expect(charge).toMatchObject({
     title: energyChargeExperience.title,
     description: energyChargeExperience.description,

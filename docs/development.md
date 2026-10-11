@@ -27,7 +27,7 @@ in `apps/www`; the runtime remains framework-independent.
 ## Local package edits
 
 Edit a bundled definition in `packages/audiobits/src/recipes/index.ts` while
-`pnpm dev` runs. After tsdown emits the change, reload `/sounds`, open that
+`pnpm dev` runs. After tsdown emits the change, reload `/catalog`, open that
 sound's workbench and Recipe tab, and inspect the updated JSON before Play. The site
 uses `transpilePackages` and imports `audiobits` through its public exports,
 which point to `dist`; it never aliases library source. A refresh is the
@@ -164,22 +164,24 @@ The site consumes the local runtime without a version bump or npm publication.
 delivery and npm publishing are independent. The website displays the package
 version from the manifest.
 
-## Gallery examples
+## Catalog examples
 
-The gallery at `/sounds` and its eight sound routes keep one engine per
-mounted session. The audio monitor stays in a desktop rail or compact mobile
-dock. Restore in the workbench Recipe tab restores the bundled recipe, primary
-controls and seed 42; Reset variation changes only the seed. JSON Apply reports validation
-issues and preserves last-valid playback; applying valid data stops current
-voices. No JavaScript text is evaluated.
+`/catalog` keeps one engine for the bundled-sound rows. The output strip is a
+desktop row and a compact mobile dock. `/catalog/[slug]` uses that same session
+contract for one bundled sound. Each mounted workbench owns one engine and
+disposes it when the visitor leaves the entry. Restore in the Recipe tab
+restores the bundled recipe, primary controls and seed 42; Reset variation
+changes only the seed. JSON Apply reports validation issues and preserves
+last-valid playback; applying valid data stops current voices. No JavaScript
+text is evaluated.
 
-`/catalog/[slug]` uses that same session contract for one bundled sound.
-Each mounted workbench owns one engine and disposes it when the visitor
-leaves the entry. `/sounds` and `/sounds/[slug]` stay available.
+`/sounds`, `/sounds/[slug]`, `/experiences/energy-charge`, and
+`/experiences/reactive-thruster` permanently redirect to the matching catalog
+URL.
 
 `pnpm test` typechecks every TypeScript docs fence and generated examples across
 control/seed extrema through public exports. `pnpm test:browser` bundles the
 exact displayed host examples, then exercises activation, Stop, and disposal
-alongside signal equivalence and the gallery UI. Generated inputs/bundles and
+alongside signal equivalence and the catalog UI. Generated inputs/bundles and
 browser artifacts stay under ignored directories. This evidence is distinct
 from the maintainer-reported listening acceptance.

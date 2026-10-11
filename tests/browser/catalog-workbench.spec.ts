@@ -154,6 +154,9 @@ test("impact keeps recipe editing, seeds, current code, and raw comparison", asy
   await expect(page.getByRole("textbox")).toHaveCount(0);
   await page.getByRole("tab", { name: "Recipe", exact: true }).click();
   await expect(editor).toHaveValue("{");
+  await page.getByRole("button", { name: "View recipe", exact: true }).click();
+  await page.getByRole("button", { name: "Edit recipe", exact: true }).click();
+  await expect(editor).toHaveValue("{");
 
   const input = JSON.parse(bundled);
   input.unsupported = "alert('never executed')";
@@ -222,6 +225,7 @@ test("impact keeps recipe editing, seeds, current code, and raw comparison", asy
   await expect(page.locator(".catalog-parameters [role=alert]")).toContainText(
     "unsigned 32-bit integer",
   );
+  expect(await contexts(page)).toHaveLength(1);
 });
 
 test("whoosh shows only the controls in the applied recipe", async ({
@@ -246,6 +250,11 @@ test("whoosh shows only the controls in the applied recipe", async ({
   expect(example).toContain('import { whoosh } from "audiobits/recipes"');
   expect(example).toContain('"size":0.9');
   expect(example).toContain(`seed: ${seed}`);
+  await page.getByRole("tab", { name: "Recipe", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Copy whoosh recipe", exact: true })
+    .click();
+  expect(JSON.parse(await copied(page)).schemaVersion).toBe(1);
   await page
     .getByRole("button", { name: "Reset variation", exact: true })
     .click();
@@ -491,12 +500,24 @@ test("desktop and mobile workbenches keep playback with the inspector", async ({
   });
 });
 
-test("unknown catalog slugs stay 404 while older sound routes stay available", async ({
+test("unknown catalog slugs stay 404 and legacy sound routes redirect", async ({
   request,
 }) => {
-  expect((await request.get(`${home}/catalog/impact`)).status()).toBe(200);
-  expect((await request.get(`${home}/sounds/impact`)).status()).toBe(200);
-  expect((await request.get(`${home}/catalog/not-a-sound`)).status()).toBe(404);
+  expect(
+    (await request.get(`${home}/catalog/impact`, { maxRedirects: 0 })).status(),
+  ).toBe(200);
+  const legacy = await request.get(`${home}/sounds/impact`, {
+    maxRedirects: 0,
+  });
+  expect(legacy.status()).toBe(308);
+  expect(new URL(legacy.headers().location ?? "", home).pathname).toBe(
+    "/catalog/impact",
+  );
+  expect(
+    (
+      await request.get(`${home}/catalog/not-a-sound`, { maxRedirects: 0 })
+    ).status(),
+  ).toBe(404);
   expect((await request.get(`${home}/catalog/energy-charge`)).status()).toBe(
     200,
   );

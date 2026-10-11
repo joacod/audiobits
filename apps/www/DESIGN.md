@@ -177,7 +177,7 @@ The palette is oxidized green, warm paper, and brass. The frontmatter records th
 ### Neutral
 
 - **Green ink** (`ink`): homepage ground, shared header, main text on paper, and dark signal surfaces.
-- **Warm paper** (`paper`): catalog and experience pages, code chips, editable fields, and the homepage footer plate.
+- **Warm paper** (`paper`): catalog pages, code chips, editable fields, and the homepage footer plate.
 - **Quiet green** (`quiet`): supporting text on paper, including the npm version line.
 - **Pale instrument green** (`instrument-quiet`): supporting text and static portrait strokes on the housing.
 - **Sage rule** (`rule`): dividers and ordinary control borders on paper.
@@ -219,9 +219,9 @@ Showcase pages use a content width of (76rem). The gutter is `max(1.5rem, calc((
 
 The homepage order is header, Energy Charge hero, three short use columns, a static catalog preview, and a paper footer. The hero is two columns above (900px): copy on the left, the charge well on the right. At (900px) and below it stacks, with the copy directly above the well. At (760px) and below the well is at most (22rem), so Hold to charge stays in the first screen at (375px) by (900px). Use columns and the three sound previews stay three-across until (760px), then stack. Experience rows become two columns at that same breakpoint.
 
-The shared header is an ink band. On the homepage its background is transparent so it joins the housing. On catalog and experience routes it is a solid ink band over the paper bench. At (760px) and below, the links wrap onto their own row. Every header link has a (44px) minimum height.
+The shared header is an ink band. On the homepage its background is transparent so it joins the housing. On catalog routes it is a solid ink band over the paper bench. At (760px) and below, the links wrap onto their own row. Every header link has a (44px) minimum height.
 
-Collection and workbench layouts are unchanged: a flexible sound column, an (18rem) monitor rail, and a (3rem) gap. From (761px) to (1000px) the rail is (16rem). At (760px) and below the monitor becomes a fixed bottom dock.
+The catalog index is a paper column with a sticky grouped index from (761px). Its output strip sits with the bundled sounds on desktop and becomes a fixed bottom dock at (760px) and below. A workbench keeps the stage and controls in one column, with the inspector beside them from (980px) and below them on smaller screens. Below (760px) the workbench playback group is a fixed bottom strip.
 
 ## Elevation & Depth
 
@@ -247,23 +247,23 @@ Focus on paper is a dark-ochre (3px) outline offset by (4px). Focus on the heade
 
 ### Navigation
 
-One header serves the homepage, the catalog, and both experience routes. The links are Home, Catalog, Docs, and GitHub. Catalog points at `/catalog`. The current page is underlined in signal. Docs uses the Fumadocs sidebar instead of this header.
+One header serves the homepage and the catalog. The links are Home, Catalog, Docs, and GitHub. Catalog points at `/catalog`. The current page is underlined in signal. Docs uses the Fumadocs sidebar instead of this header. Older `/sounds` and `/experiences` URLs permanently redirect to the matching catalog URL.
 
 ### Catalog preview
 
-The homepage preview is static. Two experience rows and three portrait links point at the live pages. Portraits keep the pulse, harmonic, and flow drawings. Nothing in that section starts audio. The section link opens `/catalog`.
+The homepage preview is static. Two experience rows and three portrait links point at `/catalog/[slug]`. Portraits keep the pulse, harmonic, and flow drawings. Nothing in that section starts audio. The section link opens `/catalog`.
 
 ### Catalog overview
 
-`/catalog` is the paper browsing page. A compact heading sits with a sticky grouped index: Interactive experiences, then Bundled sounds. The index and the previews share one entry list. The Energy Charge ring is a hold control beside its copy: the rings and the percent follow the gesture, and the voice starts on that hold. The Reactive Thruster preview is an ink flight field under its copy. Dragging it moves the point and starts the voice. Bundled sounds are compact rows with the existing pulse, harmonic, and flow marks, Play or Start/Stop, and a workbench link. One output strip serves the whole collection. Its trace is tall enough to read a short sound, and it stays a strip rather than a second monitor card. Experience and bundled sound links open `/catalog/[slug]`. The original `/experiences/[slug]` pages stay available until redirects. At 760px and below, the index becomes a Catalog menu with the same groups, and the output strip returns to the bottom dock.
+`/catalog` is the paper browsing page. A compact heading sits with a sticky grouped index: Interactive experiences, then Bundled sounds. The index and the previews share one entry list. The Energy Charge ring is a hold control beside its copy: the rings and the percent follow the gesture, and the voice starts on that hold. The Reactive Thruster preview is an ink flight field under its copy. Dragging it moves the point and starts the voice. Bundled sounds are compact rows with the existing pulse, harmonic, and flow marks, Play or Start/Stop, and a workbench link. One output strip serves the whole collection. Its trace is tall enough to read a short sound, and it stays a strip rather than a second monitor card. Experience and bundled sound links open `/catalog/[slug]`. `/sounds` and `/experiences/energy-charge` and `/experiences/reactive-thruster` permanently redirect there. At 760px and below, the index becomes a Catalog menu with the same groups, and the output strip returns to the bottom dock. The page padding keeps the last row above that dock.
 
 ### Catalog sound workbench
 
-`/catalog/[slug]` is the paper workbench for one bundled sound, and the same frame holds Energy Charge and Reactive Thruster. The same index stays beside it, and becomes the Catalog menu below 760px. A breadcrumb, the sound name, the description, and a bundled-source line introduce the entry. The page ground stays paper. The stage is an ink field: its family mark shows control position when the recipe has a parameter, and its canvas is measured output. Pulse, harmonic, and flow each keep one painter. Playback, the recipe's own parameters, seed, mute, and volume sit with the stage. Code, Recipe, and Raw Web Audio stay in the inspector, beside that column from 980px and below it on smaller screens. Tabs and sliders that the recipe does not support are omitted. Below 760px the playback group becomes a bottom strip. Related sounds and documentation links sit under the bench. Leaving the entry disposes that page's audio session. Energy Charge keeps the hold instrument. Reactive Thruster is a movement field driven by the same pointer that sets throttle. The inspector shows the independent catalog files, and the website visuals stay out of those files. `/sounds/[slug]` keeps the earlier workbench until redirects. `/experiences/[slug]` stays available until redirects.
+`/catalog/[slug]` is the paper workbench for one bundled sound, and the same frame holds Energy Charge and Reactive Thruster. The same index stays beside it, and becomes the Catalog menu below 760px. A breadcrumb, the sound name, the description, and a bundled-source line introduce the entry. The page ground stays paper. The stage is an ink field: its family mark shows control position when the recipe has a parameter, and its canvas is measured output. Pulse, harmonic, and flow each keep one painter. Playback, the recipe's own parameters, seed, mute, and volume sit with the stage. Code, Recipe, and Raw Web Audio stay in the inspector, beside that column from 980px and below it on smaller screens. Tabs and sliders that the recipe does not support are omitted. Below 760px the playback group becomes a bottom strip. Related sounds and documentation links sit under the bench. Leaving the entry disposes that page's audio session. Energy Charge keeps the hold instrument. Reactive Thruster is a movement field driven by the same pointer that sets throttle. The inspector shows the independent catalog files, and the website visuals stay out of those files. `/sounds/[slug]` permanently redirects to the same entry.
 
 ### Audio monitor, workbench, and inspector
 
-Collection and `/sounds/[slug]` workbench behavior is unchanged. The monitor waveform reads native output. Portraits on those pages remain the paper-and-ink pulse, harmonic, and flow forms. Inspector tabs, recipe editing, and playback controls keep their existing paper-bench treatment. The catalog workbench uses one measured stage and does not add a second analyser.
+The catalog output strip and the workbench stage read native output. Pulse, harmonic, and flow marks stay paper and ink. Inspector tabs, recipe editing, and playback controls keep the paper-bench treatment. The workbench uses one measured stage and does not add a second analyser. A canvas stops drawing when it is offscreen, hidden, or reduced motion is on. Charge rings and thruster ribbons do not keep an idle animation loop.
 
 ## Do's and Don'ts
 

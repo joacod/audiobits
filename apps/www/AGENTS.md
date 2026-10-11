@@ -8,9 +8,8 @@ Read root `AGENTS.md` first.
 
 - `/` = discovery. Make a new visitor understand and want AudioBits.
 - `/catalog` = the browsing index for interactive experiences and bundled sounds.
-- `/catalog/[slug]` = bundled sound workbench. Manipulate, inspect, edit, and copy one sound.
-- `/sounds` = the sound collection. It stays available while detail routes still live here.
-- `/sounds/[slug]` = the earlier workbench. It stays available until redirects.
+- `/catalog/[slug]` = one bundled sound workbench, or Energy Charge or Reactive Thruster. Manipulate, inspect, edit, and copy that entry.
+- `/sounds`, `/sounds/[slug]`, `/experiences/energy-charge`, and `/experiences/reactive-thruster` permanently redirect to the matching catalog URL.
 - `/docs` = Fumadocs reference documentation. Keep it calm, readable,
   predictable, and separate from the showcase experience.
 

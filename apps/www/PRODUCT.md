@@ -25,7 +25,7 @@ JSON recipes, typed controls and installed-version metadata.
 
 Eight bundled sounds exercise one-shots, sustained voices, play/live controls and
 seeded variation. The homepage session is one lazy Energy Charge engine. The
-gallery holds one lazy engine per session. Real caller-owned native analyser
+catalog holds one lazy engine per mounted session. Real caller-owned native analyser
 data drives output-reactive detail. No autoplay. Runtime remains independent of
 website dependencies.
 AudioBits is available on npm. Fumadocs remains a separate reference experience.
@@ -63,10 +63,8 @@ adequate contrast, reduced motion, mute and explicit Stop. No sound-only feedbac
   previews Energy Charge, Reactive Thruster, and three bundled sounds without
   starting them. Catalog, documentation, and `npm install audiobits` stay in
   reach. No second live engine.
-- `/catalog`: browse every current example and bundled sound. Experiences come first, then sounds. One shared playback session covers the sounds. Experience previews stay silent. The shared header's Catalog item points here. Experience and bundled rows open `/catalog/[slug]`.
+- `/catalog`: browse every current example and bundled sound. Experiences come first, then sounds. One shared playback session covers the sounds. Experience previews stay silent until their own gesture. The shared header's Catalog item points here. Experience and bundled rows open `/catalog/[slug]`.
 - `/catalog/[slug]`: understand one bundled sound, or open Energy Charge or Reactive Thruster in the same frame. The stage, playback, and inspector stay on one page. Each visit owns one audio session and disposes it on leave. Experience pages show the independent catalog source.
-- `/sounds`: the sound collection and workbenches remain available. The header no longer treats this index as the catalog.
-- `/sounds/[slug]`: the earlier workbench remains available until redirects.
-- `/experiences/energy-charge`: the earlier charge page remains available until redirects.
-- `/experiences/reactive-thruster`: the earlier movement page remains available until redirects.
+- `/sounds` and `/sounds/[slug]` permanently redirect to `/catalog` and `/catalog/[slug]`.
+- `/experiences/energy-charge` and `/experiences/reactive-thruster` permanently redirect to the matching catalog entries.
 - `/docs`: read the calm Fumadocs reference; marketing components do not enter it.

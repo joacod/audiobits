@@ -2,7 +2,7 @@
 
 Showcase color, type, and motion tokens live on `.foundation` in
 [app/globals.css](app/globals.css). They cover the homepage, the shared header,
-the sound gallery, and individual sound pages. Fumadocs keeps its own theme.
+and the catalog. Fumadocs keeps its own theme.
 The document light and dark classes do not repaint `.foundation`.
 
 ## Source of truth
@@ -21,7 +21,7 @@ Shared roles:
 - `--font-display`, `--font-ui`, and `--font-code` name Fraunces, Arial, and the monospace stack.
 - `--gutter`, `--gap`, `--control-radius`, and `--motion-ui` set the page inset, the base gap, the (4px) control radius, and the (160ms) control transition.
 
-The homepage does not invent a second palette. `.foundation.landing` uses ink as the ground and paper as the text color, then the footer plate reverses that pair. Catalog and experience pages keep paper as the ground.
+The homepage does not invent a second palette. `.foundation.landing` uses ink as the ground and paper as the text color, then the footer plate reverses that pair. Catalog pages keep paper as the ground.
 
 Hero geometry, ring color mixes, and one-off fluid sizes stay local to [app/charge-hero.css](app/charge-hero.css) and [app/landing.css](app/landing.css). Do not add a token for a value that appears once.
 

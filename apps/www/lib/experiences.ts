@@ -1,8 +1,7 @@
 // Website metadata is separate from acoustic recipe data and bundled presets.
-// href stays on the original experience route until redirects land.
 export const reactiveThrusterExperience = {
   title: "Reactive thruster",
-  href: "/experiences/reactive-thruster",
+  href: "/catalog/reactive-thruster",
   description: "Move to shape a living sound. Release to coast.",
   controls: ["Pointer velocity", "Throttle", "Impact"],
   relatedSounds: ["thruster", "impact"],
@@ -11,7 +10,7 @@ export const reactiveThrusterExperience = {
 
 export const energyChargeExperience = {
   title: "Energy charge",
-  href: "/experiences/energy-charge",
+  href: "/catalog/energy-charge",
   description: "Hold to build energy. Shape the sound with progress.",
   controls: ["Hold to charge", "Progress"],
   relatedSounds: [],

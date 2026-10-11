@@ -3,11 +3,8 @@ import Link from "next/link";
 import { ArrowIcon } from "./arrow-icon";
 import { ChargeHero } from "./charge-hero";
 import { SiteHeader } from "./site-header";
-import {
-  energyChargeExperience,
-  reactiveThrusterExperience,
-} from "../lib/experiences";
-import { soundInfo, type SoundKind } from "../lib/gallery";
+import { catalogEntries, catalogEntriesByCategory } from "../lib/catalog";
+import type { BundledCatalogEntry } from "../lib/catalog";
 import { siteBuild } from "../lib/site-build";
 import "./landing.css";
 import "./charge-hero.css";
@@ -17,12 +14,15 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-const preview: SoundKind[] = ["impact", "glass-notification", "whoosh"];
-
-const experiences = [
-  { ...energyChargeExperience, mark: "charge" },
-  { ...reactiveThrusterExperience, mark: "thruster" },
-] as const;
+const previewSlugs = ["impact", "glass-notification", "whoosh"] as const;
+const previews = previewSlugs.map((slug) => {
+  const entry = catalogEntries.find((item) => item.slug === slug);
+  if (!entry || entry.category !== "bundled") {
+    throw new Error(`Missing bundled catalog entry: ${slug}`);
+  }
+  return entry;
+});
+const experiences = catalogEntriesByCategory("experience");
 
 export default function Home() {
   return (
@@ -74,7 +74,7 @@ export default function Home() {
               href={experience.href}
               className="landing-experience"
             >
-              <ExperienceMark kind={experience.mark} />
+              <ExperienceMark kind={experience.preview.family} />
               <span>
                 <h3>{experience.title}</h3>
                 <p>{experience.description}</p>
@@ -86,15 +86,15 @@ export default function Home() {
           ))}
         </div>
         <div className="landing-sound-list">
-          {preview.map((kind) => (
+          {previews.map((entry) => (
             <Link
-              key={kind}
-              href={`/sounds/${kind}`}
+              key={entry.slug}
+              href={entry.href}
               className="landing-sound-entry"
             >
-              <Portrait family={soundInfo[kind].visualFamily} />
-              <h3>{soundInfo[kind].title}</h3>
-              <p>{soundInfo[kind].use}</p>
+              <Portrait family={entry.preview.family} />
+              <h3>{entry.title}</h3>
+              <p>{entry.use}</p>
               <span className="landing-open">
                 Open workbench <ArrowIcon />
               </span>
@@ -125,7 +125,7 @@ export default function Home() {
 function Portrait({
   family,
 }: {
-  family: (typeof soundInfo)[SoundKind]["visualFamily"];
+  family: BundledCatalogEntry["preview"]["family"];
 }) {
   return (
     <svg

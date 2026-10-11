@@ -272,6 +272,26 @@ test("catalog navigation, focus, and layout hold on desktop and mobile", async (
       });
     }),
   ).toBe(true);
+  await page.evaluate(() =>
+    window.scrollTo(0, document.documentElement.scrollHeight),
+  );
+  const docs = page
+    .locator(".catalog-footer")
+    .getByRole("link", { name: "Documentation", exact: true });
+  expect(
+    await docs.evaluate((link) => {
+      const rect = link.getBoundingClientRect();
+      const dock = document
+        .querySelector(".audio-monitor")
+        ?.getBoundingClientRect();
+      if (!dock) return false;
+      const hit = document.elementFromPoint(
+        rect.x + Math.min(rect.width / 2, 24),
+        rect.y + rect.height / 2,
+      );
+      return link.contains(hit) && rect.bottom <= dock.top + 1;
+    }),
+  ).toBe(true);
   await expect(index).toBeHidden();
   const menu = page.getByRole("button", { name: "Catalog menu", exact: true });
   await menu.click();
@@ -303,8 +323,9 @@ test("catalog navigation, focus, and layout hold on desktop and mobile", async (
   });
 });
 
-test("shared catalog link leaves the sound index in place", async ({
+test("legacy sound and experience URLs redirect to the catalog", async ({
   page,
+  request,
 }) => {
   await page.goto(home);
   await page
@@ -312,13 +333,19 @@ test("shared catalog link leaves the sound index in place", async ({
     .getByRole("link", { name: "Catalog", exact: true })
     .click();
   await expect(page).toHaveURL(catalog);
-  await page.goto(`${home}/sounds`);
-  await expect(page.locator("article.sound-card")).toHaveCount(8);
   await expect(
     page.getByRole("link", { name: "Catalog", exact: true }),
-  ).not.toHaveAttribute("aria-current", "page");
-  expect((await page.request.get(`${home}/sounds/impact`)).status()).toBe(200);
-  expect(
-    (await page.request.get(`${home}/experiences/reactive-thruster`)).status(),
-  ).toBe(200);
+  ).toHaveAttribute("aria-current", "page");
+  for (const [from, to] of [
+    ["/sounds", "/catalog"],
+    ["/sounds/impact", "/catalog/impact"],
+    ["/experiences/energy-charge", "/catalog/energy-charge"],
+    ["/experiences/reactive-thruster", "/catalog/reactive-thruster"],
+  ]) {
+    const response = await request.get(`${home}${from}`, { maxRedirects: 0 });
+    expect(response.status(), from).toBe(308);
+    expect(new URL(response.headers().location ?? "", home).pathname).toBe(to);
+    await page.goto(`${home}${from}`);
+    await expect(page).toHaveURL(`${home}${to}`);
+  }
 });
