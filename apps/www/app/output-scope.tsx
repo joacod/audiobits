@@ -10,10 +10,12 @@ export function OutputScope({
   engine,
   active,
   family,
+  measured = false,
 }: {
   engine: AudioEngine | null | (() => AudioEngine | null);
   active: boolean;
   family?: VisualFamily;
+  measured?: boolean;
 }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
@@ -95,6 +97,20 @@ export function OutputScope({
       clear();
     };
   }, [engine, active, family]);
+  const label =
+    measured && family
+      ? `Measured ${family} output`
+      : family
+        ? `${family} sound portrait; driven by live output`
+        : "Live output waveform; animation pauses for reduced motion";
+  const idleCaption = measured
+    ? "Play to measure this sound"
+    : "Play to see the generated signal";
+  const liveCaption = measured
+    ? "Live signal"
+    : family
+      ? "Responding to output"
+      : "Live output · display gain ×16";
   return (
     <figure
       className={`output-scope ${family ? `sound-portrait portrait-${family}` : ""}`}
@@ -104,25 +120,17 @@ export function OutputScope({
         width={900}
         height={family ? 360 : 128}
         role="img"
-        aria-label={
-          family
-            ? `${family} sound portrait; driven by live output`
-            : "Live output waveform; animation pauses for reduced motion"
-        }
+        aria-label={label}
       />
       <figcaption>
         <span>
-          {family
-            ? "Generated locally · Audio assets: 0 bytes"
-            : "Generated signal"}
+          {measured
+            ? "Measured output"
+            : family
+              ? "Generated locally · Audio assets: 0 bytes"
+              : "Generated signal"}
         </span>
-        <span>
-          {active
-            ? family
-              ? "Responding to output"
-              : "Live output · display gain ×16"
-            : "Play to see the generated signal"}
-        </span>
+        <span>{active ? liveCaption : idleCaption}</span>
       </figcaption>
     </figure>
   );

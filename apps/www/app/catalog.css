@@ -469,3 +469,240 @@
     }
   }
 }
+
+@layer components {
+  .foundation.catalog-page .catalog-detail h1 {
+    grid-column: auto;
+    grid-row: auto;
+    font-size: clamp(2rem, 4vw, 3.4rem);
+    line-height: 1.12;
+    letter-spacing: -0.025em;
+  }
+  .foundation.catalog-page .catalog-entry-header p {
+    margin-top: 0.45rem;
+  }
+  .foundation.catalog-page .catalog-breadcrumb ol {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem 0.15rem;
+    margin: 0 0 1rem;
+    padding: 0;
+    list-style: none;
+    color: var(--quiet);
+    font-size: 0.9rem;
+  }
+  .foundation.catalog-page .catalog-breadcrumb li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+  .foundation.catalog-page .catalog-breadcrumb a,
+  .foundation.catalog-page .catalog-related a,
+  .foundation.catalog-page .catalog-docs a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+  .foundation.catalog-page .catalog-breadcrumb [aria-current="page"] {
+    color: var(--ink);
+  }
+  .foundation.catalog-page .catalog-source {
+    color: var(--quiet);
+    font-size: 0.9rem;
+  }
+  .foundation.catalog-page .catalog-source code {
+    font-family: var(--font-code);
+    font-size: 0.85rem;
+  }
+  .foundation.catalog-page .catalog-bench {
+    display: grid;
+    gap: 1rem 1.75rem;
+    min-width: 0;
+    margin-top: 0.5rem;
+  }
+  .foundation.catalog-page .catalog-stage-field {
+    display: grid;
+    grid-template-columns: 3.25rem minmax(0, 1fr);
+    gap: 0.75rem;
+    align-items: center;
+    min-width: 0;
+    background: var(--ink);
+    color: var(--signal);
+    padding: 0.85rem 1rem 0.35rem;
+  }
+  .foundation.catalog-page .catalog-stage-mark {
+    width: 3.25rem;
+    height: 3.25rem;
+    color: var(--accent);
+    opacity: calc(0.4 + var(--drive, 0.35) * 0.6);
+    transform: scale(calc(0.86 + var(--drive, 0.35) * 0.28));
+    transform-origin: center;
+  }
+  .foundation.catalog-page .catalog-stage-harmonic .catalog-stage-mark {
+    color: var(--signal);
+  }
+  .foundation.catalog-page .catalog-stage-flow .catalog-stage-mark {
+    color: var(--instrument-quiet);
+  }
+  .foundation.catalog-page .catalog-stage .sound-portrait {
+    min-width: 0;
+    background: transparent;
+    color: inherit;
+    padding: 0;
+  }
+  .foundation.catalog-page .catalog-stage .sound-portrait canvas {
+    height: 13rem;
+    margin: 0;
+    color: var(--accent);
+  }
+  .foundation.catalog-page .catalog-stage-harmonic .sound-portrait canvas {
+    color: var(--signal);
+  }
+  .foundation.catalog-page .catalog-stage-flow .sound-portrait canvas {
+    color: var(--instrument-quiet);
+  }
+  .foundation.catalog-page .catalog-stage .sound-portrait figcaption {
+    border-color: var(--instrument-line);
+    color: var(--instrument-quiet);
+  }
+  .foundation.catalog-page
+    .catalog-stage
+    .sound-portrait
+    figcaption
+    span:first-child {
+    color: var(--signal);
+  }
+  .foundation.catalog-page .catalog-drive {
+    margin: 0.45rem 0 0;
+    color: var(--quiet);
+    font-size: 0.9rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .foundation.catalog-page .catalog-transport {
+    display: grid;
+    gap: 0.35rem 0.75rem;
+  }
+  .foundation.catalog-page .catalog-transport p {
+    margin: 0;
+    font-size: 0.9rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .foundation.catalog-page .catalog-levels {
+    display: none;
+  }
+  .foundation.catalog-page .catalog-volume {
+    margin: 0.35rem 0 0;
+  }
+  .foundation.catalog-page .catalog-inspector {
+    min-width: 0;
+    border-top: 1px solid var(--rule);
+    padding-top: 0.75rem;
+  }
+  .foundation.catalog-page .catalog-detail .inspector-tabs {
+    margin-bottom: 0.75rem;
+  }
+  .foundation.catalog-page .catalog-detail .recipe-tools [role="tabpanel"] h3 {
+    font-size: 1.35rem;
+    margin-block: 0.35rem 0.5rem;
+  }
+  .foundation.catalog-page .catalog-detail .recipe-tools pre,
+  .foundation.catalog-page .catalog-detail .recipe-tools textarea {
+    max-height: 16rem;
+    overflow: auto;
+  }
+  .foundation.catalog-page .catalog-detail .recipe-tools textarea {
+    min-height: 12rem;
+  }
+  .foundation.catalog-page .catalog-related {
+    margin-top: 1.75rem;
+    padding-top: 0.25rem;
+    border-top: 1px solid var(--rule);
+  }
+  .foundation.catalog-page .catalog-related nav[aria-label="Related entries"],
+  .foundation.catalog-page .catalog-docs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1.25rem;
+    align-items: center;
+  }
+  .foundation.catalog-page .catalog-related ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1.25rem;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  @media (min-width: 761px) {
+    .foundation.catalog-page .catalog-detail .catalog-main {
+      grid-row: 1 / span 2;
+    }
+  }
+  @media (min-width: 980px) {
+    .foundation.catalog-page .catalog-bench {
+      grid-template-columns: minmax(0, 1.15fr) minmax(16rem, 0.92fr);
+      grid-template-areas:
+        "stage inspect"
+        "play inspect";
+      align-items: start;
+    }
+    .foundation.catalog-page .catalog-stage {
+      grid-area: stage;
+    }
+    .foundation.catalog-page .catalog-playback {
+      grid-area: play;
+    }
+    .foundation.catalog-page .catalog-inspector {
+      grid-area: inspect;
+      position: sticky;
+      top: 0.75rem;
+      border-top: 0;
+      border-left: 1px solid var(--rule);
+      padding-top: 0;
+      padding-left: 1.25rem;
+    }
+  }
+  @media (max-width: 760px) {
+    .foundation.catalog-page .catalog-detail .catalog-toolbar {
+      justify-content: flex-end;
+      min-height: 44px;
+    }
+    .foundation.catalog-page .catalog-stage .sound-portrait canvas {
+      height: 8.5rem;
+    }
+    .foundation.catalog-page .catalog-stage-field {
+      grid-template-columns: 2.5rem minmax(0, 1fr);
+      padding-inline: 0.75rem;
+    }
+    .foundation.catalog-page .catalog-stage-mark {
+      width: 2.5rem;
+      height: 2.5rem;
+    }
+    .foundation.catalog-page:has(.catalog-detail) {
+      padding-bottom: calc(14rem + env(safe-area-inset-bottom));
+    }
+    .foundation.catalog-page .catalog-detail .catalog-transport {
+      position: fixed;
+      inset: auto 0 0;
+      z-index: 20;
+      background: var(--paper);
+      border-top: 1px solid var(--ink);
+      padding: 0.5rem 1rem calc(0.5rem + env(safe-area-inset-bottom));
+    }
+    .foundation.catalog-page .catalog-detail .catalog-levels {
+      display: inline-flex;
+      margin-left: auto;
+    }
+    .foundation.catalog-page
+      .catalog-detail
+      .catalog-transport[data-levels="closed"]
+      .catalog-volume {
+      display: none;
+    }
+    .foundation.catalog-page .catalog-detail :is(button, input, textarea, a) {
+      scroll-margin-bottom: 16rem;
+    }
+  }
+}

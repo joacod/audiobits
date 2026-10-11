@@ -89,7 +89,7 @@ export const catalogEntries: readonly CatalogEntry[] = [
       title: demo.title,
       description: demo.description,
       category: "bundled",
-      href: `/sounds/${slug}`,
+      href: `/catalog/${slug}`,
       playback: demo.recipe.kind,
       use: demo.use,
       preview: { family: demo.visualFamily },
@@ -107,4 +107,13 @@ export function catalogEntriesByCategory(
 export function catalogEntriesByCategory(category: CatalogCategory) {
   return catalogEntries.filter((entry) => entry.category === category) as
     readonly ExperienceCatalogEntry[] | readonly BundledCatalogEntry[];
+}
+
+export function bundledCatalogEntry(slug: string) {
+  const entry = catalogEntries.find((item) => item.slug === slug);
+  return entry?.category === "bundled" ? entry : undefined;
+}
+
+export function bundledDetailDescription(entry: BundledCatalogEntry) {
+  return `${entry.description} ${entry.use}. Play, customize, and copy the current sound.`;
 }

@@ -173,6 +173,10 @@ controls and seed 42; Reset variation changes only the seed. JSON Apply reports 
 issues and preserves last-valid playback; applying valid data stops current
 voices. No JavaScript text is evaluated.
 
+`/catalog/[slug]` uses that same session contract for one bundled sound.
+Each mounted workbench owns one engine and disposes it when the visitor
+leaves the entry. `/sounds` and `/sounds/[slug]` stay available.
+
 `pnpm test` typechecks every TypeScript docs fence and generated examples across
 control/seed extrema through public exports. `pnpm test:browser` bundles the
 exact displayed host examples, then exercises activation, Stop, and disposal
