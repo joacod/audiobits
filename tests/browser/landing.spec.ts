@@ -245,6 +245,31 @@ test("release, cancellation and navigation leave no orphaned charge sources", as
   await expect(page.getByTestId("landing-playback-state")).toHaveText(
     "Charge: stopped",
   );
+  const ring = await page.evaluate(() => {
+    const well = document.querySelector(".landing .charge-well");
+    const button = document.querySelector(".landing .charge-hold");
+    if (
+      !(well instanceof HTMLElement) ||
+      !(button instanceof HTMLButtonElement)
+    )
+      return null;
+    well.scrollIntoView({ block: "center" });
+    const box = well.getBoundingClientRect();
+    const x = box.left + 16;
+    const y = box.top + box.height / 2;
+    const hit = document.elementFromPoint(x, y);
+    return { x, y, onControl: hit === button || button.contains(hit) };
+  });
+  expect(ring?.onControl).toBe(true);
+  await page.mouse.move(ring!.x, ring!.y);
+  await page.mouse.down();
+  await expect(page.getByTestId("landing-playback-state")).toHaveText(
+    "Charge: running",
+  );
+  await page.mouse.up();
+  await expect(page.getByTestId("landing-playback-state")).toHaveText(
+    "Charge: stopped",
+  );
   await expect
     .poll(() =>
       page.evaluate(() =>

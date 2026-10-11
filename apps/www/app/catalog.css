@@ -630,15 +630,13 @@
   }
   .foundation.catalog-page .catalog-charge-well .charge-hold {
     position: absolute;
-    top: 50%;
-    left: 50%;
+    inset: 0;
     z-index: 1;
-    width: clamp(11rem, 46%, 15.5rem);
-    aspect-ratio: 1;
+    width: auto;
+    height: auto;
     padding: 0;
     border: 0;
     border-radius: 50%;
-    transform: translate(-50%, -50%);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -646,6 +644,18 @@
     touch-action: none;
     user-select: none;
     color: var(--paper);
+    background: transparent;
+  }
+  .foundation.catalog-page .catalog-charge-well .charge-hold::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: -1;
+    width: clamp(11rem, 46%, 15.5rem);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
     background:
       radial-gradient(circle, rgb(26 44 36 / 0.92) 0 62%, transparent 64%),
       conic-gradient(
@@ -657,6 +667,11 @@
   .foundation.catalog-page .catalog-charge-well .charge-hold:enabled:hover {
     color: var(--signal);
     border: 0;
+    background: transparent;
+  }
+  .foundation.catalog-page
+    .catalog-charge-well
+    .charge-hold:enabled:hover::before {
     background:
       radial-gradient(circle, rgb(26 44 36 / 0.92) 0 62%, transparent 64%),
       conic-gradient(
