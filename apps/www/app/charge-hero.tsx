@@ -181,12 +181,9 @@ export function ChargeHero() {
               if (pointer.current === event.pointerId) stop();
             }}
             onKeyDown={(event) => {
-              if (
-                (event.key === " " || event.key === "Enter") &&
-                !event.repeat
-              ) {
+              if (event.key === " " || event.key === "Enter") {
                 event.preventDefault();
-                beginHold();
+                if (!event.repeat) beginHold();
               }
             }}
             onKeyUp={(event) => {

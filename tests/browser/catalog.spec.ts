@@ -61,13 +61,8 @@ test("catalog lists both groups once and links to the current pages", async ({
   }
   await expect(page.locator("article.sound-card, textarea")).toHaveCount(0);
   await expect(page.getByRole("spinbutton")).toHaveCount(0);
-  await expect(
-    page.getByRole("button", { name: "Hold to charge", exact: true }),
-  ).toBeVisible();
-  await expect(page.locator(".catalog-experience button")).toHaveCount(1);
-  await expect(
-    page.getByRole("group", { name: "Drag to fly", exact: true }),
-  ).toBeVisible();
+  await expect(page.locator(".catalog-experience button")).toHaveCount(0);
+  await expect(page.locator(".catalog-experience canvas")).toHaveCount(0);
   await expect(page.locator("[data-audio-session]")).toHaveCount(1);
   await index.getByRole("link", { name: "Energy charge", exact: true }).click();
   await expect(page).toHaveURL(`${home}/catalog/energy-charge`);
@@ -150,55 +145,46 @@ test("catalog playback stays on one session until Stop all and cleanup", async (
   await expect.poll(() => contexts(page)).toEqual(["closed"]);
 });
 
-test("catalog experiences stay silent until the gesture", async ({ page }) => {
+test("catalog experience previews stay silent and link to complete interactions", async ({
+  page,
+}) => {
   await instrument(page);
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(catalog);
   expect(await contexts(page)).toEqual([]);
-  await expect(page.getByTestId("energy-charge-state")).toHaveText(
-    "Energy charge: stopped",
-  );
-  await expect(page.getByTestId("reactive-thruster-state")).toHaveText(
-    "Reactive thruster: stopped",
-  );
-  const hold = page.getByRole("button", {
-    name: "Hold to charge",
-    exact: true,
-  });
-  const holdBox = await hold.boundingBox();
-  if (!holdBox) throw new Error("Charge control has no box.");
-  await page.mouse.move(
-    holdBox.x + holdBox.width / 2,
-    holdBox.y + holdBox.height / 2,
-  );
-  await page.mouse.down();
-  await expect(page.getByTestId("energy-charge-state")).toHaveText(
-    "Energy charge: running",
-  );
-  await expect
-    .poll(() => hold.locator(".catalog-charge-readout").textContent())
-    .not.toBe("0%");
-  expect(await contexts(page)).toEqual(["running"]);
-  await page.mouse.up();
-  await expect(page.getByTestId("energy-charge-state")).toHaveText(
-    "Energy charge: stopped",
-  );
-
-  const pad = page.getByRole("group", { name: "Drag to fly", exact: true });
-  const before = await pad.locator("circle").getAttribute("cx");
-  const box = await pad.boundingBox();
-  if (!box) throw new Error("Flight field has no box.");
-  await page.mouse.move(box.x + 28, box.y + box.height / 2);
-  await page.mouse.down();
-  await page.mouse.move(box.x + box.width - 28, box.y + 30, { steps: 12 });
-  await expect(page.getByTestId("reactive-thruster-state")).toHaveText(
-    "Reactive thruster: running",
-  );
-  await expect
-    .poll(() => pad.locator("circle").getAttribute("cx"))
-    .not.toBe(before);
-  expect(await contexts(page)).toEqual(["running", "running"]);
-  await page.mouse.up();
+  await expect(page.locator(".catalog-experience canvas")).toHaveCount(0);
+  await expect(page.locator(".catalog-experience button")).toHaveCount(0);
+  for (const entry of catalogEntries) {
+    if (entry.category !== "experience") continue;
+    const preview = page.locator(`[data-catalog-entry="${entry.slug}"]`);
+    await preview.getByRole("link").click();
+    await expect(page).toHaveURL(`${home}${entry.href}`);
+    const start = page.getByRole("button", {
+      name: entry.slug === "energy-charge" ? "Start charge" : "Start thruster",
+      exact: true,
+    });
+    await expect(start).toBeEnabled();
+    expect(
+      (await contexts(page)).filter((state) => state !== "closed"),
+    ).toEqual([]);
+    await start.click();
+    await expect
+      .poll(
+        async () =>
+          (await contexts(page)).filter((state) => state === "running").length,
+      )
+      .toBe(1);
+    await page
+      .getByRole("navigation", { name: "Main navigation" })
+      .getByRole("link", { name: "Catalog", exact: true })
+      .click();
+    await expect(page).toHaveURL(catalog);
+    await expect
+      .poll(async () =>
+        (await contexts(page)).every((state) => state === "closed"),
+      )
+      .toBe(true);
+  }
 });
 
 test("catalog navigation, focus, and layout hold on desktop and mobile", async ({
@@ -255,18 +241,11 @@ test("catalog navigation, focus, and layout hold on desktop and mobile", async (
   expect(
     await page.evaluate(() => {
       const field = document.querySelector(".thruster-field");
-      const status = document.querySelector(
-        "[data-testid='reactive-thruster-state']",
-      );
       const dock = document.querySelector(".audio-monitor");
-      if (
-        !(field instanceof HTMLElement) ||
-        !(status instanceof HTMLElement) ||
-        !(dock instanceof HTMLElement)
-      )
+      if (!(field instanceof HTMLElement) || !(dock instanceof HTMLElement))
         return false;
       const monitor = dock.getBoundingClientRect();
-      return [field, status].every((node) => {
+      return [field].every((node) => {
         const box = node.getBoundingClientRect();
         return box.bottom <= monitor.top || box.top >= monitor.bottom;
       });

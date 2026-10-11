@@ -235,6 +235,18 @@ test("discovery links, narrow touch input and reduced motion remain usable", asy
     "data-renderer",
     "canvas",
   );
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.evaluate(() => {
+    document.documentElement.style.fontSize = "200%";
+  });
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await page.evaluate(() => {
+    document.documentElement.style.removeProperty("font-size");
+  });
   await page
     .getByRole("navigation", { name: "Main navigation" })
     .getByRole("link", { name: "Catalog", exact: true })
