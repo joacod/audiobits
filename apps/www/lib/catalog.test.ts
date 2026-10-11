@@ -70,7 +70,7 @@ test("catalog entries derive links and playback from website metadata", () => {
       category: "bundled",
       title: demo.title,
       description: demo.description,
-      href: `/sounds/${slug}`,
+      href: `/catalog/${slug}`,
       playback: demo.recipe.kind,
       use: demo.use,
       preview: { family: demo.visualFamily },
@@ -89,7 +89,7 @@ test("catalog entries derive links and playback from website metadata", () => {
   expect(bundledThruster).toMatchObject({
     category: "bundled",
     playback: "sustained",
-    href: "/sounds/thruster",
+    href: "/catalog/thruster",
   });
   expect(experienceThruster).toMatchObject({
     category: "experience",

@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { catalogEntries, catalogGroups } from "../lib/catalog";
 
 const query = "(max-width: 760px)";
@@ -52,6 +53,9 @@ const subscribeNarrow = (onChange: () => void) => {
 };
 
 export function CatalogLayout({ children }: { children: ReactNode }) {
+  const pathname = usePathname() ?? "";
+  const detail = pathname !== "/catalog";
+  const routed = catalogEntries.find((entry) => entry.href === pathname)?.slug;
   const menuId = useId();
   const narrow = useSyncExternalStore(
     subscribeNarrow,
@@ -66,6 +70,7 @@ export function CatalogLayout({ children }: { children: ReactNode }) {
   const dialog = narrow && open;
 
   useEffect(() => {
+    if (routed) return;
     const sync = () => {
       const next = currentCatalogSlug();
       if (next) setActive((current) => (current === next ? current : next));
@@ -76,7 +81,7 @@ export function CatalogLayout({ children }: { children: ReactNode }) {
       window.removeEventListener("scroll", sync);
       window.removeEventListener("resize", sync);
     };
-  }, []);
+  }, [routed]);
 
   useEffect(() => {
     if (!dialog) return;
@@ -120,9 +125,11 @@ export function CatalogLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="catalog-layout">
+    <div
+      className={detail ? "catalog-layout catalog-detail" : "catalog-layout"}
+    >
       <div className="catalog-toolbar">
-        <h1>Catalog</h1>
+        {detail ? null : <h1>Catalog</h1>}
         <button
           ref={trigger}
           type="button"
@@ -167,7 +174,13 @@ export function CatalogLayout({ children }: { children: ReactNode }) {
                         <Link
                           href={entry.href}
                           aria-current={
-                            active === entry.slug ? "location" : undefined
+                            routed
+                              ? routed === entry.slug
+                                ? "page"
+                                : undefined
+                              : active === entry.slug
+                                ? "location"
+                                : undefined
                           }
                           onClick={() => setOpen(false)}
                         >

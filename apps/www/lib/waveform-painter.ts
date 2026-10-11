@@ -35,7 +35,7 @@ export function drawIdle(
 
 export type VisualFamily = "pulse" | "harmonic" | "flow";
 
-/** Abstract sound portraits, not a calibrated scope. Displacement uses real output. */
+/** Family portraits. Displacement uses measured output, and silence stays a single paint. */
 export function drawPortrait(
   paint: CanvasRenderingContext2D,
   width: number,
@@ -46,48 +46,99 @@ export function drawPortrait(
   let peak = 0;
   for (const sample of samples) peak = Math.max(peak, Math.abs(sample));
   const energy = Math.min(1, peak * 16);
-  paint.lineWidth = 1 + energy;
-  if (family === "pulse") {
-    for (let ring = 0; ring < 14; ring++) {
-      const radius = height * (0.05 + ring * 0.027) + energy * (14 - ring) * 2;
-      paint.globalAlpha = 0.2 + (14 - ring) / 20;
-      paint.beginPath();
-      paint.ellipse(
-        width / 2,
-        height / 2,
-        radius * 1.7,
-        radius,
-        0,
-        0,
-        Math.PI * 2,
-      );
-      paint.stroke();
-    }
-  } else {
-    const lines = family === "harmonic" ? 12 : 20;
-    for (let line = 0; line < lines; line++) {
-      paint.globalAlpha = 0.25 + (line / lines) * 0.6;
-      paint.beginPath();
-      for (let point = 0; point <= 120; point++) {
-        const x = (point / 120) * width;
-        const envelope = Math.sin((Math.PI * point) / 120);
-        const sample = samples[Math.floor((point / 121) * samples.length)] ?? 0;
-        const center =
-          height / 2 + (line - lines / 2) * (family === "harmonic" ? 12 : 5);
-        const shape = Math.sin(
-          (point / 120) * Math.PI * (family === "flow" ? 2 : 3) + line * 0.13,
-        );
-        const y =
-          center +
-          envelope *
-            (shape * height * 0.2 +
-              Math.max(-1, Math.min(1, sample * 16)) * height * 0.16);
-        if (point === 0) paint.moveTo(x, y);
-        else paint.lineTo(x, y);
-      }
-      paint.stroke();
-    }
-  }
+  paint.lineWidth = 1.25;
+  paint.lineJoin = "round";
+  paint.fillStyle = paint.strokeStyle;
+  if (family === "pulse") drawPulse(paint, width, height, samples, energy);
+  else if (family === "harmonic") drawHarmonic(paint, width, height, samples);
+  else drawFlow(paint, width, height, samples);
   paint.globalAlpha = 1;
   return peak;
+}
+
+function drawPulse(
+  paint: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  samples: Float32Array,
+  energy: number,
+) {
+  const centerX = width / 2;
+  const centerY = height / 2;
+  for (let ring = 0; ring < 6; ring++) {
+    const sample = Math.abs(
+      samples[Math.floor((ring / 6) * samples.length)] ?? 0,
+    );
+    const kick = Math.min(1, sample * 16);
+    const radius = height * (0.08 + ring * 0.07) + kick * (18 - ring * 2);
+    paint.globalAlpha = 0.22 + (6 - ring) * 0.1;
+    paint.beginPath();
+    paint.ellipse(
+      centerX,
+      centerY,
+      radius * 1.55,
+      radius * 0.72,
+      0,
+      0,
+      Math.PI * 2,
+    );
+    paint.stroke();
+  }
+  paint.globalAlpha = 0.9;
+  paint.beginPath();
+  paint.arc(centerX, centerY, 3 + energy * 10, 0, Math.PI * 2);
+  paint.fill();
+}
+
+function drawHarmonic(
+  paint: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  samples: Float32Array,
+) {
+  const partials = 8;
+  const gap = width / (partials + 1);
+  for (let index = 0; index < partials; index++) {
+    const start = Math.floor((index * samples.length) / partials);
+    const end = Math.floor(((index + 1) * samples.length) / partials);
+    let power = 0;
+    for (let sample = start; sample < end; sample++) {
+      power = Math.max(power, Math.abs(samples[sample] ?? 0));
+    }
+    const amount = Math.min(1, power * 16);
+    const rise = height * (0.08 + amount * 0.36);
+    const x = gap * (index + 1);
+    paint.globalAlpha = 0.35 + amount * 0.65;
+    paint.beginPath();
+    paint.moveTo(x, height / 2 - rise);
+    paint.lineTo(x, height / 2 + rise * 0.45);
+    paint.stroke();
+  }
+}
+
+function drawFlow(
+  paint: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  samples: Float32Array,
+) {
+  const lines = 6;
+  const points = 80;
+  for (let line = 0; line < lines; line++) {
+    paint.globalAlpha = 0.28 + (line / lines) * 0.55;
+    paint.beginPath();
+    for (let point = 0; point <= points; point++) {
+      const x = (point / points) * width;
+      const sample =
+        samples[Math.floor((point / points) * (samples.length - 1))] ?? 0;
+      const drift = Math.max(-1, Math.min(1, sample * 16));
+      const bow = Math.sin((point / points) * Math.PI);
+      const y =
+        height * (0.18 + (line / (lines - 1)) * 0.64) +
+        bow * drift * height * 0.16;
+      if (point === 0) paint.moveTo(x, y);
+      else paint.lineTo(x, y);
+    }
+    paint.stroke();
+  }
 }

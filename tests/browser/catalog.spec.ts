@@ -75,8 +75,10 @@ test("catalog lists both groups once and links to the current pages", async ({
   await page
     .getByRole("link", { name: "Open impact workbench", exact: true })
     .click();
-  await expect(page).toHaveURL(`${home}/sounds/impact`);
-  await expect(page.locator(".sound-workbench")).toBeVisible();
+  await expect(page).toHaveURL(`${home}/catalog/impact`);
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Impact", exact: true }),
+  ).toBeVisible();
 });
 
 test("catalog playback stays on one session until Stop all and cleanup", async ({

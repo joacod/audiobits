@@ -63,9 +63,10 @@ adequate contrast, reduced motion, mute and explicit Stop. No sound-only feedbac
   previews Energy Charge, Reactive Thruster, and three bundled sounds without
   starting them. Catalog, documentation, and `npm install audiobits` stay in
   reach. No second live engine.
-- `/catalog`: browse every current example and bundled sound. Experiences come first, then sounds. One shared playback session covers the sounds. Experience previews stay silent. The shared header's Catalog item points here.
+- `/catalog`: browse every current example and bundled sound. Experiences come first, then sounds. One shared playback session covers the sounds. Experience previews stay silent. The shared header's Catalog item points here. Bundled rows open `/catalog/[slug]`.
+- `/catalog/[slug]`: understand and customize one bundled sound. The stage, playback, and inspector stay on one page. Each visit owns one audio session and disposes it on leave.
 - `/sounds`: the sound collection and workbenches remain available. The header no longer treats this index as the catalog.
-- `/sounds/[slug]`: understand and customize one sound with playback variation and a tabbed inspector.
+- `/sounds/[slug]`: the earlier workbench remains available until redirects.
 - `/experiences/energy-charge`: open the complete charge host and copy that page.
 - `/experiences/reactive-thruster`: open the complete movement host and copy that page.
 - `/docs`: read the calm Fumadocs reference; marketing components do not enter it.
