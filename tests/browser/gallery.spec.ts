@@ -643,7 +643,13 @@ test("homepage charge uses one engine, reports output and disposes on navigation
     "voice.set({ charge: 0.42 })",
   );
   await expect(page.locator(".recipe-tools")).toHaveCount(0);
-  await expect(page.locator(".landing-sound-entry")).toHaveCount(4);
+  const previews = page.locator(".landing-sound-entry");
+  await expect(previews).toHaveCount(3);
+  for (const kind of ["impact", "glass-notification", "whoosh"]) {
+    await expect(
+      page.locator(`.landing-sound-entry[href="/sounds/${kind}"]`),
+    ).toHaveCount(1);
+  }
   await page.getByRole("button", { name: "Start charge", exact: true }).click();
   await expect(page.getByTestId("landing-playback-state")).toHaveText(
     "Charge: running",

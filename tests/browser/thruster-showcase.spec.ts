@@ -228,6 +228,6 @@ test("discovery links, narrow touch input and reduced motion remain usable", asy
   ).toBeVisible();
   await page.goto("http://127.0.0.1:3100");
   await expect(
-    page.getByRole("link", { name: "Try the reactive thruster" }),
-  ).toBeVisible();
+    page.getByRole("link", { name: "Reactive thruster" }),
+  ).toHaveAttribute("href", "/experiences/reactive-thruster");
 });
