@@ -24,8 +24,10 @@ JSON recipes, typed controls and installed-version metadata.
 ## Capabilities and Constraints
 
 Eight bundled sounds exercise one-shots, sustained voices, play/live controls and
-seeded variation. One lazy engine per landing or gallery session; real caller-owned native
-analyser data; no autoplay. Runtime remains independent of website dependencies.
+seeded variation. The homepage session is one lazy Energy Charge engine. The
+gallery holds one lazy engine per session. Real caller-owned native analyser
+data drives output-reactive detail. No autoplay. Runtime remains independent of
+website dependencies.
 AudioBits is available on npm. Fumadocs remains a separate reference experience.
 
 ## Brand Commitments
@@ -55,9 +57,10 @@ adequate contrast, reduced motion, mute and explicit Stop. No sound-only feedbac
 
 ## Route purposes
 
-- `/`: persuade through a single interactive sound stage, then connect the selected
-  sound and controls to copyable integration code. Glass, Impact and Thruster
-  share one session; a compact four-sound preview leads to the collection.
+- `/`: persuade by holding Energy Charge. One voice follows progress, the rings
+  show that charge, and a labelled `voice.set({ charge })` excerpt shows the
+  same value. Links open the full energy charge experience and the docs. A
+  compact four-sound preview leads to the collection.
 - `/sounds`: operate a light sound collection with a persistent audio monitor.
 - `/sounds/[slug]`: understand and customize one sound with playback variation and a tabbed inspector.
 - `/docs`: read the calm Fumadocs reference; marketing components do not enter it.

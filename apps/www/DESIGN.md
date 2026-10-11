@@ -107,16 +107,20 @@ components:
 
 The sonic playground treats browser audio as something to hear, change and inspect. Warm paper, dark green ink and self-hosted Fraunces headings give the showcase a tactile editorial character; ordinary HTML controls keep the instrument precise.
 
-A dedicated editorial landing pairs an expressive headline with a dark green
-sound stage and brass signal. Ruled entries and restrained code panels carry
-the collection and individual sound pages. Signal is living content derived from native audio output, and brass marks the controls that initiate playback or hold a pressed state. The separate Fumadocs reference experience keeps its own styling.
+A dedicated editorial landing pairs an expressive headline with a full-width
+ink Energy Charge hero. Rings accumulate with charge, and edge brightness
+follows measured output when motion is allowed. Brass marks the hold meter,
+Start charge, and pressed Mute. A labelled `voice.set({ charge })` excerpt
+sits with the instrument. Ruled entries and restrained code panels carry the
+collection and individual sound pages. The separate Fumadocs reference
+experience keeps its own styling.
 
 **Key Characteristics:**
 
 - Warm paper and green ink, with brass for playback and pressed controls.
 - Serif headings above practical sans-serif controls and monospace code.
 - Ruled specimens and flat surfaces instead of floating cards.
-- Measured waveform and a bounded Play response; no idle decorative motion.
+- Charge rings follow interaction progress. The monitor waveform follows native output. No invented waveform and no idle looping signal.
 
 ## Colors
 
@@ -164,14 +168,13 @@ terminal chrome.
 
 The page uses a centered content area of (76rem), with side gutters calculated as
 `max(1.5rem, calc((100vw - 76rem) / 2))`. The masthead wraps. The landing pairs a large, balanced headline with a concise
-product explanation, links and installation command. Its full-width dark stage
-holds three selectors, a measured-signal portrait and a compact control area.
-The connected workflow pairs three verbs with code reflecting the selected sound
-and values. A four-sound ruled preview, short differentiators and an ink footer
-complete discovery. At (760px) and below the stage stacks with a (96px) portrait,
-keeping Play within the first screen at a (375px × 844px) viewport. The preview
-uses two columns below (1000px). Landing styles live in a dedicated stylesheet
-under `.landing`; collection, workbench and Fumadocs keep their layouts.
+product explanation, links to the energy charge experience and documentation, and the installation command. Its full-width ink hero holds the charge well: concentric rings, Hold to charge with a brass progress meter, playback status, the live `voice.set({ charge })` binding, a Charge slider, and Start charge, Release charge, Mute and Stop.
+Experience links, a four-sound ruled preview, short differentiators and an ink footer
+complete discovery. At (900px) and below the hero stacks. At (760px) and below the
+well is at most (22rem), keeping Hold to charge within the first screen at a
+(375px × 844px) viewport. The preview uses two columns below (1000px). Landing
+styles live in dedicated stylesheets under `.landing`; collection, workbench and
+Fumadocs keep their layouts.
 
 Collection and workbench pair flexible sound content with an (18rem) monitor rail
 and a (3rem) gap. From (761px) to (1000px), the rail is (16rem) and gap (1.5rem).
@@ -210,6 +213,7 @@ pale signal brass; ordinary hover uses code paper and an ink border. Disabled
 buttons have opacity (0.5) and a default cursor.
 
 All focusable showcase elements use a dark-ochre (3px) outline offset by (4px).
+On the ink hero, focus uses pale signal brass so the outline stays visible.
 Background and border changes transition over (160ms), with `ease-out`; reduced
 motion removes transitions. Play produces an eight-ray click response lasting
 (360ms), suppressed for reduced motion and hidden documents.
@@ -242,14 +246,18 @@ the wordmark occupies its own row; masthead link boxes use the implemented
 
 The monitor pairs an ink waveform with current/last sound, engine state, effects
 volume, Mute and Stop all. Portraits use paper and ink with three reusable forms:
-pulse ellipses, harmonic bands and flowing lines. The landing reuses these
-families on ink with a brass signal; its selectors switch sound without playback.
-Switching cuts current voices. Play retriggers one-shots; sustained sound has
-explicit Start and Stop, with live throttle. Brightness and intensity apply on
-the next Play. Mute, visible playback state and inline errors remain in the stage.
-Static portrait geometry is illustrative; live displacement follows native output.
-The monitor is the literal waveform, with labelled display gain. Both stop drawing
-offscreen, while hidden and under reduced motion.
+pulse ellipses, harmonic bands and flowing lines. Collection previews and
+workbench portraits use these families. The homepage hero does not. Its rings
+follow charge from 0 to 1, including while muted. When motion is allowed, edge
+brightness follows the caller-owned analyser. Reduced motion, narrow viewports
+and a failed WebGL context keep the CSS rings without a continuous loop. Hold,
+Space and Enter reach full charge in three seconds. Release leaves the tail.
+Stop cuts it. Start charge, Release charge and the Charge slider are the
+manual path. Mute, visible playback state and an inline activation error stay
+in the hero. Static portrait geometry elsewhere is illustrative; live
+displacement follows native output. The monitor is the literal waveform, with
+labelled display gain. Drawing stops offscreen, while hidden and under reduced
+motion.
 
 ### Inspector
 
@@ -276,7 +284,9 @@ Seed, Randomize and Reset variation belong with playback, above the inspector.
 - **Don't** apply the showcase stylesheet as a redesign of the separate Fumadocs reference experience.
 
 Source of truth: [global styles](app/globals.css), [landing styles](app/landing.css),
-[landing](app/page.tsx), [sound stage](app/landing-experience.tsx), [gallery](app/gallery-page.tsx),
+[hero styles](app/charge-hero.css), [landing](app/page.tsx),
+[charge hero](app/charge-hero.tsx), [charge rings](app/charge-rings.tsx),
+[gallery](app/gallery-page.tsx),
 [sound specimens](app/sound-card.tsx), [output scope](app/output-scope.tsx) and
 [Play response](app/play-spark.tsx). This record describes the showcase, not the
 separate Fumadocs theme. Small utility captions and the mobile masthead's (32px)

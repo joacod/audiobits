@@ -6,6 +6,13 @@ Showcase assets and adaptations stay in this website workspace.
   adapted for one bounded Play interaction with reduced motion and idle-loop removal.
   [License](react-bits.txt): MIT with Commons Clause. Used within this website,
   not exported as a standalone component or included in the AudioBits package.
+- [React Bits Magic Rings](https://reactbits.dev/animations/magic-rings)
+  ([registry source](https://reactbits.dev/r/MagicRings-TS-CSS.json)): free
+  component, adapted in `app/charge-rings.tsx` so ring count, radius, color,
+  rotation and thickness follow Energy Charge progress and measured output.
+  The original clock cycle, pointer parallax, click burst, noise and three.js
+  renderer are not included. Same [license](react-bits.txt): MIT with Commons
+  Clause, copyright 2026 David Haz. Website-only. Not shipped in the package.
 - [React Bits Waves](https://github.com/DavidHDev/react-bits/blob/main/src/ts-default/Backgrounds/Waves/Waves.tsx):
   inspected as the hero linework reference. The bounded portrait painter is an
   independent native-canvas implementation driven by AudioBits samples; no Waves

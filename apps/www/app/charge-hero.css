@@ -1,0 +1,259 @@
+@layer components {
+  .landing .charge-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 0.86fr) minmax(0, 1.14fr);
+    gap: 2rem 3.5rem;
+    align-items: center;
+    margin: 0 calc(var(--gutter) * -1);
+    padding: 2.75rem var(--gutter) 3.25rem;
+    background:
+      radial-gradient(
+        circle at 72% 42%,
+        color-mix(in srgb, var(--ink), white 14%) 0%,
+        transparent 34rem
+      ),
+      var(--ink);
+    color: var(--paper);
+    color-scheme: dark;
+    --focus: var(--signal);
+    --rule: #768b7d;
+  }
+  .landing .charge-hero ::selection {
+    background: var(--signal);
+    color: var(--ink);
+  }
+  .landing .charge-hero h1 {
+    max-width: 9ch;
+    color: var(--paper);
+  }
+  .landing .charge-hero h1 em {
+    display: block;
+  }
+  .landing .charge-lede {
+    max-width: 34ch;
+    margin: 1.25rem 0 0;
+    color: var(--paper);
+  }
+  .landing .charge-hero .landing-links {
+    margin-top: 1.5rem;
+  }
+  .landing .charge-hero .landing-links a {
+    color: var(--signal);
+  }
+  .landing .charge-hero .landing-install {
+    color: var(--ink);
+  }
+  .landing .charge-stage {
+    min-width: 0;
+  }
+  .landing .charge-well {
+    position: relative;
+    width: min(100%, 34rem);
+    margin-inline: auto;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: radial-gradient(circle, #1a2c24 0%, transparent 70%);
+  }
+  .landing .charge-rings {
+    --level: 0;
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  .landing .charge-rings canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    visibility: hidden;
+  }
+  .landing .charge-rings[data-renderer="webgl"] canvas {
+    visibility: visible;
+  }
+  .landing .charge-ring,
+  .landing .charge-core {
+    position: absolute;
+    border-radius: 50%;
+  }
+  .landing .charge-ring {
+    inset: calc(5% + var(--i) * 5.2%);
+    border: 1.5px solid
+      color-mix(in srgb, var(--signal), var(--accent) calc(var(--i) * 9%));
+    opacity: clamp(0, calc(var(--charge) * 7.2 - var(--i) + 0.55), 1);
+    transform: scale(calc(0.96 + var(--charge) * 0.04 + var(--level) * 0.035));
+  }
+  .landing .charge-core {
+    left: 50%;
+    top: 50%;
+    width: calc(14% + var(--charge) * 12%);
+    aspect-ratio: 1;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(
+      circle,
+      color-mix(in srgb, var(--signal), white calc(var(--level) * 30%)) 0%,
+      transparent 72%
+    );
+    opacity: calc(0.28 + var(--charge) * 0.72);
+  }
+  .landing .charge-rings[data-renderer="webgl"] .charge-ring,
+  .landing .charge-rings[data-renderer="webgl"] .charge-core {
+    visibility: hidden;
+  }
+  .landing .charge-rings[data-running="true"]:not([data-renderer="webgl"]) {
+    animation: charge-turn calc(18s - var(--charge) * 11s) linear infinite;
+  }
+  .landing .charge-hold {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 1;
+    width: clamp(11rem, 46%, 15.5rem);
+    aspect-ratio: 1;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    touch-action: none;
+    user-select: none;
+    color: var(--paper);
+    background:
+      radial-gradient(circle, rgb(26 44 36 / 0.92) 0 62%, transparent 64%),
+      conic-gradient(
+        from -90deg,
+        var(--accent) calc(var(--charge) * 1turn),
+        rgb(118 139 125 / 0.55) 0
+      );
+  }
+  .landing .charge-hero .charge-hold:enabled:hover {
+    color: var(--signal);
+    background:
+      radial-gradient(circle, rgb(26 44 36 / 0.92) 0 62%, transparent 64%),
+      conic-gradient(
+        from -90deg,
+        var(--signal) calc(var(--charge) * 1turn),
+        rgb(118 139 125 / 0.55) 0
+      );
+  }
+  .landing .charge-hero .charge-hold:focus-visible {
+    outline: 3px solid var(--signal);
+    outline-offset: 8px;
+  }
+  .landing .charge-percent {
+    font-family: Fraunces, Georgia, serif;
+    font-size: clamp(2rem, 4vw, 3.4rem);
+    font-weight: 450;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+    line-height: 0.9;
+  }
+  .landing .charge-hold-label {
+    margin-top: 0.45rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+  .landing .charge-panel {
+    width: min(100%, 34rem);
+    margin: 0.25rem auto 0;
+  }
+  .landing .charge-legend {
+    max-width: 52ch;
+    margin: 0 0 0.75rem;
+    color: color-mix(in srgb, var(--paper) 78%, var(--ink));
+  }
+  .landing .charge-panel [role="status"] {
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+  }
+  .landing .charge-binding {
+    margin: 0.9rem 0 0.25rem;
+  }
+  .landing .charge-binding figcaption {
+    margin-bottom: 0.4rem;
+    color: color-mix(in srgb, var(--paper) 78%, var(--ink));
+    font-size: 0.8rem;
+  }
+  .landing .charge-binding pre {
+    margin: 0;
+    overflow: auto;
+    padding: 0.9rem 1rem;
+    border-radius: var(--control-radius);
+    background: var(--code);
+    color: var(--ink);
+    font-family: monospace;
+    font-size: 0.8rem;
+    line-height: 1.6;
+  }
+  .landing .charge-hero label {
+    margin: 0.75rem 0 0.35rem;
+    color: color-mix(in srgb, var(--paper) 78%, var(--ink));
+    font-size: 0.9rem;
+  }
+  .landing .charge-hero label output {
+    color: var(--paper);
+    font-variant-numeric: tabular-nums;
+  }
+  .landing .charge-hero input[type="range"] {
+    accent-color: var(--signal);
+    max-width: none;
+  }
+  .landing .charge-hero .audio-controls {
+    margin-top: 0.35rem;
+  }
+  .landing .charge-hero .audio-controls button:not(.play-action) {
+    color: var(--paper);
+    border-color: #768b7d;
+    background: transparent;
+  }
+  .landing .charge-hero .audio-controls button:not(.play-action):enabled:hover {
+    color: var(--paper);
+    border-color: var(--signal);
+    background: #344e40;
+  }
+  .landing .charge-error {
+    margin: 0.9rem 0 0;
+    padding: 0.75rem 0.9rem;
+    border: 1px solid var(--signal);
+    color: var(--paper);
+  }
+  @keyframes charge-turn {
+    to {
+      transform: rotate(1turn);
+    }
+  }
+  @media (max-width: 900px) {
+    .landing .charge-hero {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+      padding-top: 2rem;
+    }
+    .landing .charge-hero h1 {
+      max-width: 12ch;
+    }
+  }
+  @media (max-width: 760px) {
+    .landing .charge-hero {
+      padding: 1.5rem var(--gutter) 2rem;
+    }
+    .landing .charge-lede {
+      margin-top: 0.8rem;
+      font-size: 1rem;
+    }
+    .landing .charge-well {
+      width: min(100%, 22rem);
+    }
+    .landing .charge-percent {
+      font-size: 2rem;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .landing .charge-rings {
+      animation: none;
+    }
+  }
+}

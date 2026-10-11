@@ -115,139 +115,201 @@ test("native dynamic resource bounds, cleanup and timing baseline", async ({
   await expect(button).toBeVisible();
   console.log(`Dynamic resources: ${await button.textContent()}`);
 });
-for (const target of ["site", "vanilla"] as const) {
-  test(`${target} impact and one continuous thruster through public exports`, async ({
-    page,
-  }) => {
-    await page.addInitScript(() => {
-      const Native = globalThis.AudioContext;
-      const sources: AudioScheduledSourceNode[] = [];
-      const contexts: AudioContext[] = [];
-      globalThis.AudioContext = class extends Native {
-        constructor() {
-          super();
-          contexts.push(this);
-        }
-        createOscillator() {
-          const node = super.createOscillator();
-          sources.push(node);
-          return node;
-        }
-        createBufferSource() {
-          const node = super.createBufferSource();
-          sources.push(node);
-          return node;
-        }
-      };
-      Object.assign(globalThis, { sources, contexts });
-    });
-    await page.goto(
-      target === "site" ? "http://127.0.0.1:3100" : "http://127.0.0.1:4173",
-    );
-    expect(
-      await page.evaluate(
-        () =>
-          (globalThis as unknown as { contexts: AudioContext[] }).contexts
-            .length,
-      ),
-    ).toBe(0);
-    if (target === "site")
-      await page
-        .getByRole("button", { name: "Impact One-shot", exact: true })
-        .click();
-    await page
-      .getByRole("slider", { name: "Intensity", exact: true })
-      .fill("1");
-    for (let i = 0; i < 3; i++)
-      await page.getByRole("button", { name: "Play impact" }).click();
-    if (target === "site")
-      await page
-        .getByRole("button", { name: "Thruster Sustained", exact: true })
-        .click();
-    await page.getByRole("button", { name: "Start thruster" }).click();
-    const state =
-      target === "site"
-        ? page.getByTestId("landing-playback-state")
-        : page.locator("#thruster-state");
-    await expect(state).toHaveText("Thruster: running");
-    await expect(
-      page.getByRole("button", { name: "Start thruster" }),
-    ).toBeDisabled();
-    const count = await page.evaluate(
-      () => (globalThis as unknown as { sources: unknown[] }).sources.length,
-    );
-    for (const value of ["1", "0", "0.75", "0.2"])
-      await page.getByRole("slider", { name: "Throttle" }).fill(value);
-    expect(
-      await page.evaluate(
-        () => (globalThis as unknown as { sources: unknown[] }).sources.length,
-      ),
-    ).toBe(count);
-    expect(count).toBe(target === "vanilla" ? 9 : 8);
-    await page
-      .getByRole("button", {
-        name: target === "site" ? "Stop" : "Stop thruster",
-        exact: true,
-      })
-      .click();
-    await expect(state).toHaveText("Thruster: stopped");
-    await page.getByRole("button", { name: "Start thruster" }).click();
-    await expect(state).toHaveText("Thruster: running");
-    await page
-      .getByRole("button", {
-        name: target === "site" ? "Stop" : "Stop all",
-        exact: true,
-      })
-      .click();
-    await expect(state).toHaveText("Thruster: stopped");
-    if (target === "site")
-      await expect(
-        page
-          .getByRole("region", { name: "Interactive sound stage" })
-          .getByRole("alert"),
-      ).toHaveCount(0);
-    else await expect(page.getByRole("alert")).toBeEmpty();
-    await page.getByRole("button", { name: "Start thruster" }).click();
-    await expect(state).toHaveText("Thruster: running");
-    // Scripted host visibility event: native graphs, simulated page hide.
-    await page.evaluate(() => {
-      Object.defineProperty(document, "hidden", {
-        configurable: true,
-        value: true,
-      });
-      document.dispatchEvent(new Event("visibilitychange"));
-    });
-    await expect(state).toHaveText(
-      target === "site" ? "Thruster: ready" : "Thruster: stopped",
-    );
-    await expect
-      .poll(() =>
-        page.evaluate(() =>
-          (globalThis as unknown as { contexts: AudioContext[] }).contexts.map(
-            (context) => context.state,
-          ),
-        ),
-      )
-      .toEqual(["suspended"]);
-    await page.evaluate(() => {
-      Reflect.deleteProperty(document, "hidden");
-    });
-    await page.getByRole("button", { name: "Start thruster" }).click();
-    await expect(state).toHaveText("Thruster: running");
-    if (target === "site")
-      await page.getByRole("link", { name: "Docs" }).click();
-    else
-      await page.evaluate(() => {
-        window.dispatchEvent(new Event("pagehide"));
-      });
-    await expect
-      .poll(() =>
-        page.evaluate(() =>
-          (globalThis as unknown as { contexts: AudioContext[] }).contexts.map(
-            (context) => context.state,
-          ),
-        ),
-      )
-      .toEqual(["closed"]);
+test("vanilla impact and one continuous thruster through public exports", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const Native = globalThis.AudioContext;
+    const sources: AudioScheduledSourceNode[] = [];
+    const contexts: AudioContext[] = [];
+    globalThis.AudioContext = class extends Native {
+      constructor() {
+        super();
+        contexts.push(this);
+      }
+      createOscillator() {
+        const node = super.createOscillator();
+        sources.push(node);
+        return node;
+      }
+      createBufferSource() {
+        const node = super.createBufferSource();
+        sources.push(node);
+        return node;
+      }
+    };
+    Object.assign(globalThis, { sources, contexts });
   });
-}
+  await page.goto("http://127.0.0.1:4173");
+  expect(
+    await page.evaluate(
+      () =>
+        (globalThis as unknown as { contexts: AudioContext[] }).contexts.length,
+    ),
+  ).toBe(0);
+  await page.getByRole("slider", { name: "Intensity", exact: true }).fill("1");
+  for (let i = 0; i < 3; i++)
+    await page.getByRole("button", { name: "Play impact" }).click();
+  await page.getByRole("button", { name: "Start thruster" }).click();
+  const state = page.locator("#thruster-state");
+  await expect(state).toHaveText("Thruster: running");
+  await expect(
+    page.getByRole("button", { name: "Start thruster" }),
+  ).toBeDisabled();
+  const count = await page.evaluate(
+    () => (globalThis as unknown as { sources: unknown[] }).sources.length,
+  );
+  for (const value of ["1", "0", "0.75", "0.2"])
+    await page.getByRole("slider", { name: "Throttle" }).fill(value);
+  expect(
+    await page.evaluate(
+      () => (globalThis as unknown as { sources: unknown[] }).sources.length,
+    ),
+  ).toBe(count);
+  expect(count).toBe(9);
+  await page
+    .getByRole("button", { name: "Stop thruster", exact: true })
+    .click();
+  await expect(state).toHaveText("Thruster: stopped");
+  await page.getByRole("button", { name: "Start thruster" }).click();
+  await expect(state).toHaveText("Thruster: running");
+  await page.getByRole("button", { name: "Stop all", exact: true }).click();
+  await expect(state).toHaveText("Thruster: stopped");
+  await expect(page.getByRole("alert")).toBeEmpty();
+  await page.getByRole("button", { name: "Start thruster" }).click();
+  await expect(state).toHaveText("Thruster: running");
+  // Scripted host visibility event: native graphs, simulated page hide.
+  await page.evaluate(() => {
+    Object.defineProperty(document, "hidden", {
+      configurable: true,
+      value: true,
+    });
+    document.dispatchEvent(new Event("visibilitychange"));
+  });
+  await expect(state).toHaveText("Thruster: stopped");
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        (globalThis as unknown as { contexts: AudioContext[] }).contexts.map(
+          (context) => context.state,
+        ),
+      ),
+    )
+    .toEqual(["suspended"]);
+  await page.evaluate(() => {
+    Reflect.deleteProperty(document, "hidden");
+  });
+  await page.getByRole("button", { name: "Start thruster" }).click();
+  await expect(state).toHaveText("Thruster: running");
+  await page.evaluate(() => {
+    window.dispatchEvent(new Event("pagehide"));
+  });
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        (globalThis as unknown as { contexts: AudioContext[] }).contexts.map(
+          (context) => context.state,
+        ),
+      ),
+    )
+    .toEqual(["closed"]);
+});
+
+test("homepage energy charge keeps one voice through live updates and hide", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const Native = globalThis.AudioContext;
+    const sources: AudioScheduledSourceNode[] = [];
+    const contexts: AudioContext[] = [];
+    globalThis.AudioContext = class extends Native {
+      constructor() {
+        super();
+        contexts.push(this);
+      }
+      createOscillator() {
+        const node = super.createOscillator();
+        sources.push(node);
+        return node;
+      }
+      createBufferSource() {
+        const node = super.createBufferSource();
+        sources.push(node);
+        return node;
+      }
+    };
+    Object.assign(globalThis, { sources, contexts });
+  });
+  await page.goto("http://127.0.0.1:3100");
+  expect(
+    await page.evaluate(
+      () =>
+        (globalThis as unknown as { contexts: AudioContext[] }).contexts.length,
+    ),
+  ).toBe(0);
+  const state = page.getByTestId("landing-playback-state");
+  await page.getByRole("slider", { name: "Charge", exact: true }).fill("0.4");
+  await page.getByRole("button", { name: "Start charge", exact: true }).click();
+  await expect(state).toHaveText("Charge: running");
+  const count = await page.evaluate(
+    () => (globalThis as unknown as { sources: unknown[] }).sources.length,
+  );
+  expect(count).toBe(4);
+  for (const value of ["1", "0.2", "0.8", "1"])
+    await page.getByRole("slider", { name: "Charge", exact: true }).fill(value);
+  expect(
+    await page.evaluate(
+      () => (globalThis as unknown as { sources: unknown[] }).sources.length,
+    ),
+  ).toBe(count);
+  await expect(page.locator(".charge-binding code")).toHaveText(
+    "voice.set({ charge: 1.00 })",
+  );
+  await expect(
+    page.getByRole("region", { name: "Energy charge hero" }).getByRole("alert"),
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: "Stop", exact: true }).click();
+  await expect(state).toHaveText("Charge: stopped");
+  await page.getByRole("button", { name: "Start charge", exact: true }).click();
+  await expect(state).toHaveText("Charge: running");
+  expect(
+    await page.evaluate(
+      () => (globalThis as unknown as { sources: unknown[] }).sources.length,
+    ),
+  ).toBe(8);
+  await page.evaluate(() => {
+    Object.defineProperty(document, "hidden", {
+      configurable: true,
+      value: true,
+    });
+    document.dispatchEvent(new Event("visibilitychange"));
+  });
+  await expect(state).toHaveText("Charge: stopped");
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        (globalThis as unknown as { contexts: AudioContext[] }).contexts.map(
+          (context) => context.state,
+        ),
+      ),
+    )
+    .toEqual(["suspended"]);
+  await page.evaluate(() => {
+    Reflect.deleteProperty(document, "hidden");
+  });
+  await page.getByRole("button", { name: "Start charge", exact: true }).click();
+  await expect(state).toHaveText("Charge: running");
+  await page
+    .getByRole("navigation", { name: "Main navigation" })
+    .getByRole("link", { name: "Docs" })
+    .click();
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        (globalThis as unknown as { contexts: AudioContext[] }).contexts.map(
+          (context) => context.state,
+        ),
+      ),
+    )
+    .toEqual(["closed"]);
+});

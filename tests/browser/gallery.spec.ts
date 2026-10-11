@@ -614,14 +614,17 @@ test("showcase uses native output, bounded seeded variation and simple current c
   expect(JSON.parse(copied).schemaVersion).toBe(1);
 });
 
-test("homepage stage shares one engine, copies settings and disposes on navigation", async ({
+test("homepage charge uses one engine, reports output and disposes on navigation", async ({
   page,
 }) => {
   await instrument(page);
   await page.setViewportSize({ width: 375, height: 844 });
   await page.goto("http://127.0.0.1:3100");
-  const play = page.getByRole("button", { name: "Play glass", exact: true });
-  const bounds = await play.boundingBox();
+  const hold = page.getByRole("button", {
+    name: "Hold to charge",
+    exact: true,
+  });
+  const bounds = await hold.boundingBox();
   expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(844);
   expect(
     await page.evaluate(
@@ -635,58 +638,37 @@ test("homepage stage shares one engine, copies settings and disposes on navigati
           .galleryContexts.length,
     ),
   ).toBe(0);
-  await page
-    .getByRole("slider", { name: "Brightness", exact: true })
-    .fill("0.83");
-  await expect(page.locator(".stage-parameter")).toContainText("0.83");
+  await page.getByRole("slider", { name: "Charge", exact: true }).fill("0.42");
+  await expect(page.locator(".charge-binding code")).toHaveText(
+    "voice.set({ charge: 0.42 })",
+  );
   await expect(page.locator(".recipe-tools")).toHaveCount(0);
   await expect(page.locator(".landing-sound-entry")).toHaveCount(4);
-  await page.getByRole("button", { name: "Copy code", exact: true }).click();
-  expect(
-    await page.evaluate(
-      () => (globalThis as unknown as { copiedExample: string }).copiedExample,
-    ),
-  ).toContain('"brightness":0.83');
-  await play.focus();
-  await page.keyboard.press("Enter");
+  await page.getByRole("button", { name: "Start charge", exact: true }).click();
   await expect(page.getByTestId("landing-playback-state")).toHaveText(
-    "Glass notification: playing",
-  );
-  await expect(page.getByTestId("landing-playback-state")).toHaveText(
-    "Glass notification: ready",
-  );
-  await page
-    .getByRole("button", { name: /^Thruster(?: Sustained)?$/, exact: true })
-    .click();
-  await page
-    .getByRole("button", { name: "Start thruster", exact: true })
-    .click();
-  await expect(page.getByTestId("landing-playback-state")).toHaveText(
-    "Thruster: running",
+    "Charge: running",
   );
   await expect
     .poll(() =>
-      page
-        .locator(".stage-signal canvas")
-        .getAttribute("data-peak")
-        .then(Number),
+      page.locator(".charge-rings").getAttribute("data-level").then(Number),
     )
     .toBeGreaterThan(0);
-  await page.getByRole("slider", { name: "Throttle" }).focus();
-  await page.keyboard.press("ArrowRight");
-  await expect(page.getByRole("slider", { name: "Throttle" })).toHaveValue(
-    "0.21",
-  );
   await page.getByRole("button", { name: "Mute", exact: true }).click();
   await expect(
     page.getByRole("button", { name: "Mute", exact: true }),
   ).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByTestId("landing-playback-state")).toHaveText(
+    "Charge: running · muted",
+  );
+  await expect
+    .poll(() => page.locator(".charge-rings").getAttribute("data-level"))
+    .toBe("0");
   await page.getByRole("button", { name: "Stop", exact: true }).click();
   await expect(page.getByTestId("landing-playback-state")).toHaveText(
-    "Thruster: stopped",
+    "Charge: stopped · muted",
   );
-  await expect(page.locator(".stage-signal canvas")).toHaveAttribute(
-    "data-peak",
+  await expect(page.locator(".charge-rings")).toHaveAttribute(
+    "data-level",
     "0",
   );
   expect(
