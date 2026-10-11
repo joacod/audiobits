@@ -1,0 +1,471 @@
+@layer components {
+  .foundation.catalog-page {
+    padding-bottom: 2.5rem;
+    scrollbar-color: var(--rule) var(--paper);
+  }
+  .foundation.catalog-page h1 {
+    font-size: clamp(1.7rem, 2.4vw, 2.2rem);
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    margin: 0;
+  }
+  .foundation.catalog-page .catalog-layout {
+    position: relative;
+    padding-top: 1.15rem;
+  }
+  .foundation.catalog-page .catalog-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    position: relative;
+  }
+  .foundation.catalog-page .catalog-menu {
+    display: none;
+  }
+  .foundation.catalog-page .catalog-nav-panel {
+    display: block;
+  }
+  .foundation.catalog-page .catalog-nav-panel nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .foundation.catalog-page .catalog-nav-panel h2 {
+    margin: 1rem 0 0;
+    font-family: var(--font-ui);
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    line-height: 1.3;
+  }
+  .foundation.catalog-page .catalog-nav-panel nav > div:first-child h2 {
+    margin-top: 0;
+  }
+  .foundation.catalog-page .catalog-nav-panel a {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    color: var(--ink);
+    font-size: 0.95rem;
+    text-decoration: none;
+  }
+  .foundation.catalog-page .catalog-nav-panel a:hover,
+  .foundation.catalog-page .catalog-nav-panel a[aria-current="location"] {
+    text-decoration: underline;
+    text-underline-offset: 0.35rem;
+  }
+  .foundation.catalog-page .catalog-nav-panel a[aria-current="location"] {
+    font-weight: 700;
+    text-decoration-thickness: 2px;
+  }
+  .foundation.catalog-page .catalog-main h2 {
+    margin: 0 0 0.7rem;
+    font-size: clamp(1.45rem, 2vw, 1.8rem);
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+  }
+  .foundation.catalog-page .catalog-section + .catalog-section {
+    margin-top: 1.5rem;
+  }
+  .foundation.catalog-page .catalog-experience {
+    min-width: 0;
+    padding: 0.85rem 0 1.1rem;
+    border-top: 1px solid var(--rule);
+  }
+  .foundation.catalog-page .catalog-experience h3 {
+    margin: 0;
+    font-size: clamp(1.55rem, 2.2vw, 2rem);
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+  .foundation.catalog-page .catalog-experience p,
+  .foundation.catalog-page .catalog-sound p {
+    margin: 0.4rem 0 0;
+  }
+  .foundation.catalog-page .catalog-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.9rem;
+    margin: 0.55rem 0 0;
+    padding: 0;
+    list-style: none;
+    color: var(--quiet);
+    font-size: 0.9rem;
+  }
+  .foundation.catalog-page .catalog-open {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    margin-top: 0.35rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+  .foundation.catalog-page .catalog-experience-charge {
+    display: grid;
+    grid-template-columns: 7.75rem minmax(0, 1fr);
+    gap: 0.75rem 1.25rem;
+    align-items: start;
+  }
+  .foundation.catalog-page .catalog-experience-charge > .charge-well {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .foundation.catalog-page
+    .catalog-experience-charge
+    > .catalog-experience-copy {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .foundation.catalog-page .catalog-experience-charge > .catalog-status {
+    grid-column: 2;
+    grid-row: 2;
+    margin: 0.2rem 0 0;
+  }
+  .foundation.catalog-page .catalog-experience-charge > [role="alert"] {
+    grid-column: 1 / -1;
+    grid-row: 3;
+  }
+  .foundation.catalog-page .catalog-instrument {
+    min-width: 0;
+  }
+  .foundation.catalog-page button.charge-well {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: min(7.75rem, 100%);
+    aspect-ratio: 1;
+    justify-self: start;
+    min-height: 0;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    border-radius: 50%;
+    background: var(--ink);
+    color: var(--signal);
+    touch-action: none;
+    user-select: none;
+  }
+  .foundation.catalog-page button.charge-well:enabled:hover {
+    border: 0;
+    background: var(--ink);
+    color: var(--signal);
+  }
+  .foundation.catalog-page .charge-rings {
+    --level: 0;
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  .foundation.catalog-page .charge-rings canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    visibility: hidden;
+  }
+  .foundation.catalog-page .charge-rings[data-renderer="webgl"] canvas {
+    visibility: visible;
+  }
+  .foundation.catalog-page .charge-ring,
+  .foundation.catalog-page .charge-core {
+    position: absolute;
+    border-radius: 50%;
+  }
+  .foundation.catalog-page .charge-ring {
+    inset: calc(8% + var(--i) * 4.2%);
+    border: 1.5px solid var(--signal);
+    opacity: clamp(0, calc(var(--charge) * 7.2 - var(--i) + 0.55), 1);
+  }
+  .foundation.catalog-page .charge-core {
+    left: 50%;
+    top: 50%;
+    width: calc(18% + var(--charge) * 16%);
+    aspect-ratio: 1;
+    transform: translate(-50%, -50%);
+    background: var(--accent);
+    opacity: calc(0.35 + var(--charge) * 0.65);
+  }
+  .foundation.catalog-page .charge-rings[data-renderer="webgl"] .charge-ring,
+  .foundation.catalog-page .charge-rings[data-renderer="webgl"] .charge-core {
+    visibility: hidden;
+  }
+  .foundation.catalog-page .catalog-charge-readout {
+    position: relative;
+    z-index: 1;
+    color: var(--paper);
+    font-size: 0.95rem;
+    font-variant-numeric: tabular-nums;
+    pointer-events: none;
+  }
+  .foundation.catalog-page .catalog-experience-thruster {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+  .foundation.catalog-page .thruster-field {
+    background: var(--ink);
+    color: var(--instrument-quiet);
+    overflow: hidden;
+    cursor: pointer;
+    touch-action: none;
+    user-select: none;
+  }
+  .foundation.catalog-page .thruster-field[data-state="running"] {
+    color: var(--signal);
+  }
+  .foundation.catalog-page .thruster-field svg {
+    display: block;
+    width: 100%;
+    height: 8.5rem;
+  }
+  .foundation.catalog-page .thruster-field path {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    opacity: calc(0.45 + var(--thrust, 0) * 0.55);
+  }
+  .foundation.catalog-page .thruster-point {
+    fill: var(--accent);
+  }
+  .foundation.catalog-page .catalog-sound {
+    display: grid;
+    grid-template-columns: 3.25rem minmax(0, 1fr);
+    gap: 0.35rem 0.85rem;
+    align-items: center;
+    min-width: 0;
+    padding: 0.7rem 0;
+    border-top: 1px solid var(--rule);
+  }
+  .foundation.catalog-page .catalog-mark {
+    width: 3.25rem;
+    height: 3.25rem;
+    color: var(--ink);
+  }
+  .foundation.catalog-page .catalog-mark-harmonic {
+    color: var(--focus);
+  }
+  .foundation.catalog-page .catalog-mark-flow {
+    color: var(--quiet);
+  }
+  .foundation.catalog-page .catalog-sound-copy {
+    min-width: 0;
+  }
+  .foundation.catalog-page .catalog-sound h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+  }
+  .foundation.catalog-page .catalog-use {
+    color: var(--quiet);
+    font-size: 0.9rem;
+  }
+  .foundation.catalog-page .catalog-status {
+    font-size: 0.9rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .foundation.catalog-page .catalog-sound[data-status="starting"] .catalog-mark,
+  .foundation.catalog-page .catalog-sound[data-status="playing"] .catalog-mark,
+  .foundation.catalog-page .catalog-sound[data-status="running"] .catalog-mark {
+    color: var(--accent);
+  }
+  .foundation.catalog-page .catalog-sound-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+  }
+  .foundation.catalog-page .catalog-sound-actions .catalog-open {
+    margin-top: 0;
+  }
+  .foundation.catalog-page .catalog-footer {
+    margin-top: 1.75rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--rule);
+  }
+  .foundation.catalog-page .catalog-footer p {
+    margin: 0.35rem 0;
+    color: var(--quiet);
+  }
+  .foundation.catalog-page .catalog-install {
+    margin: 0.5rem 0;
+  }
+  .foundation.catalog-page .catalog-install code {
+    display: inline-block;
+    padding: 0.5rem 0.75rem;
+    background: var(--code);
+    border-radius: var(--control-radius);
+    color: var(--ink);
+    font-size: 0.85rem;
+  }
+  .foundation.catalog-page .catalog-close {
+    display: none;
+  }
+  .foundation.catalog-page .catalog-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+  .foundation.catalog-page .catalog-backdrop:enabled:hover {
+    border: 0;
+    background: transparent;
+  }
+
+  @media (min-width: 761px) {
+    .foundation.catalog-page .catalog-layout {
+      display: grid;
+      grid-template-columns: 12.5rem minmax(0, 1fr);
+      column-gap: 2rem;
+      row-gap: 0.35rem;
+      align-items: start;
+    }
+    .foundation.catalog-page .catalog-toolbar {
+      display: contents;
+    }
+    .foundation.catalog-page h1 {
+      grid-column: 2;
+      grid-row: 1;
+    }
+    .foundation.catalog-page .catalog-nav-panel {
+      grid-column: 1;
+      grid-row: 1 / span 2;
+      position: sticky;
+      top: 0.75rem;
+      align-self: start;
+      max-height: calc(100vh - 1.5rem);
+      overflow: auto;
+      scrollbar-color: var(--rule) var(--paper);
+      scrollbar-width: thin;
+    }
+    .foundation.catalog-page .catalog-main {
+      grid-column: 2;
+      grid-row: 2;
+      min-width: 0;
+    }
+    .foundation.catalog-page .catalog-experiences {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+      gap: 0 1.5rem;
+      align-items: start;
+    }
+    .foundation.catalog-page .catalog-sound {
+      grid-template-columns: 3.25rem minmax(0, 1fr) auto;
+    }
+    .foundation.catalog-page .catalog-sound-actions {
+      grid-column: auto;
+      justify-content: end;
+    }
+    .foundation.catalog-page .catalog-output .audio-monitor {
+      position: static;
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.65rem 1rem;
+      margin-bottom: 0.35rem;
+      padding: 0 0 0.75rem;
+      border: 0;
+      border-bottom: 1px solid var(--rule);
+      background: transparent;
+    }
+    .foundation.catalog-page .catalog-output .monitor-heading {
+      display: flex;
+      align-items: baseline;
+      gap: 0.75rem;
+    }
+    .foundation.catalog-page .catalog-output .monitor-heading h2 {
+      margin: 0;
+      font-family: var(--font-ui);
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 0;
+      line-height: 1.3;
+    }
+    .foundation.catalog-page .catalog-output .output-scope {
+      width: min(100%, 18rem);
+      margin: 0;
+      padding: 0.2rem 0 0.35rem;
+      background: transparent;
+      border-bottom: 1px solid var(--ink);
+    }
+    .foundation.catalog-page .catalog-output .output-scope canvas {
+      height: 3.25rem;
+      margin: 0;
+      color: var(--ink);
+    }
+    .foundation.catalog-page .catalog-output .output-scope figcaption {
+      display: none;
+    }
+    .foundation.catalog-page .catalog-output label {
+      flex: 1 1 12rem;
+      margin: 0;
+    }
+  }
+
+  @media (max-width: 1100px) and (min-width: 761px) {
+    .foundation.catalog-page .catalog-experiences {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .foundation.catalog-page .catalog-sound {
+      grid-template-columns: 3.25rem minmax(0, 1fr);
+    }
+    .foundation.catalog-page .catalog-sound-actions {
+      grid-column: 1 / -1;
+      justify-content: start;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .foundation.catalog-page .catalog-menu {
+      display: inline-flex;
+      flex: none;
+    }
+    .foundation.catalog-page .catalog-nav-panel {
+      display: none;
+    }
+    .foundation.catalog-page
+      .catalog-nav-panel[data-open="true"]
+      .catalog-close {
+      display: inline-flex;
+      margin: 0.25rem 0 0.15rem;
+    }
+    .foundation.catalog-page .catalog-nav-panel[data-open="true"] {
+      position: absolute;
+      z-index: 40;
+      top: calc(100% + 0.35rem);
+      left: 0;
+      right: 0;
+      display: block;
+      max-height: min(70vh, 28rem);
+      overflow: auto;
+      padding: 0.35rem 0.85rem 0.7rem;
+      border: 1px solid var(--ink);
+      background: var(--paper);
+    }
+    .foundation.catalog-page .catalog-experience-charge {
+      grid-template-columns: 5.25rem minmax(0, 1fr);
+      gap: 0.75rem 1rem;
+    }
+    .foundation.catalog-page button.charge-well {
+      width: 5.25rem;
+    }
+    .foundation.catalog-page .catalog-experience {
+      padding-bottom: 0.45rem;
+    }
+    .foundation.catalog-page .catalog-experience-thruster {
+      gap: 0.4rem;
+    }
+    .foundation.catalog-page .thruster-field svg {
+      height: 6rem;
+    }
+  }
+}

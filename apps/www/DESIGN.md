@@ -39,6 +39,30 @@ typography:
     fontWeight: 450
     lineHeight: 1.15
     letterSpacing: "-0.02em"
+  catalog-heading:
+    fontFamily: "Fraunces, Georgia, serif"
+    fontSize: "clamp(1.7rem, 2.4vw, 2.2rem)"
+    fontWeight: 450
+    lineHeight: 1.1
+    letterSpacing: "-0.03em"
+  catalog-section:
+    fontFamily: "Fraunces, Georgia, serif"
+    fontSize: "clamp(1.45rem, 2vw, 1.8rem)"
+    fontWeight: 450
+    lineHeight: 1.15
+    letterSpacing: "-0.02em"
+  catalog-experience:
+    fontFamily: "Fraunces, Georgia, serif"
+    fontSize: "clamp(1.55rem, 2.2vw, 2rem)"
+    fontWeight: 450
+    lineHeight: 1.15
+    letterSpacing: "-0.02em"
+  catalog-name:
+    fontFamily: "Fraunces, Georgia, serif"
+    fontSize: "1.25rem"
+    fontWeight: 450
+    lineHeight: 1.2
+    letterSpacing: "-0.02em"
   wordmark:
     fontFamily: "Fraunces, Georgia, serif"
     fontSize: "1.35rem"
@@ -178,7 +202,8 @@ Fraunces carries the headline, section titles, the wordmark, and the charge nume
 ### Hierarchy
 
 - **Display:** the homepage headline and other primary page headings. Fluid size, tight leading, balanced wrapping.
-- **Headline:** catalog and experience page headings.
+- **Headline:** experience page headings.
+- **Catalog:** the overview heading, its section titles, experience names, and sound names. These steps stay smaller than the homepage display so the index fits the first screen.
 - **Section:** homepage section headings, a smaller fluid scale than the page headline.
 - **Title:** sound names on the collection. Landing use-column and preview titles are smaller than the collection title.
 - **Wordmark:** Fraunces at (1.35rem) and weight (520). Hover does not recolor the word. The brass core brightens to signal.
@@ -222,11 +247,15 @@ Focus on paper is a dark-ochre (3px) outline offset by (4px). Focus on the heade
 
 ### Navigation
 
-One header serves the homepage, the catalog, and both experience routes. The links are Home, Catalog, Docs, and GitHub. Catalog points at `/sounds` until a catalog URL exists. The current page is underlined in signal. Docs uses the Fumadocs sidebar instead of this header.
+One header serves the homepage, the catalog, and both experience routes. The links are Home, Catalog, Docs, and GitHub. Catalog points at `/catalog`. The current page is underlined in signal. Docs uses the Fumadocs sidebar instead of this header.
 
 ### Catalog preview
 
-The homepage preview is static. Two experience rows and three portrait links point at the live pages. Portraits keep the pulse, harmonic, and flow drawings. Nothing in that section starts audio.
+The homepage preview is static. Two experience rows and three portrait links point at the live pages. Portraits keep the pulse, harmonic, and flow drawings. Nothing in that section starts audio. The section link opens `/catalog`.
+
+### Catalog overview
+
+`/catalog` is the paper browsing page. A compact heading sits with a sticky grouped index: Interactive experiences, then Bundled sounds. The index and the previews share one entry list. The Energy Charge ring is a hold control beside its copy: the rings and the percent follow the gesture, and the voice starts on that hold. The Reactive Thruster preview is an ink flight field under its copy. Dragging it moves the point and starts the voice. Bundled sounds are compact rows with the existing pulse, harmonic, and flow marks, Play or Start/Stop, and a workbench link. One output strip serves the whole collection. Its trace is tall enough to read a short sound, and it stays a strip rather than a second monitor card. Detail links still open `/experiences/[slug]` and `/sounds/[slug]`. At 760px and below, the index becomes a Catalog menu with the same groups, and the output strip returns to the bottom dock.
 
 ### Audio monitor, workbench, and inspector
 

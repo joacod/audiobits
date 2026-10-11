@@ -67,7 +67,9 @@ for (const width of [375, 768, 1440]) {
     await page
       .getByRole("link", { name: "Explore the catalog", exact: true })
       .click();
-    await expect(page.locator("article.sound-card")).toHaveCount(8);
+    await expect(page).toHaveURL(`${home}/catalog`);
+    await expect(page.locator("[data-catalog-entry]")).toHaveCount(10);
+    await expect(page.locator("article.sound-card")).toHaveCount(0);
   });
 }
 

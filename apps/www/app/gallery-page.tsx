@@ -9,7 +9,7 @@ import type { SoundKind } from "../lib/gallery";
 export function GalleryPage({ selected }: { selected?: SoundKind }) {
   return (
     <main className="foundation showcase-collection">
-      <SiteHeader current="catalog" />
+      <SiteHeader />
       <header className="gallery-intro">
         <h1>
           {selected ? soundInfo[selected].title : "The sound collection."}

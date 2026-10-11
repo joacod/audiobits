@@ -63,7 +63,8 @@ adequate contrast, reduced motion, mute and explicit Stop. No sound-only feedbac
   previews Energy Charge, Reactive Thruster, and three bundled sounds without
   starting them. Catalog, documentation, and `npm install audiobits` stay in
   reach. No second live engine.
-- `/sounds`: operate a light sound collection with a persistent audio monitor. The shared header's Catalog item points here.
+- `/catalog`: browse every current example and bundled sound. Experiences come first, then sounds. One shared playback session covers the sounds. Experience previews stay silent. The shared header's Catalog item points here.
+- `/sounds`: the sound collection and workbenches remain available. The header no longer treats this index as the catalog.
 - `/sounds/[slug]`: understand and customize one sound with playback variation and a tabbed inspector.
 - `/experiences/energy-charge`: open the complete charge host and copy that page.
 - `/experiences/reactive-thruster`: open the complete movement host and copy that page.

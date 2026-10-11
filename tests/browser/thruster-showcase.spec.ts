@@ -223,8 +223,9 @@ test("discovery links, narrow touch input and reduced motion remain usable", asy
   await expect(page.locator(".flight-state")).toHaveText("Thruster: stopped");
   await expect(page.locator("canvas")).toHaveAttribute("data-peak", "0");
   await page.getByRole("link", { name: "Catalog", exact: true }).click();
+  await expect(page).toHaveURL("http://127.0.0.1:3100/catalog");
   await expect(
-    page.getByRole("link", { name: "Try the reactive thruster" }),
+    page.getByRole("link", { name: "Open reactive thruster", exact: true }),
   ).toBeVisible();
   await page.goto("http://127.0.0.1:3100");
   await expect(

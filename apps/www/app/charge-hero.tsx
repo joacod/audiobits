@@ -118,7 +118,7 @@ export function ChargeHero() {
           control as code.
         </p>
         <div className="landing-links">
-          <Link className="landing-primary" href="/sounds">
+          <Link className="landing-primary" href="/catalog">
             Explore the catalog <ArrowIcon />
           </Link>
           <Link href="/docs">

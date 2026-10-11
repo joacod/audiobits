@@ -28,6 +28,12 @@ test("public pages expose unique metadata and content without JavaScript", async
         "Hear, customize, and integrate procedural sound effects generated in your browser with Web Audio.",
     },
     {
+      path: "/catalog",
+      title: "Catalog | AudioBits",
+      description:
+        "Browse interactive experiences and bundled sounds. Play a recipe, then open its workbench or the full example.",
+    },
+    {
       path: "/sounds",
       title: "Sound collection | AudioBits",
       description:
@@ -107,6 +113,7 @@ test("crawl files cover exactly the public pages and invalid routes stay 404", a
   }, xml);
   const paths = [
     "/",
+    "/catalog",
     "/sounds",
     ...soundKinds.map((slug) => `/sounds/${slug}`),
     ...docs.map((doc) => doc.path),

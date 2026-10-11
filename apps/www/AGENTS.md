@@ -7,7 +7,8 @@ Read root `AGENTS.md` first.
 ## Route purposes
 
 - `/` = discovery. Make a new visitor understand and want AudioBits.
-- `/sounds` = exploration. Browse and compare the curated sound collection.
+- `/catalog` = the browsing index for interactive experiences and bundled sounds.
+- `/sounds` = the sound collection. It stays available while detail routes still live here.
 - `/sounds/[slug]` = workbench. Manipulate, inspect, edit, and copy one sound.
 - `/docs` = Fumadocs reference documentation. Keep it calm, readable,
   predictable, and separate from the showcase experience.
