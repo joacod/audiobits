@@ -121,6 +121,9 @@ export function ChargeRings({
     const advanced = () => !narrow.matches && !reduced.matches;
 
     let renderer: WebGLRenderingContext | null = null;
+    let program: WebGLProgram | null = null;
+    let buffer: WebGLBuffer | null = null;
+    let attempted = false;
     let frame = 0;
     let time = 0;
     let last = 0;
@@ -224,13 +227,26 @@ export function ChargeRings({
       draw(now);
       frame = requestAnimationFrame(tick);
     };
+    const releaseRenderer = () => {
+      if (renderer) {
+        renderer.useProgram(null);
+        renderer.bindBuffer(renderer.ARRAY_BUFFER, null);
+        if (program) renderer.deleteProgram(program);
+        if (buffer) renderer.deleteBuffer(buffer);
+      }
+      renderer = null;
+      program = null;
+      buffer = null;
+    };
     const enableRenderer = () => {
       if (!advanced()) {
         publishMode("css");
-        renderer = null;
+        releaseRenderer();
+        attempted = false;
         return;
       }
-      if (renderer) return;
+      if (renderer || attempted) return;
+      attempted = true;
       const gl = glCanvas.getContext("webgl", {
         alpha: true,
         antialias: false,
@@ -252,15 +268,35 @@ export function ChargeRings({
       };
       const vertex = compiled(gl.VERTEX_SHADER, vertexShader);
       const fragment = compiled(gl.FRAGMENT_SHADER, fragmentShader);
-      const program = gl.createProgram();
-      if (!vertex || !fragment || !program) return;
+      if (!vertex || !fragment) {
+        if (vertex) gl.deleteShader(vertex);
+        if (fragment) gl.deleteShader(fragment);
+        return;
+      }
+      program = gl.createProgram();
+      if (!program) {
+        gl.deleteShader(vertex);
+        gl.deleteShader(fragment);
+        return;
+      }
       gl.attachShader(program, vertex);
       gl.attachShader(program, fragment);
       gl.linkProgram(program);
-      if (!gl.getProgramParameter(program, gl.LINK_STATUS)) return;
+      gl.detachShader(program, vertex);
+      gl.detachShader(program, fragment);
+      gl.deleteShader(vertex);
+      gl.deleteShader(fragment);
       renderer = gl;
+      if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+        releaseRenderer();
+        return;
+      }
+      buffer = gl.createBuffer();
+      if (!buffer) {
+        releaseRenderer();
+        return;
+      }
       gl.useProgram(program);
-      const buffer = gl.createBuffer();
       gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
       gl.bufferData(
         gl.ARRAY_BUFFER,
@@ -297,10 +333,15 @@ export function ChargeRings({
 
     const onContextLost = (event: Event) => {
       event.preventDefault();
-      renderer = null;
+      releaseRenderer();
       publishMode("css");
     };
+    const onContextRestored = () => {
+      attempted = false;
+      paint();
+    };
     glCanvas.addEventListener("webglcontextlost", onContextLost);
+    glCanvas.addEventListener("webglcontextrestored", onContextRestored);
     narrow.addEventListener("change", paint);
     reduced.addEventListener("change", paint);
     document.addEventListener("visibilitychange", paint);
@@ -323,6 +364,8 @@ export function ChargeRings({
       reduced.removeEventListener("change", paint);
       document.removeEventListener("visibilitychange", paint);
       glCanvas.removeEventListener("webglcontextlost", onContextLost);
+      glCanvas.removeEventListener("webglcontextrestored", onContextRestored);
+      releaseRenderer();
     };
   }, [engine, progress]);
 

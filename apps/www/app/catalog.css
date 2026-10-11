@@ -117,19 +117,7 @@
     grid-column: 2;
     grid-row: 1;
   }
-  .foundation.catalog-page .catalog-experience-charge > .catalog-status {
-    grid-column: 2;
-    grid-row: 2;
-    margin: 0.2rem 0 0;
-  }
-  .foundation.catalog-page .catalog-experience-charge > [role="alert"] {
-    grid-column: 1 / -1;
-    grid-row: 3;
-  }
-  .foundation.catalog-page .catalog-instrument {
-    min-width: 0;
-  }
-  .foundation.catalog-page button.charge-well {
+  .foundation.catalog-page .charge-well {
     position: relative;
     display: grid;
     place-items: center;
@@ -141,13 +129,6 @@
     overflow: hidden;
     border: 0;
     border-radius: 50%;
-    background: var(--ink);
-    color: var(--signal);
-    touch-action: none;
-    user-select: none;
-  }
-  .foundation.catalog-page button.charge-well:enabled:hover {
-    border: 0;
     background: var(--ink);
     color: var(--signal);
   }
@@ -192,14 +173,6 @@
   .foundation.catalog-page .charge-rings[data-renderer="webgl"] .charge-core {
     visibility: hidden;
   }
-  .foundation.catalog-page .catalog-charge-readout {
-    position: relative;
-    z-index: 1;
-    color: var(--paper);
-    font-size: 0.95rem;
-    font-variant-numeric: tabular-nums;
-    pointer-events: none;
-  }
   .foundation.catalog-page .catalog-experience-thruster {
     display: flex;
     flex-direction: column;
@@ -209,12 +182,6 @@
     background: var(--ink);
     color: var(--instrument-quiet);
     overflow: hidden;
-    cursor: pointer;
-    touch-action: none;
-    user-select: none;
-  }
-  .foundation.catalog-page .thruster-field[data-state="running"] {
-    color: var(--signal);
   }
   .foundation.catalog-page .thruster-field svg {
     display: block;
@@ -225,7 +192,7 @@
     fill: none;
     stroke: currentColor;
     stroke-width: 1.5;
-    opacity: calc(0.45 + var(--thrust, 0) * 0.55);
+    opacity: 0.65;
   }
   .foundation.catalog-page .thruster-point {
     fill: var(--accent);
@@ -458,7 +425,7 @@
       grid-template-columns: 5.25rem minmax(0, 1fr);
       gap: 0.75rem 1rem;
     }
-    .foundation.catalog-page button.charge-well {
+    .foundation.catalog-page .charge-well {
       width: 5.25rem;
     }
     .foundation.catalog-page .catalog-experience {
@@ -798,6 +765,9 @@
   .foundation.catalog-page .catalog-source-note,
   .foundation.catalog-page .catalog-source-tools p {
     max-width: 68ch;
+  }
+  .foundation.catalog-page .catalog-source-tools p code {
+    overflow-wrap: anywhere;
   }
   .foundation.catalog-page .catalog-source-files {
     display: grid;

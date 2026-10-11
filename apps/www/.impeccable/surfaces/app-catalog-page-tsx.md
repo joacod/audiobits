@@ -18,8 +18,8 @@ The catalog is the browsing page for every current AudioBits example and bundled
 ## Direction contract
 
 THESIS: Ten instruments sit on a paper bench, experiences first and bundled sounds second, with the entry itself as the preview. The page refuses identical cards, a long introduction, and a second audio engine per row.
-OWN-WORLD: The charge housing stays on the homepage. This page is warm paper, green ink, and brass only for Play and pressed controls. Fraunces names the page and the experiences. Arial runs the index and the controls. The charge preview is a hold ring. The thruster preview is an ink flight field. Bundled rows keep the pulse, harmonic, and flow marks. Hairline rules, no cards, no glass, no neon.
-STORY: A visitor holds Energy Charge or drags Reactive Thruster on the page, then opens the full host. A bundled sound shows its use, plays from one shared session, and opens its existing workbench.
+OWN-WORLD: The charge housing stays on the homepage. This page is warm paper, green ink, and brass only for Play and pressed controls. Fraunces names the page and the experiences. Arial runs the index and the controls. The charge preview is a static ring. The thruster preview is an ink flight field. Bundled rows keep the pulse, harmonic, and flow marks. Hairline rules, no cards, no glass, no neon.
+STORY: A visitor recognizes Energy Charge or Reactive Thruster from a static preview and opens its full interactive host. A bundled sound shows its use, plays from one shared session, and opens its existing workbench.
 FIRST VIEWPORT: A compact Catalog heading, a sticky grouped index, and the two experience previews. Bundled sounds follow immediately. On small screens the index becomes a Catalog menu with the same groups.
 FORM: Brief-pinned extension of the showcase. No concept-seed roll. Seed key: pinned-by-brief. Code-led.
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance.

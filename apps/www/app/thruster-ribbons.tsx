@@ -237,6 +237,8 @@ export function ThrusterRibbons({
       samples = undefined;
     };
     const resize = () => {
+      const previousWidth = width;
+      const previousHeight = height;
       width = Math.max(1, surface.clientWidth);
       height = Math.max(1, surface.clientHeight);
       const ratio = Math.min(window.devicePixelRatio || 1, 1.5);
@@ -246,9 +248,11 @@ export function ThrusterRibbons({
         glCanvas.width = pixelWidth;
         glCanvas.height = pixelHeight;
       }
-      if (!target.current.placed) {
+      if (
+        !target.current.placed &&
+        (width !== previousWidth || height !== previousHeight)
+      ) {
         for (const ribbon of ribbons) {
-          if (ribbon.x !== 0 || ribbon.points[0] !== 0) continue;
           const next = createRibbon(
             ribbons.indexOf(ribbon),
             width / 2,
@@ -508,11 +512,22 @@ export function ThrusterRibbons({
       if (!gl || gl.isContextLost()) return false;
       const vertex = compile(gl, gl.VERTEX_SHADER, VERTEX);
       const fragment = compile(gl, gl.FRAGMENT_SHADER, FRAGMENT);
+      if (!vertex || !fragment) {
+        if (vertex) gl.deleteShader(vertex);
+        if (fragment) gl.deleteShader(fragment);
+        return false;
+      }
       const nextProgram = gl.createProgram();
-      if (!vertex || !fragment || !nextProgram) return false;
+      if (!nextProgram) {
+        gl.deleteShader(vertex);
+        gl.deleteShader(fragment);
+        return false;
+      }
       gl.attachShader(nextProgram, vertex);
       gl.attachShader(nextProgram, fragment);
       gl.linkProgram(nextProgram);
+      gl.detachShader(nextProgram, vertex);
+      gl.detachShader(nextProgram, fragment);
       gl.deleteShader(vertex);
       gl.deleteShader(fragment);
       if (!gl.getProgramParameter(nextProgram, gl.LINK_STATUS)) {
@@ -531,6 +546,15 @@ export function ThrusterRibbons({
       }
       vao = gl.createVertexArray();
       buffer = gl.createBuffer();
+      if (!vao || !buffer) {
+        gl.useProgram(null);
+        gl.deleteProgram(nextProgram);
+        if (vao) gl.deleteVertexArray(vao);
+        if (buffer) gl.deleteBuffer(buffer);
+        vao = null;
+        buffer = null;
+        return false;
+      }
       gl.bindVertexArray(vao);
       gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
       const position = gl.getAttribLocation(nextProgram, "a_position");
@@ -654,6 +678,11 @@ export function ThrusterRibbons({
       reduced.removeEventListener("change", kick);
       document.removeEventListener("visibilitychange", kick);
       glCanvas.removeEventListener("webglcontextlost", onLost);
+      if (renderer) {
+        renderer.useProgram(null);
+        renderer.bindVertexArray(null);
+        renderer.bindBuffer(renderer.ARRAY_BUFFER, null);
+      }
       if (renderer && program) renderer.deleteProgram(program);
       if (renderer && buffer) renderer.deleteBuffer(buffer);
       if (renderer && vao) renderer.deleteVertexArray(vao);
