@@ -33,7 +33,7 @@ export function SiteHeader({ current }: { current?: "home" | "catalog" }) {
             Home
           </Link>
           <Link
-            href="/sounds"
+            href="/catalog"
             aria-current={current === "catalog" ? "page" : undefined}
           >
             Catalog

@@ -6,6 +6,7 @@ import { siteUrl } from "../lib/site-url";
 export default function sitemap(): MetadataRoute.Sitemap {
   const paths = [
     "/",
+    "/catalog",
     "/sounds",
     ...soundKinds.map((slug) => `/sounds/${slug}`),
     ...source.getPages().map((page) => page.url),

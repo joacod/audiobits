@@ -59,8 +59,8 @@ export default function Home() {
       <section className="landing-catalog" aria-labelledby="catalog-heading">
         <div className="landing-section-heading">
           <h2 id="catalog-heading">Examples and bundled sounds</h2>
-          <Link href="/sounds">
-            See all eight sounds <ArrowIcon />
+          <Link href="/catalog">
+            Open the catalog <ArrowIcon />
           </Link>
         </div>
         <p className="catalog-note">
