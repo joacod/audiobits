@@ -3,37 +3,34 @@ import { join } from "node:path";
 import { ImageResponse } from "next/og";
 import { brandColors } from "../lib/brand-colors";
 
-// Social card with the AudioBits wordmark, waveform and slogan.
+// Social composition inspired by the README hero, drawn independently in code.
 // ImageResponse cannot read CSS custom properties; brandColors mirrors the
 // `.foundation` tokens and a unit test keeps them in sync.
 const VOID = brandColors.void;
 const INK = brandColors.ink;
-const MUTE = brandColors.mute;
 const SIGNAL = [
   brandColors["signal-low"],
   brandColors["signal-mid"],
   brandColors["signal-high"],
 ] as const;
 
-const TAGLINE = "Sound that reacts.";
+const HEADLINE = ["SOUND", "THAT", "REACTS."];
+const DESCRIPTOR = "procedural sound effects for the web";
 
-export const alt = `audiobits wordmark with the waveform mark and the line: ${TAGLINE}`;
+export const alt = `audiobits: SOUND THAT REACTS. ${DESCRIPTOR}. Bold white lettering and a blue-to-purple-to-pink waveform on a near-black background.`;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 const fonts = join(process.cwd(), "node_modules/@fontsource");
 
-function gradient(id: string) {
-  return (
-    <defs>
-      <linearGradient id={id} x1="0" y1="0" x2="1" y2="0">
-        <stop offset="0" stopColor={SIGNAL[0]} />
-        <stop offset="0.6" stopColor={SIGNAL[1]} />
-        <stop offset="1" stopColor={SIGNAL[2]} />
-      </linearGradient>
-    </defs>
-  );
-}
+// A stylized signal grows in amplitude and frequency from left to right.
+const waveform = Array.from({ length: 221 }, (_, index) => {
+  const progress = index / 220;
+  const amplitude = 8 + 172 * progress;
+  const phase = 2 * Math.PI * (1.4 * progress + 3.4 * progress ** 2);
+  const y = 200 - Math.sin(phase) * amplitude;
+  return `${index === 0 ? "M" : "L"}${index * 3} ${y.toFixed(1)}`;
+}).join(" ");
 
 export default async function Image() {
   const [display, mono] = await Promise.all([
@@ -54,53 +51,73 @@ export default async function Image() {
         flexDirection: "column",
         background: VOID,
         color: INK,
-        padding: "100px 84px 0",
+        padding: "44px 56px",
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: 36 }}>
-        <svg width="84" height="84" viewBox="0 0 64 64">
-          {gradient("m")}
-          <path
-            d="M8 32 C14 32 15 26 20 26 S26 40 32 40 S38 14 44 14 S50 50 56 50"
-            fill="none"
-            stroke="url(#m)"
-            strokeWidth="6"
-            strokeLinecap="round"
-          />
-        </svg>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          fontFamily: "Geist Mono",
+        }}
+      >
+        <div style={{ fontSize: 26 }}>audiobits</div>
         <div
           style={{
-            fontFamily: "Big Shoulders Display",
-            fontSize: 150,
-            lineHeight: 1,
+            fontSize: 20,
+            color: INK,
+            opacity: 0.75,
           }}
         >
-          audiobits
+          {DESCRIPTOR}
         </div>
       </div>
       <div
         style={{
-          fontFamily: "Geist Mono",
-          fontSize: 30,
-          color: MUTE,
-          marginTop: 48,
+          display: "flex",
+          flexDirection: "column",
+          fontFamily: "Big Shoulders Display",
+          fontWeight: 800,
+          fontSize: 156,
+          lineHeight: 0.9,
+          letterSpacing: "-3px",
+          marginTop: 70,
         }}
       >
-        {TAGLINE}
+        {HEADLINE.map((line) => (
+          <div key={line}>{line}</div>
+        ))}
       </div>
       <svg
-        width="1200"
-        height="240"
-        viewBox="0 0 1200 240"
-        style={{ position: "absolute", left: 0, bottom: 20 }}
+        width="660"
+        height="400"
+        viewBox="0 0 660 400"
+        style={{ position: "absolute", right: 0, top: 166 }}
       >
-        {gradient("w")}
+        <defs>
+          <linearGradient id="signal" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stopColor={SIGNAL[0]} />
+            <stop offset="0.6" stopColor={SIGNAL[1]} />
+            <stop offset="1" stopColor={SIGNAL[2]} />
+          </linearGradient>
+        </defs>
         <path
-          d="M0 140 C120 140 180 120 260 128 S380 178 440 160 S560 50 660 54 S780 210 880 214 S1040 70 1200 70"
+          d={waveform}
           fill="none"
-          stroke="url(#w)"
+          stroke="url(#signal)"
+          strokeWidth="26"
+          strokeOpacity="0.18"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d={waveform}
+          fill="none"
+          stroke="url(#signal)"
           strokeWidth="7"
           strokeLinecap="round"
+          strokeLinejoin="round"
         />
       </svg>
     </div>,

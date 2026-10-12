@@ -86,7 +86,7 @@ test("public pages expose unique metadata and content without JavaScript", async
       ]) {
         await expect(page.locator(selector)).toHaveAttribute(
           "content",
-          "audiobits wordmark with the waveform mark and the line: Sound that reacts.",
+          "audiobits: SOUND THAT REACTS. procedural sound effects for the web. Bold white lettering and a blue-to-purple-to-pink waveform on a near-black background.",
         );
       }
     }
@@ -109,6 +109,37 @@ test("public pages expose unique metadata and content without JavaScript", async
       }
     }
   }
+});
+
+test("social metadata resolves to matching generated OG and Twitter cards", async ({
+  page,
+  request,
+}) => {
+  await page.goto(home);
+  await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute(
+    "content",
+    "summary_large_image",
+  );
+  const images: Buffer[] = [];
+  for (const [selector, route] of [
+    ['meta[property="og:image"]', "/opengraph-image"],
+    ['meta[name="twitter:image"]', "/twitter-image"],
+  ]) {
+    const imageUrl = await page.locator(selector).getAttribute("content");
+    expect(imageUrl).toBeTruthy();
+    const url = new URL(imageUrl!);
+    expect(url.pathname).toBe(route);
+    const response = await request.get(`${home}${url.pathname}${url.search}`);
+    expect(response.status()).toBe(200);
+    expect(response.headers()["content-type"]).toBe("image/png");
+    const png = await response.body();
+    expect(png.subarray(0, 8).toString("hex")).toBe("89504e470d0a1a0a");
+    expect(png.subarray(12, 16).toString()).toBe("IHDR");
+    expect(png.readUInt32BE(16)).toBe(1200);
+    expect(png.readUInt32BE(20)).toBe(630);
+    images.push(png);
+  }
+  expect(images[1].equals(images[0])).toBe(true);
 });
 
 test("crawl files cover exactly the public pages and invalid routes stay 404", async ({
