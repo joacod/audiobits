@@ -41,27 +41,19 @@ if (result.ok) {
 ## Catalog source you own
 
 All eight existing sounds have canonical source in `catalog/recipes/`. Install
-an individual recipe from the [source registry](https://github.com/joacod/audiobits/blob/main/catalog/README.md),
+an individual recipe through the [catalog source guide](/docs/catalog),
 import its local `recipe.ts`, create a sound, and play it after gesture activation.
 You own that source. The npm package supplies only the engine and recipe language.
 See [Quick start](/docs) for a complete local recipe using public engine APIs.
 
 ## Interactive source
 
-[Reactive thruster](/catalog/reactive-thruster) is a developer-owned catalog
-recipe, separate from the catalog’s simpler `thruster` recipe. Copy `recipe.ts` for its
-sound definition, or take `pointer.ts`, `host.ts`, and `index.html` too for a
-complete vanilla interaction. Include canonical Impact at
-`../../recipes/impact/recipe.ts` relative to the host, or install the complete
-registry item to preserve that layout. The showcase displays all canonical files.
-Install `audiobits` as the runtime dependency; the copied files belong to your
-application and have no website or framework imports.
-
-Throttle is a live control in `[0, 1]`. The pointer integration maps velocity to
-throttle; the host adds canonical Impact on the same engine. Release preserves
-the sound tail, Stop all cuts voices, and the host suspends on hide. Call
-`host.dispose()` when removing the view. See [Lifecycle](/docs/lifecycle) for
-engine ownership in other integrations.
+[Energy Charge](/catalog/energy-charge) and
+[Reactive Thruster](/catalog/reactive-thruster) combine recipe data with reusable
+controllers and complete browser hosts. Reactive Thruster's recipe is separate
+from the simpler catalog `thruster`. See
+[catalog integration](/docs/catalog#integrate-into-your-application) for file
+layout, controller ownership, and adapting these experiences to your application.
 
 ## Supported subset
 

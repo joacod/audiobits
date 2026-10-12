@@ -1,0 +1,82 @@
+---
+title: Optional local MCP tooling
+description: Extend complex agent workflows with local catalog discovery and installed-runtime validation.
+---
+
+Normal AudioBits use needs no MCP server. The
+[official Skill](/docs/agents) works with public exports and ordinary coding
+tools. MCP can help with repeated recipe validation, catalog discovery, or
+comparisons between catalog requirements and an installed runtime.
+
+The Skill includes a self-contained Node.js ESM stdio executable at
+`scripts/mcp.mjs`. Its server dependencies and offline catalog metadata are
+bundled; the AudioBits runtime comes from your consumer project. No monorepo
+checkout, cloud account, or background service is required. Installing the Skill
+does not register or start this server.
+
+## Supported tools
+
+| Tool                  | Purpose                                                                                                                                                     |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `inspect_project`     | Report the installed runtime version, schema, capabilities, and diagnostics.                                                                                |
+| `search_catalog`      | Search offline catalog metadata by query or category.                                                                                                       |
+| `get_catalog_item`    | Return an item's metadata, declared source manifest, install commands, and requirements. Optional `sourcePaths` explicitly retrieves declared source files. |
+| `validate_recipe`     | Validate JSON recipe data with the consumer's installed runtime.                                                                                            |
+| `check_compatibility` | Compare an item's declared requirements with installed schema and capabilities.                                                                             |
+
+Inspect the connected server's actual tool schemas before calling. Runtime tools
+accept `projectPath`, overriding the launch default. Select a trusted project
+root containing `package.json` and `node_modules/audiobits`. Resolution does not
+fall back to an ancestor project or the server's dependencies. Package-manager
+symlinks work; Yarn PnP without `node_modules` is unsupported.
+
+Catalog search and metadata are offline. Only an explicit `sourcePaths` request
+on `get_catalog_item` may retrieve declared public GitHub source, with size and
+hash checks. Returned source is review material; the server never installs or
+executes it. Install reviewed source through the [registry workflow](/docs/catalog).
+
+## Configure a local client
+
+1. [Install the Skill](/docs/agents#install-the-skill) and install `audiobits` in
+   your consumer project if needed. Use Node **24.21.0 or later in the 24.x
+   series** for the server. Other Node series are unverified.
+2. Find the actual installed Skill directory in the CLI output or your agent's
+   inventory. From your consumer project, run the read-only helper below,
+   replacing `/path/to/installed/audiobits` with that directory.
+3. Inspect your MCP client's existing registrations, configuration scope, and
+   supported local stdio mechanism. Reuse an existing AudioBits registration
+   when appropriate. Register the helper's exact `command` and `args` through
+   the client's documented configuration mechanism, preserving unrelated settings.
+4. Reload the client if required, confirm connectivity and tool discovery, then
+   call `inspect_project` to verify that it resolves the intended runtime.
+
+```sh
+node "/path/to/installed/audiobits/scripts/setup-mcp.mjs" --project "$PWD"
+```
+
+The helper resolves local Node, Skill script, and consumer paths and prints a
+JSON object with `command` and `args`. It never writes configuration or starts
+the server. The arguments include the installed `scripts/mcp.mjs` executable and
+`--project` with your consumer root, so clients without a configurable working
+directory can still resolve that project.
+
+Configuration formats differ across clients. Use your client's help or
+documentation rather than assuming a shared config path or schema. Keep resolved
+personal paths in local configuration. The client owns the stdio process and
+closes it on EOF; launch the executable directly, since package-manager banners
+can contaminate protocol stdout. If your client cannot register or connect to
+the server, continue with public exports and the Skill's normal workflow.
+
+## Verification limits
+
+The server imports the trusted installed runtime in a worker for validation.
+The worker isolates output and lifecycle, not untrusted installed code.
+Compatibility checks compare declared schema and capabilities. They do not
+typecheck your application, render browser audio, or verify gesture activation,
+Stop, hiding, and cleanup. Run application checks and relevant browser checks
+after integration; AudioBits automated browser evidence targets Chromium.
+
+For exact setup behavior, see the
+[Skill tooling reference](https://github.com/joacod/audiobits/blob/main/skills/audiobits/references/tooling.md).
+For development of the server itself, see
+[`tools/mcp/`](https://github.com/joacod/audiobits/blob/main/tools/mcp/README.md).

@@ -1,0 +1,80 @@
+---
+title: Official Skill and agent workflows
+description: Give a coding agent AudioBits guidance for integration, original recipes, and interactive experiences.
+---
+
+The official **AudioBits Skill** teaches a coding agent how to integrate browser
+audio, design original sounds, and adapt editable catalog source. It covers
+public runtime APIs, recipe validation, gesture activation, live controls, and
+resource ownership. It is one Skill with guidance for different task depths.
+
+The Skill supplies instructions and references. Your application still uses the
+`audiobits` npm runtime and, when useful, [installed catalog source](/docs/catalog).
+It does not play audio by itself or add a framework adapter.
+
+## Install the Skill
+
+Install through the [Skills CLI](https://skills.sh/docs/cli):
+
+```sh
+npx skills add joacod/audiobits --skill audiobits
+```
+
+Follow the CLI prompts to choose your agent and installation scope. Use the
+installed location reported by the CLI or your agent's Skill inventory. The
+authoritative instructions and references live in
+[`skills/audiobits/`](https://github.com/joacod/audiobits/tree/main/skills/audiobits).
+
+Installing the Skill does not install the runtime into your application or
+register an MCP server. [Optional local MCP tooling](/docs/mcp) is available for
+complex workflows, but every workflow below works with ordinary coding tools.
+
+## Choose the depth
+
+**Basic integration:** Ask for a small local recipe and wire it into the
+application's existing UI and audio ownership. A simple confirmation sound can
+use the runtime directly without installing a catalog item or controller.
+
+> Use the AudioBits Skill to add a short confirmation sound to my Save button.
+> Inspect the existing framework and installed dependencies first. Start audio
+> from the click, show activation errors, provide Stop, and clean up on unmount.
+
+**Original sound:** Describe the intended sound and the controls that matter.
+The agent should inspect the installed schema and capabilities, compose
+supported primitives, and validate serializable recipe data before playback.
+
+> Use the AudioBits Skill to design a soft, glass-like notification. Give it a
+> play-only intensity parameter and reproducible seeded variation. Keep it within
+> my installed runtime's capabilities, validate the recipe and control extrema,
+> and integrate it with my existing sound host.
+
+**Interactive experience:** Describe how application input should shape sound,
+then choose useful catalog source or an original recipe. Keep input and UI state
+outside the recipe and preserve the application's entrypoint and lifecycle.
+
+> Use the AudioBits Skill to adapt Energy Charge to my task progress indicator.
+> Inspect the catalog source and install only what this integration needs. Let
+> my application supply progress in either direction, reuse my audio engine, and
+> handle release, cancellation, hide, and teardown. Keep my existing UI.
+
+Try [Energy Charge](/catalog/energy-charge) and
+[Reactive Thruster](/catalog/reactive-thruster) to explore the difference between
+sound data, input controllers, and complete hosts.
+
+## What to expect from the agent
+
+The agent should inspect your installed `audiobits` exports, declarations,
+`audiobits/schema.json`, and `audiobits/capabilities.json`. These define your
+runtime's contract; the website and Skill may describe a newer version. An
+existing installation should not be upgraded incidentally.
+
+Recipes stay JSON-only. The agent validates generated or external data with
+`validateRecipe`, connects only the controls you need, and keeps engine ownership
+at your application's existing host boundary. Ask it to report the typecheck,
+validation, and browser checks it ran, with any evidence gaps. Node validation
+does not synthesize Web Audio or establish audible quality.
+
+Use the [quick start](/docs) for a minimal host and the
+[runtime reference](/docs/api), [recipe guide](/docs/recipes), and
+[lifecycle guide](/docs/lifecycle) to review the result. For repeated validation
+or capability comparisons in a complex task, consider [optional MCP tools](/docs/mcp).

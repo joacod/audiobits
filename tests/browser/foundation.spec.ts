@@ -44,7 +44,10 @@ test("Fumadocs renders package MDX", async ({ page }) => {
     "npm install audiobits",
   );
   await expect(
-    page.getByRole("heading", { name: "Quick start", exact: true }),
+    page.getByRole("heading", {
+      name: "Introduction and quick start",
+      exact: true,
+    }),
   ).toBeVisible();
   await expect(
     page.getByText(`AudioBits API · ${manifest.version} · Available on npm.`, {
