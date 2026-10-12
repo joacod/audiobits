@@ -22,7 +22,9 @@
     "release:prepare": "pnpm lint && pnpm typecheck && pnpm test && pnpm test:browser && pnpm test:package",
     "build:mcp": "tsc -p tools/mcp/tsconfig.json",
     "test:mcp": "pnpm build:lib && pnpm build:mcp && node tools/mcp/generate-snapshot.mjs --check && vitest run --config tools/mcp/vitest.config.ts",
-    "test:mcp:github": "pnpm build:lib && pnpm build:mcp && vitest run --config tools/mcp/vitest.github.config.ts"
+    "test:mcp:github": "pnpm build:lib && pnpm build:mcp && vitest run --config tools/mcp/vitest.github.config.ts",
+    "build:skill": "node tools/mcp/build-skill.mjs",
+    "check:skill": "node tools/mcp/build-skill.mjs --check"
   },
   "devDependencies": {
     "@changesets/cli": "3.0.3",
@@ -32,6 +34,7 @@
     "@playwright/test": "1.63.0",
     "@types/node": "24.19.1",
     "audiobits": "workspace:*",
+    "esbuild": "0.28.2",
     "eslint": "9.39.5",
     "eslint-config-next": "16.3.8",
     "prettier": "3.9.9",

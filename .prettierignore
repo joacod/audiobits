@@ -10,3 +10,5 @@ test-results
 
 # Preserve upstream formatting in vendored agent skills.
 apps/www/.agents/skills/
+skills/audiobits/scripts/mcp.mjs
+skills/audiobits/scripts/mcp.LICENSE.txt

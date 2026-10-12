@@ -187,6 +187,9 @@ importers:
       audiobits:
         specifier: workspace:*
         version: link:packages/audiobits
+      esbuild:
+        specifier: 0.28.2
+        version: 0.28.2
       eslint:
         specifier: 9.39.5
         version: 9.39.5(jiti@2.7.0)(supports-color@7.2.0)
