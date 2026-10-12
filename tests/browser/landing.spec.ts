@@ -61,7 +61,27 @@ for (const [width, height] of [
     await expect(
       page.locator(".landing-experience").filter({ hasText: "Energy Charge" }),
     ).toHaveAttribute("href", "/catalog/energy-charge");
-    await expect(page.locator(".landing-experience")).toHaveCount(2);
+    await expect(page.locator(".landing-experience")).toHaveCount(1);
+    await expect(page.locator(".landing h2")).toHaveText([
+      "Hear it. Own it.",
+      "Let your agent build the sound.",
+      "Explore more",
+    ]);
+    await expect(page.locator(".landing-command pre")).toHaveCount(2);
+    for (const command of await page.locator(".landing-command-row").all()) {
+      const bounds = (await command.boundingBox())!;
+      expect(bounds.x).toBeGreaterThanOrEqual(0);
+      expect(bounds.x + bounds.width).toBeLessThanOrEqual(width);
+      expect(
+        await command.evaluate((node) => node.scrollWidth <= node.clientWidth),
+      ).toBe(true);
+      const copy = command.getByRole("button");
+      await copy.focus();
+      expect(
+        await copy.evaluate((node) => getComputedStyle(node).outlineStyle),
+      ).toBe("solid");
+      expect((await copy.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    }
     await page.screenshot({ path: testInfo.outputPath(`hero-${width}.png`) });
     await page.screenshot({
       path: testInfo.outputPath(`landing-${width}.png`),
@@ -89,13 +109,100 @@ for (const [width, height] of [
     }
     expect(new Set(structures).size).toBe(3);
     await page
-      .getByRole("link", { name: "Explore the catalog", exact: true })
+      .getByRole("link", { name: "Explore the full catalog", exact: true })
       .click();
     await expect(page).toHaveURL(`${home}/catalog`);
     await expect(page.locator("[data-catalog-entry]")).toHaveCount(10);
     await expect(page.locator("article.sound-card")).toHaveCount(0);
   });
 }
+
+test("landing install commands copy exactly and documentation destinations resolve", async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto(home);
+  for (const [label, command] of [
+    [
+      "thruster install",
+      "npx shadcn@latest add joacod/audiobits/reactive-thruster",
+    ],
+    ["Skill install", "npx skills add joacod/audiobits --skill audiobits"],
+  ]) {
+    const copy = page.getByRole("button", { name: `Copy ${label} command` });
+    await expect(copy).toBeEnabled();
+    await copy.focus();
+    await page.keyboard.press("Enter");
+    await expect(
+      page
+        .locator(".landing-command")
+        .filter({ has: copy })
+        .getByRole("status"),
+    ).toHaveText("Copied.");
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
+      command,
+    );
+  }
+  for (const [name, href, heading] of [
+    ["Install editable source", "/docs/catalog", "Catalog and editable source"],
+    ["Build with the runtime", "/docs", "Introduction and quick start"],
+    [
+      "Build with AI agents",
+      "/docs/agents",
+      "Official Skill and agent workflows",
+    ],
+    ["optional local MCP tooling", "/docs/mcp", "Optional local MCP tooling"],
+  ]) {
+    const link = page.getByRole("link", { name, exact: true });
+    await expect(link).toHaveAttribute("href", href);
+    await link.click();
+    await expect(page).toHaveURL(`${home}${href}`);
+    await expect(
+      page.getByRole("heading", { name: heading, exact: true }),
+    ).toBeVisible();
+    await page.goto(home);
+  }
+  for (const [name, href] of [
+    ["npm", "https://www.npmjs.com/package/audiobits"],
+    ["GitHub", "https://github.com/joacod/audiobits"],
+    ["Catalog", "/catalog"],
+    ["Docs", "/docs"],
+  ]) {
+    await expect(
+      page.locator(".landing-footer").getByRole("link", { name, exact: true }),
+    ).toHaveAttribute("href", href);
+  }
+});
+
+test("landing copy failure keeps the command available for manual copying", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator.clipboard, "writeText", {
+      value: async () => {
+        throw new Error("Clipboard unavailable");
+      },
+    });
+  });
+  await page.setViewportSize({ width: 320, height: 667 });
+  await page.goto(home);
+  for (const command of await page.locator(".landing-command").all()) {
+    const copy = command.getByRole("button");
+    await expect(copy).toBeEnabled();
+    await copy.click();
+    await expect(command.getByRole("status")).toHaveText(
+      "Copy unavailable. Select and copy the command above.",
+    );
+    await expect(command.locator("code")).toBeVisible();
+    await expect(copy).toBeEnabled();
+  }
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+});
 
 test("landing stays silent until a gesture, measures output, mutes and disposes on navigation", async ({
   page,

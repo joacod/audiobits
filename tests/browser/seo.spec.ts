@@ -80,6 +80,15 @@ test("public pages expose unique metadata and content without JavaScript", async
       await expect(page.locator(".thruster-intro p")).toContainText(
         "Procedural sound effects for the web.",
       );
+      await expect(page.locator(".landing-own pre")).toHaveText(
+        "npx shadcn@latest add joacod/audiobits/reactive-thruster",
+      );
+      await expect(page.locator(".landing-agents pre")).toHaveText(
+        "npx skills add joacod/audiobits --skill audiobits",
+      );
+      await expect(
+        page.getByRole("link", { name: "audiobits npm runtime", exact: true }),
+      ).toHaveAttribute("href", "https://www.npmjs.com/package/audiobits");
       for (const selector of [
         'meta[property="og:image:alt"]',
         'meta[name="twitter:image:alt"]',
@@ -94,7 +103,11 @@ test("public pages expose unique metadata and content without JavaScript", async
       await expect(page.locator('a[href="/docs/api"]').first()).toBeAttached();
     }
     if (!route.path.startsWith("/docs")) {
-      await expect(page.locator("main")).toContainText("npm install audiobits");
+      if (route.path !== "/") {
+        await expect(page.locator("main")).toContainText(
+          "npm install audiobits",
+        );
+      }
       await expect(page.locator('a[href="/docs"]').first()).toBeAttached();
     }
     expect(
