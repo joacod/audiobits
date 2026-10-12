@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { defineSound, validateRecipe } from "../src/recipe/validate";
-import { confirmation } from "../src/recipes";
+import { confirmation } from "../../../catalog/recipes/confirmation/recipe";
 import { compile, envelopeAt } from "../src/compiler/plan";
 import { checkNyquist } from "../src/compiler/graph";
 

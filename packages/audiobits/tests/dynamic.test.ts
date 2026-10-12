@@ -1,6 +1,7 @@
 import { expect, it } from "vitest";
 import { defineSound, validateRecipe } from "../src/recipe/validate";
-import { impact, thruster } from "../src/recipes";
+import { impact } from "../../../catalog/recipes/impact/recipe";
+import { thruster } from "../../../catalog/recipes/thruster/recipe";
 import { compile } from "../src/compiler/plan";
 import { checkNyquist } from "../src/compiler/graph";
 import { randomFor, noiseData, controlsFor } from "../src/compiler/values";

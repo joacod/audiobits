@@ -66,7 +66,7 @@ export const catalogGroups = [
     title: "Interactive experiences",
     category: "experience",
   },
-  { id: "sounds", title: "Bundled sounds", category: "bundled" },
+  { id: "sounds", title: "Catalog sounds", category: "bundled" },
 ] as const satisfies readonly {
   id: string;
   title: string;

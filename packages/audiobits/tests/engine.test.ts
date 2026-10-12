@@ -1,6 +1,8 @@
 import { expect, it, vi } from "vitest";
 import { createAudio, createEngine } from "../src/runtime/engine";
-import { confirmation, impact, thruster } from "../src/recipes";
+import { confirmation } from "../../../catalog/recipes/confirmation/recipe";
+import { impact } from "../../../catalog/recipes/impact/recipe";
+import { thruster } from "../../../catalog/recipes/thruster/recipe";
 
 class Param {
   value = 0;

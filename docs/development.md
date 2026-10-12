@@ -26,14 +26,13 @@ in `apps/www`; the runtime remains framework-independent.
 
 ## Local package edits
 
-Edit canonical definitions in `catalog/recipes/<id>/recipe.ts`. The library build
-generates the transitional `audiobits/recipes` module from those files. While
-`pnpm dev` runs, run `node scripts/generate-legacy-recipes.mjs` after a recipe
-edit so the package watcher rebuilds the compatibility export. Reload `/catalog`,
-open that sound's workbench and Recipe tab, and inspect the updated JSON before Play. The site
-uses `transpilePackages` and imports `audiobits` through its public exports,
-which point to `dist`; it never aliases library source. A refresh is the
-supported verification path; state-preserving hot updates are not promised.
+Edit canonical definitions in `catalog/recipes/<id>/recipe.ts`. Catalog files
+are application-owned source outside the npm package; the website imports them
+directly. Reload `/catalog`, open that sound's workbench and Recipe tab, and
+inspect updated JSON before Play. The site uses `transpilePackages` and imports
+`audiobits` through public exports pointing to `dist`; it never aliases library
+source. A refresh is the supported verification path; state-preserving hot
+updates are not promised.
 
 The vanilla example also uses `audiobits: workspace:*`. Its separate development
 server needs a completed library build:
@@ -131,14 +130,13 @@ with Next.js. CI disables Next telemetry.
 `pnpm test:package` requires the Chromium binary matching pinned Playwright.
 It validates built ESM/declaration exports with strict publint, checks the
 package archive allowlist (runtime/declarations, schema/capabilities, manifest, license,
-README, changelog and Skill/reference), and installs that archive into a fresh
+README and changelog), and installs that archive into a fresh
 system temporary directory using npm offline with install scripts disabled.
 Node imports and TypeScript NodeNext checks resolve only the installed package.
 They require no workspace source or browser globals.
 
-Packaged README/Skill TypeScript examples typecheck. The canonical README quick
-start and Skill controlled sound host execute in Chromium from an ephemeral
-loopback server, covering silent load, gesture activation, finite nonzero signal,
+The packaged README and GitHub README quick starts typecheck and execute in
+Chromium from an ephemeral loopback server, covering silent load, gesture activation, finite nonzero signal,
 Stop and context closure. An unused runtime import fully tree-shakes against a
 baseline. The temporary consumer is removed afterward; the archive and evidence
 remain under ignored `node_modules/.cache/audiobits-release/`.
@@ -177,20 +175,19 @@ these sources while owning website presentation. The
 complete experiences as owned source. It covers all eight recipes and both
 experiences.
 `registry.json` owns discovery metadata and installation file manifests; website
-metadata is derived from it. The legacy module in
-`packages/audiobits/src/recipes/index.ts` is generated, never edited directly.
+metadata is derived from it. No creative recipes are generated into the runtime.
 
 `pnpm test:package` copies each of the ten item manifests into its own source
 tree in an isolated packed-package consumer, typechecks every installed
-TypeScript file, validates every recipe with the actual runtime, checks legacy
-equivalence, and runs both standalone experience entrypoints in Chromium. The site browser tests verify the displayed source matches the catalog,
-along with interaction and lifecycle behavior.
+TypeScript file, validates every recipe with the actual runtime, and runs both
+standalone experience entrypoints in Chromium. The site browser tests verify the
+displayed source matches the catalog, along with interaction and lifecycle behavior.
 
-`/catalog` keeps one engine for the bundled-sound rows. The output strip is a
+`/catalog` keeps one engine for the catalog sound rows. The output strip is a
 desktop row and a compact mobile dock. `/catalog/[slug]` uses that same session
-contract for one bundled sound. Each mounted workbench owns one engine and
+contract for one catalog sound. Each mounted workbench owns one engine and
 disposes it when the visitor leaves the entry. Restore in the Recipe tab
-restores the bundled recipe, primary controls and seed 42; Reset variation
+restores the catalog recipe, primary controls and seed 42; Reset variation
 changes only the seed. JSON Apply reports validation issues and preserves
 last-valid playback; applying valid data stops current voices. No JavaScript
 text is evaluated.

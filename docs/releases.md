@@ -2,13 +2,23 @@
 
 ## Delivery boundaries
 
-Only the runtime package is publishable.
+Only the engine runtime package is publishable. Its archive contains runtime
+ESM, declarations, schema, capabilities, manifest, license, README and changelog.
+Creative recipes and experiences are copy-owned catalog source; agent guidance
+lives separately in `skills/audiobits/`. None is shipped in the npm archive.
 The [release workflow](../.github/workflows/release.yml) directly publishes npm releases
 through OIDC Trusted Publishing and then creates matching Git tags and GitHub
 Releases. Root, site and example workspaces
 remain private.
 
 Follow the [browser policy](validation.md#browser-policy).
+
+## Versioning
+
+Before 1.0, use patch Changesets for corrections and minor Changesets for new
+functionality or breaking changes. At 1.0 and later, breaking changes use major.
+A 1.0 release requires an explicit maintainer readiness decision. The Version
+Packages workflow applies Changesets and updates generated metadata.
 
 ## Release verification
 

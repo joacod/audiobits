@@ -23,24 +23,19 @@
     "dist",
     "LICENSE",
     "README.md",
-    "CHANGELOG.md",
-    "skill"
+    "CHANGELOG.md"
   ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./recipes": {
-      "types": "./dist/recipes/index.d.ts",
-      "import": "./dist/recipes/index.js"
-    },
     "./schema.json": "./dist/schema.json",
     "./capabilities.json": "./dist/capabilities.json"
   },
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "node ../../scripts/generate-recipe.mjs && node ../../scripts/generate-legacy-recipes.mjs && tsdown && node ../../scripts/copy-schema.mjs",
+    "build": "node ../../scripts/generate-recipe.mjs && tsdown && node ../../scripts/copy-schema.mjs",
     "dev": "tsdown --watch",
     "typecheck": "tsc -p tsconfig.json && tsc -p tests/tsconfig.types.json"
   },

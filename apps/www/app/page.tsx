@@ -40,9 +40,9 @@ export default function Home() {
             </p>
           </article>
           <article>
-            <h3>Bundled recipes</h3>
+            <h3>Recipes you own</h3>
             <p>
-              Eight sounds ship in the package. Open one, change its parameters,
+              Eight sounds live in the catalog. Open one, change its parameters,
               and copy the example into your app.
             </p>
           </article>
@@ -50,21 +50,21 @@ export default function Home() {
             <h3>Independent examples</h3>
             <p>
               Energy Charge and Reactive Thruster are complete pages you can
-              copy. They are not bundled recipes. Each one wires a small
-              interaction to the same engine.
+              copy. Each includes sound source and wires a small interaction to
+              the same engine.
             </p>
           </article>
         </div>
       </section>
       <section className="landing-catalog" aria-labelledby="catalog-heading">
         <div className="landing-section-heading">
-          <h2 id="catalog-heading">Examples and bundled sounds</h2>
+          <h2 id="catalog-heading">Examples and catalog sounds</h2>
           <Link href="/catalog">
             Open the catalog <ArrowIcon />
           </Link>
         </div>
         <p className="catalog-note">
-          Examples are complete hosts. The three sounds are bundled recipes.
+          Examples are complete hosts. The three sounds are copy-owned recipes.
           Open a page to hear it.
         </p>
         <div className="landing-experiences">

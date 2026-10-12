@@ -1,14 +1,28 @@
 import { expect, test } from "vitest";
-import * as recipes from "../src/recipes";
+import { confirmation } from "../../../catalog/recipes/confirmation/recipe";
+import { impact } from "../../../catalog/recipes/impact/recipe";
+import { thruster } from "../../../catalog/recipes/thruster/recipe";
+import { tactileClick } from "../../../catalog/recipes/tactile-click/recipe";
+import { gentleRejection } from "../../../catalog/recipes/gentle-rejection/recipe";
+import { glassNotification } from "../../../catalog/recipes/glass-notification/recipe";
+import { whoosh } from "../../../catalog/recipes/whoosh/recipe";
+import { powerUp } from "../../../catalog/recipes/power-up/recipe";
 import { validateRecipe } from "../src/recipe/validate";
 import { compile } from "../src/compiler/plan";
 import { controlsFor } from "../src/compiler/values";
-import capabilities from "../src/recipe/capabilities.json";
+
+const recipes = {
+  confirmation,
+  impact,
+  thruster,
+  tactileClick,
+  gentleRejection,
+  glassNotification,
+  whoosh,
+  powerUp,
+};
 
 test("all curated recipes round-trip, validate and fit the existing schema at control extrema", () => {
-  expect(Object.keys(recipes).sort()).toEqual(
-    [...capabilities.curatedRecipes].sort(),
-  );
   for (const recipe of Object.values(recipes)) {
     expect(validateRecipe(JSON.parse(JSON.stringify(recipe))).ok).toBe(true);
     expect(Object.isFrozen(recipe)).toBe(true);

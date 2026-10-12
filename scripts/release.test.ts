@@ -16,7 +16,7 @@ import {
   validateRecipe,
 } from "../packages/audiobits/src/recipe/validate";
 import { compile } from "../packages/audiobits/src/compiler/plan";
-import { confirmation } from "../packages/audiobits/src/recipes";
+import { confirmation } from "../catalog/recipes/confirmation/recipe";
 
 const metadata = JSON.parse(
   readFileSync("packages/audiobits/src/recipe/capabilities.json", "utf8"),

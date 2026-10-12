@@ -1,6 +1,8 @@
 import { createAudio, defineSound, validateRecipe } from "../src/index";
 import type { Recipe } from "../src/index";
-import { confirmation, impact, thruster } from "../src/recipes/index";
+import { confirmation } from "../../../catalog/recipes/confirmation/recipe";
+import { impact } from "../../../catalog/recipes/impact/recipe";
+import { thruster } from "../../../catalog/recipes/thruster/recipe";
 
 const authored = defineSound({
   schemaVersion: 1,

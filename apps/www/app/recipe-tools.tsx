@@ -82,7 +82,7 @@ export const RecipeTools = memo(function RecipeTools({
     onReset();
     setDraft(JSON.stringify(sounds[kind], null, 2));
     setIssues([]);
-    setCopyState("Bundled recipe and defaults restored.");
+    setCopyState("Catalog recipe and defaults restored.");
   }
   async function copy(text: string) {
     try {
@@ -156,10 +156,10 @@ export const RecipeTools = memo(function RecipeTools({
         </Tabs.Panel>
         {hasRawComparison(kind) && (
           <Tabs.Panel value="raw">
-            <h3>Raw Web Audio · bundled {kind}</h3>
+            <h3>Raw Web Audio · catalog {kind}</h3>
             <p>
               Equivalent dry sound, seeded noise, live smoothing, release and
-              cleanup for the bundled definition. Both examples use -12 dB
+              cleanup for the catalog definition. Both examples use -12 dB
               master gain. Voice stealing is outside this single-voice
               comparison.
             </p>
@@ -185,7 +185,7 @@ export const RecipeTools = memo(function RecipeTools({
               </>
             ) : (
               <p>
-                Restore the bundled recipe to view its raw comparison. Edited
+                Restore the catalog recipe to view its raw comparison. Edited
                 recipes are represented by the current AudioBits code.
               </p>
             )}

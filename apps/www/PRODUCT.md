@@ -20,14 +20,14 @@ portable recipe data and copy a small integration example.
 
 AudioBits provides procedural sound effects for the web. Its primary slogan is
 "Sound that reacts." The installable library uses Web Audio, portable versioned
-JSON recipes, typed controls and installed-version metadata. Bundled sound
-recipes ship in the npm package; independent copy-paste experiences live in the
-repository-root catalog. The website showcases both and lets visitors customize
-and copy them.
+JSON recipes, typed controls and installed-version metadata. The npm package
+ships the engine and recipe language; copy-owned recipes and independent
+experiences live in the repository-root catalog. The website showcases both
+and lets visitors customize and copy them.
 
 ## Capabilities and Constraints
 
-Eight bundled sounds exercise one-shots, sustained voices, play/live controls and
+Eight catalog sounds exercise one-shots, sustained voices, play/live controls and
 seeded variation. The homepage session is one lazy Energy Charge engine. The
 catalog holds one lazy engine per mounted session. Real caller-owned native analyser
 data drives output-reactive detail. No autoplay. Runtime remains independent of
@@ -63,10 +63,10 @@ adequate contrast, reduced motion, mute and explicit Stop. No sound-only feedbac
 
 - `/`: persuade on a first visit. A short explanation sits with one Energy
   Charge instrument. Hold is the proof. The page then distinguishes the
-  installable package, eight bundled recipes, and two copy-paste examples, and
-  previews Energy Charge, Reactive Thruster, and three bundled sounds without
+  installable package, eight copy-owned recipes, and two copy-paste examples, and
+  previews Energy Charge, Reactive Thruster, and three catalog sounds without
   starting them. Catalog, documentation, and `npm install audiobits` stay in
   reach. No second live engine.
-- `/catalog`: browse every current example and bundled sound. Experiences come first, then sounds. One shared playback session covers the sounds. Experience previews are static and link to the full interactions without mounting audio hosts. The shared header's Catalog item points here. Experience and bundled rows open `/catalog/[slug]`.
-- `/catalog/[slug]`: understand one bundled sound, or open Energy Charge or Reactive Thruster in the same frame. The stage, playback, and inspector stay on one page. Each visit owns one audio session and disposes it on leave. Experience pages show the independent catalog source.
+- `/catalog`: browse every current example and catalog sound. Experiences come first, then sounds. One shared playback session covers the sounds. Experience previews are static and link to the full interactions without mounting audio hosts. The shared header's Catalog item points here. Experience and sound rows open `/catalog/[slug]`.
+- `/catalog/[slug]`: understand one catalog sound, or open Energy Charge or Reactive Thruster in the same frame. The stage, playback, and inspector stay on one page. Each visit owns one audio session and disposes it on leave. Experience pages show the independent catalog source.
 - `/docs`: read the calm Fumadocs reference; marketing components do not enter it.

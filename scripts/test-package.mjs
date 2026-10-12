@@ -43,23 +43,29 @@ try {
   const emitted = await readdir(resolve("packages/audiobits/dist"), {
     recursive: true,
   });
-  const outputFiles = emitted.filter((file) => /\.(js|d\.ts|json)$/.test(file));
-  if (
-    outputFiles.length !== 8 ||
-    emitted.some((file) => !outputFiles.includes(file) && file !== "recipes")
-  )
-    throw new Error("Unexpected build output");
+  const outputFiles = [
+    "index.js",
+    "index.d.ts",
+    "schema.json",
+    "capabilities.json",
+  ];
+  assert.deepEqual(
+    emitted.toSorted(),
+    outputFiles.toSorted(),
+    "Unexpected build output",
+  );
   const allowed = new Set([
     "package/package.json",
     "package/README.md",
     "package/LICENSE",
     "package/CHANGELOG.md",
-    "package/skill/SKILL.md",
-    "package/skill/references/controls.md",
     ...outputFiles.map((file) => `package/dist/${file}`),
   ]);
-  if (files.length !== allowed.size || files.some((file) => !allowed.has(file)))
-    throw new Error(`Unexpected package files: ${files.join(", ")}`);
+  assert.deepEqual(
+    files.toSorted(),
+    [...allowed].toSorted(),
+    "Unexpected package files",
+  );
   await writeFile(
     join(consumer, "package.json"),
     JSON.stringify({
@@ -85,7 +91,7 @@ try {
   );
   await writeFile(
     join(consumer, "index.ts"),
-    'import { createAudio, defineSound, validateRecipe } from "audiobits"; import { confirmation, impact, thruster } from "audiobits/recipes"; const audio = createAudio(); const recipe = defineSound(confirmation); audio.sound(recipe); const dynamic = () => { const voice = audio.sound(thruster).play({ seed: 42, parameters: { throttle: 0.2 } }); voice.set({ throttle: 1 }); const bus = audio.bus("effects"); bus.setGainDb(-6, 0.1); bus.setMuted(true); bus.setParent(audio.master); audio.sound(impact).play({ bus }); const analyser = audio.native.context.createAnalyser(); const detach = audio.native.connect(analyser); detach(); analyser.disconnect(); audio.stopAll({ tails: "cut" }); bus.dispose(); const seed: number = voice.seed; audio.sound(impact).play({ parameters: { intensity: 1 }, seed }); voice.stop(); }; void dynamic; console.log(validateRecipe(recipe)); void audio.dispose();\n',
+    'import { createAudio, defineSound, validateRecipe } from "audiobits"; import { confirmation } from "./items/confirmation/src/sounds/recipes/confirmation/recipe.js"; import { impact } from "./items/impact/src/sounds/recipes/impact/recipe.js"; import { thruster } from "./items/thruster/src/sounds/recipes/thruster/recipe.js"; const audio = createAudio(); const recipe = defineSound(confirmation); audio.sound(recipe); const dynamic = () => { const voice = audio.sound(thruster).play({ seed: 42, parameters: { throttle: 0.2 } }); voice.set({ throttle: 1 }); const bus = audio.bus("effects"); bus.setGainDb(-6, 0.1); bus.setMuted(true); bus.setParent(audio.master); audio.sound(impact).play({ bus }); const analyser = audio.native.context.createAnalyser(); const detach = audio.native.connect(analyser); detach(); analyser.disconnect(); audio.stopAll({ tails: "cut" }); bus.dispose(); const seed: number = voice.seed; audio.sound(impact).play({ parameters: { intensity: 1 }, seed }); voice.stop(); }; void dynamic; console.log(validateRecipe(recipe)); void audio.dispose();\n',
   );
   const registry = JSON.parse(await readFile("registry.json", "utf8"));
   evidence.catalog = [];
@@ -141,13 +147,6 @@ try {
       import { validateRecipe } from "audiobits";
       import { ${item.meta.exportName} as recipe } from "./validation/recipe.mjs";
       assert.equal(validateRecipe(recipe).ok, true);
-      ${
-        item.meta.classification === "recipe"
-          ? `
-      import { ${item.meta.exportName} as legacy } from "audiobits/recipes";
-      assert.deepEqual(recipe, legacy);`
-          : ""
-      }
     `,
       ],
       directory,
@@ -170,7 +169,10 @@ try {
   await writeFile(
     join(consumer, "authoring.types.ts"),
     (await readFile("packages/audiobits/tests/authoring.types.ts", "utf8"))
-      .replaceAll("../src/recipes/index", "audiobits/recipes")
+      .replace(
+        /\.\.\/\.\.\/\.\.\/catalog\/recipes\/([^/]+)\/recipe/g,
+        "./items/$1/src/sounds/recipes/$1/recipe.js",
+      )
       .replaceAll("../src/index", "audiobits"),
   );
   run(
@@ -200,14 +202,16 @@ try {
     assert.equal(typeof window, 'undefined');
     assert.equal(typeof AudioContext, 'undefined');
     const { createAudio, defineSound, validateRecipe } = await import('audiobits');
-    const recipes = await import('audiobits/recipes');
+    const recipe = defineSound({ schemaVersion: 1, kind: 'one-shot', duration: 0.15,
+      layers: [{ id: 'tone', source: { type: 'oscillator', waveform: 'sine', frequency: 660 },
+        gainDb: -18, envelope: { attack: 0.004, decay: 0.08, sustain: 0.1, release: 0.04 } }] });
     const { default: schema } = await import('audiobits/schema.json', { with: { type: 'json' } });
     const { default: capabilities } = await import('audiobits/capabilities.json', { with: { type: 'json' } });
-    assert.deepEqual(Object.keys(recipes).sort(), capabilities.curatedRecipes.toSorted());
+    assert.equal("curatedRecipes" in capabilities, false);
     assert.equal(capabilities.schemaVersion, schema.$defs.OneShotRecipe.properties.schemaVersion.const);
-    for (const recipe of Object.values(recipes)) assert.ok(validateRecipe(recipe).ok);
+    assert.ok(validateRecipe(recipe).ok);
     const audio = createAudio();
-    for (const recipe of Object.values(recipes)) audio.sound(defineSound(recipe));
+    audio.sound(recipe);
     assert.equal(audio.state, 'idle');
     await audio.dispose();
     assert.equal(typeof createAudio, 'function');
@@ -225,7 +229,17 @@ try {
       "utf8",
     ),
   );
-  if (manifest.private || manifest.dependencies || manifest.peerDependencies)
+  assert.deepEqual(Object.keys(manifest.exports).sort(), [
+    ".",
+    "./capabilities.json",
+    "./schema.json",
+  ]);
+  if (
+    manifest.private ||
+    manifest.dependencies ||
+    manifest.peerDependencies ||
+    manifest.optionalDependencies
+  )
     throw new Error(
       "Runtime must be publishable with zero runtime dependencies",
     );
@@ -276,43 +290,53 @@ try {
     await readFile(join(installed, "LICENSE"), "utf8"),
     await readFile(resolve("LICENSE"), "utf8"),
   );
+  // Recreate the GitHub README's documented local source layout. It is not shipped.
+  const copiedConfirmation = join(
+    consumer,
+    "sounds/recipes/confirmation/recipe.ts",
+  );
+  await mkdir(resolve(copiedConfirmation, ".."), { recursive: true });
+  await copyFile(
+    join(
+      consumer,
+      "items/confirmation/src/sounds/recipes/confirmation/recipe.ts",
+    ),
+    copiedConfirmation,
+  );
   const examples = [];
-  for (const file of ["README.md", "skill/references/controls.md"]) {
-    const content = await readFile(join(installed, file), "utf8");
-    for (const [index, match] of [
-      ...content.matchAll(/```ts\n([\s\S]*?)```/g),
-    ].entries()) {
+  for (const [file, content] of [
+    ["README.md", await readFile(join(installed, "README.md"), "utf8")],
+    ["GitHub README.md", await readFile(join(root, "README.md"), "utf8")],
+  ]) {
+    const snippets = [...content.matchAll(/```ts\n([\s\S]*?)```/g)];
+    assert.equal(
+      snippets.length,
+      1,
+      `${file} must have one canonical quick start`,
+    );
+    for (const [index, match] of snippets.entries()) {
       const name = `example-${examples.length}`;
       await writeFile(join(consumer, `${name}.ts`), match[1]);
       examples.push({ name, file, index, code: match[1] });
+      const packaged = file === "README.md";
+      run(
+        process.execPath,
+        [
+          resolve("node_modules/typescript/bin/tsc"),
+          "--noEmit",
+          "--strict",
+          "--module",
+          packaged ? "NodeNext" : "ESNext",
+          "--moduleResolution",
+          packaged ? "NodeNext" : "Bundler",
+          "--target",
+          "ES2022",
+          `${name}.ts`,
+        ],
+        consumer,
+      );
     }
   }
-  const quickStarts = examples.filter(({ file }) => file === "README.md");
-  assert.equal(
-    quickStarts.length,
-    1,
-    "README must ship one canonical quick start",
-  );
-  assert.ok(
-    examples.some(({ file }) => file === "skill/references/controls.md"),
-    "Skill must ship its controlled sound example",
-  );
-  run(
-    process.execPath,
-    [
-      resolve("node_modules/typescript/bin/tsc"),
-      "--noEmit",
-      "--strict",
-      "--module",
-      "NodeNext",
-      "--moduleResolution",
-      "NodeNext",
-      "--target",
-      "ES2022",
-      ...examples.map(({ name }) => `${name}.ts`),
-    ],
-    consumer,
-  );
   evidence.examples = examples.map(({ file, index }) => ({
     file,
     index,
@@ -388,7 +412,6 @@ const probe = {
   get state() { return audio.state; },
   get counts() { return audio.counts; },
   get contextState() { return context?.state; },
-  ${example.file === "README.md" ? "" : "setThrottle,"}
 };
 Object.assign(globalThis, { probe });`,
     );
@@ -593,7 +616,7 @@ Object.assign(globalThis, { probe });`,
       await page.click("#play");
       await page.evaluate(() => globalThis.playing);
       assert.equal(await page.evaluate(() => globalThis.contextCount), 1);
-      if (example.file === "README.md") {
+      {
         // Retrieve after finite voices finish: later automation reads must still
         // see the captured playback signal, rather than just current silence.
         await expect
@@ -636,7 +659,6 @@ Object.assign(globalThis, { probe });`,
         `Native signal must be nonzero and finite: ${diagnostic}`,
       );
       const peak = signal.peak;
-      await page.evaluate(() => globalThis.probe.setThrottle?.(0.8));
       await page.click("#stop");
       await expect
         .poll(

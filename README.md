@@ -9,7 +9,7 @@
 </p>
 
 **AudioBits** is a tiny, browser-native procedural audio library. Generate sound
-effects from editable recipes, use bundled sounds, and connect sound parameters
+effects from editable recipes, copy catalog sounds, and connect sound parameters
 to application state. No required audio files or runtime dependencies.
 
 [Live catalog](https://audiobits.joacod.com/catalog) ·
@@ -25,9 +25,13 @@ Install in a browser application with a bundler:
 npm install audiobits
 ```
 
+Copy [Confirmation’s recipe.ts](catalog/recipes/confirmation/recipe.ts) to
+`src/sounds/recipes/confirmation/recipe.ts` and retain the [MIT license](LICENSE).
+Use this host code in `src/`:
+
 ```ts
 import { createAudio } from "audiobits";
-import { confirmation } from "audiobits/recipes";
+import { confirmation } from "./sounds/recipes/confirmation/recipe";
 
 const audio = createAudio();
 const sound = audio.sound(confirmation);
@@ -53,9 +57,10 @@ page hiding, and navigation.
 
 ## Explore AudioBits
 
-### Bundled sounds
+### Recipes you own
 
-Import ready-to-use recipes from `audiobits/recipes`, preview them in the
+Copy or install ready-to-use recipes from the [source registry](catalog/README.md),
+import their local files, preview them in the
 [live catalog](https://audiobits.joacod.com/catalog), and adjust supported
 [parameters and seeds](https://audiobits.joacod.com/docs/parameters). Use them as
 starting points for your own sounds. See the
@@ -71,8 +76,9 @@ independent source code from the repository-root
 [`catalog/`](https://github.com/joacod/audiobits/tree/main/catalog) into your app
 and use AudioBits as the runtime.
 
-Bundled sounds are package exports. These interactive examples are copy-in
-source, not exports from `audiobits/recipes`.
+The npm package owns the engine and recipe language. Recipes and interactive
+examples are copy-owned application source. Agent instructions live separately
+in the [AudioBits Skill](skills/audiobits/SKILL.md).
 
 ## Why AudioBits?
 

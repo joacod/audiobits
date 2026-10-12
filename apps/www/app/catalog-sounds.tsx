@@ -35,7 +35,7 @@ export function CatalogSounds() {
   } = useCollectionSession();
   return (
     <section className="catalog-section" aria-labelledby="catalog-sounds">
-      <h2 id="catalog-sounds">Bundled sounds</h2>
+      <h2 id="catalog-sounds">Catalog sounds</h2>
       <div className="catalog-output" data-audio-session="catalog">
         <AudioMonitor
           engine={engine}

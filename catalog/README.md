@@ -135,9 +135,9 @@ sound.play();
 await audio.dispose();
 ```
 
-The recipe preserves the bundled confirmation tone. You may change its pitches,
-envelopes or gain locally, keeping recipe schema version 1. The published
-`audiobits/recipes` export remains available during the source-ownership transition.
+The recipe preserves the existing confirmation tone. You may change its pitches,
+envelopes or gain locally, keeping recipe schema version 1. The npm package ships
+only the engine and recipe language; install creative source separately.
 
 ## Energy Charge
 
@@ -171,7 +171,7 @@ Installation includes the complete recipe, pointer controller, host, demo, guide
 and license under `src/sounds/experiences/reactive-thruster/`. The same item also
 includes canonical Impact and its license under `src/sounds/recipes/impact/`.
 The host imports `../../recipes/impact/recipe`; keep that path intact. No
-`audiobits/recipes`, runtime internals or site-private modules are needed. See
+runtime internals or site-private modules are needed. See
 the [experience guide](experiences/reactive-thruster/README.md).
 
 All entries use public runtime APIs and recipe schema 1. The TypeScript source

@@ -50,7 +50,7 @@ test("confirmation copies the current seed and has no parameter controls", async
     page.getByRole("heading", { level: 1, name: "Confirmation", exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByText("Bundled sound · Success feedback · one-shot"),
+    page.getByText("Copy-owned sound · Success feedback · one-shot"),
   ).toBeVisible();
   await expect(page.getByRole("slider")).toHaveCount(1);
   await expect(
@@ -181,7 +181,7 @@ test("impact keeps recipe editing, seeds, current code, and raw comparison", asy
   await expect(page.locator(".recipe-tools [role=alert]")).toHaveCount(0);
   await page.getByRole("tab", { name: "Raw Web Audio", exact: true }).click();
   await expect(page.locator("#impact")).toContainText(
-    "Restore the bundled recipe to view its raw comparison",
+    "Restore the catalog recipe to view its raw comparison",
   );
   await page.getByRole("tab", { name: "Code", exact: true }).click();
   await page

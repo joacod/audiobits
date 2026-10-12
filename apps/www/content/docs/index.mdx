@@ -11,31 +11,51 @@ Install AudioBits from npm:
 npm install audiobits
 ```
 
-## Play a confirmation
+## Play a tone
 
 Create the engine and definition without allocating browser audio. Call `play()`
 directly from your button's click handler and report rejected promises to the user.
 Retry a failed start with a fresh Play gesture.
 
 ```ts
-import { createAudio } from "audiobits";
-import { confirmation } from "audiobits/recipes";
+import { createAudio, defineSound } from "audiobits";
 
+const recipe = defineSound({
+  schemaVersion: 1,
+  kind: "one-shot",
+  duration: 0.15,
+  layers: [
+    {
+      id: "tone",
+      source: { type: "oscillator", waveform: "sine", frequency: 660 },
+      gainDb: -18,
+      envelope: { attack: 0.004, decay: 0.08, sustain: 0.1, release: 0.04 },
+    },
+  ],
+});
 const audio = createAudio();
-const sound = audio.sound(confirmation);
+const sound = audio.sound(recipe);
+
 export async function play() {
   await audio.start();
   sound.play();
+}
+export function stop() {
+  audio.stopAll({ tails: "cut" });
+}
+export async function dispose() {
+  await audio.dispose();
 }
 ```
 
 Bind `play()` to your button click and surface failures with
 `void play().catch(showError)`. For hiding, SPA navigation, suspension and disposal,
-see [Production lifecycle](/docs/lifecycle). The catalog never plays on load.
+bind `stop()` to Stop and await `dispose()` when removing the host.
+See [Production lifecycle](/docs/lifecycle). The catalog never plays on load.
 
 ## Next
 
-- [Listen and adjust](/catalog) the eight bundled sounds.
+- [Listen and adjust](/catalog) the eight catalog sounds.
 - [Recipes](/docs/recipes): validated JSON and supported fields.
 - [Playback and lifecycle](/docs/lifecycle): sound versus voice, Stop, and teardown.
 - [Parameters](/docs/parameters): controls, smoothing, and seeded replay.
