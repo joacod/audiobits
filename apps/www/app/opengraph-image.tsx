@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { ImageResponse } from "next/og";
 import { brandColors } from "../lib/brand-colors";
 
-// Social card per the approved asset set (assets/social, brand guide v1.0).
+// Social card with the AudioBits wordmark, waveform and slogan.
 // ImageResponse cannot read CSS custom properties; brandColors mirrors the
 // `.foundation` tokens and a unit test keeps them in sync.
 const VOID = brandColors.void;
@@ -15,7 +15,7 @@ const SIGNAL = [
   brandColors["signal-high"],
 ] as const;
 
-const TAGLINE = "Make interfaces sound alive.";
+const TAGLINE = "Sound that reacts.";
 
 export const alt = `audiobits wordmark with the waveform mark and the line: ${TAGLINE}`;
 export const size = { width: 1200, height: 630 };

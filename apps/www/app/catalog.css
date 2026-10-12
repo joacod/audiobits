@@ -912,7 +912,7 @@
   }
 }
 
-/* Workbench: graphite hardware panels with mono labels (GUIDE v1.0, A controls). */
+/* Workbench: graphite panels with mono labels, faders and segmented meters. */
 @layer components {
   .foundation.catalog-page h1 {
     font-size: clamp(2.6rem, 5vw, 4.4rem);

@@ -18,7 +18,7 @@ export function OutputScope({
   active: boolean;
   family?: VisualFamily;
   measured?: boolean;
-  /** Live Signal hero band: resting mark until real samples arrive, gradient only while live. */
+  /** AudioBits showcase hero band: resting mark until real samples arrive, gradient only while live. */
   signal?: boolean;
 }) {
   const canvas = useRef<HTMLCanvasElement>(null);

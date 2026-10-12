@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { expect, test } from "vitest";
 import { brandColors } from "./brand-colors";
 
-test("brand colors match the Live Signal custom properties in globals.css", () => {
+test("brand colors match the AudioBits showcase custom properties in globals.css", () => {
   const css = readFileSync(
     new URL("../app/globals.css", import.meta.url),
     "utf8",

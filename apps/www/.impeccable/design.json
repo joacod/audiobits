@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generatedAt": "2026-10-11T23:59:00Z",
-  "title": "Design System: audiobits showcase (Live Signal)",
+  "title": "Design System: AudioBits showcase",
   "extensions": {
     "colorMeta": {
       "void": {
@@ -238,8 +238,8 @@
     }
   ],
   "narrative": {
-    "northStar": "Live Signal",
-    "overview": "The waveform is the logo and moves only when sound moves. Dark-first: Void ground, Ink text, Mute secondary. The blue, violet and magenta signal gradient belongs to live elements and the mark. Big Shoulders Display headlines, Geist Mono UI. The workbench borrows hardware panel controls: graphite panels, knob-capped faders and LED meters. Fumadocs keeps its own theme.",
+    "northStar": "AudioBits showcase",
+    "overview": "The waveform is the logo and moves only when sound moves. Dark-first: Void ground, Ink text, Mute secondary. The blue, violet and magenta signal gradient belongs to live elements and the mark. Big Shoulders Display headlines, Geist Mono UI. The workbench uses graphite panels, knob-capped faders and segmented LED meters. Fumadocs keeps its own theme.",
     "keyCharacteristics": [
       "Void #050507, Ink #F2F2F2, Mute #8A8A92.",
       "Signal gradient #2A6CFF to #B44CFF to #FF2E88 only on live elements and the mark.",

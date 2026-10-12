@@ -28,27 +28,27 @@ test("public pages expose unique metadata and content without JavaScript", async
   const routes = [
     {
       path: "/",
-      title: "AudioBits | Procedural Sound Effects for the Web",
+      title: "AudioBits | Procedural Sound Effects",
       description:
         "Hear, customize, and integrate procedural sound effects generated in your browser with Web Audio.",
     },
     {
       path: "/catalog",
-      title: "Catalog | AudioBits",
+      title: "AudioBits | Catalog",
       description:
         "Browse interactive experiences and bundled sounds. Play a recipe, then open its workbench or the full example.",
     },
     ...catalogEntriesByCategory("experience").map((entry) => ({
       path: entry.href,
-      title: `${entry.title} | AudioBits`,
+      title: `AudioBits | ${entry.title}`,
       description: experienceDetailDescription(entry),
     })),
     ...catalogEntriesByCategory("bundled").map((entry) => ({
       path: entry.href,
-      title: `${entry.title} | AudioBits`,
+      title: `AudioBits | ${entry.title}`,
       description: bundledDetailDescription(entry),
     })),
-    ...docs.map((doc) => ({ ...doc, title: `${doc.title} | AudioBits` })),
+    ...docs.map((doc) => ({ ...doc, title: `AudioBits | ${doc.title}` })),
   ];
   expect(new Set(routes.map((route) => route.title)).size).toBe(routes.length);
   for (const route of routes) {
@@ -76,13 +76,17 @@ test("public pages expose unique metadata and content without JavaScript", async
     await expect(page.locator("h1")).toHaveCount(1);
     await expect(page.locator("h1")).not.toBeEmpty();
     if (route.path === "/") {
+      await expect(page.locator("h1")).toHaveText("Sound that reacts.");
+      await expect(page.locator(".charge-lede")).toContainText(
+        "Procedural sound effects for the web.",
+      );
       for (const selector of [
         'meta[property="og:image:alt"]',
         'meta[name="twitter:image:alt"]',
       ]) {
         await expect(page.locator(selector)).toHaveAttribute(
           "content",
-          "audiobits wordmark with the waveform mark and the line: Make interfaces sound alive.",
+          "audiobits wordmark with the waveform mark and the line: Sound that reacts.",
         );
       }
     }

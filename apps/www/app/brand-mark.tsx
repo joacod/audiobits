@@ -1,4 +1,4 @@
-// The approved audiobits mark (GUIDE v1.0). `small` is the 32 px and below
+// The AudioBits waveform mark. `small` is the 32 px and below
 // variant: first bump dropped, thicker stroke. `tone="mono"` is the one-colour
 // Ink stroke used as a non-live resting frame.
 const paths = {

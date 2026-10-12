@@ -23,7 +23,7 @@ range input offer the same sound without precise pointer movement.
 
 ## Complete interactive example
 
-The [interactive showcase](https://audiobits.joacod.com/experiences/reactive-thruster)
+The [interactive showcase](https://audiobits.joacod.com/catalog/reactive-thruster)
 uses [host.ts](host.ts) with the same recipe and pointer integration. Copy
 `recipe.ts`, `pointer.ts`, `host.ts`, and [index.html](index.html) into one folder:
 

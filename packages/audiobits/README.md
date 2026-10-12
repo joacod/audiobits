@@ -4,7 +4,7 @@ Browser-native procedural sound for games and interactive applications. Play
 bundled sounds or build editable JSON recipes without downloaded audio assets
 or runtime dependencies.
 
-[Live gallery](https://audiobits.joacod.com/sounds) ·
+[Live catalog](https://audiobits.joacod.com/catalog) ·
 [Documentation](https://audiobits.joacod.com/docs)
 
 ## Quick start

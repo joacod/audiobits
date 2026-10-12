@@ -18,8 +18,12 @@ portable recipe data and copy a small integration example.
 
 ## Positioning
 
-A procedural sound-effects library built on Web Audio, with portable versioned
-JSON recipes, typed controls and installed-version metadata.
+AudioBits provides procedural sound effects for the web. Its primary slogan is
+"Sound that reacts." The installable library uses Web Audio, portable versioned
+JSON recipes, typed controls and installed-version metadata. Bundled sound
+recipes ship in the npm package; independent copy-paste experiences live in the
+repository-root catalog. The website showcases both and lets visitors customize
+and copy them.
 
 ## Capabilities and Constraints
 
