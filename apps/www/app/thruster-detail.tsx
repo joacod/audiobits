@@ -11,6 +11,7 @@ import {
 import type { PointerEvent as ReactPointerEvent } from "react";
 import { mountThruster } from "../../../catalog/experiences/reactive-thruster/host";
 import { ExperienceSource } from "./experience-source";
+import { CatalogInstall } from "./catalog-install";
 import type { ExperienceSourceFile } from "./experience-source";
 import { ThrusterRibbons } from "./thruster-ribbons";
 import type { ThrusterTarget } from "./thruster-ribbons";
@@ -221,6 +222,9 @@ export function ThrusterDetail({
             {`Thruster: ${state}${muted ? " · muted" : ""}`}
           </p>
           {error ? <p role="alert">{error}</p> : null}
+        </div>
+        <div className="catalog-parameters">
+          <h2>Customize</h2>
           <label>
             Keyboard throttle: {Math.round(throttle * 100)}%
             <input
@@ -237,19 +241,20 @@ export function ThrusterDetail({
                 host.current?.setThrottle(value);
               }}
             />
+            <span className="control-mode">
+              Raise throttle for a stronger engine sound while playing.
+            </span>
           </label>
         </div>
         <p id="flight-help">
-          Drag in the field, or use Start and the throttle. Full thrust is 1200
-          px/s. Release keeps the tail. Stop cuts it.
+          Drag faster for more thrust, or use Start and the throttle. Release
+          keeps the tail. Stop cuts it.
         </p>
       </div>
+      <CatalogInstall slug="reactive-thruster" />
       <div className="catalog-inspector">
+        <h2>Inspect source</h2>
         <ExperienceSource
-          symbol="reactiveThruster"
-          parameter="throttle"
-          soundNote="recipe.ts is independent copy-in source for the motor, turbine, and exhaust. It is separate from the simpler catalog Thruster recipe. Install audiobits, copy this file, and create the sound with audio.sound(reactiveThruster). From a user gesture, start audio, play the sound, then update throttle on that voice and stop it."
-          interactionNote="Copy recipe.ts, pointer.ts, host.ts, and index.html into one folder. pointer.ts turns pointer velocity into throttle and reaches full thrust at 1200 px/s. Keep pointer capture on the play surface. Start from a direct user gesture. Release keeps up to 280 ms of tail. Stop cuts it. The host shares one engine with impact, suspends on hide, stops on blur, and closes on pagehide. Call host.dispose() when you remove the view. No React or Next.js is required."
           presentation="The ribbons on this page follow the same pointer and throttle as the sound. They are website presentation and are not part of these files."
           sources={sources}
         />

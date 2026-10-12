@@ -6,6 +6,12 @@ export function registryItem(id: string) {
   return item;
 }
 
+export function registryInstallCommand(id: string) {
+  const item = registryItem(id);
+  const repository = new URL(registry.homepage).pathname.slice(1);
+  return `npx shadcn@latest add ${repository}/${item.name}`;
+}
+
 export function experienceSourceFiles(id: string) {
   const item = registryItem(id);
   const base = `~/src/sounds/experiences/${id}/`;

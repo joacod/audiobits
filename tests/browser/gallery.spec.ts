@@ -336,9 +336,9 @@ test("workbench controls stay disabled until hydration owns them", async ({
     ),
   ).toBe(0);
   for (const kind of [
-    "tactile-click",
-    "gentle-rejection",
-    "glass-notification",
+    "tactile click",
+    "gentle rejection",
+    "glass notification",
     "power-up",
   ]) {
     await page

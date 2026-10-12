@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { catalogEntries } from "../../apps/www/lib/catalog";
 
 const home = "http://127.0.0.1:3100";
 
@@ -49,9 +50,6 @@ test("confirmation copies the current seed and has no parameter controls", async
   await expect(
     page.getByRole("heading", { level: 1, name: "Confirmation", exact: true }),
   ).toBeVisible();
-  await expect(
-    page.getByText("Copy-owned sound · Success feedback · one-shot"),
-  ).toBeVisible();
   await expect(page.getByRole("slider")).toHaveCount(1);
   await expect(
     page.getByRole("slider", { name: "Effects volume", exact: true }),
@@ -79,7 +77,9 @@ test("confirmation copies the current seed and has no parameter controls", async
   await page
     .getByRole("button", { name: "Play confirmation", exact: true })
     .click();
-  await expect(page.getByRole("status")).toHaveText("Audio: running");
+  await expect(
+    page.locator(".catalog-transport").getByRole("status"),
+  ).toHaveText("Audio: running");
   await expect(page.locator(".catalog-transport [role=alert]")).toHaveCount(0);
   expect(await contexts(page)).toEqual(["running"]);
 });
@@ -96,7 +96,7 @@ test("gentle rejection omits parameters and raw comparison", async ({
     page.getByRole("tab", { name: "Code", exact: true }),
   ).toHaveAttribute("aria-selected", "true");
   await expect(
-    page.getByRole("button", { name: "Play gentle-rejection", exact: true }),
+    page.getByRole("button", { name: "Play gentle rejection", exact: true }),
   ).toBeVisible();
   await page.getByRole("tab", { name: "Recipe", exact: true }).click();
   await expect(
@@ -170,7 +170,9 @@ test("impact keeps recipe editing, seeds, current code, and raw comparison", asy
     '$["unsupported"]',
   );
   await page.getByRole("button", { name: "Play impact", exact: true }).click();
-  await expect(page.getByRole("status")).toHaveText("Audio: running");
+  await expect(
+    page.locator(".catalog-transport").getByRole("status"),
+  ).toHaveText("Audio: running");
 
   delete input.unsupported;
   input.layers[0].gainDb.range = [-30, -20];
@@ -355,7 +357,9 @@ test("thruster stays sustained, follows live throttle, and navigation disposes a
     .getByRole("link", { name: "Next: Confirmation", exact: true })
     .click();
   await expect(page).toHaveURL(`${home}/catalog/confirmation`);
-  await expect(page.getByRole("status")).toHaveText("Audio: idle");
+  await expect(
+    page.locator(".catalog-transport").getByRole("status"),
+  ).toHaveText("Audio: idle");
   await expect.poll(() => contexts(page)).toEqual(["closed"]);
   await page
     .getByRole("link", { name: "Catalog", exact: true })
@@ -386,7 +390,7 @@ test("clipboard failure stays visible and does not claim success", async ({
   );
 });
 
-test("desktop and mobile workbenches keep playback with the inspector", async ({
+test("desktop and mobile workbenches put interaction before adoption and source", async ({
   page,
 }, testInfo) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
@@ -402,8 +406,20 @@ test("desktop and mobile workbenches keep playback with the inspector", async ({
   expect(codeBox).not.toBeNull();
   expect(playBox!.y).toBeGreaterThanOrEqual(0);
   expect(playBox!.y + playBox!.height).toBeLessThanOrEqual(900);
-  expect(codeBox!.y).toBeGreaterThanOrEqual(0);
-  expect(codeBox!.y + codeBox!.height).toBeLessThanOrEqual(900);
+  const installBox = (await page.locator(".catalog-adoption").boundingBox())!;
+  const customizeBox = (await page.locator(".catalog-playback").boundingBox())!;
+  const stageBox = (await page.locator(".catalog-stage").boundingBox())!;
+  expect(installBox.y).toBeGreaterThanOrEqual(
+    customizeBox.y + customizeBox.height,
+  );
+  expect(installBox.y).toBeGreaterThanOrEqual(stageBox.y + stageBox.height);
+  expect(codeBox!.y).toBeGreaterThan(installBox.y + installBox.height);
+  await page
+    .getByRole("button", { name: "Copy Impact command", exact: true })
+    .focus();
+  await expect(
+    page.getByRole("button", { name: "Copy Impact command", exact: true }),
+  ).toBeFocused();
   await expect(
     page
       .getByRole("navigation", { name: "Catalog" })
@@ -521,4 +537,76 @@ test("current catalog entries work and unknown slugs stay 404", async ({
   expect(
     (await request.get(`${home}/catalog/reactive-thruster`)).status(),
   ).toBe(200);
+});
+
+test("every catalog item copies its registry command and links to installation docs", async ({
+  page,
+  request,
+}) => {
+  await instrument(page);
+  for (const entry of catalogEntries) {
+    await page.goto(`${home}${entry.href}`);
+    const adoption = page.getByRole("region", { name: "Add to project" });
+    const command = `npx shadcn@latest add joacod/audiobits/${entry.slug}`;
+    await expect(adoption.locator("pre")).toHaveText(command);
+    await expect(adoption).toContainText("audiobits runtime dependency");
+    await expect(adoption).toContainText("Installs the catalog defaults");
+    const copy = adoption.getByRole("button", {
+      name: `Copy ${entry.title} command`,
+      exact: true,
+    });
+    await copy.focus();
+    await page.keyboard.press("Enter");
+    expect(await copied(page)).toBe(command);
+    await expect(adoption.getByRole("status")).toHaveText("Copied.");
+    expect(await contexts(page)).toEqual([]);
+    await expect(
+      page
+        .locator(".catalog-main")
+        .getByText("npm install audiobits", { exact: true }),
+    ).toHaveCount(0);
+    await expect(
+      adoption.getByRole("link", { name: "Installation guide" }),
+    ).toHaveAttribute("href", "/docs/catalog#install-source");
+  }
+  const docs = await request.get(`${home}/docs/catalog`);
+  expect(docs.status()).toBe(200);
+  const html = await docs.text();
+  expect(html).toContain('id="install-source"');
+  expect(html).toContain('id="integrate-into-your-application"');
+});
+
+test("install command clipboard denial preserves a selectable command", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: {
+        writeText: async () => {
+          throw new Error("denied");
+        },
+      },
+    });
+  });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(`${home}/catalog/reactive-thruster`);
+  const adoption = page.getByRole("region", { name: "Add to project" });
+  await adoption
+    .getByRole("button", {
+      name: "Copy Reactive thruster command",
+      exact: true,
+    })
+    .click();
+  await expect(adoption.getByRole("status")).toHaveText(
+    "Copy unavailable. Select and copy the command above.",
+  );
+  await expect(adoption.locator("pre")).toHaveText(
+    "npx shadcn@latest add joacod/audiobits/reactive-thruster",
+  );
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
 });

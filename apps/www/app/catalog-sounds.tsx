@@ -37,6 +37,9 @@ export function CatalogSounds() {
   return (
     <section className="catalog-section" aria-labelledby="catalog-sounds">
       <h2 id="catalog-sounds">Catalog sounds</h2>
+      <p className="catalog-section-hint">
+        Preview a sound. Open its workbench to customize and install it.
+      </p>
       <div className="catalog-output" data-audio-session="catalog">
         <AudioMonitor
           engine={engine}
@@ -72,7 +75,11 @@ export function CatalogSounds() {
               <SoundMark family={entry.preview.family} index={index} />
               <div className="catalog-sound-copy">
                 <h3>{entry.title}</h3>
-                <p className="catalog-use">{entry.use}</p>
+                <p className="catalog-use">
+                  {entry.use
+                    .replace("one-shot", "quick sound")
+                    .replace("sustained", "continuous sound")}
+                </p>
                 <p
                   className="catalog-status"
                   data-testid={`${entry.slug}-state`}
@@ -93,12 +100,12 @@ export function CatalogSounds() {
                     onClick={() => void play(entry.slug)}
                   >
                     <PlayIcon />
-                    {action} {entry.slug}
+                    {action} {entry.title.toLowerCase()}
                   </Button>
                 </PlaySpark>
                 {sustained && (
                   <Button onClick={() => stop(entry.slug)}>
-                    Stop {entry.slug}
+                    Stop {entry.title.toLowerCase()}
                   </Button>
                 )}
                 <Link className="catalog-open" href={entry.href}>

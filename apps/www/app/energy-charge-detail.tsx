@@ -11,6 +11,7 @@ import type { CSSProperties } from "react";
 import { mountEnergyCharge } from "../../../catalog/experiences/energy-charge/host";
 import { ChargeRings } from "./charge-rings";
 import { ExperienceSource } from "./experience-source";
+import { CatalogInstall } from "./catalog-install";
 import type { ExperienceSourceFile } from "./experience-source";
 
 const subscribeHydration = () => () => {};
@@ -199,6 +200,9 @@ export function EnergyChargeDetail({
             {`Charge: ${state}${muted ? " · muted" : ""}`}
           </p>
           {error ? <p role="alert">{error}</p> : null}
+        </div>
+        <div className="catalog-parameters">
+          <h2>Customize</h2>
           <label>
             Charge: {Math.round(charge * 100)}%
             <input
@@ -214,20 +218,20 @@ export function EnergyChargeDetail({
                 publish(Number(event.target.value));
               }}
             />
+            <span className="control-mode">
+              Raise charge to build intensity, even while playing.
+            </span>
           </label>
         </div>
         <p id="charge-help">
           Hold with a pointer, touch, Space, or Enter. Three seconds to full
-          charge. Release keeps the tail. Stop cuts it. Rings follow charge,
-          including while muted.
+          charge. Release keeps the tail. Stop cuts it.
         </p>
       </div>
+      <CatalogInstall slug="energy-charge" />
       <div className="catalog-inspector">
+        <h2>Inspect source</h2>
         <ExperienceSource
-          symbol="energyCharge"
-          parameter="charge"
-          soundNote="recipe.ts is independent copy-in source. It belongs to your application. Install audiobits, copy this file, and create the sound with audio.sound(energyCharge). From a user gesture, start audio, play the sound, then update charge on that voice and stop it."
-          interactionNote="Copy recipe.ts, progress.ts, host.ts, and index.html into one folder. Start from a direct user gesture. Supply progress in either direction. Full charge holds until release. Release keeps the tail. Stop cuts it. The host suspends on hide, stops on blur, and closes on pagehide. Call host.dispose() when you remove the view. progress.ts can share an application engine. No React or Next.js is required."
           presentation="The rings on this page follow charge and measured output. They are website presentation and are not part of these files."
           sources={sources}
         />

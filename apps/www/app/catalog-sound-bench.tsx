@@ -8,6 +8,7 @@ import { OutputScope } from "./output-scope";
 import { PlaySpark } from "./play-spark";
 import { SoundMark } from "../icons/catalog-marks";
 import { PlayIcon } from "../icons/play-icon";
+import { CatalogInstall } from "./catalog-install";
 import { useCollectionSession } from "./collection-session";
 import { parameterEndpoints, parameterLabel, soundInfo } from "../lib/gallery";
 import type { SoundKind } from "../lib/gallery";
@@ -149,11 +150,13 @@ function SoundSession({
                 onClick={() => void play(slug)}
               >
                 <PlayIcon />
-                {`${sustained ? "Start" : "Play"} ${slug}`}
+                {`${sustained ? "Start" : "Play"} ${info.title.toLowerCase()}`}
               </Button>
             </PlaySpark>
             {sustained && (
-              <Button onClick={() => stop(slug)}>Stop {slug}</Button>
+              <Button onClick={() => stop(slug)}>
+                Stop {info.title.toLowerCase()}
+              </Button>
             )}
             <Button
               disabled={!ready}
@@ -194,6 +197,7 @@ function SoundSession({
           </label>
         </div>
         <div className="catalog-parameters">
+          <h2>Customize</h2>
           {parameters.length > 0 && (
             <div role="group" aria-label="Sound controls">
               {parameters.map(([name, parameter]) => (
@@ -252,7 +256,7 @@ function SoundSession({
                   changeSeed(String(Math.floor(Math.random() * 0x100000000)))
                 }
               >
-                Randomize {slug}
+                Randomize {info.title.toLowerCase()}
               </Button>
               <Button disabled={!ready} onClick={() => changeSeed("42")}>
                 Reset variation
@@ -264,7 +268,9 @@ function SoundSession({
           </div>
         </div>
       </div>
+      <CatalogInstall slug={slug} />
       <div className="catalog-inspector">
+        <h2>Inspect source</h2>
         <RecipeTools
           kind={slug}
           recipe={recipe}
