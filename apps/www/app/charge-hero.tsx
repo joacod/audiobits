@@ -10,7 +10,7 @@ import {
 import Link from "next/link";
 import { energyChargeExperience } from "../lib/experiences";
 import { mountEnergyCharge } from "../../../catalog/experiences/energy-charge/host";
-import { ArrowIcon } from "./arrow-icon";
+import { ArrowIcon } from "../icons/arrow-icon";
 import { ChargeRings } from "./charge-rings";
 import { OutputScope } from "./output-scope";
 

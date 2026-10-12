@@ -4,7 +4,8 @@ import Link from "next/link";
 import { Button } from "@base-ui/react/button";
 import { AudioMonitor } from "./audio-monitor";
 import { PlaySpark } from "./play-spark";
-import { SoundMark } from "./catalog-marks";
+import { SoundMark } from "../icons/catalog-marks";
+import { PlayIcon } from "../icons/play-icon";
 import { openCatalogLabel } from "./catalog-label";
 import { useCollectionSession } from "./collection-session";
 import { catalogEntriesByCategory } from "../lib/catalog";
@@ -91,14 +92,7 @@ export function CatalogSounds() {
                     }
                     onClick={() => void play(entry.slug)}
                   >
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 14 14"
-                      aria-hidden="true"
-                    >
-                      <path d="M3 1.5 12 7 3 12.5Z" fill="currentColor" />
-                    </svg>
+                    <PlayIcon />
                     {action} {entry.slug}
                   </Button>
                 </PlaySpark>

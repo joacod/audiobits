@@ -112,7 +112,7 @@ Documentation uses stock Fumadocs neutral styling, components, layout, typograph
 
 ## Mark
 
-The AudioBits mark is a single waveform stroke that builds from quiet to loud, like a charge. `BrandMark` in [app/brand-mark.tsx](app/brand-mark.tsx) draws it inline:
+The AudioBits mark is a single waveform stroke that builds from quiet to loud, like a charge. `BrandMark` in [icons/brand-mark.tsx](icons/brand-mark.tsx) draws it inline:
 
 - Above 32 px: the full wave (`mark-1-wave`).
 - 32 px and below: the small variant with the first bump dropped and a thicker stroke. The header uses this.
@@ -196,4 +196,4 @@ Charge rings and the progress ring rest in Mute and Graphite edge and take the s
 - **Don't** animate anything that is not following sound or state.
 - **Don't** fork or restyle Fumadocs components. Keep showcase tokens and fonts scoped to `.foundation`.
 
-Source of truth: [global styles](app/globals.css), [landing styles](app/landing.css), [hero styles](app/charge-hero.css), [catalog styles](app/catalog.css), [mark](app/brand-mark.tsx), [header](app/site-header.tsx), [output scope](app/output-scope.tsx).
+Source of truth: [global styles](app/globals.css), [landing styles](app/landing.css), [hero styles](app/charge-hero.css), [catalog styles](app/catalog.css), [mark](icons/brand-mark.tsx), [header](app/site-header.tsx), [output scope](app/output-scope.tsx).

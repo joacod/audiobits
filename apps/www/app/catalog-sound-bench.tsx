@@ -6,7 +6,8 @@ import type { CSSProperties } from "react";
 import { Button } from "@base-ui/react/button";
 import { OutputScope } from "./output-scope";
 import { PlaySpark } from "./play-spark";
-import { SoundMark } from "./catalog-marks";
+import { SoundMark } from "../icons/catalog-marks";
+import { PlayIcon } from "../icons/play-icon";
 import { useCollectionSession } from "./collection-session";
 import { parameterEndpoints, parameterLabel, soundInfo } from "../lib/gallery";
 import type { SoundKind } from "../lib/gallery";
@@ -147,14 +148,7 @@ function SoundSession({
                 }
                 onClick={() => void play(slug)}
               >
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 14 14"
-                  aria-hidden="true"
-                >
-                  <path d="M3 1.5 12 7 3 12.5Z" fill="currentColor" />
-                </svg>
+                <PlayIcon />
                 {`${sustained ? "Start" : "Play"} ${slug}`}
               </Button>
             </PlaySpark>

@@ -85,7 +85,9 @@ export async function instrument(
       },
     });
   }, activation);
-  await page.goto(`http://127.0.0.1:3100/catalog/${route}`);
+  await page.goto(
+    `http://127.0.0.1:3100${route.startsWith("/") ? route : `/catalog/${route}`}`,
+  );
 }
 export const probe = (page: Page) =>
   page.evaluate(() => {

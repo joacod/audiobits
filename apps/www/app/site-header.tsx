@@ -1,5 +1,7 @@
 import Link from "next/link";
-import { BrandMark } from "./brand-mark";
+import { BrandMark } from "../icons/brand-mark";
+import { GithubIcon } from "../icons/github-icon";
+import { NpmIcon } from "../icons/npm-icon";
 
 const github = "https://github.com/joacod/audiobits";
 
@@ -12,9 +14,6 @@ export function SiteHeader({ current }: { current?: "home" | "catalog" }) {
           AudioBits
         </Link>
         <div className="site-nav-links">
-          <Link href="/" aria-current={current === "home" ? "page" : undefined}>
-            Home
-          </Link>
           <Link
             href="/catalog"
             aria-current={current === "catalog" ? "page" : undefined}
@@ -22,7 +21,22 @@ export function SiteHeader({ current }: { current?: "home" | "catalog" }) {
             Catalog
           </Link>
           <Link href="/docs">Docs</Link>
-          <a href={github}>GitHub</a>
+          <a
+            href={github}
+            className="site-brand-link"
+            aria-label="GitHub"
+            title="AudioBits on GitHub"
+          >
+            <GithubIcon />
+          </a>
+          <a
+            href="https://www.npmjs.com/package/audiobits"
+            className="site-brand-link"
+            aria-label="npm"
+            title="AudioBits on npm"
+          >
+            <NpmIcon />
+          </a>
         </div>
       </nav>
     </header>

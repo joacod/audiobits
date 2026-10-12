@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import { drawWaveform, drawIdle, drawPortrait } from "../lib/waveform-painter";
 import type { VisualFamily } from "../lib/waveform-painter";
 import type { AudioEngine } from "audiobits";
-import { BrandMark } from "./brand-mark";
+import { BrandMark } from "../icons/brand-mark";
 
 /** A caller-owned tap: visual timing never schedules audio. */
 export function OutputScope({
