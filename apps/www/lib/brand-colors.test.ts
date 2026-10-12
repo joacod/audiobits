@@ -7,7 +7,7 @@ test("brand colors match the Live Signal custom properties in globals.css", () =
     new URL("../app/globals.css", import.meta.url),
     "utf8",
   );
-  const start = css.indexOf("  :root {");
+  const start = css.indexOf("  .foundation {");
   expect(start).toBeGreaterThanOrEqual(0);
   const block = css.slice(start, css.indexOf("\n  }", start));
   for (const [name, value] of Object.entries(brandColors)) {

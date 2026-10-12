@@ -51,6 +51,53 @@ test("Fumadocs renders package MDX", async ({ page }) => {
   ).toBeVisible();
 });
 
+test("Fumadocs keeps stock neutral styling and persists theme selection", async ({
+  page,
+}) => {
+  // A fresh visitor starts dark even when the OS prefers light.
+  await page.emulateMedia({ colorScheme: "light" });
+  await page.goto("http://127.0.0.1:3100/docs");
+  const root = page.locator("html");
+  const body = page.locator("body");
+  const sidebar = page.locator("#nd-sidebar");
+  const code = page.locator("main pre code").first();
+  const toggle = page.getByRole("button", {
+    name: "Toggle Theme",
+    exact: true,
+  });
+  await expect(root).toHaveClass(/dark/);
+  await expect(body).toHaveCSS("background-color", "rgb(18, 18, 18)");
+  await expect(body).toHaveCSS("color", "rgb(235, 235, 235)");
+  await expect(sidebar).toHaveCSS("background-color", "rgb(25, 25, 25)");
+  await expect(code).toHaveCSS("font-family", /ui-monospace/);
+
+  for (const element of [root, body, sidebar, code]) {
+    expect(
+      await element.evaluate((node) =>
+        ["--void", "--ink", "--font-display"].map((name) =>
+          getComputedStyle(node).getPropertyValue(name).trim(),
+        ),
+      ),
+    ).toEqual(["", "", ""]);
+    await expect(element).not.toHaveCSS("font-family", /geistMono/);
+  }
+
+  await toggle.click();
+  await expect(root).toHaveClass(/light/);
+  await expect(body).toHaveCSS("background-color", "rgb(245, 245, 245)");
+  await expect(body).toHaveCSS("color", "rgb(10, 10, 10)");
+  await expect(sidebar).toHaveCSS("background-color", "rgb(241, 241, 241)");
+  await expect(code).toHaveCSS("font-family", /ui-monospace/);
+  await page.reload();
+  await expect(root).toHaveClass(/light/);
+  await expect(body).toHaveCSS("background-color", "rgb(245, 245, 245)");
+  await toggle.click();
+  await expect(root).toHaveClass(/dark/);
+  await page.reload();
+  await expect(root).toHaveClass(/dark/);
+  await expect(body).toHaveCSS("background-color", "rgb(18, 18, 18)");
+});
+
 test("vanilla consumer displays the lazy public engine", async ({ page }) => {
   await page.goto("http://127.0.0.1:4173");
   await expect(page.locator("#status")).toHaveText("AudioBits: idle");

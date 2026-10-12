@@ -15,8 +15,7 @@ const SIGNAL = [
   brandColors["signal-high"],
 ] as const;
 
-// PLACEHOLDER copy pending Positioning/Voice. Replace with the real line.
-const TAGLINE = "sound driven by state, for the web";
+const TAGLINE = "Make interfaces sound alive.";
 
 export const alt = `audiobits wordmark with the waveform mark and the line: ${TAGLINE}`;
 export const size = { width: 1200, height: 630 };

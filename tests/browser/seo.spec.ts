@@ -75,6 +75,17 @@ test("public pages expose unique metadata and content without JavaScript", async
     ).not.toMatch(/noindex/i);
     await expect(page.locator("h1")).toHaveCount(1);
     await expect(page.locator("h1")).not.toBeEmpty();
+    if (route.path === "/") {
+      for (const selector of [
+        'meta[property="og:image:alt"]',
+        'meta[name="twitter:image:alt"]',
+      ]) {
+        await expect(page.locator(selector)).toHaveAttribute(
+          "content",
+          "audiobits wordmark with the waveform mark and the line: Make interfaces sound alive.",
+        );
+      }
+    }
     if (route.path.startsWith("/docs")) {
       await expect(page.locator('a[href="/docs/api"]').first()).toBeAttached();
     }
@@ -139,38 +150,18 @@ test("crawl files cover exactly the public pages and invalid routes stay 404", a
     });
     expect(response.status(), url!).toBe(200);
   }
-  const legacy = [
-    ["/sounds", "/catalog"],
-    ...catalogEntries.map((entry) => [`/sounds/${entry.slug}`, entry.href]),
-    ["/experiences/energy-charge", "/catalog/energy-charge"],
-    ["/experiences/reactive-thruster", "/catalog/reactive-thruster"],
-  ] as const;
-  for (const [from, to] of legacy) {
-    const response = await request.get(`${home}${from}?kept=1`, {
-      maxRedirects: 0,
-    });
-    expect(response.status(), from).toBe(308);
-    const location = new URL(response.headers().location ?? "", home);
-    expect(location.pathname, from).toBe(to);
-    expect(location.search, from).toBe("?kept=1");
-    const followed = await request.get(`${home}${from}`);
-    expect(followed.status(), from).toBe(200);
-    expect(new URL(followed.url()).pathname, from).toBe(to);
-  }
-  const legacyMissing = await request.get(`${home}/sounds/not-a-sound`, {
-    maxRedirects: 0,
-  });
-  expect(legacyMissing.status()).toBe(308);
-  expect(new URL(legacyMissing.headers().location ?? "", home).pathname).toBe(
-    "/catalog/not-a-sound",
-  );
-  expect((await request.get(`${home}/sounds/not-a-sound`)).status()).toBe(404);
   for (const path of [
+    "/sounds",
+    ...catalogEntries.map((entry) => `/sounds/${entry.slug}`),
+    "/sounds/not-a-sound",
+    "/experiences/energy-charge",
+    "/experiences/reactive-thruster",
     "/catalog/not-a-sound",
     "/experiences/not-a-page",
     "/docs/not-a-page",
   ]) {
     const response = await request.get(`${home}${path}`, { maxRedirects: 0 });
     expect(response.status(), path).toBe(404);
+    expect(response.headers().location, path).toBeUndefined();
   }
 });
