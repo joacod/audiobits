@@ -116,8 +116,8 @@ export function ChargeHero() {
           Sound that <em>reacts.</em>
         </h1>
         <p className="charge-lede">
-          Procedural sound effects for the web. Hold to charge one voice, then
-          copy the Energy Charge interaction into your app.
+          Procedural sound effects for the web. Hold to charge a voice, then
+          copy the code.
         </p>
         <div className="landing-links">
           <Link className="landing-primary" href="/catalog">
