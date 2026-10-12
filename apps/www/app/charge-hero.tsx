@@ -12,6 +12,7 @@ import { energyChargeExperience } from "../lib/experiences";
 import { mountEnergyCharge } from "../../../catalog/energy-charge/host";
 import { ArrowIcon } from "./arrow-icon";
 import { ChargeRings } from "./charge-rings";
+import { OutputScope } from "./output-scope";
 
 const subscribeHydration = () => () => {};
 
@@ -274,6 +275,9 @@ export function ChargeHero() {
             </p>
           ) : null}
         </div>
+      </div>
+      <div className="charge-signal">
+        <OutputScope engine={readEngine} active={state === "running"} signal />
       </div>
     </section>
   );
