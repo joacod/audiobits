@@ -44,7 +44,10 @@ test("all documentation fences and current gallery/raw examples typecheck throug
   const virtual = new Map(
     snippets.map((code, index) => [
       resolve(`apps/www/__example_${index}.ts`),
-      code,
+      code.replaceAll(
+        'from "./sounds/recipes/',
+        'from "../../catalog/recipes/',
+      ),
     ]),
   );
   const options: ts.CompilerOptions = {

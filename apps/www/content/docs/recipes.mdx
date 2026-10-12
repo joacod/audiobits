@@ -40,18 +40,23 @@ if (result.ok) {
 
 ## Bundled presets and source you own
 
-For a normal one-shot, import a preset from `audiobits/recipes`, create a sound,
-and play it after gesture activation. See [Quick start](/docs).
+All eight existing sounds have canonical source in `catalog/recipes/`. Install
+an individual recipe from the [source registry](https://github.com/joacod/audiobits/blob/main/catalog/README.md),
+import its local `recipe.ts`, create a sound, and play it after gesture activation.
+You own that source. The legacy `audiobits/recipes` exports remain available
+during migration and are generated from the same definitions. See [Quick start](/docs).
 
 [Reactive thruster](/catalog/reactive-thruster) is a developer-owned catalog
 recipe, separate from the bundled `thruster` preset. Copy `recipe.ts` for its
 sound definition, or take `pointer.ts`, `host.ts`, and `index.html` too for a
-complete vanilla interaction. The showcase displays the canonical files.
+complete vanilla interaction. Include canonical Impact at
+`../../recipes/impact/recipe.ts` relative to the host, or install the complete
+registry item to preserve that layout. The showcase displays all canonical files.
 Install `audiobits` as the runtime dependency; the copied files belong to your
 application and have no website or framework imports.
 
 Throttle is a live control in `[0, 1]`. The pointer integration maps velocity to
-throttle; the host adds a bundled impact on the same engine. Release preserves
+throttle; the host adds canonical Impact on the same engine. Release preserves
 the sound tail, Stop all cuts voices, and the host suspends on hide. Call
 `host.dispose()` when removing the view. See [Lifecycle](/docs/lifecycle) for
 engine ownership in other integrations.

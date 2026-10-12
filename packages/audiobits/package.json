@@ -40,7 +40,7 @@
   },
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "node ../../scripts/generate-recipe.mjs && tsdown && node ../../scripts/copy-schema.mjs",
+    "build": "node ../../scripts/generate-recipe.mjs && node ../../scripts/generate-legacy-recipes.mjs && tsdown && node ../../scripts/copy-schema.mjs",
     "dev": "tsdown --watch",
     "typecheck": "tsc -p tsconfig.json && tsc -p tests/tsconfig.types.json"
   },

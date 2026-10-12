@@ -17,7 +17,7 @@ packages/audiobits/
   src/recipe/              Pure recipe types, validation, normalization
   src/compiler/            Internal execution plan and native graph construction
   src/runtime/             Engine, Sound, Voice, resource ownership
-  src/recipes/             Curated recipes, separately exported
+  src/recipes/             Generated transitional recipe exports
   tests/                   Unit and type checks
   skill/                   Installed-version consumer guidance
 examples/vanilla/          Private consumer using only public package exports
@@ -34,18 +34,23 @@ controls, and visualization dependencies stay in `apps/www`.
 
 The runtime package owns the engine, recipe language, validation, compilation,
 playback, and lifecycle. The catalog owns reusable creative source, verified
-against the built public package. `catalog/recipes/` is the intended boundary for
-individually distributable recipes; it has no entries yet. The eight bundled
-recipes remain in `packages/audiobits/src/recipes/` with their current exports.
+against the built public package. `catalog/recipes/` owns all eight existing
+sound definitions. `registry.json` is canonical distribution and discovery
+metadata for those recipes and the two experiences. The website derives titles,
+descriptions and source manifests from it and keeps presentation details locally.
 
 `catalog/experiences/` owns complete examples: recipe definitions, interaction
-logic, browser host integration, and standalone demo entrypoints. The website
-consumes those canonical sources and owns their presentation and metadata.
-Reactive Thruster's host temporarily imports the bundled impact from
-`audiobits/recipes`; that dependency remains until its separate migration.
-Future Skills and MCP integrations should discover the catalog rather than
-maintain duplicate examples. No catalog registry or additional package is needed
-for this boundary.
+logic, browser host integration, and standalone demo entrypoints. Reactive
+Thruster's host imports canonical Impact with a relative path. Its registry
+manifest includes that source and license at matching installed paths. Both
+experiences use public `audiobits` APIs without runtime internals or website imports.
+
+During migration, `audiobits/recipes` remains available. The build generates
+`packages/audiobits/src/recipes/index.ts` from canonical recipe source, adapting
+only public imports/types to package-local equivalents. No runtime catalog
+import or dependency is shipped. The generated acoustic definitions and legacy
+types are unchanged; drift and deterministic equivalence tests protect this
+bridge. The catalog is developer-owned source, not an npm package.
 
 ## Execution boundary
 

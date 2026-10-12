@@ -85,8 +85,8 @@ export function ExperienceSource({
             <code>{setup}</code>
           </pre>
           <p>
-            Put the files beside each other and open the Vite URL. These files
-            are the portable example.
+            Keep the displayed relative paths and open the demo in Vite. These
+            files are the portable example.
           </p>
           <div className="catalog-source-files">
             {sources.map((file) => (

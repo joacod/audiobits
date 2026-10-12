@@ -71,7 +71,9 @@ test("confirmation copies the current seed and has no parameter controls", async
     .getByRole("button", { name: "Copy confirmation code", exact: true })
     .click();
   const example = await copied(page);
-  expect(example).toContain('import { confirmation } from "audiobits/recipes"');
+  expect(example).toContain(
+    'import { confirmation } from "./sounds/recipes/confirmation/recipe"',
+  );
   expect(example).toContain("seed: 9");
   expect(example).not.toContain("seed: 42");
   await page
@@ -125,7 +127,7 @@ test("impact keeps recipe editing, seeds, current code, and raw comparison", asy
   expect(await copied(page)).toContain('"intensity":0.83');
   expect(await copied(page)).toContain("seed: 7");
   expect(await copied(page)).toContain(
-    'import { impact } from "audiobits/recipes"',
+    'import { impact } from "./sounds/recipes/impact/recipe"',
   );
   await expect(
     page.getByRole("link", { name: "Production lifecycle", exact: true }),
@@ -188,7 +190,7 @@ test("impact keeps recipe editing, seeds, current code, and raw comparison", asy
   expect(await copied(page)).toContain("defineSound");
   expect(await copied(page)).toContain("-30");
   expect(await copied(page)).not.toContain(
-    'import { impact } from "audiobits/recipes"',
+    'import { impact } from "./sounds/recipes/impact/recipe"',
   );
 
   await page.getByRole("tab", { name: "Recipe", exact: true }).click();
@@ -247,7 +249,9 @@ test("whoosh shows only the controls in the applied recipe", async ({
     .getByRole("button", { name: "Copy whoosh code", exact: true })
     .click();
   const example = await copied(page);
-  expect(example).toContain('import { whoosh } from "audiobits/recipes"');
+  expect(example).toContain(
+    'import { whoosh } from "./sounds/recipes/whoosh/recipe"',
+  );
   expect(example).toContain('"size":0.9');
   expect(example).toContain(`seed: ${seed}`);
   await page.getByRole("tab", { name: "Recipe", exact: true }).click();

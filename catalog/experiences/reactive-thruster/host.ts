@@ -1,5 +1,5 @@
 import { createAudio } from "audiobits";
-import { impact } from "audiobits/recipes";
+import { impact } from "../../recipes/impact/recipe";
 import { attachPointerThruster } from "./pointer";
 
 /** Framework-independent host. The caller owns presentation and calls dispose on teardown. */

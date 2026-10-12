@@ -1,3 +1,4 @@
+import registry from "../../../registry.json" with { type: "json" };
 import { expect, test } from "vitest";
 import {
   energyChargeExperience,
@@ -40,6 +41,9 @@ test("catalog index covers every current entry once, in collection order", () =>
   );
   expect([...soundKinds].sort()).toEqual([...bundledOrder].sort());
   expect(catalogEntries).toHaveLength(soundKinds.length + 2);
+  expect(catalogEntries.map((item) => item.slug).sort()).toEqual(
+    registry.items.map((item) => item.name).sort(),
+  );
 });
 
 test("catalog entries derive links and playback from website metadata", () => {

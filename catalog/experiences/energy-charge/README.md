@@ -63,3 +63,8 @@ uses these exact sources, adding a three-second hold interaction at the UI layer
 No completion accent is included: releasing is the recipe's clean tail, while
 cancellation never produces a success sound. A game or task may supply its own
 progress and choose its own completion policy without copying the showcase.
+
+The root `registry.json` records discovery metadata and the complete source and
+license manifest. Installation keeps these files together under
+`src/sounds/experiences/energy-charge/`; the website derives source lists from
+that manifest.

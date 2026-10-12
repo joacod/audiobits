@@ -13,6 +13,7 @@ import {
   experienceCatalogEntry,
   experienceDetailDescription,
 } from "../../../lib/catalog";
+import { experienceSourceFiles } from "../../../lib/registry";
 import { experienceSourcePurpose } from "../../../lib/experiences";
 import { rawExampleSource } from "../../../lib/site-build";
 
@@ -46,13 +47,10 @@ const ThrusterDetail = dynamic(
 
 function readExperienceSources(slug: "energy-charge" | "reactive-thruster") {
   const purposes = experienceSourcePurpose[slug];
-  return (Object.keys(purposes) as (keyof typeof purposes)[]).map((name) => ({
+  return experienceSourceFiles(slug).map(({ name, path }) => ({
     name,
-    purpose: purposes[name],
-    code: readFileSync(
-      join(process.cwd(), "../../catalog/experiences", slug, name),
-      "utf8",
-    ),
+    purpose: (purposes as Readonly<Record<string, string>>)[name],
+    code: readFileSync(join(process.cwd(), "../..", path), "utf8"),
   }));
 }
 

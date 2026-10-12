@@ -177,7 +177,17 @@ test("copy actions return every complete canonical source file and report clipbo
   });
   await page.getByRole("tab", { name: "Complete interaction" }).click();
   await expect(interaction).toBeVisible();
-  for (const name of ["recipe.ts", "pointer.ts", "host.ts", "index.html"]) {
+  const files = [
+    "recipe.ts",
+    "pointer.ts",
+    "host.ts",
+    "index.html",
+    "../../recipes/impact/recipe.ts",
+  ];
+  await expect(interaction.getByRole("button", { name: /^Copy / })).toHaveCount(
+    files.length,
+  );
+  for (const name of files) {
     await interaction
       .getByRole("button", { name: `Copy ${name}`, exact: true })
       .click();

@@ -1,3 +1,4 @@
+import registry from "../../../registry.json" with { type: "json" };
 import {
   energyChargeExperience,
   reactiveThrusterExperience,
@@ -29,7 +30,7 @@ export type BundledCatalogEntry = CatalogEntryBase & {
   playback: "one-shot" | "sustained";
   use: string;
   preview: { family: "pulse" | "harmonic" | "flow" };
-  source: { exportName: string };
+  source: { exportName: string; file: string };
 };
 
 export type CatalogEntry = ExperienceCatalogEntry | BundledCatalogEntry;
@@ -73,31 +74,49 @@ export const catalogGroups = [
 }[];
 
 export const catalogEntries: readonly CatalogEntry[] = [
-  ...experienceEntries.map((item): ExperienceCatalogEntry => ({
-    slug: item.slug,
-    title: item.experience.title,
-    description: item.experience.description,
-    category: "experience",
-    href: `/catalog/${item.slug}`,
-    controls: item.experience.controls,
-    preview: { family: item.preview },
-    source: { files: item.experience.sourceFiles },
-    relatedSounds: item.experience.relatedSounds,
-  })),
-  ...bundledOrder.map((slug): BundledCatalogEntry => {
-    const demo = demos[slug];
-    return {
-      slug,
-      title: demo.title,
-      description: demo.description,
-      category: "bundled",
-      href: `/catalog/${slug}`,
-      playback: demo.recipe.kind,
-      use: demo.use,
-      preview: { family: demo.visualFamily },
-      source: { exportName: demo.exportName },
-    };
-  }),
+  ...registry.items
+    .filter((item) => item.meta.classification === "experience")
+    .sort(
+      (a, b) =>
+        experienceEntries.findIndex((item) => item.slug === a.name) -
+        experienceEntries.findIndex((item) => item.slug === b.name),
+    )
+    .map((entry): ExperienceCatalogEntry => {
+      const item = experienceEntries.find((item) => item.slug === entry.name)!;
+      return {
+        slug: entry.name,
+        title: entry.title,
+        description: entry.description,
+        category: "experience",
+        href: `/catalog/${entry.name}`,
+        controls: item.experience.controls,
+        preview: { family: item.preview },
+        source: { files: item.experience.sourceFiles },
+        relatedSounds: item.experience.relatedSounds,
+      };
+    }),
+  ...registry.items
+    .filter((item) => item.meta.classification === "recipe")
+    .map((item) => item.name as SoundKind)
+    .sort((a, b) => bundledOrder.indexOf(a) - bundledOrder.indexOf(b))
+    .map((slug): BundledCatalogEntry => {
+      const demo = demos[slug];
+      return {
+        slug,
+        title: demo.title,
+        description: demo.description,
+        category: "bundled",
+        href: `/catalog/${slug}`,
+        playback: demo.recipe.kind,
+        use: demo.use,
+        preview: { family: demo.visualFamily },
+        source: {
+          exportName: demo.exportName,
+          file: registry.items.find((item) => item.name === slug)!.files[0]
+            .path,
+        },
+      };
+    }),
 ];
 
 export function catalogEntriesByCategory(

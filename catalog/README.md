@@ -16,11 +16,11 @@ npx shadcn@4.21.4 list joacod/audiobits
 npx shadcn@4.21.4 view joacod/audiobits/confirmation
 npx shadcn@4.21.4 add joacod/audiobits/confirmation
 npx shadcn@4.21.4 add joacod/audiobits/energy-charge
+npx shadcn@4.21.4 add joacod/audiobits/reactive-thruster
 ```
 
-Before this registry reaches main, append `#feat/github-source-registry` to each
-GitHub address above. For reproducible installs, replace the branch with a
-reviewed full commit SHA. Both entries use `registry:item` and explicit
+For reproducible installs, append `#<reviewed-full-commit-SHA>` to each GitHub
+address. All ten entries use `registry:item` and explicit
 `registry:file` targets relative to the project root (`~/`); React, Tailwind,
 Next.js, framework detection and `components.json` are unnecessary.
 
@@ -91,20 +91,40 @@ npx shadcn@4.21.4 add joacod/audiobits/energy-charge --dry-run
 npx shadcn@4.21.4 add joacod/audiobits/energy-charge --diff
 ```
 
-Append a branch or commit ref as above. These commands only review changes.
+Append a reviewed commit ref as above. These commands only review changes.
 Delete the disposable directory afterward and perform the actual install in
 your application, where no `components.json` is required. Existing shadcn
 projects can use their own config for previews. See the
 [verification record](registry-verification.md) for the tested commands and limits.
 
+## Recipes and experiences
+
+[registry.json](../registry.json) is the canonical discovery and distribution
+manifest. It contains eight recipes: `confirmation`, `impact`, `thruster`,
+`tactile-click`, `gentle-rejection`, `glass-notification`, `whoosh`, and `power-up`;
+and two experiences: `energy-charge` and `reactive-thruster`. Use any ID with
+`view` or `add`. Metadata records classification, categories, schema version,
+required public capabilities and complete source/license manifests. The website
+derives discovery titles, descriptions and source lists from this registry;
+visual families, control labels and display order belong to the website.
+
+Recipes install under `src/sounds/recipes/<id>/`; experiences under
+`src/sounds/experiences/<id>/`. These targets mirror the canonical source layout
+so relative imports survive copying and installation. Earlier proof-of-concept
+installs placed Confirmation and Energy Charge directly under `src/sounds/`.
+A new install uses the targets above; review your imports when adopting that
+layout and preserve any locally edited source.
+
+See [recipe ownership](recipes/README.md) for editing and verification.
+
 ## Confirmation
 
-Installation writes `src/sounds/confirmation.ts` and
-`src/sounds/confirmation.LICENSE`. Import the owned recipe from your application:
+Installation writes `src/sounds/recipes/confirmation/recipe.ts` and `LICENSE`.
+Import the owned recipe from your application:
 
 ```ts
 import { createAudio } from "audiobits";
-import { confirmation } from "./sounds/confirmation";
+import { confirmation } from "./sounds/recipes/confirmation/recipe";
 
 const audio = createAudio();
 const sound = audio.sound(confirmation);
@@ -122,8 +142,8 @@ envelopes or gain locally, keeping recipe schema version 1. The published
 ## Energy Charge
 
 Installation writes `recipe.ts`, `progress.ts`, `host.ts`, `index.html`,
-`README.md` and `LICENSE` under `src/sounds/energy-charge/`. All relative imports
-stay within that directory. See the [experience guide](experiences/energy-charge/README.md).
+`README.md` and `LICENSE` under `src/sounds/experiences/energy-charge/`. All relative
+imports stay within that directory. See the [experience guide](experiences/energy-charge/README.md).
 
 - `recipe.ts` is reusable sound data.
 - `progress.ts` is the reusable controller for application-supplied progress.
@@ -139,13 +159,22 @@ npm install --save-dev vite typescript
 npx vite
 ```
 
-Open `/src/sounds/energy-charge/index.html`. Installation never writes a root
-`index.html`, build configuration, CSS or framework setup. Your application can
+Open `/src/sounds/experiences/energy-charge/index.html`. Installation never writes
+a root `index.html`, build configuration, CSS or framework setup. Your application can
 import the recipe or controller without using the demo. Customize sound data,
 progress mapping or presentation independently; start audio in a user gesture
 and dispose owned resources during teardown.
 
-Both entries use public runtime APIs and recipe schema 1. The TypeScript source
+## Reactive Thruster
+
+Installation includes the complete recipe, pointer controller, host, demo, guide
+and license under `src/sounds/experiences/reactive-thruster/`. The same item also
+includes canonical Impact and its license under `src/sounds/recipes/impact/`.
+The host imports `../../recipes/impact/recipe`; keep that path intact. No
+`audiobits/recipes`, runtime internals or site-private modules are needed. See
+the [experience guide](experiences/reactive-thruster/README.md).
+
+All entries use public runtime APIs and recipe schema 1. The TypeScript source
 supports bundler module resolution; it is not precompiled JavaScript. Automated
 browser evidence targets Chromium and does not establish listening quality,
 physical-device support or other-browser compatibility.
