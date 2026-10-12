@@ -2,8 +2,8 @@ import { expect, it, vi } from "vitest";
 import type { AudioEngine, Voice } from "../src/index";
 import { defineSound, validateRecipe } from "../src/index";
 import { compile } from "../src/compiler/plan";
-import { energyCharge } from "../../../catalog/energy-charge/recipe";
-import { createEnergyCharge } from "../../../catalog/energy-charge/progress";
+import { energyCharge } from "../../../catalog/experiences/energy-charge/recipe";
+import { createEnergyCharge } from "../../../catalog/experiences/energy-charge/progress";
 
 it("serializes and validates all charge mappings across the range", () => {
   expect(JSON.parse(JSON.stringify(energyCharge))).toEqual(energyCharge);

@@ -12,7 +12,7 @@ contracts; [recipe model](recipe-model.md) explains data and compatibility invar
 Repository responsibilities:
 
 ```text
-apps/www/                  Private Next.js documentation and demo workspace
+apps/www/                  Catalog presentation, documentation, and website UI
 packages/audiobits/
   src/recipe/              Pure recipe types, validation, normalization
   src/compiler/            Internal execution plan and native graph construction
@@ -21,7 +21,9 @@ packages/audiobits/
   tests/                   Unit and type checks
   skill/                   Installed-version consumer guidance
 examples/vanilla/          Private consumer using only public package exports
-catalog/                  Portable examples verified against the built package
+catalog/
+  recipes/                Individually distributable, copy-owned recipes
+  experiences/            Complete interactive source examples
 docs/                     Contributor architecture and operational guides
 ```
 
@@ -29,6 +31,21 @@ One runtime package owns its version and public exports. Do not split schema,
 presets, effects, and runtime into independent packages. Curated recipe exports
 must not inflate a consumer that imports only the engine. Website rendering,
 controls, and visualization dependencies stay in `apps/www`.
+
+The runtime package owns the engine, recipe language, validation, compilation,
+playback, and lifecycle. The catalog owns reusable creative source, verified
+against the built public package. `catalog/recipes/` is the intended boundary for
+individually distributable recipes; it has no entries yet. The eight bundled
+recipes remain in `packages/audiobits/src/recipes/` with their current exports.
+
+`catalog/experiences/` owns complete examples: recipe definitions, interaction
+logic, browser host integration, and standalone demo entrypoints. The website
+consumes those canonical sources and owns their presentation and metadata.
+Reactive Thruster's host temporarily imports the bundled impact from
+`audiobits/recipes`; that dependency remains until its separate migration.
+Future Skills and MCP integrations should discover the catalog rather than
+maintain duplicate examples. No catalog registry or additional package is needed
+for this boundary.
 
 ## Execution boundary
 

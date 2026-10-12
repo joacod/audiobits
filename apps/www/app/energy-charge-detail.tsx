@@ -8,7 +8,7 @@ import {
   useSyncExternalStore,
 } from "react";
 import type { CSSProperties } from "react";
-import { mountEnergyCharge } from "../../../catalog/energy-charge/host";
+import { mountEnergyCharge } from "../../../catalog/experiences/energy-charge/host";
 import { ChargeRings } from "./charge-rings";
 import { ExperienceSource } from "./experience-source";
 import type { ExperienceSourceFile } from "./experience-source";

@@ -185,7 +185,7 @@ test("copy actions return every complete canonical source file and report clipbo
       () => (globalThis as unknown as { copiedSource: string }).copiedSource,
     );
     expect(copied).toBe(
-      readFileSync(`catalog/reactive-thruster/${name}`, "utf8"),
+      readFileSync(`catalog/experiences/reactive-thruster/${name}`, "utf8"),
     );
   }
   await page.evaluate(() => {

@@ -166,6 +166,19 @@ version from the manifest.
 
 ## Catalog examples
 
+Copy-owned interactive sources live in `catalog/experiences/`:
+[Energy Charge](../catalog/experiences/energy-charge/README.md) and
+[Reactive Thruster](../catalog/experiences/reactive-thruster/README.md). Edit their
+recipe, interaction, host, or demo files there; `apps/www` imports and displays
+these sources while owning website presentation. `catalog/recipes/` is reserved
+for individually distributable recipes and currently has no entries. Bundled
+recipes remain in `packages/audiobits/src/recipes/index.ts`.
+
+`pnpm test:package` copies both experiences into an isolated packed-package
+consumer, typechecks their hosts, and runs their standalone entrypoints in
+Chromium. The site browser tests verify the displayed source matches the catalog,
+along with interaction and lifecycle behavior.
+
 `/catalog` keeps one engine for the bundled-sound rows. The output strip is a
 desktop row and a compact mobile dock. `/catalog/[slug]` uses that same session
 contract for one bundled sound. Each mounted workbench owns one engine and

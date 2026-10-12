@@ -156,7 +156,7 @@ pnpm build:lib
 pnpm --filter @audiobits/vanilla dev
 ```
 
-[Vanilla host source](../../examples/vanilla/src/main.ts) imports only public
+[Vanilla host source](../../../examples/vanilla/src/main.ts) imports only public
 AudioBits exports and these canonical files. The consumer's TypeScript path
 entry resolves the installed public package for source outside its workspace;
 a copied recipe next to your host needs no such entry.

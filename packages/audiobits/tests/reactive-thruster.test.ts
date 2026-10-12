@@ -3,11 +3,11 @@ import type { AudioEngine, AudioState, Voice } from "../src/index";
 import { validateRecipe, defineSound } from "../src/index";
 import { compile } from "../src/compiler/plan";
 import { noiseData } from "../src/compiler/values";
-import { reactiveThruster } from "../../../catalog/reactive-thruster/recipe";
+import { reactiveThruster } from "../../../catalog/experiences/reactive-thruster/recipe";
 import {
   attachPointerThruster,
   velocityThrottle,
-} from "../../../catalog/reactive-thruster/pointer";
+} from "../../../catalog/experiences/reactive-thruster/pointer";
 
 afterEach(() => {
   vi.restoreAllMocks();

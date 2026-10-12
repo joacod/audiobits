@@ -9,7 +9,7 @@ import {
   useSyncExternalStore,
 } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
-import { mountThruster } from "../../../catalog/reactive-thruster/host";
+import { mountThruster } from "../../../catalog/experiences/reactive-thruster/host";
 import { ExperienceSource } from "./experience-source";
 import type { ExperienceSourceFile } from "./experience-source";
 import { ThrusterRibbons } from "./thruster-ribbons";

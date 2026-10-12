@@ -153,7 +153,7 @@ test("canonical source copying, clipboard denial, narrow touch and reduced motio
       await page.evaluate(
         () => (globalThis as unknown as { copiedSource: string }).copiedSource,
       ),
-    ).toBe(readFileSync(`catalog/energy-charge/${name}`, "utf8"));
+    ).toBe(readFileSync(`catalog/experiences/energy-charge/${name}`, "utf8"));
   }
   await page.evaluate(() => {
     navigator.clipboard.writeText = async () => {
