@@ -3,14 +3,17 @@
 This optional stdio server helps coding agents use AudioBits in a consumer
 application. It lives in the private root workspace, uses the official
 `@modelcontextprotocol/server` v2 SDK and adds no runtime dependencies or
-publishable package. Skill distribution and a standalone executable belong to
-PR 07.
+publishable package. The single official [AudioBits Skill](../../skills/audiobits/SKILL.md)
+ships the optional server at `skills/audiobits/scripts/mcp.mjs`; consumer setup
+and host commands live in its [tooling reference](../../skills/audiobits/references/tooling.md).
 
 Use the repository's pinned Node and pnpm versions. From the repository root:
 
 ```sh
 pnpm install --frozen-lockfile
 pnpm build:mcp
+pnpm build:skill
+pnpm check:skill
 ```
 
 Configure an MCP client's stdio launch with `node` as the command, the absolute
@@ -27,6 +30,26 @@ The server reads MCP messages on stdin and reserves stdout for protocol messages
 Transport diagnostics use stderr. EOF, SIGINT and SIGTERM close the connection.
 To inspect AudioBits itself, first run `pnpm build:lib` and launch with the
 repository root as `cwd`.
+
+`--project <consumer-project>` explicitly sets the launch default for hosts
+without a configurable working directory. The installed executable supports
+Node 24.21.0 or later in the 24.x series. Other Node series are unverified.
+
+## Reproducible Skill distribution
+
+`build:skill` bundles `bundle.ts`, the stdio server, runtime worker, SDK/Zod
+dependencies and catalog snapshot with the exact-pinned esbuild and lockfile.
+Workers re-enter the same executable without starting another transport. Public
+runtime imports stay dynamic and resolve only in the consumer project. The build
+rejects bundled AudioBits runtime code, unbundled dependencies and executables
+over 1 MiB. It emits dependency licenses alongside the executable, with no source
+maps or machine paths. Do not edit generated output directly.
+
+`check:skill` rebuilds in memory and compares both committed files byte for byte.
+Missing or stale output fails without rewriting files. PR/main CI runs it before
+MCP tests. After an implementation, snapshot or dependency change, run
+`pnpm build:skill` and commit both generated outputs. The optional setup helper
+has no dependencies, resolves installed symlinks and only prints launch settings.
 
 ## Tools and project boundary
 
@@ -88,12 +111,15 @@ node tools/mcp/generate-snapshot.mjs --check
 
 Generation reads the registry and declared files at that commit, verifies they
 match the checkout, and produces deterministic metadata. `--check` reuses the
-snapshot revision and checks drift. Git is needed for generation, not execution.
+snapshot revision and checks drift. Generation and `--check` read that commit
+with Git. Running the server does not. The quality workflow fetches the pinned
+revision because its checkout is shallow.
 
 ## Verification and limitations
 
 ```sh
 pnpm test:mcp
+pnpm check:skill
 pnpm test:mcp:github
 ```
 
@@ -107,6 +133,15 @@ invalid paths, malformed inputs, recovery and shutdown. Server-side fetch is
 blocked during offline protocol tests. Unit tests cover schema mismatches, source
 allowlisting, origin, size, integrity and local retrieval. Temporary consumers and
 caches are removed after verification.
+
+Bundled tests copy the complete Skill outside the monorepo, start its executable
+without server dependencies, exercise all five tools and consumer version
+changes, and check setup path resolution and preservation of existing settings.
+The normal public runtime validation workflow also runs without MCP configured.
+Installation acceptance uses the actual Skills CLI against a pushed PR revision
+in a clean external project before main changes. Use a GitHub tree URL selecting
+the PR branch/revision with `--skill audiobits`; the default installation command
+in the Skill reference selects main after merge.
 
 `test:mcp:github` separately performs one explicit, live source retrieval through
 the protocol client from an external packed consumer. It requires public network

@@ -77,7 +77,12 @@ export async function fixture() {
   }
 }
 
-export async function protocolClient(cwd: string, offline = true) {
+export async function protocolClient(
+  cwd: string,
+  offline = true,
+  entry = resolve(root, "tools/mcp/dist/stdio.js"),
+  extraArgs: string[] = [],
+) {
   const client = new Client({
     name: "audiobits-protocol-test",
     version: "1.0.0",
@@ -88,7 +93,8 @@ export async function protocolClient(cwd: string, offline = true) {
       ...(offline
         ? ["--import", resolve(root, "tools/mcp/offline-guard.mjs")]
         : []),
-      resolve(root, "tools/mcp/dist/stdio.js"),
+      entry,
+      ...extraArgs,
     ],
     cwd,
     stderr: "pipe",

@@ -49,6 +49,8 @@ pnpm --filter @audiobits/vanilla dev
 | `pnpm dev`             | Initial library build, library watch, and site server                |
 | `pnpm build:lib`       | Library ESM and declarations                                         |
 | `pnpm build:mcp`       | Independent local stdio MCP server build                             |
+| `pnpm build:skill`     | Bundle optional MCP executable and licenses into the official Skill  |
+| `pnpm check:skill`     | Fail on stale committed Skill executable or dependency licenses      |
 | `pnpm build:site`      | Library build followed by site build                                 |
 | `pnpm build`           | Library, site, and vanilla production builds                         |
 | `pnpm typecheck`       | Build library, generate site types, check all workspaces             |

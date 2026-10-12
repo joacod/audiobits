@@ -7,6 +7,7 @@ export default [
     ignores: [
       // Vendored agent tools retain their upstream code and conventions.
       "apps/www/.agents/skills/**",
+      "skills/audiobits/scripts/mcp.mjs",
       "**/node_modules/**",
       "**/dist/**",
       "**/.next/**",

@@ -26,8 +26,21 @@ assume the website or this Skill matches that runtime version.
   relevant owned source and adapt its controller to application state and UI.
   Keep the application's entrypoint and lifecycle; do not transplant a demo.
 - **Validation or optional tools:** Read [tooling](references/tooling.md) when
-  choosing checks, resolving contracts, or using an available AudioBits MCP.
+  choosing checks, resolving contracts, or considering the bundled local MCP.
   Every workflow works without MCP.
+
+## Optional MCP policy
+
+Understand the request first. For simple sounds and integrations, use public
+APIs and ordinary coding tools directly; do not suggest MCP installation.
+For complex catalog discovery, capability comparisons or repeated validation,
+check whether AudioBits MCP is already available and use its actual tools where
+helpful. If absent but useful, explain the concrete benefit and request any
+required permission for host configuration. When authorized and supported,
+follow [tooling](references/tooling.md) to configure the installed local script.
+If configuration is unsupported, denied or fails, continue the normal workflow
+with installed exports and the catalog reference. Never block audio development
+on MCP setup. Installing this Skill does not register or start the server.
 
 ## Core workflow
 

@@ -91,6 +91,9 @@ test("normal CI runs quality and full Chromium integration on PRs and main", asy
     ci.jobs.quality.steps.flatMap(({ run }: { run?: string }) => run ?? []),
   ).toEqual([
     "pnpm install --frozen-lockfile",
+    "pnpm check:skill",
+    'git fetch --depth=1 origin "$(jq -r .revision tools/mcp/snapshot.json)"',
+    "pnpm test:mcp",
     "pnpm lint",
     "pnpm typecheck",
     "pnpm test",
