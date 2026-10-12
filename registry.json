@@ -1,0 +1,93 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "audiobits",
+  "homepage": "https://github.com/joacod/audiobits",
+  "items": [
+    {
+      "name": "confirmation",
+      "type": "registry:item",
+      "title": "Confirmation",
+      "description": "A short rising confirmation tone as editable recipe source.",
+      "dependencies": ["audiobits"],
+      "categories": ["recipe"],
+      "meta": {
+        "classification": "recipe",
+        "tags": ["confirmation", "one-shot"],
+        "schemaVersion": 1,
+        "compatibility": {
+          "runtime": "audiobits public API with recipe schema 1",
+          "language": "TypeScript",
+          "moduleResolution": "Bundler",
+          "browser": "Web Audio; automated verification in Chromium",
+          "framework": "none"
+        }
+      },
+      "files": [
+        {
+          "path": "catalog/recipes/confirmation/recipe.ts",
+          "type": "registry:file",
+          "target": "~/src/sounds/confirmation.ts"
+        },
+        {
+          "path": "LICENSE",
+          "type": "registry:file",
+          "target": "~/src/sounds/confirmation.LICENSE"
+        }
+      ],
+      "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/main/catalog/README.md for integration and update guidance."
+    },
+    {
+      "name": "energy-charge",
+      "type": "registry:item",
+      "title": "Energy Charge",
+      "description": "A sustained energy field with progress controller, browser host and standalone demo.",
+      "dependencies": ["audiobits"],
+      "categories": ["experience"],
+      "meta": {
+        "classification": "experience",
+        "tags": ["energy", "sustained", "progress"],
+        "schemaVersion": 1,
+        "compatibility": {
+          "runtime": "audiobits public API with recipe schema 1",
+          "language": "TypeScript",
+          "moduleResolution": "Bundler",
+          "browser": "Web Audio; automated verification in Chromium",
+          "framework": "none"
+        }
+      },
+      "files": [
+        {
+          "path": "catalog/experiences/energy-charge/recipe.ts",
+          "type": "registry:file",
+          "target": "~/src/sounds/energy-charge/recipe.ts"
+        },
+        {
+          "path": "catalog/experiences/energy-charge/progress.ts",
+          "type": "registry:file",
+          "target": "~/src/sounds/energy-charge/progress.ts"
+        },
+        {
+          "path": "catalog/experiences/energy-charge/host.ts",
+          "type": "registry:file",
+          "target": "~/src/sounds/energy-charge/host.ts"
+        },
+        {
+          "path": "catalog/experiences/energy-charge/index.html",
+          "type": "registry:file",
+          "target": "~/src/sounds/energy-charge/index.html"
+        },
+        {
+          "path": "catalog/experiences/energy-charge/README.md",
+          "type": "registry:file",
+          "target": "~/src/sounds/energy-charge/README.md"
+        },
+        {
+          "path": "LICENSE",
+          "type": "registry:file",
+          "target": "~/src/sounds/energy-charge/LICENSE"
+        }
+      ],
+      "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/main/catalog/README.md for integration and update guidance."
+    }
+  ]
+}

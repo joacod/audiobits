@@ -170,9 +170,9 @@ Copy-owned interactive sources live in `catalog/experiences/`:
 [Energy Charge](../catalog/experiences/energy-charge/README.md) and
 [Reactive Thruster](../catalog/experiences/reactive-thruster/README.md). Edit their
 recipe, interaction, host, or demo files there; `apps/www` imports and displays
-these sources while owning website presentation. `catalog/recipes/` is reserved
-for individually distributable recipes and currently has no entries. Bundled
-recipes remain in `packages/audiobits/src/recipes/index.ts`.
+these sources while owning website presentation. The [GitHub source registry](../catalog/README.md) installs Confirmation from
+`catalog/recipes/confirmation/` and the complete Energy Charge experience as
+owned source. Bundled recipes remain in `packages/audiobits/src/recipes/index.ts`.
 
 `pnpm test:package` copies both experiences into an isolated packed-package
 consumer, typechecks their hosts, and runs their standalone entrypoints in
