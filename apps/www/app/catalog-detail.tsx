@@ -66,8 +66,7 @@ function sourceLabel(entry: CatalogEntry) {
   if (entry.category === "bundled") {
     return (
       <>
-        Bundled sound · {entry.use}. Source{" "}
-        <code>{entry.source.exportName}</code> in audiobits/recipes.
+        Bundled sound · {entry.use}. Source <code>{entry.source.file}</code>.
       </>
     );
   }

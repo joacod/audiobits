@@ -25,7 +25,10 @@ range input offer the same sound without precise pointer movement.
 
 The [interactive showcase](https://audiobits.joacod.com/catalog/reactive-thruster)
 uses [host.ts](host.ts) with the same recipe and pointer integration. Copy
-`recipe.ts`, `pointer.ts`, `host.ts`, and [index.html](index.html) into one folder:
+`recipe.ts`, `pointer.ts`, `host.ts`, and [index.html](index.html) with their
+relative paths. Also copy [canonical Impact](../../recipes/impact/recipe.ts) at
+`../../recipes/impact/recipe.ts` relative to the host. The registry installs this
+complete manifest, including both licenses:
 
 ```sh
 npm install audiobits
@@ -38,9 +41,10 @@ impact, Mute, Stop, and recoverable activation errors. The host owns a shared
 engine, suspends on hide, and closes on page teardown. In an SPA, call
 `await host.dispose()` when removing the view.
 
-Website experience metadata lives outside recipes in `apps/www/lib/experiences.ts`:
-route, controls, related bundled sounds, and canonical source filenames. Future
-experiences can use the same source-file pattern without changing `SoundRecipe`
+Discovery metadata and source manifests live in root `registry.json`. Website
+presentation in `apps/www/lib/experiences.ts` derives titles, descriptions and
+source filenames from that registry while keeping controls and related sounds.
+Future experiences can use the same source-file pattern without changing `SoundRecipe`
 or forcing an interaction into a standalone sound workbench.
 
 ## Minimal host
@@ -51,7 +55,7 @@ The host owns DOM presentation, engine limits, shared mixing, and final cleanup:
 
 ```ts
 import { createAudio } from "audiobits";
-import { impact } from "audiobits/recipes";
+import { impact } from "../../recipes/impact/recipe";
 import { attachPointerThruster } from "./pointer";
 
 const audio = createAudio({ maxVoices: 8, maxVoicesPerSound: 2 });

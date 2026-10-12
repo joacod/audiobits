@@ -1,6 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "allowImportingTsExtensions": true,
     "paths": {
       "audiobits": ["./node_modules/audiobits"],
       "audiobits/recipes": ["./node_modules/audiobits/dist/recipes/index.js"]

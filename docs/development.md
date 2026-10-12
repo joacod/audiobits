@@ -26,9 +26,11 @@ in `apps/www`; the runtime remains framework-independent.
 
 ## Local package edits
 
-Edit a bundled definition in `packages/audiobits/src/recipes/index.ts` while
-`pnpm dev` runs. After tsdown emits the change, reload `/catalog`, open that
-sound's workbench and Recipe tab, and inspect the updated JSON before Play. The site
+Edit canonical definitions in `catalog/recipes/<id>/recipe.ts`. The library build
+generates the transitional `audiobits/recipes` module from those files. While
+`pnpm dev` runs, run `node scripts/generate-legacy-recipes.mjs` after a recipe
+edit so the package watcher rebuilds the compatibility export. Reload `/catalog`,
+open that sound's workbench and Recipe tab, and inspect the updated JSON before Play. The site
 uses `transpilePackages` and imports `audiobits` through its public exports,
 which point to `dist`; it never aliases library source. A refresh is the
 supported verification path; state-preserving hot updates are not promised.
@@ -170,13 +172,18 @@ Copy-owned interactive sources live in `catalog/experiences/`:
 [Energy Charge](../catalog/experiences/energy-charge/README.md) and
 [Reactive Thruster](../catalog/experiences/reactive-thruster/README.md). Edit their
 recipe, interaction, host, or demo files there; `apps/www` imports and displays
-these sources while owning website presentation. The [GitHub source registry](../catalog/README.md) installs Confirmation from
-`catalog/recipes/confirmation/` and the complete Energy Charge experience as
-owned source. Bundled recipes remain in `packages/audiobits/src/recipes/index.ts`.
+these sources while owning website presentation. The
+[GitHub source registry](../catalog/README.md) installs canonical recipes and
+complete experiences as owned source. It covers all eight recipes and both
+experiences.
+`registry.json` owns discovery metadata and installation file manifests; website
+metadata is derived from it. The legacy module in
+`packages/audiobits/src/recipes/index.ts` is generated, never edited directly.
 
-`pnpm test:package` copies both experiences into an isolated packed-package
-consumer, typechecks their hosts, and runs their standalone entrypoints in
-Chromium. The site browser tests verify the displayed source matches the catalog,
+`pnpm test:package` copies each of the ten item manifests into its own source
+tree in an isolated packed-package consumer, typechecks every installed
+TypeScript file, validates every recipe with the actual runtime, checks legacy
+equivalence, and runs both standalone experience entrypoints in Chromium. The site browser tests verify the displayed source matches the catalog,
 along with interaction and lifecycle behavior.
 
 `/catalog` keeps one engine for the bundled-sound rows. The output strip is a

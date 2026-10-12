@@ -1,98 +1,93 @@
 import capabilities from "audiobits/capabilities.json" with { type: "json" };
-import {
-  confirmation,
-  impact,
-  thruster,
-  tactileClick,
-  gentleRejection,
-  glassNotification,
-  whoosh,
-  powerUp,
-} from "audiobits/recipes";
+import { confirmation } from "../../../catalog/recipes/confirmation/recipe.ts";
+import { impact } from "../../../catalog/recipes/impact/recipe.ts";
+import { thruster } from "../../../catalog/recipes/thruster/recipe.ts";
+import { tactileClick } from "../../../catalog/recipes/tactile-click/recipe.ts";
+import { gentleRejection } from "../../../catalog/recipes/gentle-rejection/recipe.ts";
+import { glassNotification } from "../../../catalog/recipes/glass-notification/recipe.ts";
+import { whoosh } from "../../../catalog/recipes/whoosh/recipe.ts";
+import { powerUp } from "../../../catalog/recipes/power-up/recipe.ts";
+import { registryItem } from "./registry.ts";
 import type { Recipe } from "audiobits";
 
 // Presentation belongs to the gallery, independently of portable recipe data.
 export const demos = {
   confirmation: {
     visualFamily: "harmonic",
-    exportName: "confirmation",
+    exportName: registryItem("confirmation").meta.exportName,
+    title: registryItem("confirmation").title,
+    description: registryItem("confirmation").description,
     recipe: confirmation,
-    title: "Confirmation",
-    description: "A soft upward chime for a completed action.",
     use: "Success feedback · one-shot",
     labels: {},
     endpoints: {},
   },
   impact: {
     visualFamily: "pulse",
-    exportName: "impact",
+    exportName: registryItem("impact").meta.exportName,
+    title: registryItem("impact").title,
+    description: registryItem("impact").description,
     recipe: impact,
-    title: "Impact",
-    description:
-      "A descending body and filtered noise transient. Intensity changes pitch, brightness, and level.",
     use: "Collisions and hits · one-shot",
     labels: { intensity: "Intensity" },
     endpoints: { intensity: ["Soft", "Hard"] },
   },
   thruster: {
     visualFamily: "flow",
-    exportName: "thruster",
+    exportName: registryItem("thruster").meta.exportName,
+    title: registryItem("thruster").title,
+    description: registryItem("thruster").description,
     recipe: thruster,
-    title: "Thruster",
-    description:
-      "Start once, adjust throttle while it runs, then release with Stop.",
     use: "Movement and propulsion · sustained",
     labels: { throttle: "Throttle" },
     endpoints: { throttle: ["Idle", "Full thrust"] },
   },
   "tactile-click": {
     visualFamily: "pulse",
-    exportName: "tactileClick",
+    exportName: registryItem("tactile-click").meta.exportName,
+    title: registryItem("tactile-click").title,
+    description: registryItem("tactile-click").description,
     recipe: tactileClick,
-    title: "Tactile click",
-    description: "A tiny rounded contact with a restrained noise texture.",
     use: "Buttons and toggles · one-shot",
     labels: { intensity: "Click intensity" },
     endpoints: { intensity: ["Light", "Firm"] },
   },
   "gentle-rejection": {
     visualFamily: "pulse",
-    exportName: "gentleRejection",
+    exportName: registryItem("gentle-rejection").meta.exportName,
+    title: registryItem("gentle-rejection").title,
+    description: registryItem("gentle-rejection").description,
     recipe: gentleRejection,
-    title: "Gentle rejection",
-    description: "Two soft descending tones for an unavailable action.",
     use: "Unavailable actions · one-shot",
     labels: {},
     endpoints: {},
   },
   "glass-notification": {
     visualFamily: "harmonic",
-    exportName: "glassNotification",
+    exportName: registryItem("glass-notification").meta.exportName,
+    title: registryItem("glass-notification").title,
+    description: registryItem("glass-notification").description,
     recipe: glassNotification,
-    title: "Glass notification",
-    description:
-      "Four delicate partials with independent decays and a bright glass rim.",
     use: "Quiet notifications · one-shot",
     labels: { brightness: "Brightness" },
     endpoints: { brightness: ["Warm", "Brilliant"] },
   },
   whoosh: {
     visualFamily: "flow",
-    exportName: "whoosh",
+    exportName: registryItem("whoosh").meta.exportName,
+    title: registryItem("whoosh").title,
+    description: registryItem("whoosh").description,
     recipe: whoosh,
-    title: "Whoosh",
-    description:
-      "Filtered noise sweeps past with an adjustable sense of weight.",
     use: "Transitions and movement · one-shot",
     labels: { size: "Size" },
     endpoints: { size: ["Small", "Huge"] },
   },
   "power-up": {
     visualFamily: "harmonic",
-    exportName: "powerUp",
+    exportName: registryItem("power-up").meta.exportName,
+    title: registryItem("power-up").title,
+    description: registryItem("power-up").description,
     recipe: powerUp,
-    title: "Power-up",
-    description: "A rising triangle and sine halo that gather energy together.",
     use: "Rewards and pickups · one-shot",
     labels: { intensity: "Power intensity" },
     endpoints: { intensity: ["Gentle", "Charged"] },
@@ -239,7 +234,7 @@ export function quickExample(
   seed: number,
 ) {
   return `import { createAudio } from "audiobits";
-import { ${demos[kind].exportName} } from "audiobits/recipes";
+import { ${demos[kind].exportName} } from "./sounds/recipes/${kind}/recipe";
 
 const audio = createAudio();
 const sound = audio.sound(${demos[kind].exportName});

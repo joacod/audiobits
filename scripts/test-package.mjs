@@ -87,35 +87,85 @@ try {
     join(consumer, "index.ts"),
     'import { createAudio, defineSound, validateRecipe } from "audiobits"; import { confirmation, impact, thruster } from "audiobits/recipes"; const audio = createAudio(); const recipe = defineSound(confirmation); audio.sound(recipe); const dynamic = () => { const voice = audio.sound(thruster).play({ seed: 42, parameters: { throttle: 0.2 } }); voice.set({ throttle: 1 }); const bus = audio.bus("effects"); bus.setGainDb(-6, 0.1); bus.setMuted(true); bus.setParent(audio.master); audio.sound(impact).play({ bus }); const analyser = audio.native.context.createAnalyser(); const detach = audio.native.connect(analyser); detach(); analyser.disconnect(); audio.stopAll({ tails: "cut" }); bus.dispose(); const seed: number = voice.seed; audio.sound(impact).play({ parameters: { intensity: 1 }, seed }); voice.stop(); }; void dynamic; console.log(validateRecipe(recipe)); void audio.dispose();\n',
   );
-  for (const name of ["recipe.ts", "pointer.ts", "host.ts", "index.html"]) {
-    await copyFile(
-      join(root, "catalog/experiences/reactive-thruster", name),
-      join(consumer, name),
+  const registry = JSON.parse(await readFile("registry.json", "utf8"));
+  evidence.catalog = [];
+  for (const item of registry.items) {
+    // Each item has its own source tree. Sibling items cannot satisfy imports.
+    const directory = join(consumer, "items", item.name);
+    const types = [];
+    for (const file of item.files) {
+      const target = join(directory, file.target.replace(/^~\//, ""));
+      await mkdir(resolve(target, ".."), { recursive: true });
+      await copyFile(join(root, file.path), target);
+      if (target.endsWith(".ts")) types.push(target);
+    }
+    run(
+      process.execPath,
+      [
+        resolve("node_modules/typescript/bin/tsc"),
+        "--noEmit",
+        "--strict",
+        "--module",
+        "ESNext",
+        "--moduleResolution",
+        "Bundler",
+        "--target",
+        "ES2022",
+        ...types,
+      ],
+      directory,
     );
-  }
-  await mkdir(join(consumer, "energy-charge"));
-  for (const name of ["recipe.ts", "progress.ts", "host.ts", "index.html"]) {
-    await copyFile(
-      join(root, "catalog/experiences/energy-charge", name),
-      join(consumer, "energy-charge", name),
+    const recipeFile = item.files.find(
+      (file) =>
+        file.path ===
+        `catalog/${item.meta.classification === "recipe" ? "recipes" : "experiences"}/${item.name}/recipe.ts`,
     );
+    const source = join(directory, recipeFile.target.replace(/^~\//, ""));
+    await build({
+      entry: [source],
+      format: "esm",
+      platform: "node",
+      target: "es2022",
+      outDir: join(directory, "validation"),
+      dts: false,
+      clean: true,
+      external: ["audiobits"],
+    });
+    run(
+      process.execPath,
+      [
+        "--input-type=module",
+        "-e",
+        `
+      import assert from "node:assert/strict";
+      import { validateRecipe } from "audiobits";
+      import { ${item.meta.exportName} as recipe } from "./validation/recipe.mjs";
+      assert.equal(validateRecipe(recipe).ok, true);
+      ${
+        item.meta.classification === "recipe"
+          ? `
+      import { ${item.meta.exportName} as legacy } from "audiobits/recipes";
+      assert.deepEqual(recipe, legacy);`
+          : ""
+      }
+    `,
+      ],
+      directory,
+    );
+    evidence.catalog.push({
+      id: item.name,
+      files: item.files.length,
+      typecheck: "passed",
+      validation: "passed",
+    });
   }
-  run(
-    process.execPath,
-    [
-      resolve("node_modules/typescript/bin/tsc"),
-      "--noEmit",
-      "--strict",
-      "--module",
-      "ESNext",
-      "--moduleResolution",
-      "Bundler",
-      "--target",
-      "ES2022",
-      "host.ts",
-      "energy-charge/host.ts",
-    ],
+  const thrusterDirectory = join(
     consumer,
+    "items/reactive-thruster/src/sounds/experiences/reactive-thruster",
+  );
+  const energyDirectory = join(
+    consumer,
+    "items/energy-charge/src/sounds/experiences/energy-charge",
   );
   await writeFile(
     join(consumer, "authoring.types.ts"),
@@ -354,7 +404,7 @@ Object.assign(globalThis, { probe });`,
     });
   }
   await build({
-    entry: [join(consumer, "host.ts")],
+    entry: [join(thrusterDirectory, "host.ts")],
     format: "esm",
     platform: "browser",
     target: "es2022",
@@ -363,7 +413,7 @@ Object.assign(globalThis, { probe });`,
     clean: false,
   });
   await build({
-    entry: [join(consumer, "energy-charge/host.ts")],
+    entry: [join(energyDirectory, "host.ts")],
     format: "esm",
     platform: "browser",
     target: "es2022",
@@ -372,10 +422,10 @@ Object.assign(globalThis, { probe });`,
     clean: false,
   });
   const energyHtml = (
-    await readFile(join(consumer, "energy-charge/index.html"), "utf8")
+    await readFile(join(energyDirectory, "index.html"), "utf8")
   ).replace('"./host.ts"', '"./energy-charge/host.js"');
   const thrusterHtml = (
-    await readFile(join(consumer, "index.html"), "utf8")
+    await readFile(join(thrusterDirectory, "index.html"), "utf8")
   ).replace('"./host.ts"', '"./host.js"');
   const server = createServer(async (request, response) => {
     if (request.url === "/energy") {
