@@ -111,7 +111,9 @@ node tools/mcp/generate-snapshot.mjs --check
 
 Generation reads the registry and declared files at that commit, verifies they
 match the checkout, and produces deterministic metadata. `--check` reuses the
-snapshot revision and checks drift. Git is needed for generation, not execution.
+snapshot revision and checks drift. Generation and `--check` read that commit
+with Git. Running the server does not. The quality workflow fetches the pinned
+revision because its checkout is shallow.
 
 ## Verification and limitations
 

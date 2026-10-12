@@ -22,6 +22,8 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm check:skill
+      # The snapshot check reads its pinned catalog commit, which a depth-1 checkout does not contain.
+      - run: git fetch --depth=1 origin "$(jq -r .revision tools/mcp/snapshot.json)"
       - run: pnpm test:mcp
       - run: pnpm lint
       - run: pnpm typecheck
