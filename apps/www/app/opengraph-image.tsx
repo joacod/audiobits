@@ -1,14 +1,19 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { ImageResponse } from "next/og";
+import { brandColors } from "../lib/brand-colors";
 
 // Social card per the approved asset set (assets/social, brand guide v1.0).
-// ImageResponse cannot read CSS custom properties, so the card repeats the
-// Void, Ink, Mute and signal values from the `.foundation` tokens.
-const VOID = "#050507";
-const INK = "#f2f2f2";
-const MUTE = "#8a8a92";
-const SIGNAL = ["#2a6cff", "#b44cff", "#ff2e88"] as const;
+// ImageResponse cannot read CSS custom properties; brandColors mirrors the
+// `.foundation` tokens and a unit test keeps them in sync.
+const VOID = brandColors.void;
+const INK = brandColors.ink;
+const MUTE = brandColors.mute;
+const SIGNAL = [
+  brandColors["signal-low"],
+  brandColors["signal-mid"],
+  brandColors["signal-high"],
+] as const;
 
 // PLACEHOLDER copy pending Positioning/Voice. Replace with the real line.
 const TAGLINE = "sound driven by state, for the web";
