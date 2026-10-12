@@ -1,240 +1,186 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-11T12:00:00Z",
-  "title": "Design System: AudioBits showcase",
+  "generatedAt": "2026-10-11T23:59:00Z",
+  "title": "Design System: audiobits showcase (Live Signal)",
   "extensions": {
     "colorMeta": {
-      "paper": {
+      "void": {
         "role": "neutral",
-        "displayName": "Warm paper",
+        "displayName": "Void",
+        "value": "#050507",
         "tonalRamp": [
-          "oklch(15% 0.0137 92.98)",
-          "oklch(27% 0.0137 92.98)",
-          "oklch(38% 0.0137 92.98)",
-          "oklch(50% 0.0137 92.98)",
-          "oklch(61% 0.0137 92.98)",
-          "oklch(73% 0.0137 92.98)",
-          "oklch(84% 0.0137 92.98)",
-          "oklch(95% 0.0137 92.98)"
+          "oklch(15% 0.0062 285.40)",
+          "oklch(27% 0.0062 285.40)",
+          "oklch(38% 0.0062 285.40)",
+          "oklch(50% 0.0062 285.40)",
+          "oklch(61% 0.0062 285.40)",
+          "oklch(73% 0.0062 285.40)",
+          "oklch(84% 0.0062 285.40)",
+          "oklch(95% 0.0062 285.40)"
         ]
       },
       "ink": {
         "role": "neutral",
-        "displayName": "Green ink",
+        "displayName": "Ink",
+        "value": "#f2f2f2",
         "tonalRamp": [
-          "oklch(15% 0.0350 166.20)",
-          "oklch(27% 0.0350 166.20)",
-          "oklch(38% 0.0350 166.20)",
-          "oklch(50% 0.0350 166.20)",
-          "oklch(61% 0.0350 166.20)",
-          "oklch(73% 0.0350 166.20)",
-          "oklch(84% 0.0350 166.20)",
-          "oklch(95% 0.0350 166.20)"
+          "oklch(15% 0.0000 89.88)",
+          "oklch(27% 0.0000 89.88)",
+          "oklch(38% 0.0000 89.88)",
+          "oklch(50% 0.0000 89.88)",
+          "oklch(61% 0.0000 89.88)",
+          "oklch(73% 0.0000 89.88)",
+          "oklch(84% 0.0000 89.88)",
+          "oklch(95% 0.0000 89.88)"
         ]
       },
-      "quiet": {
+      "mute": {
         "role": "neutral",
-        "displayName": "Quiet green",
+        "displayName": "Mute",
+        "value": "#8a8a92",
         "tonalRamp": [
-          "oklch(15% 0.0254 153.56)",
-          "oklch(27% 0.0254 153.56)",
-          "oklch(38% 0.0254 153.56)",
-          "oklch(50% 0.0254 153.56)",
-          "oklch(61% 0.0254 153.56)",
-          "oklch(73% 0.0254 153.56)",
-          "oklch(84% 0.0254 153.56)",
-          "oklch(95% 0.0254 153.56)"
+          "oklch(15% 0.0118 286.06)",
+          "oklch(27% 0.0118 286.06)",
+          "oklch(38% 0.0118 286.06)",
+          "oklch(50% 0.0118 286.06)",
+          "oklch(61% 0.0118 286.06)",
+          "oklch(73% 0.0118 286.06)",
+          "oklch(84% 0.0118 286.06)",
+          "oklch(95% 0.0118 286.06)"
         ]
       },
-      "rule": {
+      "graphite": {
         "role": "neutral",
-        "displayName": "Sage rule",
+        "displayName": "Graphite",
+        "value": "#1b1c1e",
         "tonalRamp": [
-          "oklch(15% 0.0218 134.12)",
-          "oklch(27% 0.0218 134.12)",
-          "oklch(38% 0.0218 134.12)",
-          "oklch(50% 0.0218 134.12)",
-          "oklch(61% 0.0218 134.12)",
-          "oklch(73% 0.0218 134.12)",
-          "oklch(84% 0.0218 134.12)",
-          "oklch(95% 0.0218 134.12)"
+          "oklch(15% 0.0041 264.49)",
+          "oklch(27% 0.0041 264.49)",
+          "oklch(38% 0.0041 264.49)",
+          "oklch(50% 0.0041 264.49)",
+          "oklch(61% 0.0041 264.49)",
+          "oklch(73% 0.0041 264.49)",
+          "oklch(84% 0.0041 264.49)",
+          "oklch(95% 0.0041 264.49)"
         ]
       },
-      "accent": {
+      "graphite-edge": {
+        "role": "neutral",
+        "displayName": "Graphite edge",
+        "value": "#34363a",
+        "tonalRamp": [
+          "oklch(15% 0.0075 264.47)",
+          "oklch(27% 0.0075 264.47)",
+          "oklch(38% 0.0075 264.47)",
+          "oklch(50% 0.0075 264.47)",
+          "oklch(61% 0.0075 264.47)",
+          "oklch(73% 0.0075 264.47)",
+          "oklch(84% 0.0075 264.47)",
+          "oklch(95% 0.0075 264.47)"
+        ]
+      },
+      "signal-low": {
         "role": "primary",
-        "displayName": "Brass",
+        "displayName": "Signal low",
+        "value": "#2a6cff",
         "tonalRamp": [
-          "oklch(15% 0.1247 87.02)",
-          "oklch(27% 0.1247 87.02)",
-          "oklch(38% 0.1247 87.02)",
-          "oklch(50% 0.1247 87.02)",
-          "oklch(61% 0.1247 87.02)",
-          "oklch(73% 0.1247 87.02)",
-          "oklch(84% 0.1247 87.02)",
-          "oklch(95% 0.1247 87.02)"
+          "oklch(15% 0.2288 263.01)",
+          "oklch(27% 0.2288 263.01)",
+          "oklch(38% 0.2288 263.01)",
+          "oklch(50% 0.2288 263.01)",
+          "oklch(61% 0.2288 263.01)",
+          "oklch(73% 0.2288 263.01)",
+          "oklch(84% 0.2288 263.01)",
+          "oklch(95% 0.2288 263.01)"
         ]
       },
-      "signal": {
+      "signal-mid": {
         "role": "primary",
-        "displayName": "Pale signal brass",
+        "displayName": "Signal mid",
+        "value": "#b44cff",
         "tonalRamp": [
-          "oklch(15% 0.1009 88.69)",
-          "oklch(27% 0.1009 88.69)",
-          "oklch(38% 0.1009 88.69)",
-          "oklch(50% 0.1009 88.69)",
-          "oklch(61% 0.1009 88.69)",
-          "oklch(73% 0.1009 88.69)",
-          "oklch(84% 0.1009 88.69)",
-          "oklch(95% 0.1009 88.69)"
+          "oklch(15% 0.2540 307.08)",
+          "oklch(27% 0.2540 307.08)",
+          "oklch(38% 0.2540 307.08)",
+          "oklch(50% 0.2540 307.08)",
+          "oklch(61% 0.2540 307.08)",
+          "oklch(73% 0.2540 307.08)",
+          "oklch(84% 0.2540 307.08)",
+          "oklch(95% 0.2540 307.08)"
         ]
       },
-      "code": {
-        "role": "neutral",
-        "displayName": "Code paper",
+      "signal-high": {
+        "role": "primary",
+        "displayName": "Signal high",
+        "value": "#ff2e88",
         "tonalRamp": [
-          "oklch(15% 0.0148 98.30)",
-          "oklch(27% 0.0148 98.30)",
-          "oklch(38% 0.0148 98.30)",
-          "oklch(50% 0.0148 98.30)",
-          "oklch(61% 0.0148 98.30)",
-          "oklch(73% 0.0148 98.30)",
-          "oklch(84% 0.0148 98.30)",
-          "oklch(95% 0.0148 98.30)"
-        ]
-      },
-      "focus": {
-        "role": "neutral",
-        "displayName": "Dark ochre",
-        "tonalRamp": [
-          "oklch(15% 0.0957 87.44)",
-          "oklch(27% 0.0957 87.44)",
-          "oklch(38% 0.0957 87.44)",
-          "oklch(50% 0.0957 87.44)",
-          "oklch(61% 0.0957 87.44)",
-          "oklch(73% 0.0957 87.44)",
-          "oklch(84% 0.0957 87.44)",
-          "oklch(95% 0.0957 87.44)"
-        ]
-      },
-      "focus-bench": {
-        "role": "neutral",
-        "displayName": "Dark ochre",
-        "tonalRamp": [
-          "oklch(15% 0.0957 87.44)",
-          "oklch(27% 0.0957 87.44)",
-          "oklch(38% 0.0957 87.44)",
-          "oklch(50% 0.0957 87.44)",
-          "oklch(61% 0.0957 87.44)",
-          "oklch(73% 0.0957 87.44)",
-          "oklch(84% 0.0957 87.44)",
-          "oklch(95% 0.0957 87.44)"
-        ]
-      },
-      "instrument-line": {
-        "role": "neutral",
-        "displayName": "Instrument line",
-        "tonalRamp": [
-          "oklch(15% 0.028 150)",
-          "oklch(27% 0.028 150)",
-          "oklch(38% 0.028 150)",
-          "oklch(50% 0.028 150)",
-          "oklch(61% 0.028 150)",
-          "oklch(73% 0.028 150)",
-          "oklch(84% 0.028 150)",
-          "oklch(95% 0.028 150)"
-        ]
-      },
-      "instrument-quiet": {
-        "role": "neutral",
-        "displayName": "Pale instrument green",
-        "tonalRamp": [
-          "oklch(15% 0.02 145)",
-          "oklch(27% 0.02 145)",
-          "oklch(38% 0.02 145)",
-          "oklch(50% 0.02 145)",
-          "oklch(61% 0.02 145)",
-          "oklch(73% 0.02 145)",
-          "oklch(84% 0.02 145)",
-          "oklch(95% 0.02 145)"
-        ]
-      },
-      "instrument-well": {
-        "role": "neutral",
-        "displayName": "Instrument well",
-        "tonalRamp": [
-          "oklch(15% 0.03 165)",
-          "oklch(27% 0.03 165)",
-          "oklch(38% 0.03 165)",
-          "oklch(50% 0.03 165)",
-          "oklch(61% 0.03 165)",
-          "oklch(73% 0.03 165)",
-          "oklch(84% 0.03 165)",
-          "oklch(95% 0.03 165)"
-        ]
-      },
-      "instrument-hover": {
-        "role": "neutral",
-        "displayName": "Instrument hover",
-        "tonalRamp": [
-          "oklch(15% 0.032 165)",
-          "oklch(27% 0.032 165)",
-          "oklch(38% 0.032 165)",
-          "oklch(50% 0.032 165)",
-          "oklch(61% 0.032 165)",
-          "oklch(73% 0.032 165)",
-          "oklch(84% 0.032 165)",
-          "oklch(95% 0.032 165)"
+          "oklch(15% 0.2444 1.68)",
+          "oklch(27% 0.2444 1.68)",
+          "oklch(38% 0.2444 1.68)",
+          "oklch(50% 0.2444 1.68)",
+          "oklch(61% 0.2444 1.68)",
+          "oklch(73% 0.2444 1.68)",
+          "oklch(84% 0.2444 1.68)",
+          "oklch(95% 0.2444 1.68)"
         ]
       }
     },
     "typographyMeta": {
       "display": {
         "displayName": "Display",
-        "purpose": "Page headings."
+        "purpose": "Home headline. Big Shoulders Display 900, uppercase."
       },
       "headline": {
         "displayName": "Headline",
-        "purpose": "Catalog and experience page headings."
+        "purpose": "Page and section headings. Big Shoulders Display 800, uppercase."
       },
-      "section": {
-        "displayName": "Section",
-        "purpose": "Homepage section headings."
-      },
-      "title": {
-        "displayName": "Title",
-        "purpose": "Sound specimen headings."
+      "catalog-heading": {
+        "displayName": "Catalog heading",
+        "purpose": "Catalog and workbench page names."
       },
       "wordmark": {
         "displayName": "Wordmark",
-        "purpose": "Shared header name."
+        "purpose": "audiobits, lowercase, Big Shoulders Display 800, beside the mark."
       },
       "nav": {
         "displayName": "Navigation",
-        "purpose": "Shared header links."
+        "purpose": "Shared header links, lowercase Geist Mono."
       },
       "body": {
         "displayName": "Body",
-        "purpose": "Explanation and general content."
-      },
-      "button": {
-        "displayName": "Button",
-        "purpose": "Playback and ordinary actions."
+        "purpose": "Explanation and instrument copy in Geist Mono."
       },
       "label": {
         "displayName": "Label",
-        "purpose": "Control labels with tabular values."
+        "purpose": "Uppercase mono workbench labels with tracking."
       },
       "code": {
         "displayName": "Code",
-        "purpose": "Inspectable integration snippets."
+        "purpose": "Install command and source panels in Geist Mono."
       }
     },
-    "shadows": [],
+    "shadows": [
+      {
+        "name": "panel-highlight",
+        "value": "inset 0 1px 0 var(--graphite-edge)",
+        "purpose": "Single top highlight on workbench panels."
+      }
+    ],
     "motion": [
       {
         "name": "control-state",
         "value": "160ms ease-out",
         "purpose": "Background and border-color transitions; removed for reduced motion."
+      },
+      {
+        "name": "live-waveform",
+        "value": "per animation frame while audio runs",
+        "purpose": "Hero and workbench scopes draw real output samples; still mark or cleared canvas at rest, hidden, offscreen or reduced motion."
+      },
+      {
+        "name": "led-meter",
+        "value": "per animation frame while audio runs",
+        "purpose": "Lights segments to the current output level; keeps updating under reduced motion."
       },
       {
         "name": "play-spark",
@@ -253,128 +199,75 @@
     {
       "name": "Play",
       "kind": "button",
-      "refersTo": "button-play",
-      "description": "Brass playback action with native focus and disabled states.",
+      "refersTo": "button-primary",
+      "description": "Primary playback action: Ink fill, Void text, inverts on hover.",
       "html": "<button class=\"ds-play\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 14 14\" aria-hidden=\"true\"><path d=\"M3 1.5 12 7 3 12.5Z\" fill=\"currentColor\"/></svg>Play impact</button>",
-      "css": ".ds-play{font-family:Arial,sans-serif;color:var(--ink, #243c32);display:inline-flex;align-items:center;justify-content:center;gap:.6rem;min-height:44px;padding:.5rem .9rem;border-radius:4px;font-size:.875rem;line-height:1.3;cursor:pointer;transition:background 160ms ease-out,border-color 160ms ease-out;background:var(--accent, #e0b856);border:1px solid transparent;font-weight:600}.ds-play:enabled:hover{background:var(--signal, #ecce82)}.ds-play:focus-visible{outline:3px solid var(--focus, #715600);outline-offset:4px;}.ds-play:disabled{opacity:.5;cursor:default}@media(prefers-reduced-motion:reduce){.ds-play{transition:none}}"
+      "css": ".ds-play{font-family:var(--font-mono);display:inline-flex;align-items:center;justify-content:center;gap:.6rem;min-height:44px;padding:.5rem .9rem;border-radius:4px;font-size:.875rem;line-height:1.3;cursor:pointer;transition:background 160ms ease-out,border-color 160ms ease-out;background:var(--ink);color:var(--void);border:1px solid var(--ink)}.ds-play:enabled:hover{background:var(--void);color:var(--ink)}.ds-play:focus-visible{outline:3px solid var(--ink);outline-offset:4px}.ds-play:disabled{opacity:.5;cursor:default}@media(prefers-reduced-motion:reduce){.ds-play{transition:none}}"
     },
     {
       "name": "Secondary action",
       "kind": "button",
       "refersTo": "button-secondary",
-      "description": "Ordinary action; the brass variant also represents a pressed state.",
+      "description": "Ordinary action with a Graphite edge.",
       "html": "<button class=\"ds-secondary\">Stop all</button>",
-      "css": ".ds-secondary{font-family:Arial,sans-serif;color:var(--ink, #243c32);display:inline-flex;align-items:center;justify-content:center;gap:.6rem;min-height:44px;padding:.5rem .9rem;border-radius:4px;font-size:.875rem;line-height:1.3;cursor:pointer;transition:background 160ms ease-out,border-color 160ms ease-out;background:transparent;border:1px solid var(--rule, #b8c1b3)}.ds-secondary:enabled:hover{background:var(--code, #e8e6db);border-color:var(--ink, #243c32)}.ds-secondary[aria-pressed=\"true\"]{background:var(--accent, #e0b856);border-color:transparent;font-weight:600}.ds-secondary[aria-pressed=\"true\"]:enabled:hover{background:var(--signal, #ecce82)}.ds-secondary:focus-visible{outline:3px solid var(--focus, #715600);outline-offset:4px;}.ds-secondary:disabled{opacity:.5;cursor:default}@media(prefers-reduced-motion:reduce){.ds-secondary{transition:none}}"
+      "css": ".ds-secondary{font-family:var(--font-mono);display:inline-flex;align-items:center;justify-content:center;gap:.6rem;min-height:44px;padding:.5rem .9rem;border-radius:4px;font-size:.875rem;line-height:1.3;cursor:pointer;transition:background 160ms ease-out,border-color 160ms ease-out;background:transparent;color:var(--ink);border:1px solid var(--graphite-edge)}.ds-secondary:enabled:hover{background:var(--graphite)}.ds-secondary:focus-visible{outline:3px solid var(--ink);outline-offset:4px}"
     },
     {
-      "name": "Seed field",
-      "kind": "input",
-      "refersTo": "input-number",
-      "description": "Native numeric field with tabular values.",
-      "html": "<label class=\"ds-seed\">Seed <input type=\"number\" value=\"42\" aria-label=\"Seed\"/></label>",
-      "css": ".ds-seed{font-family:Arial,sans-serif;color:var(--ink, #243c32);display:block;font-size:.9rem}.ds-seed input{font-family:Arial,sans-serif;color:var(--ink, #243c32);font-variant-numeric:tabular-nums;width:8rem;max-width:100%;min-height:44px;border:1px solid var(--rule, #b8c1b3);border-radius:4px;padding:.4rem .6rem;background:var(--paper, #f3f0e6);caret-color:var(--ink, #243c32)}.ds-seed input:focus-visible{outline:3px solid var(--focus, #715600);outline-offset:4px;}"
+      "name": "Workbench panel",
+      "kind": "surface",
+      "refersTo": "workbench-panel",
+      "description": "Graphite hardware panel for the stage and playback group.",
+      "html": "<section class=\"ds-panel\"><span class=\"ds-label\">Effects volume</span></section>",
+      "css": ".ds-panel{background:var(--graphite);border:1px solid var(--graphite-edge);border-radius:6px;box-shadow:inset 0 1px 0 var(--graphite-edge);padding:1rem}.ds-label{font:500 .72rem var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--mute)}"
     },
     {
-      "name": "Recipe editor",
-      "kind": "input",
-      "refersTo": "recipe-editor",
-      "description": "Plain editable recipe data, with native scrolling.",
-      "html": "<label class=\"ds-editor\">Recipe JSON<textarea aria-label=\"Recipe JSON\">{\n  \"schemaVersion\": 1\n}</textarea></label>",
-      "css": ".ds-editor{font-family:Arial,sans-serif;color:var(--ink, #243c32);display:block;font-size:.9rem}.ds-editor textarea{display:block;width:100%;min-height:24rem;padding:.75rem;border:1px solid var(--rule, #b8c1b3);border-radius:4px;background:var(--paper, #f3f0e6);color:var(--ink, #243c32);caret-color:var(--ink, #243c32);font-family:monospace;font-size:.85rem;font-variant-numeric:tabular-nums;scrollbar-color:var(--quiet, #536257) var(--paper, #f3f0e6)}.ds-editor textarea:focus-visible{outline:3px solid var(--focus, #715600);outline-offset:4px;}"
+      "name": "LED meter",
+      "kind": "meter",
+      "refersTo": "led-meter",
+      "description": "Sixteen segments lit to the current output level with the signal gradient.",
+      "html": "<span class=\"ds-led\" style=\"--level:.6\" aria-hidden=\"true\"></span>",
+      "css": ".ds-led{--segments:16;display:block;height:.6rem;background:linear-gradient(90deg,var(--signal-low),var(--signal-mid) 60%,var(--signal-high)) 0 0/calc(var(--level,0)*100%) 100% no-repeat,var(--graphite-edge);mask:repeating-linear-gradient(90deg,#000 0 calc(100%/var(--segments) - 3px),transparent calc(100%/var(--segments) - 3px) calc(100%/var(--segments)))}"
     },
     {
-      "name": "Site header",
-      "kind": "nav",
-      "refersTo": "site-header",
-      "description": "Shared ink header for showcase routes. Catalog points at the sound collection.",
-      "html": "<header class=\"ds-header\"><nav class=\"ds-nav\" aria-label=\"Main navigation\"><a class=\"ds-wordmark\" href=\"#\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><circle class=\"ds-core\" cx=\"12\" cy=\"12\" r=\"3.1\"/><circle cx=\"12\" cy=\"12\" r=\"7.25\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"/><circle cx=\"12\" cy=\"12\" r=\"11\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"/></svg>AudioBits</a><div class=\"ds-links\"><a href=\"#\" aria-current=\"page\">Home</a><a href=\"#sounds\">Catalog</a><a href=\"#docs\">Docs</a><a href=\"#github\">GitHub</a></div></nav></header>",
-      "css": ".ds-header{background:var(--ink,#243c32);color:var(--paper,#f3f0e6);font-family:Arial,sans-serif}.ds-nav{display:flex;flex-wrap:wrap;align-items:center;gap:.25rem 1rem;padding:.35rem 1.5rem}.ds-links{display:flex;flex-wrap:wrap;gap:.15rem 1.1rem;margin-left:auto}.ds-nav a{color:var(--paper,#f3f0e6);display:inline-flex;align-items:center;gap:.45rem;min-height:44px;font-size:.95rem;text-decoration:none}.ds-nav a:hover{color:var(--signal,#ecce82)}.ds-nav a[aria-current=page]{color:var(--signal,#ecce82);text-decoration:underline;text-underline-offset:.45rem}.ds-nav a:focus-visible{outline:3px solid var(--signal,#ecce82);outline-offset:4px}.ds-wordmark{font-family:Fraunces,Georgia,serif;font-size:1.35rem;font-weight:520;letter-spacing:-.03em}.ds-wordmark:hover{color:var(--paper,#f3f0e6)}.ds-core{fill:var(--accent,#e0b856)}.ds-wordmark:hover .ds-core{fill:var(--signal,#ecce82)}@media(max-width:760px){.ds-links{flex-basis:100%;margin-left:0}}"
-    },
-    {
-      "name": "Install command",
-      "kind": "custom",
-      "refersTo": "install-command",
-      "description": "Exact npm install command on code paper, with a copy control.",
-      "html": "<div class=\"ds-install\"><code>npm install audiobits</code><button type=\"button\">Copy</button></div>",
-      "css": ".ds-install{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem .75rem;font-family:Arial,sans-serif}.ds-install code{background:var(--code,#e8e6db);color:var(--ink,#243c32);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.85rem;line-height:1.4;padding:.5rem .75rem;border-radius:4px}.ds-install button{min-height:44px;padding:.5rem .9rem;border:1px solid var(--instrument-line,#768b7d);border-radius:4px;background:transparent;color:var(--paper,#f3f0e6);font-size:.875rem;cursor:pointer}.ds-install button:hover{background:var(--signal,#ecce82);color:var(--ink,#243c32);border-color:var(--signal,#ecce82)}.ds-install button:focus-visible{outline:3px solid var(--signal,#ecce82);outline-offset:4px}"
-    },
-    {
-      "name": "Specimen entry",
-      "kind": "card",
-      "refersTo": "specimen-entry",
-      "description": "Light ruled collection entry; deep inspection belongs to the detail workbench.",
-      "html": "<article class=\"ds-specimen\"><div><h3>Impact</h3><p>A hit with character.</p></div><p>Play, vary, then open the workbench.</p></article>",
-      "css": ".ds-specimen{font-family:Arial,sans-serif;color:var(--ink, #243c32);display:grid;grid-template-columns:minmax(0,1fr);gap:.75rem;padding:2.5rem 0;border-top:1px solid var(--rule, #b8c1b3);background:var(--paper, #f3f0e6)}.ds-specimen h3{font-family:Fraunces,Georgia,serif;font-weight:450;font-size:2.5rem;line-height:1.15;letter-spacing:-.02em;margin:0}.ds-specimen p{font-size:.9rem;line-height:1.55}@media(max-width:760px){.ds-specimen{grid-template-columns:minmax(0,1fr);gap:1.5rem;padding:2rem 0}.ds-specimen h3{font-size:2rem}}"
-    },
-    {
-      "name": "Output scope",
-      "kind": "custom",
-      "refersTo": "output-scope",
-      "description": "Static preview of the monitor waveform; the live app reads native analyser output.",
-      "html": "<figure class=\"ds-scope\"><figcaption>Play to see the generated signal</figcaption><svg class=\"ds-baseline\" viewBox=\"0 0 900 128\" role=\"img\" aria-label=\"Idle baseline\"><path d=\"M0 64H900\" stroke=\"currentColor\" fill=\"none\"/></svg></figure>",
-      "css": ".ds-scope{font-family:Arial,sans-serif;background:var(--ink, #243c32);color:var(--paper, #f3f0e6);margin:0;padding:1.25rem 1.5rem}.ds-scope figcaption{font-size:.75rem}.ds-baseline{display:block;width:100%;height:clamp(5rem,12vw,10rem);color:var(--signal, #ecce82);margin-top:.75rem}@media(max-width:760px){.ds-scope{padding:.75rem}.ds-scope figcaption{font-size:.7rem}.ds-baseline{height:3rem;margin-top:.5rem}}"
-    },
-    {
-      "name": "Code panel",
-      "kind": "custom",
-      "refersTo": "code-panel",
-      "description": "Plain code on a slightly darker paper tone.",
-      "html": "<pre class=\"ds-code\"><code>const hit = audio.sound(impact);\nhit.play({ parameters: { intensity: 0.80 } });</code></pre>",
-      "css": ".ds-code{background:var(--code, #e8e6db);color:var(--ink, #243c32);font-family:monospace;padding:1.25rem;max-width:100%;overflow:auto;font-size:.8rem;line-height:1.7;border-radius:4px;scrollbar-color:var(--quiet, #536257) var(--code, #e8e6db);scrollbar-width:thin}"
-    },
-    {
-      "name": "Sound parameter",
-      "kind": "input",
-      "description": "Native labelled range with tabular value and timing explanation.",
-      "html": "<label class=\"ds-range\">Intensity: 0.80<input type=\"range\" min=\"0\" max=\"1\" step=\"0.01\" value=\"0.8\" aria-label=\"Intensity\"/><span>Applies on the next Play</span></label>",
-      "css": ".ds-range{font-family:Arial,sans-serif;color:var(--ink, #243c32);display:block;margin:1rem 0;font-size:.9rem;font-variant-numeric:tabular-nums}.ds-range input{display:block;width:100%;max-width:28rem;height:44px;accent-color:var(--ink, #243c32);cursor:pointer}.ds-range input:focus-visible{outline:3px solid var(--focus, #715600);outline-offset:4px;}.ds-range span{display:block;margin-top:.5rem;font-size:.75rem;color:var(--quiet, #536257)}"
+      "name": "Mark",
+      "kind": "brand",
+      "refersTo": "mark",
+      "description": "Waveform mark; small variant at 32 px and below; mono Ink as the resting frame.",
+      "html": "<svg width=\"28\" height=\"28\" viewBox=\"0 0 64 64\" aria-hidden=\"true\"><rect width=\"64\" height=\"64\" rx=\"14\" fill=\"var(--void)\"/><path d=\"M9 36 C16 36 24 44 30 44 S39 11 45 11 S51 53 55 53\" fill=\"none\" stroke=\"var(--signal-mid)\" stroke-width=\"8\" stroke-linecap=\"round\"/></svg>",
+      "css": ""
     }
   ],
   "narrative": {
-    "northStar": "The charge housing",
-    "overview": "The homepage is one mineral-green housing. The header and the Energy Charge hero share that field, so the instrument is the first thing a visitor can hold. Warm paper is reserved for labels, code, and the footer plate. Brass marks charge and primary playback. Pale signal marks action and focus while the ground is green.\n\nCatalog and experience routes keep their paper benches and their existing workbench layouts. They share the same header, type, controls, and tokens. Documentation stays on Fumadocs and does not inherit the housing. Fraunces remains the voice because the charge numeral and the headline already use it.",
+    "northStar": "Live Signal",
+    "overview": "The waveform is the logo and moves only when sound moves. Dark-first: Void ground, Ink text, Mute secondary. The blue, violet and magenta signal gradient belongs to live elements and the mark. Big Shoulders Display headlines, Geist Mono UI. The workbench borrows hardware panel controls: graphite panels, knob-capped faders and LED meters. Fumadocs keeps its own theme.",
     "keyCharacteristics": [
-      "Mineral-green housing on the homepage, warm paper on catalog and experience benches.",
-      "Brass for charge, Play, and pressed controls. Pale signal for housing focus, current navigation, and primary text actions.",
-      "Fraunces for the voice, Arial for controls, monospace only for code.",
-      "Hairline rules and flat surfaces. No cards, glass, neon, or shadows.",
-      "One live Energy Charge engine on the homepage. Supporting previews stay static."
+      "Void #050507, Ink #F2F2F2, Mute #8A8A92.",
+      "Signal gradient #2A6CFF to #B44CFF to #FF2E88 only on live elements and the mark.",
+      "Big Shoulders Display 800/900 headlines, Geist Mono UI and body.",
+      "Live waveform from real samples; the still mark at rest.",
+      "Graphite workbench panels with LED meters."
     ],
     "rules": [
       {
-        "name": "The Housing Rule",
-        "body": "The homepage ground is ink. Paper is for labels, code, and the footer plate. Do not paint the catalog or a workbench as a second dark marketing page.",
+        "name": "The Live Rule",
+        "body": "The gradient appears only while audio or state is above rest. At rest, fall back to Mute, Ink or Graphite edge.",
         "section": "colors"
       },
       {
-        "name": "The Brass State Rule",
-        "body": "Use brass for Play, the hold meter, and pressed controls. Ordinary actions stay transparent with a fine rule.",
-        "section": "colors"
+        "name": "The Honest Waveform Rule",
+        "body": "Nothing is presented as a live waveform unless it draws real output samples. Idle shows the still mark.",
+        "section": "components"
       },
       {
-        "name": "The Voice Rule",
-        "body": "Fraunces is for the voice and the charge numeral. Arial is for controls. Monospace is only for code.",
-        "section": "typography"
+        "name": "The Gesture Rule",
+        "body": "Audio starts only from a user gesture.",
+        "section": "components"
       },
       {
-        "name": "The Ruled Surface Rule",
-        "body": "Separate sections and specimens with hairline rules. Do not add floating-card shadows, glass, or a second decorative field behind the charge well.",
-        "section": "elevation"
+        "name": "The Still Rule",
+        "body": "Motion only follows sound or state. Reduced motion keeps the waveform still; meters may update.",
+        "section": "motion"
       }
-    ],
-    "dos": [
-      "Do keep Hold to charge as the homepage's primary action, with Explore the catalog and Start building as the text actions.",
-      "Do take the package version from generated metadata.",
-      "Do keep keyboard and touch targets at least (44px), including header, copy, and footer actions.",
-      "Do reset paper-surface focus to ochre wherever the housing has switched focus to signal.",
-      "Do let code wrap or scroll inside its own panel."
-    ],
-    "donts": [
-      "Don't mount a second live audio engine on the homepage.",
-      "Don't autoplay, rotate the hero, or add a decorative effect that competes with the charge well.",
-      "Don't restyle Fumadocs with the showcase housing.",
-      "Don't invent performance, package-size, adoption, or popularity claims.",
-      "Don't replace Fraunces on the charge numeral or the homepage headline. The face is part of the instrument."
     ]
   }
 }

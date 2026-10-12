@@ -4,11 +4,51 @@
 @import "fumadocs-ui/css/neutral.css";
 @import "fumadocs-ui/css/preset.css";
 
-@font-face {
-  font-family: "Fraunces";
-  src: url("/fonts/fraunces.ttf") format("truetype");
-  font-weight: 100 900;
-  font-display: swap;
+@layer tokens {
+  :root {
+    /* Live Signal identity, GUIDE v1.0. The only place colour and type values live. */
+    --void: #050507;
+    --ink: #f2f2f2;
+    --mute: #8a8a92;
+    --graphite: #1b1c1e;
+    --graphite-edge: #34363a;
+    --signal-low: #2a6cff;
+    --signal-mid: #b44cff;
+    --signal-high: #ff2e88;
+    --signal-gradient: linear-gradient(
+      90deg,
+      var(--signal-low),
+      var(--signal-mid) 60%,
+      var(--signal-high)
+    );
+    --font-display:
+      var(--font-big-shoulders), "Arial Narrow", "Helvetica Neue", sans-serif;
+    --font-mono:
+      var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Consolas,
+      monospace;
+  }
+}
+
+/* Fumadocs theme mapped to Live Signal (dark theme only; docs default to dark).
+   Unlayered so it follows fumadocs-ui's own unlayered .dark rule. */
+:root.dark,
+.dark #nd-sidebar {
+  --color-fd-background: var(--void);
+  --color-fd-foreground: var(--ink);
+  --color-fd-muted: var(--graphite);
+  --color-fd-muted-foreground: var(--mute);
+  --color-fd-popover: var(--graphite);
+  --color-fd-popover-foreground: var(--ink);
+  --color-fd-card: var(--graphite);
+  --color-fd-card-foreground: var(--ink);
+  --color-fd-border: var(--graphite-edge);
+  --color-fd-primary: var(--ink);
+  --color-fd-primary-foreground: var(--void);
+  --color-fd-secondary: var(--graphite);
+  --color-fd-secondary-foreground: var(--ink);
+  --color-fd-accent: var(--graphite-edge);
+  --color-fd-accent-foreground: var(--ink);
+  --color-fd-ring: var(--mute);
 }
 
 @layer base {
@@ -19,44 +59,28 @@
 
 @layer components {
   .foundation {
-    --paper: #f3f0e6;
-    --ink: #243c32;
-    --quiet: #536257;
-    --rule: #b8c1b3;
-    --accent: #e0b856;
-    --signal: #ecce82;
-    --code: #e8e6db;
-    --focus: #715600;
-    --focus-bench: #715600;
-    --instrument-line: #768b7d;
-    --instrument-quiet: #cfdbcf;
-    --instrument-well: #1a2c24;
-    --instrument-hover: #344e40;
-    --font-display: "Fraunces", Georgia, serif;
-    --font-ui: Arial, sans-serif;
-    --font-code: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     --gutter: max(1.5rem, calc((100vw - 76rem) / 2));
     --gap: 1.5rem;
     --control-radius: 4px;
     --motion-ui: 160ms;
-    background: var(--paper);
+    background: var(--void);
     color: var(--ink);
     min-height: 100vh;
     padding: 0 var(--gutter) 3rem;
-    font-family: var(--font-ui);
+    font-family: var(--font-mono);
     font-size: 1rem;
     line-height: 1.55;
-    color-scheme: light;
+    color-scheme: dark;
   }
   .foundation * {
     box-sizing: border-box;
   }
   .foundation ::selection {
     background: var(--ink);
-    color: var(--paper);
+    color: var(--void);
   }
   .foundation :focus-visible {
-    outline: 3px solid var(--focus);
+    outline: 3px solid var(--ink);
     outline-offset: 4px;
   }
   .foundation a {
@@ -74,24 +98,26 @@
   .foundation h2,
   .foundation h3 {
     font-family: var(--font-display);
-    font-weight: 450;
+    font-weight: 800;
+    text-transform: uppercase;
     text-wrap: balance;
   }
   .foundation h1 {
-    font-size: clamp(3rem, 7.5vw, 6rem);
-    line-height: 1.05;
-    letter-spacing: -0.035em;
+    font-size: clamp(3.5rem, 11vw, 9rem);
+    font-weight: 900;
+    line-height: 0.86;
+    letter-spacing: -0.01em;
     margin: 0;
   }
   .foundation h2 {
     font-size: clamp(2rem, 4vw, 3.4rem);
-    line-height: 1.12;
-    letter-spacing: -0.025em;
+    line-height: 0.95;
+    letter-spacing: 0;
   }
   .foundation h3 {
     font-size: 2.5rem;
-    line-height: 1.15;
-    letter-spacing: -0.02em;
+    line-height: 0.95;
+    letter-spacing: 0;
     margin: 0;
   }
   .foundation h4 {
@@ -105,10 +131,9 @@
   .foundation .site-header {
     margin: 0 calc(var(--gutter) * -1);
     padding: 0 var(--gutter);
-    background: var(--ink);
-    color: var(--paper);
+    background: var(--void);
+    color: var(--ink);
     color-scheme: dark;
-    --focus: var(--signal);
   }
   .foundation .site-nav {
     display: flex;
@@ -129,35 +154,33 @@
     align-items: center;
     min-height: 44px;
     gap: 0.45rem;
-    color: var(--paper);
-    font-size: 0.95rem;
+    color: var(--mute);
+    font-size: 0.85rem;
+    text-transform: lowercase;
     text-decoration: none;
     transition: color var(--motion-ui) ease-out;
   }
   .foundation .site-header a:hover {
-    color: var(--signal);
+    color: var(--ink);
   }
   .foundation .site-header a[aria-current="page"] {
-    color: var(--signal);
+    color: var(--ink);
     text-decoration: underline;
     text-decoration-thickness: 2px;
     text-underline-offset: 0.45rem;
   }
   .foundation .site-header .wordmark {
     font-family: var(--font-display);
-    font-size: 1.35rem;
-    font-weight: 520;
-    letter-spacing: -0.03em;
-    color: var(--paper);
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: 0;
+    color: var(--ink);
   }
   .foundation .site-header .wordmark:hover {
-    color: var(--paper);
+    color: var(--ink);
   }
-  .foundation .site-header .mark-core {
-    fill: var(--accent);
-  }
-  .foundation .site-header .wordmark:hover .mark-core {
-    fill: var(--signal);
+  .foundation .site-header .wordmark svg {
+    flex: none;
   }
   .foundation .arrow-icon {
     flex: none;
@@ -170,7 +193,7 @@
     justify-content: center;
     gap: 0.6rem;
     background: transparent;
-    border: 1px solid var(--rule);
+    border: 1px solid var(--graphite-edge);
     border-radius: var(--control-radius);
     min-height: 44px;
     padding: 0.5rem 0.9rem;
@@ -182,19 +205,21 @@
       border-color var(--motion-ui) ease-out;
   }
   .foundation button:enabled:hover {
-    background: var(--code);
-    border-color: var(--ink);
+    background: var(--graphite);
+    border-color: var(--graphite-edge);
   }
   .foundation button.play-action,
   .foundation button[aria-pressed="true"] {
-    background: var(--accent);
-    color: var(--ink);
-    border-color: transparent;
-    font-weight: 600;
+    background: var(--ink);
+    color: var(--void);
+    border-color: var(--ink);
+    font-weight: 500;
   }
   .foundation button.play-action:enabled:hover,
   .foundation button[aria-pressed="true"]:enabled:hover {
-    background: var(--signal);
+    background: var(--void);
+    color: var(--ink);
+    border-color: var(--ink);
   }
   .foundation button:disabled {
     opacity: 0.5;
@@ -223,10 +248,10 @@
     width: 8rem;
     max-width: 100%;
     min-height: 44px;
-    border: 1px solid var(--rule);
+    border: 1px solid var(--graphite-edge);
     border-radius: var(--control-radius);
     padding: 0.4rem 0.6rem;
-    background: var(--paper);
+    background: var(--void);
   }
   .foundation .audio-controls {
     display: flex;
@@ -242,8 +267,8 @@
     position: sticky;
     top: 0;
     z-index: 10;
-    background: var(--paper);
-    border-block: 1px solid var(--rule);
+    background: var(--void);
+    border-block: 1px solid var(--graphite-edge);
     padding: 0.75rem 0;
   }
   .foundation .gallery-mixer label {
@@ -267,8 +292,9 @@
     grid-column: 1 / -1;
   }
   .foundation .output-scope {
-    background: var(--ink);
-    color: var(--paper);
+    background: var(--graphite);
+    border: 1px solid var(--graphite-edge);
+    color: var(--ink);
     margin: 0;
     padding: 1.25rem 1.5rem;
   }
@@ -283,7 +309,7 @@
     display: block;
     width: 100%;
     height: clamp(5rem, 12vw, 10rem);
-    color: var(--signal);
+    color: var(--ink);
     margin-top: 0.75rem;
   }
   .foundation .recipe-tools {
@@ -299,15 +325,15 @@
     display: block;
     margin-top: 0.5rem;
     font-size: 0.75rem;
-    color: var(--quiet);
+    color: var(--mute);
   }
   .foundation pre,
   .foundation code,
   .foundation textarea {
-    font-family: var(--font-code);
+    font-family: var(--font-mono);
   }
   .foundation pre {
-    background: var(--code);
+    background: var(--graphite);
     padding: 1.25rem;
     max-width: 100%;
     overflow: auto;
@@ -315,7 +341,7 @@
     line-height: 1.6;
     tab-size: 2;
     border-radius: var(--control-radius);
-    scrollbar-color: var(--quiet) var(--code);
+    scrollbar-color: var(--graphite-edge) var(--void);
     scrollbar-width: thin;
   }
   .foundation .recipe-tools {
@@ -357,11 +383,11 @@
     width: 100%;
     min-height: 18rem;
     padding: 0.75rem;
-    border: 1px solid var(--rule);
+    border: 1px solid var(--graphite-edge);
     border-radius: var(--control-radius);
-    background: var(--paper);
+    background: var(--void);
     font-size: 0.85rem;
-    scrollbar-color: var(--quiet) var(--paper);
+    scrollbar-color: var(--graphite-edge) var(--void);
   }
   .foundation .recipe-tools pre {
     max-height: 28rem;
@@ -385,7 +411,7 @@
     width: 100%;
     height: calc(100% + 4rem);
     pointer-events: none;
-    color: var(--focus);
+    color: var(--ink);
     z-index: 1;
   }
   @media (max-width: 760px) {
@@ -460,7 +486,7 @@
     position: sticky;
     top: 1rem;
     padding: 1rem;
-    border: 1px solid var(--rule);
+    border: 1px solid var(--graphite-edge);
   }
   .foundation .monitor-heading h2 {
     font-size: 1.4rem;
@@ -504,8 +530,8 @@
     flex-basis: 100%;
   }
   .foundation .sound-portrait {
-    background: var(--paper);
-    color: var(--quiet);
+    background: var(--void);
+    color: var(--mute);
     padding: 0;
   }
   .foundation .sound-portrait canvas {
@@ -514,11 +540,11 @@
     margin: 0;
   }
   .foundation .sound-portrait figcaption {
-    border-block: 1px solid var(--rule);
+    border-block: 1px solid var(--graphite-edge);
     padding-block: 0.75rem;
   }
   .foundation .portrait-pulse canvas {
-    color: var(--focus);
+    color: var(--ink);
   }
   .foundation .portrait-flow canvas {
     color: var(--ink);
@@ -526,7 +552,7 @@
   .foundation .inspector-tabs {
     display: flex;
     gap: 0.5rem;
-    border-bottom: 1px solid var(--ink);
+    border-bottom: 1px solid var(--graphite-edge);
     margin-bottom: 1.5rem;
   }
   .foundation .inspector-tabs button {
@@ -536,7 +562,7 @@
   }
   .foundation .inspector-tabs [aria-selected="true"] {
     background: var(--ink);
-    color: var(--paper);
+    color: var(--void);
   }
   .foundation .recipe-tools [role="tabpanel"] h3 {
     font-size: 1.7rem;
@@ -560,7 +586,7 @@
       margin: 0;
       padding: 0.5rem 1rem calc(0.5rem + env(safe-area-inset-bottom));
       border: 0;
-      border-top: 1px solid var(--ink);
+      border-top: 1px solid var(--graphite-edge);
     }
     .foundation .monitor-heading h2 {
       display: none;
@@ -624,5 +650,105 @@
     .foundation .inspector-tabs button {
       padding-inline: 0.65rem;
     }
+  }
+}
+
+/* Live Signal: hero signal band, LED meter and hardware controls (GUIDE v1.0). */
+@layer components {
+  .foundation .site-header .wordmark {
+    gap: 0.6rem;
+  }
+  .foundation .signal-scope {
+    position: relative;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+  .foundation .signal-scope canvas {
+    height: clamp(6rem, 16vw, 12rem);
+    margin: 0;
+  }
+  .foundation .signal-scope .signal-rest {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: auto;
+    height: clamp(6rem, 16vw, 12rem);
+    transform: translateX(-50%);
+    color: var(--ink);
+    pointer-events: none;
+  }
+  .foundation .signal-scope[data-live="true"] .signal-rest {
+    visibility: hidden;
+  }
+  .foundation .signal-scope figcaption {
+    margin-top: 0.5rem;
+    color: var(--mute);
+    font-size: 0.75rem;
+    text-transform: lowercase;
+  }
+  .foundation .led-meter {
+    --segments: 16;
+    display: block;
+    height: 0.6rem;
+    margin-top: 0.75rem;
+    background:
+      linear-gradient(
+          90deg,
+          var(--signal-low),
+          var(--signal-mid) 60%,
+          var(--signal-high)
+        )
+        0 0 / calc(var(--level, 0) * 100%) 100% no-repeat,
+      var(--graphite-edge);
+    mask: repeating-linear-gradient(
+      90deg,
+      #000 0 calc(100% / var(--segments) - 3px),
+      transparent calc(100% / var(--segments) - 3px)
+        calc(100% / var(--segments))
+    );
+  }
+  .foundation input[type="range"] {
+    appearance: none;
+    background: transparent;
+  }
+  .foundation input[type="range"]::-webkit-slider-runnable-track {
+    height: 4px;
+    border-radius: 2px;
+    background: var(--graphite-edge);
+  }
+  .foundation input[type="range"]::-moz-range-track {
+    height: 4px;
+    border-radius: 2px;
+    background: var(--graphite-edge);
+  }
+  .foundation input[type="range"]::-webkit-slider-thumb {
+    appearance: none;
+    width: 26px;
+    height: 26px;
+    margin-top: -11px;
+    border: 2px solid var(--void);
+    border-radius: 50%;
+    background:
+      linear-gradient(var(--ink), var(--ink)) 50% 3px / 2px 8px no-repeat,
+      radial-gradient(circle at 40% 35%, var(--graphite-edge), var(--graphite));
+    box-shadow: 0 0 0 1px var(--graphite-edge);
+  }
+  .foundation input[type="range"]::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    border: 2px solid var(--void);
+    border-radius: 50%;
+    background:
+      linear-gradient(var(--ink), var(--ink)) 50% 3px / 2px 8px no-repeat,
+      radial-gradient(circle at 40% 35%, var(--graphite-edge), var(--graphite));
+    box-shadow: 0 0 0 1px var(--graphite-edge);
+  }
+  .foundation input[type="range"]:focus-visible {
+    outline: 3px solid var(--ink);
+    outline-offset: 2px;
+  }
+  .foundation input[type="range"]:disabled {
+    opacity: 0.5;
   }
 }

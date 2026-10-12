@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { drawWaveform, drawIdle, drawPortrait } from "../lib/waveform-painter";
 import type { VisualFamily } from "../lib/waveform-painter";
 import type { AudioEngine } from "audiobits";
+import { BrandMark } from "./brand-mark";
 
 /** A caller-owned tap: visual timing never schedules audio. */
 export function OutputScope({
@@ -11,18 +12,40 @@ export function OutputScope({
   active,
   family,
   measured = false,
+  signal = false,
 }: {
   engine: AudioEngine | null | (() => AudioEngine | null);
   active: boolean;
   family?: VisualFamily;
   measured?: boolean;
+  /** Live Signal hero band: resting mark until real samples arrive, gradient only while live. */
+  signal?: boolean;
 }) {
   const canvas = useRef<HTMLCanvasElement>(null);
+  const figure = useRef<HTMLElement>(null);
   useEffect(() => {
     const surface = canvas.current;
     const paint = surface?.getContext("2d");
     if (!surface || !paint) return;
-    const color = getComputedStyle(surface).color;
+    const style = getComputedStyle(surface);
+    const color = style.color;
+    let stroke: string | CanvasGradient = color;
+    if (signal) {
+      const ramp = paint.createLinearGradient(0, 0, surface.width, 0);
+      ramp.addColorStop(0, style.getPropertyValue("--signal-low").trim());
+      ramp.addColorStop(0.6, style.getPropertyValue("--signal-mid").trim());
+      ramp.addColorStop(1, style.getPropertyValue("--signal-high").trim());
+      stroke = ramp;
+    }
+    const setLive = (live: boolean) => {
+      if (figure.current) figure.current.dataset.live = String(live);
+    };
+    const setLevel = (peak: number) => {
+      figure.current?.style.setProperty(
+        "--level",
+        String(Math.min(1, peak * 8).toFixed(3)),
+      );
+    };
     const samples = new Float32Array(1024);
     const clear = () => {
       paint.clearRect(0, 0, surface.width, surface.height);
@@ -36,8 +59,10 @@ export function OutputScope({
           new Float32Array(1024),
           family,
         );
-      else drawIdle(paint, surface.width, surface.height);
+      else if (!signal) drawIdle(paint, surface.width, surface.height);
       surface.dataset.peak = "0";
+      setLive(false);
+      setLevel(0);
     };
     clear();
     const audio = typeof engine === "function" ? engine() : engine;
@@ -58,22 +83,38 @@ export function OutputScope({
     let frame = 0;
     let visible = false;
     const draw = () => {
-      if (
-        !visible ||
-        document.hidden ||
-        motion.matches ||
-        audio.state !== "running"
-      ) {
+      if (!visible || document.hidden || audio.state !== "running") {
         clear();
+        return;
+      }
+      if (motion.matches) {
+        // Reduced motion: the waveform stays still; only the meter follows output.
+        clear();
+        if (measured) {
+          analyser.getFloatTimeDomainData(samples);
+          let level = 0;
+          for (const sample of samples)
+            level = Math.max(level, Math.abs(sample));
+          setLevel(level);
+          frame = requestAnimationFrame(draw);
+        }
         return;
       }
       analyser.getFloatTimeDomainData(samples);
       paint.clearRect(0, 0, surface.width, surface.height);
-      paint.strokeStyle = color;
+      paint.strokeStyle = stroke;
+      if (signal) setLive(true);
       const peak = family
         ? drawPortrait(paint, surface.width, surface.height, samples, family)
-        : drawWaveform(paint, surface.width, surface.height, samples);
+        : drawWaveform(
+            paint,
+            surface.width,
+            surface.height,
+            samples,
+            signal ? 4 : undefined,
+          );
       surface.dataset.peak = String(peak);
+      setLevel(peak);
       frame = requestAnimationFrame(draw);
     };
     const restart = () => {
@@ -96,7 +137,7 @@ export function OutputScope({
       analyser.disconnect();
       clear();
     };
-  }, [engine, active, family]);
+  }, [engine, active, family, signal, measured]);
   const label =
     measured && family
       ? `Measured ${family} output`
@@ -113,8 +154,19 @@ export function OutputScope({
       : "Live output · display gain ×16";
   return (
     <figure
-      className={`output-scope ${family ? `sound-portrait portrait-${family}` : ""}`}
+      ref={figure}
+      data-live="false"
+      className={`output-scope ${family ? `sound-portrait portrait-${family}` : ""}${signal ? " signal-scope" : ""}`}
     >
+      {signal ? (
+        <BrandMark
+          className="signal-rest"
+          size={64}
+          small={false}
+          tone="mono"
+          frame={false}
+        />
+      ) : null}
       <canvas
         ref={canvas}
         width={900}
@@ -132,6 +184,7 @@ export function OutputScope({
         </span>
         <span>{active ? liveCaption : idleCaption}</span>
       </figcaption>
+      {measured ? <span className="led-meter" aria-hidden="true" /> : null}
     </figure>
   );
 }

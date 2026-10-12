@@ -6,9 +6,11 @@ export function drawWaveform(
   width: number,
   height: number,
   samples: Float32Array,
+  lineWidth = 1.5,
 ): number {
   const middle = height / 2;
-  paint.lineWidth = 1.5;
+  paint.lineWidth = lineWidth;
+  paint.lineCap = "round";
   paint.lineJoin = "round";
   paint.beginPath();
   let peak = 0;
