@@ -10,7 +10,7 @@ import "./landing.css";
 import "./charge-hero.css";
 
 export const metadata: Metadata = {
-  title: { absolute: "AudioBits | Procedural Sound Effects for the Web" },
+  title: { absolute: "AudioBits | Procedural Sound Effects" },
   alternates: { canonical: "/" },
 };
 

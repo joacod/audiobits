@@ -113,11 +113,11 @@ export function ChargeHero() {
     <section className="charge-hero" aria-label="Energy charge hero">
       <div className="charge-copy">
         <h1>
-          Make interfaces <em>sound alive.</em>
+          Sound that <em>reacts.</em>
         </h1>
         <p className="charge-lede">
-          Procedural sound for the web. Hold to charge one voice, then ship that
-          control as code.
+          Procedural sound effects for the web. Hold to charge a voice, then
+          copy the code.
         </p>
         <div className="landing-links">
           <Link className="landing-primary" href="/catalog">

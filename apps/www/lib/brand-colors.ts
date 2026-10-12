@@ -1,4 +1,4 @@
-// Live Signal colour values for contexts that cannot read CSS custom
+// AudioBits showcase colour values for contexts that cannot read CSS custom
 // properties (next/og cards). brand-colors.test.ts keeps these equal to the
 // `.foundation` tokens in app/globals.css.
 export const brandColors = {

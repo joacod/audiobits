@@ -58,7 +58,7 @@ The host suspends on hide, stops on blur, closes on pagehide and exposes
 The host owns its engine; `progress.ts` can instead share an application engine.
 Per-sound limits bound overlapping tails during rapid release/restart.
 
-The [website showcase](https://audiobits.joacod.com/experiences/energy-charge)
+The [website showcase](https://audiobits.joacod.com/catalog/energy-charge)
 uses these exact sources, adding a three-second hold interaction at the UI layer.
 No completion accent is included: releasing is the recipe's clean tail, while
 cancellation never produces a success sound. A game or task may supply its own

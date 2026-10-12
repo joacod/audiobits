@@ -9,9 +9,7 @@ test("site uses public exports and keyboard-operated charge playback", async ({
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("http://127.0.0.1:3100");
-  await expect(page).toHaveTitle(
-    "AudioBits | Procedural Sound Effects for the Web",
-  );
+  await expect(page).toHaveTitle("AudioBits | Procedural Sound Effects");
   await expect(page.locator(".landing-footer pre")).toHaveText(
     "npm install audiobits",
   );
@@ -20,7 +18,7 @@ test("site uses public exports and keyboard-operated charge playback", async ({
   );
   await expect(
     page.getByRole("heading", {
-      name: "Make interfaces sound alive.",
+      name: "Sound that reacts.",
       exact: true,
     }),
   ).toBeVisible();

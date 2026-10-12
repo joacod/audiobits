@@ -1,6 +1,6 @@
 ---
-name: audiobits showcase
-description: Live Signal. Sound you can see move, on a dark ground, with hardware-panel controls on the workbench.
+name: AudioBits showcase
+description: AudioBits showcase with a dark ground, audio-reactive waveform and graphite workbench controls.
 colors:
   void: "#050507"
   ink: "#f2f2f2"
@@ -93,15 +93,13 @@ components:
     activeColor: "signal gradient at the current output"
 ---
 
-# Design System: audiobits showcase
+# Design System: AudioBits showcase
 
 ## Overview
 
-**Creative North Star: "Live Signal"**
+The waveform is the logo, and it moves only when sound moves. The showcase is dark-first: Void ground, Ink text, Mute for secondary copy. The blue, violet and magenta signal gradient belongs to live elements and to the mark, nothing else. The home page and the instrument pages speak in huge condensed Big Shoulders Display headlines and Geist Mono UI. The workbench uses graphite panels, knob-capped faders and segmented LED meters.
 
-The waveform is the logo, and it moves only when sound moves. The showcase is dark-first: Void ground, Ink text, Mute for secondary copy. The blue, violet and magenta signal gradient belongs to live elements and to the mark, nothing else. The home page and the instrument pages speak in huge condensed Big Shoulders Display headlines and Geist Mono UI. The workbench borrows a hardware panel language: graphite panels, knob-capped faders and LED meters.
-
-Source: the approved brand guide v1.0 (direction B Live Signal for home and instruments, A Hardware Panel controls for the workbench). Documentation uses stock Fumadocs neutral styling, components, layout, typography and light/dark palettes. Dark mode is the default, with normal theme switching.
+Documentation uses stock Fumadocs neutral styling, components, layout, typography and light/dark palettes. Dark mode is the default, with normal theme switching.
 
 **Key Characteristics:**
 
@@ -114,7 +112,7 @@ Source: the approved brand guide v1.0 (direction B Live Signal for home and inst
 
 ## Mark
 
-The approved mark is a single waveform stroke that builds from quiet to loud, like a charge. `BrandMark` in [app/brand-mark.tsx](app/brand-mark.tsx) draws it inline:
+The AudioBits mark is a single waveform stroke that builds from quiet to loud, like a charge. `BrandMark` in [app/brand-mark.tsx](app/brand-mark.tsx) draws it inline:
 
 - Above 32 px: the full wave (`mark-1-wave`).
 - 32 px and below: the small variant with the first bump dropped and a thicker stroke. The header uses this.
@@ -158,7 +156,7 @@ Both faces are SIL Open Font License 1.1 and self-hosted with `next/font/local` 
 
 Content width (76rem) with gutter `max(1.5rem, calc((100vw - 76rem) / 2))`, (1rem) below (760px). The home order stays: header, Energy Charge hero, use columns, catalog preview, footer. The hero is two columns above (900px) and stacks below it. A full-width signal band closes the hero: the live waveform when the charge voice is running, the still mark otherwise.
 
-Catalog index and workbench layouts are unchanged. Every interactive target keeps a (44px) minimum height.
+The catalog index uses a grouped navigation sidebar and preview rows; the workbench keeps its stage, playback controls and inspector in one frame. Every interactive target keeps a (44px) minimum height.
 
 ## Elevation & Depth
 

@@ -1,6 +1,6 @@
 # Showcase design tokens
 
-Live Signal colour and type tokens live once, on `.foundation` inside the
+AudioBits showcase colour and type tokens live once, on `.foundation` inside the
 `tokens` layer of [app/globals.css](app/globals.css). They apply only to the
 showcase. Fumadocs uses its stock neutral styling, components, layout,
 typography and light/dark palettes. Dark mode is the default, with normal
@@ -11,8 +11,7 @@ theme switching.
 CSS custom properties on `.foundation` in the `tokens` layer are the source of truth.
 The stylesheet declares the layer order `theme, tokens, base, components,
 utilities`. Layout values (`--gutter`, `--gap`, `--control-radius`,
-`--motion-ui`) stay on `.foundation`. Values follow the approved brand guide
-v1.0 (Live Signal). `lib/brand-colors.ts` mirrors the colours for the OG card
+`--motion-ui`) stay on `.foundation`. The roles below describe the implemented showcase. `lib/brand-colors.ts` mirrors the colours for the OG card
 and `lib/brand-colors.test.ts` fails if they drift.
 
 Roles:
@@ -43,5 +42,5 @@ buttons. Playback uses `.play-action`. Reduced motion removes showcase
 transitions; the waveform stays still and only meters update.
 
 When this stylesheet changes, check a documentation page in both document
-themes as well as the homepage. Keep Live Signal tokens, including `--font-mono`,
+themes as well as the homepage. Keep AudioBits showcase tokens, including `--font-mono`,
 scoped to `.foundation`; do not override Fumadocs tokens or fork its components.

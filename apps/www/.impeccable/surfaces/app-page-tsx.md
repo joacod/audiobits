@@ -6,15 +6,33 @@ related_targets:
   ["app/charge-hero.tsx", "app/site-header.tsx", "app/catalog/page.tsx"]
 ---
 
-# Charge housing: homepage
+# Homepage
 
-The homepage persuades by letting a visitor hold Energy Charge, then shows how the package, bundled recipes, and independent examples differ. Fumadocs stays a separate reading surface.
+The homepage lets a visitor hold Energy Charge, then shows how the package,
+bundled recipes and independent examples differ. Fumadocs stays a separate
+reading surface.
 
-## Direction contract
+## Composition
 
-THESIS: The first screen is the charge instrument. The page refuses a second live engine, a specimen-book introduction, and a card grid of claims.
-OWN-WORLD: Live Signal. Void ground, Ink text, huge uppercase Big Shoulders Display headline, Geist Mono UI. The waveform mark is the logo: a full-width signal band closes the hero, still Ink mark at rest, real output samples in the signal gradient once a hold has started audio. Charge rings rest in Mute and take the gradient as charge rises. No warm paper, glass, blobs or bento grids.
-STORY: A visitor understands that sound is generated in the browser, holds one voice, then sees the package, eight bundled recipes, and two copy-paste examples. Catalog, docs, and the install command stay in reach.
-FIRST VIEWPORT: Header and hero share one Void field. The headline and a short explanation sit beside the charge well on wide screens and directly above it on small screens. Hold to charge is the primary action. Explore the catalog and Start building are the text actions.
-FORM: Brief-pinned extension of the Step 1 Energy Charge housing. No concept-seed roll. Seed key: pinned-by-brief. Code-led.
-FINISH: Re-skinned to the Live Signal identity (brand guide v1.0). DESIGN.md, design-tokens.md and design.json describe the shipped system.
+The first screen contains one charge instrument and one live engine. Header and
+hero share a Void field. The headline "Sound that reacts." and the descriptor
+"Procedural sound effects for the web." sit beside the charge well on wide
+screens and directly above it on small screens. Hold to charge is the primary
+action. Explore the catalog, Start building and the install command stay in reach.
+
+The page then explains the installable library, eight bundled recipes and two
+independent copy-paste examples. Experience previews link to their complete
+interactions without mounting another audio host.
+
+## Visual and interaction rules
+
+The AudioBits showcase uses Void ground, Ink text, Mute labels, uppercase Big
+Shoulders Display headlines and Geist Mono UI. A full-width signal band closes
+the hero: a still Ink waveform mark at rest, real output samples in the signal
+gradient after a user gesture starts audio. Charge rings rest in Mute and take
+the gradient as charge rises. Audio-reactive output follows real samples;
+charge animation follows interaction state. Reduced motion keeps the waveform
+still while meters may update. No warm paper, glass, blobs or bento grids.
+
+See [DESIGN.md](../../DESIGN.md) and [design-tokens.md](../../design-tokens.md)
+for the shared visual rules and token roles.

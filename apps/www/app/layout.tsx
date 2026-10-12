@@ -8,8 +8,8 @@ import "./globals.css";
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "AudioBits | Procedural Sound Effects for the Web",
-    template: "%s | AudioBits",
+    default: "AudioBits | Procedural Sound Effects",
+    template: "AudioBits | %s",
   },
   description:
     "Hear, customize, and integrate procedural sound effects generated in your browser with Web Audio.",

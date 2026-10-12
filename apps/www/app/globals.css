@@ -6,7 +6,7 @@
 
 @layer tokens {
   .foundation {
-    /* Live Signal identity, GUIDE v1.0. The only place colour and type values live. */
+    /* AudioBits showcase tokens. The only place colour and type values live. */
     --void: #050507;
     --ink: #f2f2f2;
     --mute: #8a8a92;
@@ -631,7 +631,7 @@
   }
 }
 
-/* Live Signal: hero signal band, LED meter and hardware controls (GUIDE v1.0). */
+/* AudioBits showcase: hero signal band, LED meter and graphite controls. */
 @layer components {
   .foundation .site-header .wordmark {
     gap: 0.6rem;

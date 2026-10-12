@@ -8,7 +8,7 @@ function parse(value: string, fallback: Rgb): Rgb {
   ) as unknown as Rgb;
 }
 
-/** Reads the Live Signal colour tokens from CSS so painters never own a hex value. */
+/** Reads the AudioBits showcase colour tokens from CSS so painters never own a hex value. */
 export function readSignalPalette(element: Element) {
   const style = getComputedStyle(element);
   const neutral: Rgb = [0.5, 0.5, 0.5];
