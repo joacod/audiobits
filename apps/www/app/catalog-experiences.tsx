@@ -21,11 +21,6 @@ export function CatalogExperiences() {
             <div className="catalog-experience-copy">
               <h3>{entry.title}</h3>
               <p>{entry.description}</p>
-              <ul className="catalog-controls">
-                {entry.controls.map((control) => (
-                  <li key={control}>{control}</li>
-                ))}
-              </ul>
               <Link className="catalog-open" href={entry.href}>
                 {openCatalogLabel(entry)}
               </Link>

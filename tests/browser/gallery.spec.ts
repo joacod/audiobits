@@ -285,7 +285,11 @@ test("failed gallery activation identifies Retry Play and recovers with a fresh 
     "Retry Play",
   );
   await play.click();
-  await expect(page.getByRole("status")).toHaveText("Audio: running");
+  await expect(
+    page
+      .getByRole("group", { name: "Playback", exact: true })
+      .getByRole("status"),
+  ).toHaveText("Audio: running");
   await expect(page.locator(".catalog-transport [role=alert]")).toHaveCount(0);
 });
 
@@ -336,9 +340,9 @@ test("workbench controls stay disabled until hydration owns them", async ({
     ),
   ).toBe(0);
   for (const kind of [
-    "tactile-click",
-    "gentle-rejection",
-    "glass-notification",
+    "tactile click",
+    "gentle rejection",
+    "glass notification",
     "power-up",
   ]) {
     await page

@@ -3,7 +3,19 @@ import type { ReactNode } from "react";
 import { CatalogLayout } from "./catalog-layout";
 import { bundledCatalogEntry, catalogEntries } from "../lib/catalog";
 import type { CatalogEntry } from "../lib/catalog";
-import { siteBuild } from "../lib/site-build";
+
+const soundDescription = {
+  confirmation: "A soft upward chime for a completed action.",
+  "tactile-click": "A small, rounded click for buttons and toggles.",
+  "gentle-rejection": "Two soft descending tones for an unavailable action.",
+  "glass-notification": "A delicate glass chime for quiet notifications.",
+  impact:
+    "A punchy hit. Adjust intensity for a lighter tap or a heavier collision.",
+  whoosh:
+    "A rush of air for transitions and movement. Adjust size to change its weight.",
+  "power-up": "A rising tone that builds energy for rewards and pickups.",
+  thruster: "A continuous engine sound. Adjust throttle while it runs.",
+};
 
 // Shared catalog frame. The child owns the interactive stage and its audio.
 export function CatalogDetail({
@@ -20,13 +32,6 @@ export function CatalogDetail({
         {children}
       </div>
       <CatalogRelated entry={entry} />
-      <footer className="catalog-footer">
-        <p>Available on npm · {siteBuild.version}</p>
-        <p className="catalog-install">
-          <code>npm install audiobits</code>
-        </p>
-        <Link href="/docs">Documentation</Link>
-      </footer>
     </CatalogLayout>
   );
 }
@@ -56,31 +61,12 @@ function CatalogEntryHeader({ entry }: { entry: CatalogEntry }) {
         </ol>
       </nav>
       <h1>{entry.title}</h1>
-      <p>{entry.description}</p>
-      <p className="catalog-source">{sourceLabel(entry)}</p>
+      <p>
+        {entry.category === "bundled"
+          ? soundDescription[entry.slug]
+          : entry.description}
+      </p>
     </header>
-  );
-}
-
-function sourceLabel(entry: CatalogEntry) {
-  if (entry.category === "bundled") {
-    return (
-      <>
-        Copy-owned sound · {entry.use}. Source <code>{entry.source.file}</code>.
-      </>
-    );
-  }
-  return (
-    <>
-      Independent catalog source you own.{" "}
-      {entry.source.files.map((file, index) => (
-        <span key={file}>
-          {index > 0 ? ", " : null}
-          <code>{file}</code>
-        </span>
-      ))}
-      .
-    </>
   );
 }
 

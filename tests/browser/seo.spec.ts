@@ -103,10 +103,34 @@ test("public pages expose unique metadata and content without JavaScript", async
       await expect(page.locator('a[href="/docs/api"]').first()).toBeAttached();
     }
     if (!route.path.startsWith("/docs")) {
-      if (route.path !== "/") {
-        await expect(page.locator("main")).toContainText(
-          "npm install audiobits",
+      if (route.path === "/catalog") {
+        await expect(
+          page.getByRole("link", {
+            name: "Catalog and installation guide",
+            exact: true,
+          }),
+        ).toHaveAttribute("href", "/docs/catalog");
+      } else if (route.path.startsWith("/catalog/")) {
+        const entry = catalogEntries.find(
+          (entry) => entry.href === route.path,
+        )!;
+        const adoption = page.getByRole("region", { name: "Add to project" });
+        await expect(adoption.locator("pre")).toHaveText(
+          `npx shadcn@latest add joacod/audiobits/${entry.slug}`,
         );
+        await expect(
+          adoption.getByRole("button", {
+            name: `Copy ${entry.title} command`,
+            exact: true,
+          }),
+        ).toBeVisible();
+        await expect(adoption).toContainText("audiobits runtime dependency");
+        await expect(
+          adoption.getByRole("link", {
+            name: "Installation guide",
+            exact: true,
+          }),
+        ).toHaveAttribute("href", "/docs/catalog#install-source");
       }
       await expect(page.locator('a[href="/docs"]').first()).toBeAttached();
     }

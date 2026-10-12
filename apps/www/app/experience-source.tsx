@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Tabs } from "@base-ui/react/tabs";
 
 export type ExperienceSourceFile = {
@@ -9,20 +10,10 @@ export type ExperienceSourceFile = {
   code: string;
 };
 
-const setup = `npm install audiobits`;
-
 export function ExperienceSource({
-  symbol,
-  parameter,
-  soundNote,
-  interactionNote,
   presentation,
   sources,
 }: {
-  symbol: string;
-  parameter: string;
-  soundNote: string;
-  interactionNote: string;
   presentation: string;
   sources: readonly ExperienceSourceFile[];
 }) {
@@ -45,7 +36,7 @@ export function ExperienceSource({
   return (
     <div className="catalog-source-tools">
       <p className="catalog-source-note">
-        Default implementation. Using the demo does not change these files.
+        Catalog defaults. Demo controls do not change these files.
       </p>
       <Tabs.Root defaultValue="sound">
         <Tabs.List aria-label="Source inspector" className="inspector-tabs">
@@ -53,13 +44,7 @@ export function ExperienceSource({
           <Tabs.Tab value="interaction">Complete interaction</Tabs.Tab>
         </Tabs.List>
         <Tabs.Panel value="sound">
-          <h3>Copy the sound.</h3>
-          <p>{soundNote}</p>
-          <p>
-            <code>audio.sound({symbol})</code> then{" "}
-            <code>{`voice.set({ ${parameter} })`}</code> and{" "}
-            <code>voice.stop()</code>.
-          </p>
+          <p>The sound definition, ready to adapt to your own controls.</p>
           {recipe && (
             <>
               <p>{recipe.purpose}</p>
@@ -76,19 +61,17 @@ export function ExperienceSource({
           )}
         </Tabs.Panel>
         <Tabs.Panel value="interaction">
-          <h3>Copy the interaction.</h3>
-          <p>{interactionNote}</p>
           <p>{presentation}</p>
-          <pre>
-            <code>{setup}</code>
-          </pre>
           <p>
-            Keep the displayed relative paths and use your application&apos;s
-            existing toolchain. To run the HTML demo independently, follow the{" "}
+            Keep these relative paths together. See the{" "}
+            <Link href="/docs/catalog#integrate-into-your-application">
+              integration guide
+            </Link>{" "}
+            for setup and lifecycle, or the{" "}
             <a href="https://github.com/joacod/audiobits/blob/main/catalog/README.md#optional-standalone-demo">
-              optional standalone demo setup
+              standalone demo setup
             </a>
-            . AudioBits does not require Vite.
+            .
           </p>
           <div className="catalog-source-files">
             {sources.map((file) => (

@@ -96,17 +96,29 @@ test("catalog playback stays on one session until Stop all and cleanup", async (
     if (entry.category !== "bundled") continue;
     if (entry.playback === "sustained") {
       await expect(
-        page.getByRole("button", { name: `Start ${entry.slug}`, exact: true }),
+        page.getByRole("button", {
+          name: `Start ${entry.title.toLowerCase()}`,
+          exact: true,
+        }),
       ).toBeVisible();
       await expect(
-        page.getByRole("button", { name: `Stop ${entry.slug}`, exact: true }),
+        page.getByRole("button", {
+          name: `Stop ${entry.title.toLowerCase()}`,
+          exact: true,
+        }),
       ).toBeVisible();
     } else {
       await expect(
-        page.getByRole("button", { name: `Play ${entry.slug}`, exact: true }),
+        page.getByRole("button", {
+          name: `Play ${entry.title.toLowerCase()}`,
+          exact: true,
+        }),
       ).toBeVisible();
       await expect(
-        page.getByRole("button", { name: `Stop ${entry.slug}`, exact: true }),
+        page.getByRole("button", {
+          name: `Stop ${entry.title.toLowerCase()}`,
+          exact: true,
+        }),
       ).toHaveCount(0);
     }
   }
@@ -259,7 +271,7 @@ test("catalog navigation, focus, and layout hold on desktop and mobile", async (
   );
   const docs = page
     .locator(".catalog-footer")
-    .getByRole("link", { name: "Documentation", exact: true });
+    .getByRole("link", { name: "Catalog and installation guide", exact: true });
   expect(
     await docs.evaluate((link) => {
       const rect = link.getBoundingClientRect();

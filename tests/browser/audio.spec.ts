@@ -119,7 +119,8 @@ test("site gesture, mute, stop and route teardown close owned context", async ({
     Object.assign(globalThis, { ownedContexts: contexts });
   });
   await page.goto("http://127.0.0.1:3100/catalog/confirmation");
-  await expect(page.getByRole("status")).toHaveText("Audio: idle");
+  const playback = page.getByRole("group", { name: "Playback", exact: true });
+  await expect(playback.getByRole("status")).toHaveText("Audio: idle");
   expect(
     await page.evaluate(
       () =>
@@ -128,7 +129,7 @@ test("site gesture, mute, stop and route teardown close owned context", async ({
     ),
   ).toBe(0);
   await page.getByRole("button", { name: "Play confirmation" }).click();
-  await expect(page.getByRole("status")).toHaveText("Audio: running");
+  await expect(playback.getByRole("status")).toHaveText("Audio: running");
   await page.getByRole("button", { name: "Mute", exact: true }).click();
   await expect(
     page.getByRole("button", { name: "Mute", exact: true }),
