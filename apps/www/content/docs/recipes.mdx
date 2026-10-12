@@ -41,7 +41,7 @@ if (result.ok) {
 ## Bundled presets and source you own
 
 For a normal one-shot, import a preset from `audiobits/recipes`, create a sound,
-and play it after gesture activation. See [Getting started](/docs).
+and play it after gesture activation. See [Quick start](/docs).
 
 [Reactive thruster](/catalog/reactive-thruster) is a developer-owned catalog
 recipe, separate from the bundled `thruster` preset. Copy `recipe.ts` for its
@@ -81,14 +81,14 @@ references. Diagnostics are capped at 100. See [Parameters](/docs/parameters)
 for mappings and live controls. The exported `recipeSchema` and
 `audiobits/schema.json` describe the published schema version 1 structure.
 
-## Gallery editor
+## Workbench editor
 
-Each card accepts at most 32 KiB of JSON and shows the first ten validation
+Each catalog workbench (`/catalog/[slug]`) accepts at most 32 KiB of JSON and shows the first ten validation
 issues. Apply explicitly; invalid input preserves the last valid playable
 sound. Applying a valid definition stops current playback and disposes the old
 sound. Play again to hear the new definition.
 
-Keep the card's playback kind and its primary parameter's range, default, and
+Keep the sound's playback kind and its primary parameter's range, default, and
 mode. Additional parameters use their declared defaults. Restore and Reset return to the
 bundled recipe, seed 42, and primary control defaults.
 Raw comparisons apply only to bundled definitions. Edited recipes still have a
