@@ -1,11 +1,33 @@
 ---
-title: Quick start
-description: Install AudioBits from npm and play a procedural sound from a user gesture.
+title: Introduction and quick start
+description: Choose a starting point, install the AudioBits runtime, and play your first procedural sound.
 ---
 
 <PackageChannel />
 
-Install AudioBits from npm:
+AudioBits generates procedural browser audio from recipes. Use the
+[catalog](/catalog) to hear and adjust sounds and interactive experiences, then
+use these guides to bring them into your application.
+
+The `audiobits` npm package is the audio runtime: it interprets recipe data and
+creates browser audio. The shadcn registry installs editable recipes and
+experience source into your project. Its items declare `audiobits` as an npm
+dependency, so installed source uses the same runtime as an original sound you
+write yourself.
+
+## Choose a starting point
+
+| You want to…                                     | Start here                                                             |
+| ------------------------------------------------ | ---------------------------------------------------------------------- |
+| Play a small sound or write an original recipe   | Install the runtime and try the tone below.                            |
+| Adapt a catalog sound or complete interaction    | [Install editable catalog source](/docs/catalog).                      |
+| Ask a coding agent to integrate or design audio  | [Install the official AudioBits Skill](/docs/agents).                  |
+| Extend a complex agent workflow with local tools | Read [optional MCP tooling](/docs/mcp). Normal use needs no MCP setup. |
+
+## Install the runtime
+
+For an original sound, install AudioBits directly with your project's package
+manager. With npm:
 
 ```sh
 npm install audiobits
@@ -55,7 +77,9 @@ See [Production lifecycle](/docs/lifecycle). The catalog never plays on load.
 
 ## Next
 
-- [Listen and adjust](/catalog) the eight catalog sounds.
+- [Listen and adjust](/catalog) catalog sounds and complete interactive experiences.
+- [Catalog and editable source](/docs/catalog): installation, customization, and integration.
+- [Official Skill and agent workflows](/docs/agents): integration and original audio creation.
 - [Recipes](/docs/recipes): validated JSON and supported fields.
 - [Playback and lifecycle](/docs/lifecycle): sound versus voice, Stop, and teardown.
 - [Parameters](/docs/parameters): controls, smoothing, and seeded replay.

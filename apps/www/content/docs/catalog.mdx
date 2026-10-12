@@ -1,0 +1,118 @@
+---
+title: Catalog and editable source
+description: Install recipes and interactive experiences through shadcn, then customize source you own.
+---
+
+The [catalog](/catalog) lets you hear sounds, adjust their controls, and inspect
+their source. The [GitHub source registry](https://github.com/joacod/audiobits/blob/main/registry.json)
+distributes that source into your application. `audiobits` supplies the runtime;
+the installed files supply the sound and, for an experience, its interaction.
+
+## Recipes and experiences
+
+A **recipe** is serializable, versioned sound data: sources, envelopes, filters,
+variation, and parameter mappings. It contains no UI or application state.
+Use a recipe for a button sound, notification, impact, or a sustained sound
+controlled by your own host. See the [recipe reference](/docs/recipes).
+
+An **experience** combines a recipe with a reusable interaction controller and
+a complete browser example. Try [Energy Charge](/catalog/energy-charge) for
+application-supplied progress or [Reactive Thruster](/catalog/reactive-thruster)
+for pointer-driven live throttle. You can use just the recipe, adapt the
+controller to your UI, or study the complete host.
+
+## Install source
+
+From an existing project with a `package.json`, list the registry and inspect a
+recipe before adding it:
+
+```sh
+npx shadcn@latest list joacod/audiobits
+npx shadcn@latest view joacod/audiobits/confirmation
+npx shadcn@latest add joacod/audiobits/confirmation
+```
+
+For a complete experience, choose one of these items instead:
+
+```sh
+npx shadcn@latest add joacod/audiobits/energy-charge
+npx shadcn@latest add joacod/audiobits/reactive-thruster
+```
+
+These are [shadcn GitHub registry addresses](https://ui.shadcn.com/docs/registry/github).
+The CLI resolves the repository's root `registry.json` and its declared files;
+there is no separate AudioBits registry server to configure. Each item declares
+`audiobits` in `dependencies`, so adding source also requests the npm runtime
+dependency. Review dependency changes if your project already has AudioBits;
+compare the source requirements with your installed `audiobits/capabilities.json`.
+For runtime-only installation, use the [quick start](/docs#install-the-runtime).
+
+The items use explicit project-relative file targets. Normal installation needs
+no React, Tailwind, Next.js, or `components.json`. The source is TypeScript using
+public AudioBits exports and bundler module resolution, not precompiled JavaScript.
+
+| Item                             | Installed files                                                                                                                                                                    |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A recipe, such as `confirmation` | `src/sounds/recipes/<id>/recipe.ts` and `LICENSE`                                                                                                                                  |
+| `energy-charge`                  | `recipe.ts`, `progress.ts`, `host.ts`, `index.html`, `README.md`, and `LICENSE` under `src/sounds/experiences/energy-charge/`                                                      |
+| `reactive-thruster`              | Recipe, pointer controller, host, HTML demo, README, and license under `src/sounds/experiences/reactive-thruster/`, plus Impact and its license under `src/sounds/recipes/impact/` |
+
+For a reproducible install, append `#` followed by a reviewed full commit SHA
+to the GitHub address. Without a ref, the CLI uses the default branch. Review
+existing-file overwrite prompts and retain your local changes when appropriate.
+Later catalog installs are source updates to review in version control.
+
+Use the top-level `view` command above for inspection. In the currently verified
+CLI, `add --dry-run`, `--diff`, and `--view` can prompt for `components.json` in
+an unconfigured project. Decline unrelated framework setup or use the
+[disposable preview setup](https://github.com/joacod/audiobits/blob/main/catalog/README.md#preview-limitation-in-shadcn-4214).
+
+## Integrate into your application
+
+For Confirmation, import the installed definition from a host file in `src/`:
+
+```ts
+import { createAudio } from "audiobits";
+import { confirmation } from "./sounds/recipes/confirmation/recipe";
+
+const audio = createAudio();
+const sound = audio.sound(confirmation);
+```
+
+Use this definition in place of the local tone in the [quick start](/docs#play-a-tone).
+Call `audio.start()` directly from a user gesture, await activation, then call
+`sound.play()`. Surface activation errors and allow a fresh gesture to retry.
+Provide Stop, invalidate pending starts on cancellation, suspend on hide, and
+dispose owned resources on navigation or unmount. The
+[lifecycle guide](/docs/lifecycle) explains those host responsibilities.
+
+For an experience, keep the installed relative paths intact. Reactive Thruster's
+complete host imports Impact at `../../recipes/impact/recipe`. The included
+`host.ts` owns an engine and browser lifecycle; call its `dispose()` when
+removing an SPA view. If your application already owns audio, adapt `progress.ts`
+or `pointer.ts` to that shared engine instead. Those controllers dispose their
+own sounds and listeners; the host remains responsible for engine suspension
+and final disposal.
+
+The nested `index.html` is an optional standalone demo requiring a
+TypeScript-aware browser toolchain. Installation does not replace your root
+entrypoint or create build configuration. Use your existing toolchain, or the
+[optional standalone demo setup](https://github.com/joacod/audiobits/blob/main/catalog/README.md#optional-standalone-demo).
+
+## Customize and verify
+
+Edit the installed `recipe.ts` to change pitch, gain, envelopes, filters, or
+parameter mappings. Keep application state, input mapping, and visuals in your
+controller or host. [Parameters](/docs/parameters) explains live controls and
+seeded replay; [buses](/docs/buses) explains shared routing and mute.
+
+Validate adapted data with `validateRecipe` from your installed runtime, then
+run your application's typecheck and build. Check defaults and control extrema,
+gesture activation, errors, Stop, hiding, and teardown in the browser. Static
+validation does not prove audio playback or audible quality. AudioBits automated
+browser evidence targets Chromium.
+
+You own the copied source. Retain the included MIT license when redistributing
+it. After installation, builds and playback use local files and `audiobits`
+without registry access. For help adapting or creating source, use the
+[official agent Skill](/docs/agents).
