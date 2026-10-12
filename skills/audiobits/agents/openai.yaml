@@ -1,0 +1,4 @@
+interface:
+  display_name: "AudioBits"
+  short_description: "Design sounds and interactive browser audio"
+  default_prompt: "Use $audiobits to build procedural audio that fits this application."
