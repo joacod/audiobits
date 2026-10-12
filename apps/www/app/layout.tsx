@@ -14,7 +14,10 @@ export const metadata: Metadata = {
   description:
     "Hear, customize, and integrate procedural sound effects generated in your browser with Web Audio.",
   manifest: "/site.webmanifest",
+  // Explicit list: setting `icons` replaces the app/ file-convention links.
   icons: {
+    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    apple: "/apple-icon.png",
     other: [
       { rel: "mask-icon", url: "/safari-pinned-tab.svg", color: "#050507" },
     ],
