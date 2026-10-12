@@ -10,9 +10,14 @@ test("site uses public exports and keyboard-operated thruster playback", async (
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("http://127.0.0.1:3100");
   await expect(page).toHaveTitle("AudioBits | Procedural Sound Effects");
-  await expect(page.locator(".landing-footer pre")).toHaveText(
-    "npm install audiobits",
+  await expect(page.locator(".landing-own pre")).toHaveText(
+    "npx shadcn@latest add joacod/audiobits/reactive-thruster",
   );
+  await expect(
+    page
+      .locator(".landing-footer")
+      .getByRole("link", { name: "npm", exact: true }),
+  ).toHaveAttribute("href", "https://www.npmjs.com/package/audiobits");
   await expect(page.locator("main")).not.toContainText(
     /Local workspace package|Development|unpublished|not yet been published|prepared for stable publication/,
   );
