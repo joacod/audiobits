@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { AudioEngine } from "audiobits";
+import { readSignalPalette } from "../lib/signal-palette";
 
 /**
  * Charge field adapted from the free React Bits Magic Rings shader
@@ -28,6 +29,16 @@ uniform float uTime;
 uniform float uCharge;
 uniform float uLevel;
 uniform float uSpin;
+uniform vec3 uLow;
+uniform vec3 uMid;
+uniform vec3 uHigh;
+uniform vec3 uRest;
+
+// Signal gradient mapped to state: low, mid, high. Resting rings stay Mute.
+vec3 signalAt(float t) {
+  vec3 ramp = t < 0.6 ? mix(uLow, uMid, t / 0.6) : mix(uMid, uHigh, (t - 0.6) / 0.4);
+  return mix(uRest, ramp, clamp(t * 6.0, 0.0, 1.0));
+}
 
 void main() {
   float minDim = min(uResolution.x, uResolution.y);
@@ -37,8 +48,6 @@ void main() {
   float s = sin(ang);
   p = mat2(c, -s, s, c) * p;
 
-  vec3 brass = vec3(0.878, 0.722, 0.337);
-  vec3 signal = vec3(0.925, 0.808, 0.510);
   vec3 color = vec3(0.0);
   float alpha = 0.0;
 
@@ -57,18 +66,18 @@ void main() {
       uSpin
     );
     float amount = appear * ring * sweep;
-    vec3 tone = mix(brass, signal, clamp(fi / 7.0 * uCharge + uLevel * 0.5, 0.0, 1.0));
+    vec3 tone = signalAt(clamp(uCharge * (0.55 + fi / 14.0) + uLevel * 0.5, 0.0, 1.0));
     color += tone * amount;
     alpha = max(alpha, min(amount, 1.0));
   }
 
   float coreRadius = 0.02 + uCharge * 0.05 + uLevel * 0.012;
   float core = exp(-pow(length(p) / max(coreRadius, 0.0001), 1.55));
-  color += mix(brass, signal, clamp(uCharge + uLevel * 0.4, 0.0, 1.0)) * core;
+  color += signalAt(clamp(uCharge + uLevel * 0.4, 0.0, 1.0)) * core;
   alpha = max(alpha, core * 0.92);
   float presence = exp(-pow(length(p) / (0.09 + uCharge * 0.46), 2.0));
   float field = presence * (0.08 + uCharge * 0.28 + uLevel * 0.1);
-  color += mix(brass, signal, clamp(uCharge, 0.0, 1.0)) * field;
+  color += signalAt(clamp(uCharge, 0.0, 1.0)) * field;
   alpha = max(alpha, field);
 
   float vignette = smoothstep(0.48, 0.2, length(p));
@@ -311,6 +320,11 @@ export function ChargeRings({
       uniforms.level = gl.getUniformLocation(program, "uLevel");
       uniforms.spin = gl.getUniformLocation(program, "uSpin");
       uniforms.resolution = gl.getUniformLocation(program, "uResolution");
+      const palette = readSignalPalette(surface);
+      gl.uniform3fv(gl.getUniformLocation(program, "uLow"), palette.low);
+      gl.uniform3fv(gl.getUniformLocation(program, "uMid"), palette.mid);
+      gl.uniform3fv(gl.getUniformLocation(program, "uHigh"), palette.high);
+      gl.uniform3fv(gl.getUniformLocation(program, "uRest"), palette.rest);
       gl.enable(gl.BLEND);
       gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
       gl.clearColor(0, 0, 0, 0);

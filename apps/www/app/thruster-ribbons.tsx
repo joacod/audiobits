@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { readSignalPalette, type Rgb } from "../lib/signal-palette";
 import type { AudioEngine } from "audiobits";
 
 /**
@@ -28,11 +29,9 @@ const SAMPLES = (POINTS - 1) * DETAIL + 1;
 const STRIDE = 6;
 const STEP = 1 / 120;
 const reducedQuery = "(prefers-reduced-motion: reduce)";
-const COLORS = [
-  [0.878, 0.722, 0.337],
-  [0.925, 0.808, 0.51],
-  [0.812, 0.859, 0.812],
-] as const;
+// One ribbon per signal stop (low, mid, high). Colours come from the CSS
+// tokens at mount; see lib/signal-palette.ts.
+const COLORS = ["low", "mid", "high"] as const;
 
 const VERTEX = `#version 300 es
 in vec2 a_position;
@@ -79,7 +78,7 @@ type Ribbon = {
   lift: number;
   nudge: number;
   phase: number;
-  color: (typeof COLORS)[number];
+  color: Rgb;
 };
 
 const clamp = (value: number, min: number, max: number) =>
@@ -119,7 +118,7 @@ function createRibbon(
     lift: hash(index + 13) - 0.5,
     nudge: hash(index + 17) - 0.5,
     phase: hash(index + 19) * Math.PI * 2,
-    color: COLORS[index % COLORS.length] ?? COLORS[0],
+    color: [0.5, 0.5, 0.5],
   };
 }
 
@@ -182,7 +181,11 @@ export function ThrusterRibbons({
     let moving = false;
     let width = 1;
     let height = 1;
-    const ribbons = COLORS.map((_, index) => createRibbon(index, 0, 0, 80));
+    const palette = readSignalPalette(surface);
+    const ribbons = COLORS.map((stop, index) => ({
+      ...createRibbon(index, 0, 0, 80),
+      color: palette[stop],
+    }));
     const pointX = new Float32Array(POINTS);
     const pointY = new Float32Array(POINTS);
     const spacing = new Float32Array(POINTS);
