@@ -1,7 +1,7 @@
-import { defineSound, type OneShotRecipe } from "audiobits";
+import { defineSound, type Recipe } from "audiobits";
 
 /** A short rising confirmation tone, owned and editable by the application. */
-export const confirmation: Omit<OneShotRecipe, "parameters"> = defineSound({
+export const confirmation = defineSound({
   schemaVersion: 1,
   kind: "one-shot",
   duration: 0.18,
@@ -30,4 +30,4 @@ export const confirmation: Omit<OneShotRecipe, "parameters"> = defineSound({
     },
   ],
   effects: [{ type: "filter", filter: "lowpass", frequency: 3200, q: 0.7 }],
-});
+} as const satisfies Recipe);
