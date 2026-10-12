@@ -101,7 +101,7 @@ test("documentation routes and links render the shipped package API", async ({
   page,
 }) => {
   for (const [slug, title] of [
-    ["", "Quick start"],
+    ["", "Introduction and quick start"],
     ["recipes", "Recipes"],
     ["lifecycle", "Playback and lifecycle"],
     ["parameters", "Parameters"],
@@ -426,7 +426,10 @@ test("homepage thruster uses one engine, reports output and disposes on navigati
     .getByRole("link", { name: "Docs" })
     .click();
   await expect(
-    page.getByRole("heading", { name: "Quick start", exact: true }),
+    page.getByRole("heading", {
+      name: "Introduction and quick start",
+      exact: true,
+    }),
   ).toBeVisible();
   await expect
     .poll(() =>
