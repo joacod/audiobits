@@ -1,286 +1,201 @@
 ---
-name: AudioBits showcase
-description: A charge housing for procedural browser sound, with the precision of a developer tool.
+name: audiobits showcase
+description: Live Signal. Sound you can see move, on a dark ground, with hardware-panel controls on the workbench.
 colors:
-  paper: "#f3f0e6"
-  ink: "#243c32"
-  quiet: "#536257"
-  rule: "#b8c1b3"
-  accent: "#e0b856"
-  signal: "#ecce82"
-  code: "#e8e6db"
-  focus: "#715600"
-  focus-bench: "#715600"
-  instrument-line: "#768b7d"
-  instrument-quiet: "#cfdbcf"
-  instrument-well: "#1a2c24"
-  instrument-hover: "#344e40"
+  void: "#050507"
+  ink: "#f2f2f2"
+  mute: "#8a8a92"
+  graphite: "#1b1c1e"
+  graphite-edge: "#34363a"
+  signal-low: "#2a6cff"
+  signal-mid: "#b44cff"
+  signal-high: "#ff2e88"
 typography:
   display:
-    fontFamily: "Fraunces, Georgia, serif"
-    fontSize: "clamp(3rem, 7.5vw, 6rem)"
-    fontWeight: 450
-    lineHeight: 1.05
-    letterSpacing: "-0.035em"
+    fontFamily: "Big Shoulders Display, Arial Narrow, sans-serif"
+    fontSize: "clamp(3.5rem, 11vw, 9rem)"
+    fontWeight: 900
+    lineHeight: 0.86
+    letterSpacing: "-0.01em"
+    textTransform: "uppercase"
   headline:
-    fontFamily: "Fraunces, Georgia, serif"
+    fontFamily: "Big Shoulders Display, Arial Narrow, sans-serif"
     fontSize: "clamp(2rem, 4vw, 3.4rem)"
-    fontWeight: 450
-    lineHeight: 1.12
-    letterSpacing: "-0.025em"
-  section:
-    fontFamily: "Fraunces, Georgia, serif"
-    fontSize: "clamp(1.65rem, 2.6vw, 2.2rem)"
-    fontWeight: 450
-    lineHeight: 1.15
-  title:
-    fontFamily: "Fraunces, Georgia, serif"
-    fontSize: "2.5rem"
-    fontWeight: 450
-    lineHeight: 1.15
-    letterSpacing: "-0.02em"
+    fontWeight: 800
+    lineHeight: 0.95
+    textTransform: "uppercase"
   catalog-heading:
-    fontFamily: "Fraunces, Georgia, serif"
-    fontSize: "clamp(1.7rem, 2.4vw, 2.2rem)"
-    fontWeight: 450
-    lineHeight: 1.1
-    letterSpacing: "-0.03em"
-  catalog-section:
-    fontFamily: "Fraunces, Georgia, serif"
-    fontSize: "clamp(1.45rem, 2vw, 1.8rem)"
-    fontWeight: 450
-    lineHeight: 1.15
-    letterSpacing: "-0.02em"
-  catalog-experience:
-    fontFamily: "Fraunces, Georgia, serif"
-    fontSize: "clamp(1.55rem, 2.2vw, 2rem)"
-    fontWeight: 450
-    lineHeight: 1.15
-    letterSpacing: "-0.02em"
-  catalog-name:
-    fontFamily: "Fraunces, Georgia, serif"
-    fontSize: "1.25rem"
-    fontWeight: 450
-    lineHeight: 1.2
-    letterSpacing: "-0.02em"
+    fontFamily: "Big Shoulders Display, Arial Narrow, sans-serif"
+    fontSize: "clamp(2.6rem, 5vw, 4.4rem)"
+    fontWeight: 800
+    lineHeight: 0.9
+    textTransform: "uppercase"
   wordmark:
-    fontFamily: "Fraunces, Georgia, serif"
-    fontSize: "1.35rem"
-    fontWeight: 520
-    letterSpacing: "-0.03em"
+    fontFamily: "Big Shoulders Display, Arial Narrow, sans-serif"
+    fontSize: "1.6rem"
+    fontWeight: 800
+    textTransform: "lowercase"
   body:
-    fontFamily: "Arial, sans-serif"
+    fontFamily: "Geist Mono, ui-monospace, monospace"
     fontSize: "1rem"
     lineHeight: 1.55
   nav:
-    fontFamily: "Arial, sans-serif"
-    fontSize: "0.95rem"
-  button:
-    fontFamily: "Arial, sans-serif"
-    fontSize: "0.875rem"
-    lineHeight: 1.3
+    fontFamily: "Geist Mono, ui-monospace, monospace"
+    fontSize: "0.85rem"
+    textTransform: "lowercase"
   label:
-    fontFamily: "Arial, sans-serif"
-    fontSize: "0.9rem"
+    fontFamily: "Geist Mono, ui-monospace, monospace"
+    fontSize: "0.72rem"
+    letterSpacing: "0.1em"
+    textTransform: "uppercase"
   code:
-    fontFamily: "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
+    fontFamily: "Geist Mono, ui-monospace, monospace"
     fontSize: "0.8125rem"
     lineHeight: 1.6
 rounded:
   control: "4px"
+  panel: "6px"
 spacing:
   compact: "0.5rem"
   control-gap: "0.75rem"
   base: "1rem"
   gutter-min: "1.5rem"
   section: "2.25rem"
-  column-gap: "1.5rem"
 components:
-  button-play:
-    backgroundColor: "{colors.accent}"
-    textColor: "{colors.ink}"
-    typography: "{typography.button}"
+  button-primary:
+    backgroundColor: "{colors.ink}"
+    textColor: "{colors.void}"
     rounded: "{rounded.control}"
     padding: "0.5rem 0.9rem"
-  button-play-hover:
-    backgroundColor: "{colors.signal}"
+  button-primary-hover:
+    backgroundColor: "{colors.void}"
+    textColor: "{colors.ink}"
   button-secondary:
     backgroundColor: "transparent"
     textColor: "{colors.ink}"
-    typography: "{typography.button}"
+    borderColor: "{colors.graphite-edge}"
     rounded: "{rounded.control}"
     padding: "0.5rem 0.9rem"
   button-secondary-hover:
-    backgroundColor: "{colors.code}"
-  button-housing:
-    backgroundColor: "transparent"
-    textColor: "{colors.paper}"
-    typography: "{typography.button}"
-    rounded: "{rounded.control}"
-    padding: "0.5rem 0.9rem"
-  button-housing-hover:
-    backgroundColor: "{colors.instrument-hover}"
-    textColor: "{colors.paper}"
-  install-command:
-    backgroundColor: "{colors.code}"
-    textColor: "{colors.ink}"
-    typography: "{typography.code}"
-    rounded: "{rounded.control}"
-    padding: "0.5rem 0.75rem"
-  site-header:
-    backgroundColor: "{colors.ink}"
-    textColor: "{colors.paper}"
-    typography: "{typography.nav}"
-  specimen-entry:
-    backgroundColor: "{colors.paper}"
-    textColor: "{colors.ink}"
-    padding: "2.5rem 0"
-  output-scope:
-    backgroundColor: "{colors.ink}"
-    textColor: "{colors.paper}"
-    padding: "1.25rem 1.5rem"
+    backgroundColor: "{colors.graphite}"
+  workbench-panel:
+    backgroundColor: "{colors.graphite}"
+    borderColor: "{colors.graphite-edge}"
+    rounded: "{rounded.panel}"
   code-panel:
-    backgroundColor: "{colors.code}"
+    backgroundColor: "{colors.graphite}"
     textColor: "{colors.ink}"
     typography: "{typography.code}"
     rounded: "{rounded.control}"
     padding: "1.25rem"
+  led-meter:
+    backgroundColor: "{colors.graphite-edge}"
+    activeColor: "signal gradient at the current output"
 ---
 
-# Design System: AudioBits showcase
+# Design System: audiobits showcase
 
 ## Overview
 
-**Creative North Star: "The charge housing"**
+**Creative North Star: "Live Signal"**
 
-The homepage is one mineral-green housing. The header and the Energy Charge hero share that field, so the instrument is the first thing a visitor can hold. Warm paper is reserved for labels, code, and the footer plate. Brass marks charge and primary playback. Pale signal marks action and focus while the ground is green.
+The waveform is the logo, and it moves only when sound moves. The showcase is dark-first: Void ground, Ink text, Mute for secondary copy. The blue, violet and magenta signal gradient belongs to live elements and to the mark, nothing else. The home page and the instrument pages speak in huge condensed Big Shoulders Display headlines and Geist Mono UI. The workbench borrows a hardware panel language: graphite panels, knob-capped faders and LED meters.
 
-Catalog and experience routes keep their paper benches and their existing workbench layouts. They share the same header, type, controls, and tokens. Documentation stays on Fumadocs and does not inherit the housing. Fraunces remains the voice because the charge numeral and the headline already use it.
+Source: the approved brand guide v1.0 (direction B Live Signal for home and instruments, A Hardware Panel controls for the workbench). Documentation stays on Fumadocs and is not re-skinned by this system.
 
 **Key Characteristics:**
 
-- Mineral-green housing on the homepage, warm paper on catalog and experience benches.
-- Brass for charge, Play, and pressed controls. Pale signal for housing focus, current navigation, and primary text actions.
-- Fraunces for the voice, Arial for controls, monospace only for code.
-- Hairline rules and flat surfaces. No cards, glass, neon, or shadows.
-- One live Energy Charge engine on the homepage. Supporting previews stay static.
+- Void #050507 ground, Ink #F2F2F2 text, Mute #8A8A92 secondary.
+- Signal gradient #2A6CFF to #B44CFF to #FF2E88, mapped to state (low, mid, high), only on live elements and the mark.
+- Big Shoulders Display 800 and 900 for headlines and the wordmark. Geist Mono for UI, labels, code and instrument body copy.
+- A live waveform drawn in code from real output samples. At rest it shows the fixed mark as a still frame.
+- Graphite #1B1C1E panels with #34363A edges on the workbench. LED segments light with the gradient value at the current output.
+- Motion only when sound or state moves. Reduced motion keeps the waveform still and lets only the meters update.
+
+## Mark
+
+The approved mark is a single waveform stroke that builds from quiet to loud, like a charge. `BrandMark` in [app/brand-mark.tsx](app/brand-mark.tsx) draws it inline:
+
+- Above 32 px: the full wave (`mark-1-wave`).
+- 32 px and below: the small variant with the first bump dropped and a thicker stroke. The header uses this.
+- `tone="mono"`: one-colour Ink stroke on dark, used as the non-live resting frame of the hero waveform.
+
+Clear space is a quarter of the mark's width. Minimum size 16 px. Never recolour the stroke outside the signal gradient, except one-colour Ink on dark or Void on light.
+
+The wordmark is `audiobits`, lowercase, Big Shoulders Display 800, set beside the mark.
 
 ## Colors
 
-The palette is oxidized green, warm paper, and brass. The frontmatter records the normative CSS values. Showcase colors are declared on `.foundation`, so the document light and dark themes do not repaint these routes.
+All values live once, as custom properties on `.foundation` in [app/globals.css](app/globals.css). Canvas and WebGL painters read the same properties at mount through [lib/signal-palette.ts](lib/signal-palette.ts), so no component owns a hex value.
 
-### Primary
+- **Void** (`--void`): page ground, inverted text on Ink buttons, selection text.
+- **Ink** (`--ink`): text, primary buttons, focus outlines, the resting mark.
+- **Mute** (`--mute`): secondary text, labels, resting charge rings.
+- **Graphite** (`--graphite`): workbench panels, code panels, the output scope.
+- **Graphite edge** (`--graphite-edge`): hairline rules, control borders, unlit LED segments, fader tracks.
+- **Signal low, mid, high** (`--signal-low`, `--signal-mid`, `--signal-high`) and `--signal-gradient`: live waveform stroke, charge progress ring, charge rings while charged, thruster trail while thrusting, lit LED segments.
 
-- **Brass** (`accent`): Play, pressed controls, the hold meter, and the wordmark core.
-- **Pale signal brass** (`signal`): primary text actions, current navigation, housing focus, play hover, and the waveform on ink.
+**The Live Rule.** The gradient appears only while something is live: audio is running and real samples are drawn, or state (charge, thrust, output level) is above rest. At rest those elements fall back to Mute or Ink. Never use the gradient on body text, headings or flat surfaces.
 
-### Neutral
-
-- **Green ink** (`ink`): homepage ground, shared header, main text on paper, and dark signal surfaces.
-- **Warm paper** (`paper`): catalog pages, code chips, editable fields, and the homepage footer plate.
-- **Quiet green** (`quiet`): supporting text on paper, including the npm version line.
-- **Pale instrument green** (`instrument-quiet`): supporting text and static portrait strokes on the housing.
-- **Sage rule** (`rule`): dividers and ordinary control borders on paper.
-- **Instrument line** (`instrument-line`): hairline rules and quiet control borders on the housing.
-- **Code paper** (`code`): code panels, the install chip, and secondary hover on paper.
-- **Instrument well** (`instrument-well`): the charge well and the hold control's inner disc.
-- **Instrument hover** (`instrument-hover`): secondary control hover on the housing.
-- **Dark ochre** (`focus` and `focus-bench`): focus on paper. The housing and header switch focus to pale signal, and the paper footer restores ochre through `focus-bench`.
-
-**The Housing Rule.** The homepage ground is ink. Paper is for labels, code, and the footer plate. Do not paint the catalog or a workbench as a second dark marketing page.
-
-**The Brass State Rule.** Use brass for Play, the hold meter, and pressed controls. Ordinary actions stay transparent with a fine rule.
+Contrast on Void: Ink 18.2:1, Mute 5.9:1. On Graphite: Ink 15.2:1, Mute 5.0:1.
 
 ## Typography
 
-**Display Font:** Fraunces, with Georgia and serif fallbacks. The variable face is self-hosted.
-**Body Font:** Arial, with sans-serif fallback.
-**Code Font:** ui-monospace, with SFMono, Menlo, Consolas, and monospace fallbacks.
+**Display:** Big Shoulders Display 800 and 900, uppercase for headings, lowercase for the wordmark.
+**UI and body:** Geist Mono 400 and 500 for navigation, labels, controls, code and instrument copy.
 
-Fraunces carries the headline, section titles, the wordmark, and the charge numeral. Arial keeps controls and explanation plain. Code is inspectable and does not use terminal chrome.
+Both faces are SIL Open Font License 1.1 and self-hosted with `next/font/local` from their Fontsource packages ([app/fonts.ts](app/fonts.ts)). License texts sit in [licenses/](licenses/README.md).
 
 ### Hierarchy
 
-- **Display:** the homepage headline and other primary page headings. Fluid size, tight leading, balanced wrapping.
-- **Headline:** experience page headings.
-- **Catalog:** the overview heading, its section titles, experience names, and sound names. These steps stay smaller than the homepage display so the index fits the first screen.
-- **Section:** homepage section headings, a smaller fluid scale than the page headline.
-- **Title:** sound names on the collection. Landing use-column and preview titles are smaller than the collection title.
-- **Wordmark:** Fraunces at (1.35rem) and weight (520). Hover does not recolor the word. The brass core brightens to signal.
-- **Body:** explanation at (1rem) with a maximum measure of (70ch). Housing support copy uses pale instrument green.
-- **Navigation and label:** header links at (0.95rem). Control labels use the observed (0.9rem) range, with tabular numerals where a value changes.
-- **Code:** showcase `pre` uses (0.8125rem), line-height (1.6), and tab size (2). The install chip uses (0.85rem). Long lines wrap or scroll inside the panel.
-
-**The Voice Rule.** Fraunces is for the voice and the charge numeral. Arial is for controls. Monospace is only for code.
+- **Display:** the home headline, `clamp(3.5rem, 11vw, 9rem)`, weight 900, line-height 0.86.
+- **Headline and section:** weight 800, line-height 0.95.
+- **Catalog heading:** `clamp(2.6rem, 5vw, 4.4rem)`.
+- **Labels:** workbench labels and index group titles are 0.72rem uppercase mono with 0.1em tracking, in Mute.
+- **Navigation:** lowercase mono at 0.85rem in Mute; the current page and hover use Ink.
 
 ## Layout
 
-Showcase pages use a content width of (76rem). The gutter is `max(1.5rem, calc((100vw - 76rem) / 2))`, and (1rem) below (760px). Full-bleed bands cancel that gutter with an equal negative margin.
+Content width (76rem) with gutter `max(1.5rem, calc((100vw - 76rem) / 2))`, (1rem) below (760px). The home order stays: header, Energy Charge hero, use columns, catalog preview, footer. The hero is two columns above (900px) and stacks below it. A full-width signal band closes the hero: the live waveform when the charge voice is running, the still mark otherwise.
 
-The homepage order is header, Energy Charge hero, three short use columns, a static catalog preview, and a paper footer. The hero is two columns above (900px): copy on the left, the charge well on the right. At (900px) and below it stacks, with the copy directly above the well. At (760px) and below the well is at most (22rem). At (420px) and below it is at most (19rem), so the full ring stays in the first screen at (375px) by (844px). Use columns and the three sound previews stay three-across until (760px), then stack. Experience rows become two columns at that same breakpoint.
-
-The shared header is an ink band. On the homepage its background is transparent so it joins the housing. On catalog routes it is a solid ink band over the paper bench. At (760px) and below, the links wrap onto their own row. Every header link has a (44px) minimum height.
-
-The catalog index is a paper column with a sticky grouped index from (761px). Its output strip sits with the bundled sounds on desktop and becomes a fixed bottom dock at (760px) and below. A workbench keeps the stage and controls in one column, with the inspector beside them from (980px) and below them on smaller screens. Below (760px) the workbench playback group is a fixed bottom strip.
+Catalog index and workbench layouts are unchanged. Every interactive target keeps a (44px) minimum height.
 
 ## Elevation & Depth
 
-The showcase uses no box shadows. Depth comes from the ink housing, the paper footer plate, code paper, and hairline rules. The charge well is a radial disc, not a raised card. The monitor uses stacking order and stays opaque.
-
-**The Ruled Surface Rule.** Separate sections and specimens with hairline rules. Do not add floating-card shadows, glass, or a second decorative field behind the charge well.
-
-## Shapes
-
-The signature geometry is the concentric ring: the wordmark, the charge well, and the energy-charge preview mark. Specimens, buttons, and code stay rectangular. Controls, numeric fields, and code panels share a (4px) radius. Do not turn that radius into a rounded card.
+Depth comes from Void against Graphite, hairline Graphite edges and a single inset top highlight on workbench panels. No floating shadows, glass or blobs.
 
 ## Components
 
 ### Buttons
 
-Play and pressed controls use brass, ink text, and weight (600). Ordinary paper actions are transparent with a sage border and hover to code paper. Housing actions are transparent with an instrument-line border, paper text, and an instrument-hover fill. The minimum height is (44px). Disabled buttons use opacity (0.5). Background and border changes take (160ms) ease-out. Reduced motion removes transitions.
+Primary (Play, Start charge, pressed toggles, the selected inspector tab): Ink fill, Void text. Hover inverts to Void with an Ink border. Secondary: transparent with a Graphite edge; hover fills Graphite. Disabled: opacity 0.5. Focus everywhere is a (3px) Ink outline with a (4px) offset; the hold control uses (8px).
 
-Focus on paper is a dark-ochre (3px) outline offset by (4px). Focus on the header and the homepage is pale signal at the same width and offset. The hold control uses pale signal with an (8px) offset.
+### Faders
 
-### Install command
+Native range inputs keep their roles, labels, steps and keyboard behaviour. They are drawn as a Graphite-edge track with a graphite knob cap carrying an Ink indicator, so the steps a parameter takes line up with the native step.
 
-`npm install audiobits` is a code-paper chip. The Copy control writes that exact string and announces "Install command copied." The empty announcement does not take layout space. The footer repeats the same command as plain code, without a second copy button.
+### Output scope
 
-### Navigation
+`OutputScope` taps the existing engine output. On the home hero (`signal`), the band shows the still Ink mark until a user gesture has started audio, then draws real samples with the signal gradient. On the workbench (`measured`), the scope adds an LED meter: 16 segments, lit to the current output level with the gradient. With reduced motion the canvas stays still and only the meter updates.
 
-One header serves the homepage and the catalog. The links are Home, Catalog, Docs, and GitHub. Catalog points at `/catalog`. The current page is underlined in signal. Docs uses the Fumadocs sidebar instead of this header. Older `/sounds` and `/experiences` URLs permanently redirect to the matching catalog URL.
+### Charge and thruster instruments
 
-### Catalog preview
-
-The homepage preview is static. Two experience rows and three portrait links point at `/catalog/[slug]`. Portraits keep the pulse, harmonic, and flow drawings. Nothing in that section starts audio. The section link opens `/catalog`.
-
-### Catalog overview
-
-`/catalog` is the paper browsing page. A compact heading sits with a sticky grouped index: Interactive experiences, then Bundled sounds. The index and the previews share one entry list. The Energy Charge rings sit beside their copy. The Reactive Thruster preview is an ink flight field under its copy. Both previews are static and open the full interaction through their labelled links. They create no audio hosts or render loops. Bundled sounds are compact rows with the existing pulse, harmonic, and flow marks, Play or Start/Stop, and a workbench link. One output strip serves the whole collection. Its trace is tall enough to read a short sound, and it stays a strip rather than a second monitor card. Experience and bundled sound links open `/catalog/[slug]`. `/sounds` and `/experiences/energy-charge` and `/experiences/reactive-thruster` permanently redirect there. At 760px and below, the index becomes a Catalog menu with the same groups, and the output strip returns to the bottom dock. The page padding keeps the last row above that dock.
-
-### Catalog sound workbench
-
-`/catalog/[slug]` is the paper workbench for one bundled sound, and the same frame holds Energy Charge and Reactive Thruster. The same index stays beside it, and becomes the Catalog menu below 760px. A breadcrumb, the sound name, the description, and a bundled-source line introduce the entry. The page ground stays paper. The stage is an ink field: its family mark shows control position when the recipe has a parameter, and its canvas is measured output. Pulse, harmonic, and flow each keep one painter. Playback, the recipe's own parameters, seed, mute, and volume sit with the stage. Code, Recipe, and Raw Web Audio stay in the inspector, beside that column from 980px and below it on smaller screens. Tabs and sliders that the recipe does not support are omitted. Below 760px the playback group becomes a bottom strip. Related sounds and documentation links sit under the bench. Leaving the entry disposes that page's audio session. Energy Charge keeps the hold instrument. Reactive Thruster is a movement field driven by the same pointer that sets throttle. The inspector shows the independent catalog files, and the website visuals stay out of those files. `/sounds/[slug]` permanently redirects to the same entry.
-
-### Audio monitor, workbench, and inspector
-
-The catalog output strip and the workbench stage read native output. Pulse, harmonic, and flow marks stay paper and ink. Inspector tabs, recipe editing, and playback controls keep the paper-bench treatment. The workbench uses one measured stage and does not add a second analyser. A canvas stops drawing when it is offscreen, hidden, or reduced motion is on. Charge rings and thruster ribbons do not keep an idle animation loop.
+Charge rings and the progress ring rest in Mute and Graphite edge and take the signal gradient as charge rises; output level brightens them. The thruster trail shows the gradient in proportion to thrust and fades out at rest.
 
 ## Do's and Don'ts
 
 ### Do:
 
-- **Do** keep Hold to charge as the homepage's primary action, with Explore the catalog and Start building as the text actions.
-- **Do** take the package version from generated metadata.
-- **Do** keep keyboard and touch targets at least (44px), including header, copy, and footer actions.
-- **Do** reset paper-surface focus to ochre wherever the housing has switched focus to signal.
-- **Do** let code wrap or scroll inside its own panel.
+- **Do** start audio only from a user gesture.
+- **Do** keep the resting frame honest: the still mark or a non-live frame, never a fake animated waveform.
+- **Do** read colours from the tokens, including in canvas and WebGL code.
+- **Do** keep keyboard and touch targets at least (44px).
 
 ### Don't:
 
-- **Don't** mount a second live audio engine on the homepage.
-- **Don't** autoplay, rotate the hero, or add a decorative effect that competes with the charge well.
-- **Don't** restyle Fumadocs with the showcase housing.
-- **Don't** invent performance, package-size, adoption, or popularity claims.
-- **Don't** replace Fraunces on the charge numeral or the homepage headline. The face is part of the instrument.
+- **Don't** use warm paper, serif display faces, glassmorphism, blobs, bento grids, gradient text or stock sparkles.
+- **Don't** put the signal gradient on text or flat surfaces.
+- **Don't** animate anything that is not following sound or state.
+- **Don't** restyle Fumadocs with the showcase tokens.
 
-Source of truth: [global styles](app/globals.css), [landing styles](app/landing.css), [hero styles](app/charge-hero.css), [header](app/site-header.tsx), [landing](app/page.tsx), and [charge hero](app/charge-hero.tsx). This record describes the showcase, not the Fumadocs theme.
+Source of truth: [global styles](app/globals.css), [landing styles](app/landing.css), [hero styles](app/charge-hero.css), [catalog styles](app/catalog.css), [mark](app/brand-mark.tsx), [header](app/site-header.tsx), [output scope](app/output-scope.tsx).
