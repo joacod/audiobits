@@ -46,25 +46,6 @@ import its local `recipe.ts`, create a sound, and play it after gesture activati
 You own that source. The npm package supplies only the engine and recipe language.
 See [Quick start](/docs) for a complete local recipe using public engine APIs.
 
-## Migrating from bundled recipes
-
-The pre-1.0 breaking minor line removes `audiobits/recipes` and the npm-shipped
-`skill/` directory. Replace former recipe imports with local catalog source:
-
-1. Copy the required `catalog/recipes/<id>/recipe.ts` and MIT license, or install
-   that item through the source registry. Keep the installed source in your app.
-2. Import from its local path, such as `./sounds/recipes/confirmation/recipe`.
-   Export names, sound data, controls and schema version 1 remain the same.
-3. Keep `createAudio`, `defineSound`, `validateRecipe`, recipe types,
-   `audiobits/schema.json` and `audiobits/capabilities.json` imports unchanged.
-   Capabilities describe runtime/language support; use `registry.json` for catalog discovery.
-4. Install agent guidance separately from
-   [skills/audiobits](https://github.com/joacod/audiobits/tree/main/skills/audiobits)
-   if needed. It is independent of npm installation.
-
-Activation, playback and cleanup behavior are unchanged. The package does not
-provide a replacement recipe subpath or catalog runtime dependency.
-
 ## Interactive source
 
 [Reactive thruster](/catalog/reactive-thruster) is a developer-owned catalog

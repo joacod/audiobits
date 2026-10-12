@@ -78,8 +78,7 @@ and use AudioBits as the runtime.
 
 The npm package owns the engine and recipe language. Recipes and interactive
 examples are copy-owned application source. Agent instructions live separately
-in the [AudioBits Skill](skills/audiobits/SKILL.md). For upgrades from bundled
-recipe exports, follow the [migration guide](https://audiobits.joacod.com/docs/recipes#migrating-from-bundled-recipes).
+in the [AudioBits Skill](skills/audiobits/SKILL.md).
 
 ## Why AudioBits?
 

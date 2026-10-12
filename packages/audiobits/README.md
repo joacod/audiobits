@@ -63,8 +63,6 @@ and capability metadata. Ready-made recipes and interactive experiences live in
 the [copy-owned catalog](https://github.com/joacod/audiobits/tree/main/catalog).
 Copy or install the source you need, retain its MIT license, and import it locally.
 The copied files belong to your application and can be edited independently.
-See the [migration guide](https://audiobits.joacod.com/docs/recipes#migrating-from-bundled-recipes)
-when upgrading from a version with bundled recipe exports.
 
 ## Controls and composition
 
