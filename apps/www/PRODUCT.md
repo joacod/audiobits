@@ -65,6 +65,4 @@ adequate contrast, reduced motion, mute and explicit Stop. No sound-only feedbac
   reach. No second live engine.
 - `/catalog`: browse every current example and bundled sound. Experiences come first, then sounds. One shared playback session covers the sounds. Experience previews are static and link to the full interactions without mounting audio hosts. The shared header's Catalog item points here. Experience and bundled rows open `/catalog/[slug]`.
 - `/catalog/[slug]`: understand one bundled sound, or open Energy Charge or Reactive Thruster in the same frame. The stage, playback, and inspector stay on one page. Each visit owns one audio session and disposes it on leave. Experience pages show the independent catalog source.
-- `/sounds` and `/sounds/[slug]` permanently redirect to `/catalog` and `/catalog/[slug]`.
-- `/experiences/energy-charge` and `/experiences/reactive-thruster` permanently redirect to the matching catalog entries.
 - `/docs`: read the calm Fumadocs reference; marketing components do not enter it.

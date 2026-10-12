@@ -175,10 +175,6 @@ changes only the seed. JSON Apply reports validation issues and preserves
 last-valid playback; applying valid data stops current voices. No JavaScript
 text is evaluated.
 
-`/sounds`, `/sounds/[slug]`, `/experiences/energy-charge`, and
-`/experiences/reactive-thruster` permanently redirect to the matching catalog
-URL.
-
 `pnpm test` typechecks every TypeScript docs fence and generated examples across
 control/seed extrema through public exports. `pnpm test:browser` bundles the
 exact displayed host examples, then exercises activation, Stop, and disposal

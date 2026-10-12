@@ -9,7 +9,6 @@ Read root `AGENTS.md` first.
 - `/` = discovery. Make a new visitor understand and want AudioBits.
 - `/catalog` = the browsing index for interactive experiences and bundled sounds.
 - `/catalog/[slug]` = one bundled sound workbench, or Energy Charge or Reactive Thruster. Manipulate, inspect, edit, and copy that entry.
-- `/sounds`, `/sounds/[slug]`, `/experiences/energy-charge`, and `/experiences/reactive-thruster` permanently redirect to the matching catalog URL.
 - `/docs` = Fumadocs reference documentation. Keep it calm, readable,
   predictable, and separate from the showcase experience.
 
@@ -22,7 +21,9 @@ because their human purposes differ.
   feature strictly requires a runtime change.
 - Presentation metadata stays outside `SoundRecipe`.
 - Website-only dependencies stay inside `apps/www`.
-- Fumadocs keeps its own layout and documentation UX.
+- Fumadocs keeps its stock neutral styling, layout, typography, light/dark
+  palettes and theme switching. Dark mode is the default. Scope Live Signal
+  presentation tokens and fonts to `.foundation`.
 - Do not make documentation pages inherit showcase motion or heavy visual
   effects.
 - Use real AudioBits analyser output for signal/audio-reactive visuals where

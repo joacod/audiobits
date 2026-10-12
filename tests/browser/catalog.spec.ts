@@ -302,10 +302,7 @@ test("catalog navigation, focus, and layout hold on desktop and mobile", async (
   });
 });
 
-test("legacy sound and experience URLs redirect to the catalog", async ({
-  page,
-  request,
-}) => {
+test("main navigation opens the canonical catalog", async ({ page }) => {
   await page.goto(home);
   await page
     .getByRole("navigation", { name: "Main navigation" })
@@ -315,16 +312,4 @@ test("legacy sound and experience URLs redirect to the catalog", async ({
   await expect(
     page.getByRole("link", { name: "Catalog", exact: true }),
   ).toHaveAttribute("aria-current", "page");
-  for (const [from, to] of [
-    ["/sounds", "/catalog"],
-    ["/sounds/impact", "/catalog/impact"],
-    ["/experiences/energy-charge", "/catalog/energy-charge"],
-    ["/experiences/reactive-thruster", "/catalog/reactive-thruster"],
-  ]) {
-    const response = await request.get(`${home}${from}`, { maxRedirects: 0 });
-    expect(response.status(), from).toBe(308);
-    expect(new URL(response.headers().location ?? "", home).pathname).toBe(to);
-    await page.goto(`${home}${from}`);
-    await expect(page).toHaveURL(`${home}${to}`);
-  }
 });

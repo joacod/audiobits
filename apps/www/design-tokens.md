@@ -1,14 +1,14 @@
 # Showcase design tokens
 
-Live Signal colour and type tokens live once, on `:root` inside the `tokens`
-layer of [app/globals.css](app/globals.css). The showcase (`.foundation`) reads
-them directly. Fumadocs reads them only through its `--color-fd-*` theme
-variables, which globals.css maps to the tokens for the dark theme (the default).
-Fumadocs' light theme keeps its neutral palette.
+Live Signal colour and type tokens live once, on `.foundation` inside the
+`tokens` layer of [app/globals.css](app/globals.css). They apply only to the
+showcase. Fumadocs uses its stock neutral styling, components, layout,
+typography and light/dark palettes. Dark mode is the default, with normal
+theme switching.
 
 ## Source of truth
 
-CSS custom properties on `:root` in the `tokens` layer are the source of truth.
+CSS custom properties on `.foundation` in the `tokens` layer are the source of truth.
 The stylesheet declares the layer order `theme, tokens, base, components,
 utilities`. Layout values (`--gutter`, `--gap`, `--control-radius`,
 `--motion-ui`) stay on `.foundation`. Values follow the approved brand guide
@@ -43,5 +43,5 @@ buttons. Playback uses `.play-action`. Reduced motion removes showcase
 transitions; the waveform stays still and only meters update.
 
 When this stylesheet changes, check a documentation page in both document
-themes as well as the homepage. Restyle docs only through the `--color-fd-*`
-mapping; do not fork Fumadocs layout components.
+themes as well as the homepage. Keep Live Signal tokens, including `--font-mono`,
+scoped to `.foundation`; do not override Fumadocs tokens or fork its components.
