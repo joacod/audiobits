@@ -50,7 +50,10 @@ because their human purposes differ.
 
 ## Verification
 
-- Copy/content-only changes: run only relevant static/build checks.
+- Copy/content-only changes: run only relevant static/build checks. When visible
+  copy is likely to affect wrapping or viewport fit, include the relevant
+  existing Chromium layout test before handoff. For homepage copy, use the
+  landing composition tests in `landing.spec.ts`.
 - Visual-only changes: lint/typecheck/build plus focused visual inspection.
 - Changed website interaction: run the affected Chromium Playwright test(s).
 - Do not run package release gates or compatibility suites for ordinary website
