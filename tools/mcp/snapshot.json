@@ -1,0 +1,585 @@
+{
+  "repository": "https://github.com/joacod/audiobits",
+  "revision": "c7404ebcb037a3b640d0251229b71aa26a9a9a14",
+  "items": [
+    {
+      "name": "confirmation",
+      "type": "registry:item",
+      "title": "Confirmation",
+      "description": "A soft upward chime for a completed action.",
+      "dependencies": ["audiobits"],
+      "categories": ["recipe", "one-shot"],
+      "meta": {
+        "classification": "recipe",
+        "tags": ["confirmation", "one-shot"],
+        "schemaVersion": 1,
+        "compatibility": {
+          "runtime": "audiobits public API with recipe schema 1",
+          "language": "TypeScript",
+          "moduleResolution": "Bundler",
+          "browser": "Web Audio; automated verification in Chromium",
+          "framework": "none"
+        },
+        "exportName": "confirmation",
+        "requiredCapabilities": {
+          "sources": ["oscillator"],
+          "filters": ["lowpass"],
+          "parameterModes": [],
+          "runtime": ["gesture-start", "seeded-replay", "dispose"],
+          "kinds": ["one-shot"],
+          "waveforms": ["sine"],
+          "noiseColors": [],
+          "mappingScales": [],
+          "automationCurves": ["exponential"]
+        }
+      },
+      "files": [
+        {
+          "path": "catalog/recipes/confirmation/recipe.ts",
+          "type": "registry:file",
+          "target": "~/src/sounds/recipes/confirmation/recipe.ts",
+          "bytes": 947,
+          "sha256": "7900374c355fc6704b851611981ae15919e33408930caf27125ef570c16df155"
+        },
+        {
+          "path": "LICENSE",
+          "type": "registry:file",
+          "target": "~/src/sounds/recipes/confirmation/LICENSE",
+          "bytes": 1063,
+          "sha256": "03fbc2b99516352931922164b42a05d2e5d14143b9f808449fb1f85ab6c46942"
+        }
+      ],
+      "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/c7404ebcb037a3b640d0251229b71aa26a9a9a14/catalog/README.md for integration and update guidance."
+    },
+    {
+      "name": "energy-charge",
+      "type": "registry:item",
+      "title": "Energy charge",
+      "description": "Hold to build energy. Shape the sound with progress.",
+      "dependencies": ["audiobits"],
+      "categories": ["experience"],
+      "meta": {
+        "classification": "experience",
+        "tags": ["energy", "sustained", "progress"],
+        "schemaVersion": 1,
+        "compatibility": {
+          "runtime": "audiobits public API with recipe schema 1",
+          "language": "TypeScript",
+          "moduleResolution": "Bundler",
+          "browser": "Web Audio; automated verification in Chromium",
+          "framework": "none"
+        },
+        "exportName": "energyCharge",
+        "requiredCapabilities": {
+          "sources": ["noise", "oscillator"],
+          "filters": ["bandpass", "lowpass"],
+          "parameterModes": ["live"],
+          "runtime": [
+            "gesture-start",
+            "live-controls",
+            "seeded-replay",
+            "buses",
+            "suspend",
+            "dispose"
+          ],
+          "kinds": ["sustained"],
+          "waveforms": ["sawtooth", "sine", "triangle"],
+          "noiseColors": ["white"],
+          "mappingScales": ["exponential", "linear"],
+          "automationCurves": []
+        }
+      },
+      "files": [
+        {
+          "path": "catalog/experiences/energy-charge/recipe.ts",
+          "type": "registry:file",
+          "target": "~/src/sounds/experiences/energy-charge/recipe.ts",
+          "bytes": 2473,
+          "sha256": "bd34f72bcc3ac43cbe2ccafdbd30dbdbb211dbc2606089e2b7f43765eb90f5b1"
+        },
+        {
+          "path": "catalog/experiences/energy-charge/progress.ts",
+          "type": "registry:file",
+          "target": "~/src/sounds/experiences/energy-charge/progress.ts",
+          "bytes": 2019,
+          "sha256": "a4802cd3ee666695487ee5260a0167429d27be95040448e0c57358f459d4bd53"
+        },
+        {
+          "path": "catalog/experiences/energy-charge/host.ts",
+          "type": "registry:file",
+          "target": "~/src/sounds/experiences/energy-charge/host.ts",
+          "bytes": 1483,
+          "sha256": "23b981cbb84aa99a60dfc3565e7379d20521b85d5c185abf6054a9dae2dd133e"
+        },
+        {
+          "path": "catalog/experiences/energy-charge/index.html",
+          "type": "registry:file",
+          "target": "~/src/sounds/experiences/energy-charge/index.html",
+          "bytes": 1674,
+          "sha256": "9a1799f2b762ab850082be05f0f2ee7defcbffb11cb29278321e3300b1658877"
+        },
+        {
+          "path": "catalog/experiences/energy-charge/README.md",
+          "type": "registry:file",
+          "target": "~/src/sounds/experiences/energy-charge/README.md",
+          "bytes": 3289,
+          "sha256": "0f7dacae53f6e6f1d8e0b3ec9927f6cb30e547fb8ab71471cabdc8856f1c8782"
+        },
+        {
+          "path": "LICENSE",
+          "type": "registry:file",
+          "target": "~/src/sounds/experiences/energy-charge/LICENSE",
+          "bytes": 1063,
+          "sha256": "03fbc2b99516352931922164b42a05d2e5d14143b9f808449fb1f85ab6c46942"
+        }
+      ],
+      "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/c7404ebcb037a3b640d0251229b71aa26a9a9a14/catalog/README.md for integration and update guidance."
+    },
+    {
+      "name": "gentle-rejection",
+      "type": "registry:item",
+      "title": "Gentle rejection",
+      "description": "Two soft descending tones for an unavailable action.",
+      "dependencies": ["audiobits"],
+      "categories": ["recipe", "one-shot"],
+      "meta": {
+        "classification": "recipe",
+        "tags": ["gentle-rejection", "one-shot"],
+        "schemaVersion": 1,
+        "compatibility": {
+          "runtime": "audiobits public API with recipe schema 1",
+          "language": "TypeScript",
+          "moduleResolution": "Bundler",
+          "browser": "Web Audio; automated verification in Chromium",
+          "framework": "none"
+        },
+        "exportName": "gentleRejection",
+        "requiredCapabilities": {
+          "sources": ["oscillator"],
+          "filters": ["lowpass"],
+          "parameterModes": [],
+          "runtime": ["gesture-start", "seeded-replay", "dispose"],
+          "kinds": ["one-shot"],
+          "waveforms": ["sine"],
+          "noiseColors": [],
+          "mappingScales": [],
+          "automationCurves": ["exponential"]
+        }
+      },
+      "files": [
+        {
+          "path": "catalog/recipes/gentle-rejection/recipe.ts",
+          "type": "registry:file",
+          "target": "~/src/sounds/recipes/gentle-rejection/recipe.ts",
+          "bytes": 1092,
+          "sha256": "f939d15effe7d65e5b41ed95b67ecd60ab6b6a3f7593573d5d940ad332565637"
+        },
+        {
+          "path": "LICENSE",
+          "type": "registry:file",
+          "target": "~/src/sounds/recipes/gentle-rejection/LICENSE",
+          "bytes": 1063,
+          "sha256": "03fbc2b99516352931922164b42a05d2e5d14143b9f808449fb1f85ab6c46942"
+        }
+      ],
+      "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/c7404ebcb037a3b640d0251229b71aa26a9a9a14/catalog/README.md for integration and update guidance."
+    },
+    {
+      "name": "glass-notification",
+      "type": "registry:item",
+      "title": "Glass notification",
+      "description": "Four delicate partials with independent decays and a bright glass rim.",
+      "dependencies": ["audiobits"],
+      "categories": ["recipe", "one-shot"],
+      "meta": {
+        "classification": "recipe",
+        "tags": ["glass-notification", "one-shot"],
+        "schemaVersion": 1,
+        "compatibility": {
+          "runtime": "audiobits public API with recipe schema 1",
+          "language": "TypeScript",
+          "moduleResolution": "Bundler",
+          "browser": "Web Audio; automated verification in Chromium",
+          "framework": "none"
+        },
+        "exportName": "glassNotification",
+        "requiredCapabilities": {
+          "sources": ["oscillator"],
+          "filters": ["lowpass"],
+          "parameterModes": ["play"],
+          "runtime": ["gesture-start", "seeded-replay", "dispose"],
+          "kinds": ["one-shot"],
+          "waveforms": ["sine"],
+          "noiseColors": [],
+          "mappingScales": ["exponential", "linear"],
+          "automationCurves": []
+        }
+      },
+      "files": [
+        {
+          "path": "catalog/recipes/glass-notification/recipe.ts",
+          "type": "registry:file",
+          "target": "~/src/sounds/recipes/glass-notification/recipe.ts",
+          "bytes": 1938,
+          "sha256": "932b43c2d6bbd659a866a828166c033589222cfd7d5b27610769543aeea04412"
+        },
+        {
+          "path": "LICENSE",
+          "type": "registry:file",
+          "target": "~/src/sounds/recipes/glass-notification/LICENSE",
+          "bytes": 1063,
+          "sha256": "03fbc2b99516352931922164b42a05d2e5d14143b9f808449fb1f85ab6c46942"
+        }
+      ],
+      "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/c7404ebcb037a3b640d0251229b71aa26a9a9a14/catalog/README.md for integration and update guidance."
+    },
+    {
+      "name": "impact",
+      "type": "registry:item",
+      "title": "Impact",
+      "description": "A descending body and filtered noise transient. Intensity changes pitch, brightness, and level.",
+      "dependencies": ["audiobits"],
+      "categories": ["recipe", "one-shot"],
+      "meta": {
+        "classification": "recipe",
+        "tags": ["impact", "one-shot"],
+        "schemaVersion": 1,
+        "compatibility": {
+          "runtime": "audiobits public API with recipe schema 1",
+          "language": "TypeScript",
+          "moduleResolution": "Bundler",
+          "browser": "Web Audio; automated verification in Chromium",
+          "framework": "none"
+        },
+        "exportName": "impact",
+        "requiredCapabilities": {
+          "sources": ["noise", "oscillator"],
+          "filters": ["lowpass"],
+          "parameterModes": ["play"],
+          "runtime": ["gesture-start", "seeded-replay", "dispose"],
+          "kinds": ["one-shot"],
+          "waveforms": ["triangle"],
+          "noiseColors": ["white"],
+          "mappingScales": ["exponential", "linear"],
+          "automationCurves": ["exponential"]
+        }
+      },
+      "files": [
+        {
+          "path": "catalog/recipes/impact/recipe.ts",
+          "type": "registry:file",
+          "target": "~/src/sounds/recipes/impact/recipe.ts",
+          "bytes": 1461,
+          "sha256": "7fe5381eea3b6baaae95e72795006dafa3d7a58f26179744d928e297077db123"
+        },
+        {
+          "path": "LICENSE",
+          "type": "registry:file",
+          "target": "~/src/sounds/recipes/impact/LICENSE",
+          "bytes": 1063,
+          "sha256": "03fbc2b99516352931922164b42a05d2e5d14143b9f808449fb1f85ab6c46942"
+        }
+      ],
+      "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/c7404ebcb037a3b640d0251229b71aa26a9a9a14/catalog/README.md for integration and update guidance."
+    },
+    {
+      "name": "power-up",
+      "type": "registry:item",
+      "title": "Power-up",
+      "description": "A rising triangle and sine halo that gather energy together.",
+      "dependencies": ["audiobits"],
+      "categories": ["recipe", "one-shot"],
+      "meta": {
+        "classification": "recipe",
+        "tags": ["power-up", "one-shot"],
+        "schemaVersion": 1,
+        "compatibility": {
+          "runtime": "audiobits public API with recipe schema 1",
+          "language": "TypeScript",
+          "moduleResolution": "Bundler",
+          "browser": "Web Audio; automated verification in Chromium",
+          "framework": "none"
+        },
+        "exportName": "powerUp",
+        "requiredCapabilities": {
+          "sources": ["oscillator"],
+          "filters": ["lowpass"],
+          "parameterModes": ["play"],
+          "runtime": ["gesture-start", "seeded-replay", "dispose"],
+          "kinds": ["one-shot"],
+          "waveforms": ["sine", "triangle"],
+          "noiseColors": [],
+          "mappingScales": ["linear"],
+          "automationCurves": ["exponential"]
+        }
+      },
+      "files": [
+        {
+          "path": "catalog/recipes/power-up/recipe.ts",
+          "type": "registry:file",
+          "target": "~/src/sounds/recipes/power-up/recipe.ts",
+          "bytes": 1583,
+          "sha256": "03c025d4b143d7b7ce1c58266b8b1048b4f186e6b60457fcccf0fbf8bb6ed8cb"
+        },
+        {
+          "path": "LICENSE",
+          "type": "registry:file",
+          "target": "~/src/sounds/recipes/power-up/LICENSE",
+          "bytes": 1063,
+          "sha256": "03fbc2b99516352931922164b42a05d2e5d14143b9f808449fb1f85ab6c46942"
+        }
+      ],
+      "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/c7404ebcb037a3b640d0251229b71aa26a9a9a14/catalog/README.md for integration and update guidance."
+    },
+    {
+      "name": "reactive-thruster",
+      "type": "registry:item",
+      "title": "Reactive thruster",
+      "description": "Move to shape a living sound. Release to coast.",
+      "dependencies": ["audiobits"],
+      "categories": ["experience"],
+      "meta": {
+        "classification": "experience",
+        "tags": ["thruster", "sustained", "pointer", "impact"],
+        "schemaVersion": 1,
+        "compatibility": {
+          "runtime": "audiobits public API with recipe schema 1",
+          "language": "TypeScript",
+          "moduleResolution": "Bundler",
+          "browser": "Web Audio; automated verification in Chromium",
+          "framework": "none"
+        },
+        "exportName": "reactiveThruster",
+        "requiredCapabilities": {
+          "sources": ["noise", "oscillator"],
+          "filters": ["highpass", "lowpass"],
+          "parameterModes": ["live", "play"],
+          "runtime": [
+            "gesture-start",
+            "live-controls",
+            "seeded-replay",
+            "buses",
+            "suspend",
+            "dispose"
+          ],
+          "kinds": ["one-shot", "sustained"],
+          "waveforms": ["sawtooth", "triangle"],
+          "noiseColors": ["white"],
+          "mappingScales": ["exponential", "linear"],
+          "automationCurves": ["exponential"]
+        }
+      },
+      "files": [
+        {
+          "path": "catalog/experiences/reactive-thruster/recipe.ts",
+          "type": "registry:file",
+          "target": "~/src/sounds/experiences/reactive-thruster/recipe.ts",
+          "bytes": 1929,
+          "sha256": "7f35946a111a2d1b3ce1cb908ddfe4627f8fa5b6daab1cd06765fa31879c8176"
+        },
+        {
+          "path": "catalog/experiences/reactive-thruster/pointer.ts",
+          "type": "registry:file",
+          "target": "~/src/sounds/experiences/reactive-thruster/pointer.ts",
+          "bytes": 5088,
+          "sha256": "53f605e59df5ab2cbff9e88f573c4bbac7d822cd5d7716f44c27b3aa65a7c6a5"
+        },
+        {
+          "path": "catalog/experiences/reactive-thruster/host.ts",
+          "type": "registry:file",
+          "target": "~/src/sounds/experiences/reactive-thruster/host.ts",
+          "bytes": 2757,
+          "sha256": "ba26bd3a79039d5a429e7947d2904ae5e5042ad95200964b7c06c1e67f45415f"
+        },
+        {
+          "path": "catalog/experiences/reactive-thruster/index.html",
+          "type": "registry:file",
+          "target": "~/src/sounds/experiences/reactive-thruster/index.html",
+          "bytes": 2535,
+          "sha256": "7e2b09245208b9c632954cf35656b3b6b4960337cdbbcc649a7dc4768b8e28ca"
+        },
+        {
+          "path": "catalog/experiences/reactive-thruster/README.md",
+          "type": "registry:file",
+          "target": "~/src/sounds/experiences/reactive-thruster/README.md",
+          "bytes": 6069,
+          "sha256": "0bc3a81e3f0614620be7f4334467ecbd83b121fef88e47ec9e6f4ac63086a56a"
+        },
+        {
+          "path": "LICENSE",
+          "type": "registry:file",
+          "target": "~/src/sounds/experiences/reactive-thruster/LICENSE",
+          "bytes": 1063,
+          "sha256": "03fbc2b99516352931922164b42a05d2e5d14143b9f808449fb1f85ab6c46942"
+        },
+        {
+          "path": "catalog/recipes/impact/recipe.ts",
+          "type": "registry:file",
+          "target": "~/src/sounds/recipes/impact/recipe.ts",
+          "bytes": 1461,
+          "sha256": "7fe5381eea3b6baaae95e72795006dafa3d7a58f26179744d928e297077db123"
+        },
+        {
+          "path": "LICENSE",
+          "type": "registry:file",
+          "target": "~/src/sounds/recipes/impact/LICENSE",
+          "bytes": 1063,
+          "sha256": "03fbc2b99516352931922164b42a05d2e5d14143b9f808449fb1f85ab6c46942"
+        }
+      ],
+      "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/c7404ebcb037a3b640d0251229b71aa26a9a9a14/catalog/README.md for integration and update guidance."
+    },
+    {
+      "name": "tactile-click",
+      "type": "registry:item",
+      "title": "Tactile click",
+      "description": "A tiny rounded contact with a restrained noise texture.",
+      "dependencies": ["audiobits"],
+      "categories": ["recipe", "one-shot"],
+      "meta": {
+        "classification": "recipe",
+        "tags": ["tactile-click", "one-shot"],
+        "schemaVersion": 1,
+        "compatibility": {
+          "runtime": "audiobits public API with recipe schema 1",
+          "language": "TypeScript",
+          "moduleResolution": "Bundler",
+          "browser": "Web Audio; automated verification in Chromium",
+          "framework": "none"
+        },
+        "exportName": "tactileClick",
+        "requiredCapabilities": {
+          "sources": ["noise", "oscillator"],
+          "filters": ["lowpass"],
+          "parameterModes": ["play"],
+          "runtime": ["gesture-start", "seeded-replay", "dispose"],
+          "kinds": ["one-shot"],
+          "waveforms": ["triangle"],
+          "noiseColors": ["white"],
+          "mappingScales": ["exponential", "linear"],
+          "automationCurves": ["exponential"]
+        }
+      },
+      "files": [
+        {
+          "path": "catalog/recipes/tactile-click/recipe.ts",
+          "type": "registry:file",
+          "target": "~/src/sounds/recipes/tactile-click/recipe.ts",
+          "bytes": 1553,
+          "sha256": "ca29da476a73d9bd530f6a57b6f66bf1e3362b7015c4196dc35c276f8ea2d161"
+        },
+        {
+          "path": "LICENSE",
+          "type": "registry:file",
+          "target": "~/src/sounds/recipes/tactile-click/LICENSE",
+          "bytes": 1063,
+          "sha256": "03fbc2b99516352931922164b42a05d2e5d14143b9f808449fb1f85ab6c46942"
+        }
+      ],
+      "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/c7404ebcb037a3b640d0251229b71aa26a9a9a14/catalog/README.md for integration and update guidance."
+    },
+    {
+      "name": "thruster",
+      "type": "registry:item",
+      "title": "Thruster",
+      "description": "Start once, adjust throttle while it runs, then release with Stop.",
+      "dependencies": ["audiobits"],
+      "categories": ["recipe", "sustained"],
+      "meta": {
+        "classification": "recipe",
+        "tags": ["thruster", "sustained"],
+        "schemaVersion": 1,
+        "compatibility": {
+          "runtime": "audiobits public API with recipe schema 1",
+          "language": "TypeScript",
+          "moduleResolution": "Bundler",
+          "browser": "Web Audio; automated verification in Chromium",
+          "framework": "none"
+        },
+        "exportName": "thruster",
+        "requiredCapabilities": {
+          "sources": ["noise", "oscillator"],
+          "filters": ["lowpass"],
+          "parameterModes": ["live"],
+          "runtime": [
+            "gesture-start",
+            "seeded-replay",
+            "dispose",
+            "live-controls"
+          ],
+          "kinds": ["sustained"],
+          "waveforms": ["triangle"],
+          "noiseColors": ["white"],
+          "mappingScales": ["exponential", "linear"],
+          "automationCurves": []
+        }
+      },
+      "files": [
+        {
+          "path": "catalog/recipes/thruster/recipe.ts",
+          "type": "registry:file",
+          "target": "~/src/sounds/recipes/thruster/recipe.ts",
+          "bytes": 1472,
+          "sha256": "e3a0ae516ca7aa12fb952f8206d1753950a17310f8bee7bb479cc63bd73db535"
+        },
+        {
+          "path": "LICENSE",
+          "type": "registry:file",
+          "target": "~/src/sounds/recipes/thruster/LICENSE",
+          "bytes": 1063,
+          "sha256": "03fbc2b99516352931922164b42a05d2e5d14143b9f808449fb1f85ab6c46942"
+        }
+      ],
+      "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/c7404ebcb037a3b640d0251229b71aa26a9a9a14/catalog/README.md for integration and update guidance."
+    },
+    {
+      "name": "whoosh",
+      "type": "registry:item",
+      "title": "Whoosh",
+      "description": "Filtered noise sweeps past with an adjustable sense of weight.",
+      "dependencies": ["audiobits"],
+      "categories": ["recipe", "one-shot"],
+      "meta": {
+        "classification": "recipe",
+        "tags": ["whoosh", "one-shot"],
+        "schemaVersion": 1,
+        "compatibility": {
+          "runtime": "audiobits public API with recipe schema 1",
+          "language": "TypeScript",
+          "moduleResolution": "Bundler",
+          "browser": "Web Audio; automated verification in Chromium",
+          "framework": "none"
+        },
+        "exportName": "whoosh",
+        "requiredCapabilities": {
+          "sources": ["noise"],
+          "filters": ["bandpass", "lowpass"],
+          "parameterModes": ["play"],
+          "runtime": ["gesture-start", "seeded-replay", "dispose"],
+          "kinds": ["one-shot"],
+          "waveforms": [],
+          "noiseColors": ["white"],
+          "mappingScales": ["exponential", "linear"],
+          "automationCurves": ["exponential"]
+        }
+      },
+      "files": [
+        {
+          "path": "catalog/recipes/whoosh/recipe.ts",
+          "type": "registry:file",
+          "target": "~/src/sounds/recipes/whoosh/recipe.ts",
+          "bytes": 1512,
+          "sha256": "ae1552191f4ff969833ea0bad24701c920f6b7defaa5902d38bbf46a0321c7e6"
+        },
+        {
+          "path": "LICENSE",
+          "type": "registry:file",
+          "target": "~/src/sounds/recipes/whoosh/LICENSE",
+          "bytes": 1063,
+          "sha256": "03fbc2b99516352931922164b42a05d2e5d14143b9f808449fb1f85ab6c46942"
+        }
+      ],
+      "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/c7404ebcb037a3b640d0251229b71aa26a9a9a14/catalog/README.md for integration and update guidance."
+    }
+  ]
+}

@@ -19,11 +19,16 @@
     "test:package": "pnpm build:lib && node scripts/test-package.mjs",
     "changeset": "changeset",
     "version-packages": "changeset version && node scripts/generate-recipe.mjs",
-    "release:prepare": "pnpm lint && pnpm typecheck && pnpm test && pnpm test:browser && pnpm test:package"
+    "release:prepare": "pnpm lint && pnpm typecheck && pnpm test && pnpm test:browser && pnpm test:package",
+    "build:mcp": "tsc -p tools/mcp/tsconfig.json",
+    "test:mcp": "pnpm build:lib && pnpm build:mcp && node tools/mcp/generate-snapshot.mjs --check && vitest run --config tools/mcp/vitest.config.ts",
+    "test:mcp:github": "pnpm build:lib && pnpm build:mcp && vitest run --config tools/mcp/vitest.github.config.ts"
   },
   "devDependencies": {
     "@changesets/cli": "3.0.3",
     "@eslint/js": "9.39.5",
+    "@modelcontextprotocol/client": "2.3.1",
+    "@modelcontextprotocol/server": "2.3.1",
     "@playwright/test": "1.63.0",
     "@types/node": "24.19.1",
     "audiobits": "workspace:*",
@@ -33,6 +38,7 @@
     "publint": "0.3.25",
     "typescript": "6.0.3",
     "typescript-eslint": "8.71.0",
-    "vitest": "5.0.3"
+    "vitest": "5.0.3",
+    "zod": "4.6.5"
   }
 }

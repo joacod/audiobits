@@ -48,6 +48,7 @@ pnpm --filter @audiobits/vanilla dev
 | ---------------------- | -------------------------------------------------------------------- |
 | `pnpm dev`             | Initial library build, library watch, and site server                |
 | `pnpm build:lib`       | Library ESM and declarations                                         |
+| `pnpm build:mcp`       | Independent local stdio MCP server build                             |
 | `pnpm build:site`      | Library build followed by site build                                 |
 | `pnpm build`           | Library, site, and vanilla production builds                         |
 | `pnpm typecheck`       | Build library, generate site types, check all workspaces             |
@@ -55,9 +56,14 @@ pnpm --filter @audiobits/vanilla dev
 | `pnpm format`          | Format in-scope source/configuration/onboarding files                |
 | `pnpm test`            | Supervisor, recipe/runtime/release checks; schema/metadata drift     |
 | `pnpm test:package`    | Build, pack, isolated types/imports, tree-shaking and Chromium hosts |
+| `pnpm test:mcp`        | Offline MCP units and stdio protocol with packed external runtime    |
+| `pnpm test:mcp:github` | Explicit live GitHub source retrieval through the MCP protocol       |
 | `pnpm test:browser`    | Production builds, Chromium audio signal/lifecycle and UI checks     |
 | `pnpm release:prepare` | Explicit release only: quality, Chromium and package rehearsal       |
 | `pnpm changeset`       | Record published-package changes, including relevant docs/metadata   |
+
+For stdio client setup and the consumer project boundary, see
+[local MCP development](../tools/mcp/README.md).
 
 For browser checks, install the browser matching the pinned Playwright version:
 
