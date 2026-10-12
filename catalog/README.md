@@ -94,8 +94,7 @@ npx shadcn@4.21.4 add joacod/audiobits/energy-charge --diff
 Append a reviewed commit ref as above. These commands only review changes.
 Delete the disposable directory afterward and perform the actual install in
 your application, where no `components.json` is required. Existing shadcn
-projects can use their own config for previews. See the
-[verification record](registry-verification.md) for the tested commands and limits.
+projects can use their own config for previews.
 
 ## Recipes and experiences
 
@@ -110,10 +109,7 @@ visual families, control labels and display order belong to the website.
 
 Recipes install under `src/sounds/recipes/<id>/`; experiences under
 `src/sounds/experiences/<id>/`. These targets mirror the canonical source layout
-so relative imports survive copying and installation. Earlier proof-of-concept
-installs placed Confirmation and Energy Charge directly under `src/sounds/`.
-A new install uses the targets above; review your imports when adopting that
-layout and preserve any locally edited source.
+so relative imports survive copying and installation.
 
 See [recipe ownership](recipes/README.md) for editing and verification.
 
@@ -152,16 +148,10 @@ imports stay within that directory. See the [experience guide](experiences/energ
 - `index.html` is an optional standalone demo, not your application's entrypoint.
   It references `./host.ts` and requires a TypeScript-aware browser build tool.
 
-For the demo in an otherwise plain browser project:
-
-```sh
-npm install --save-dev vite typescript
-npx vite
-```
-
-Open `/src/sounds/experiences/energy-charge/index.html`. Installation never writes
-a root `index.html`, build configuration, CSS or framework setup. Your application can
-import the recipe or controller without using the demo. Customize sound data,
+For independent playback, see [optional standalone demo](#optional-standalone-demo).
+Installation never writes a root `index.html`, build configuration, CSS or
+framework setup. Your application can import the recipe or controller without
+using the demo. Customize sound data,
 progress mapping or presentation independently; start audio in a user gesture
 and dispose owned resources during teardown.
 
@@ -175,6 +165,26 @@ runtime internals or site-private modules are needed. See
 the [experience guide](experiences/reactive-thruster/README.md).
 
 All entries use public runtime APIs and recipe schema 1. The TypeScript source
-supports bundler module resolution; it is not precompiled JavaScript. Automated
-browser evidence targets Chromium and does not establish listening quality,
-physical-device support or other-browser compatibility.
+supports bundler module resolution; it is not precompiled JavaScript.
+Browser verification targets Chromium.
+
+## Optional standalone demo
+
+Integrate copied recipes or controllers into an existing application with its
+own toolchain. AudioBits is framework-independent and does not require Vite.
+
+To run a catalog HTML demo independently, use a local server that handles
+TypeScript imports. Vite is one optional development tool. From a project with
+`package.json` and the complete copied or installed source manifest:
+
+```sh
+npm install audiobits
+npm install --save-dev vite typescript
+npx vite
+```
+
+Open the printed local URL at the demo's `index.html` path. Registry installs use
+`/src/sounds/experiences/energy-charge/index.html` or
+`/src/sounds/experiences/reactive-thruster/index.html`. Preserve relative paths,
+including Reactive Thruster's Impact recipe. Vite and TypeScript serve the demo;
+`audiobits` remains its only runtime dependency.

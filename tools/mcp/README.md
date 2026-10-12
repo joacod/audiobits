@@ -138,10 +138,6 @@ Bundled tests copy the complete Skill outside the monorepo, start its executable
 without server dependencies, exercise all five tools and consumer version
 changes, and check setup path resolution and preservation of existing settings.
 The normal public runtime validation workflow also runs without MCP configured.
-Installation acceptance uses the actual Skills CLI against a pushed PR revision
-in a clean external project before main changes. Use a GitHub tree URL selecting
-the PR branch/revision with `--skill audiobits`; the default installation command
-in the Skill reference selects main after merge.
 
 `test:mcp:github` separately performs one explicit, live source retrieval through
 the protocol client from an external packed consumer. It requires public network
@@ -149,5 +145,5 @@ access. This test never installs retrieved catalog source.
 
 Node recipe validation does not render Web Audio. Compatibility compares declared
 schema and capabilities; application TypeScript/build integration, gesture
-activation, browser synthesis, cleanup and listening need separate verification.
+activation, browser synthesis and cleanup need browser verification.
 Browser evidence remains governed by the [browser policy](../../docs/validation.md#browser-policy).

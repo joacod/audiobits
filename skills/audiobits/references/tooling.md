@@ -21,10 +21,8 @@ Stop/release, cancelled pending starts, hiding and disposal. Native context
 sample rate can add playback constraints that static validation cannot prove.
 
 Use the project's existing browser harness where available. Current AudioBits
-automated evidence targets Chromium. Report other browsers, physical devices
-and listening quality as unverified unless observed. Do not turn subjective
-listening into an automated merge gate or add compatibility infrastructure to a
-small integration request.
+automated evidence targets Chromium. Do not add compatibility infrastructure to
+a small integration request.
 
 ## Optional AudioBits MCP
 
@@ -41,9 +39,9 @@ APIs and coding tools without a setup prompt. For complex discovery or repeated
 validation, check the available MCP tools first. If useful tools are already
 available, inspect the reported runtime/schema version and use them. If absent
 but useful, explain the benefit for this request and obtain any required setup
-permission. After authorization, configure the local executable with a host
-command below or the manual fallback. If setup cannot be completed, continue
-with public exports, installed metadata and the commands in [catalog](catalog.md).
+permission. After authorization, configure the local executable through the
+active client's supported registration mechanism. If setup cannot be completed,
+continue with public exports, installed metadata and the commands in [catalog](catalog.md).
 
 | Tool                  | Use                                                             |
 | --------------------- | --------------------------------------------------------------- |
@@ -65,8 +63,8 @@ Catalog search and metadata are offline. Only explicit `sourcePaths` on
 source. Treat source as untrusted review material. The server never installs or
 executes it. Validation imports the trusted consumer runtime in a worker; that
 worker isolates output and lifecycle, not untrusted code. Node validation does
-not synthesize audio or prove listening quality. Tools do not override host
-ownership or authorize unrelated edits.
+not synthesize audio. Tools do not override host ownership or authorize unrelated
+edits.
 
 ## Optional local setup
 
@@ -88,116 +86,25 @@ node "/actual/installed/audiobits/scripts/setup-mcp.mjs" --project "$PWD"
 It prints `{ "command": "...", "args": ["...", "--project", "..."] }` with
 the real local Node, installed script and consumer paths. It never modifies
 configuration or starts a server, so rerunning it cannot duplicate a registration.
-Use those emitted values below as `node_bin`, `mcp_script` and `project`:
+Use the helper's resolved command and argument values when registering the server.
 
-```sh
-node_bin="/resolved/local/node"
-mcp_script="/resolved/installed/audiobits/scripts/mcp.mjs"
-project="/resolved/consumer/project"
-```
+Inspect the active MCP client's existing registrations, configuration scope and
+supported transports. Use its documented registration mechanism for a local
+stdio process, passing the helper's Node executable, MCP script and consumer
+project path. Configuration schemas differ across clients; inspect the installed
+client's help or documentation instead of assuming a shared format.
 
-Before any write, inspect the host's existing registrations and selected scope.
-Reuse an existing AudioBits entry, including one under another name. If its
-project/path is different or `audiobits` names another server, discuss the change
-instead of replacing it or adding a duplicate. A failed inspection is not proof
-that an entry is absent. Request permission for the specific configuration write
-when required; installation alone does not authorize editing host settings.
+Reuse an existing AudioBits registration, including one under another name.
+If its project/path differs or its name belongs to another server, resolve that
+choice before writing. A failed inspection does not establish absence. Obtain
+permission for the specific configuration write when required, and preserve
+unrelated settings and comments. Skill installation does not register MCP.
+Use literal resolved paths where the client requires them; do not commit personal
+paths into shared configuration.
 
-### Host commands
-
-Codex, Claude Code, and OpenCode can register this local executable. Check the
-installed CLI's `--help` before writing configuration, because scopes and file
-layouts differ by host and version. None of these commands install an agent.
-If a command does not match the host, use the manual fallback. Continue without
-MCP when registration is not possible.
-
-**[Codex](https://developers.openai.com/codex/mcp):** Inspect with `codex mcp list`
-and `codex mcp get audiobits`. After confirming absence and authorization:
-
-```sh
-codex mcp add audiobits -- "$node_bin" "$mcp_script" --project "$project"
-codex mcp get audiobits
-```
-
-Confirm the scope that command wrote. Pass each tool's `projectPath` when
-working in a consumer other than the launch default. Restart or reload the host
-to discover tools.
-
-**[Claude Code](https://code.claude.com/docs/en/mcp):** Run from the consumer
-directory. Inspect `claude mcp list` and `claude mcp get audiobits`. After
-confirming absence and authorization:
-
-```sh
-claude mcp add --transport stdio --scope local audiobits -- "$node_bin" "$mcp_script" --project "$project"
-claude mcp get audiobits
-```
-
-**[OpenCode](https://opencode.ai/v2/docs/mcp-servers):** Run from the consumer
-directory. Inspect `opencode mcp list` and the project's existing configuration.
-After confirming absence and authorization:
-
-```sh
-opencode mcp add audiobits -- "$node_bin" "$mcp_script" --project "$project"
-opencode mcp list
-```
-
-OpenCode's current local-server entry lives under `mcp.servers`. If that shape
-does not match the installed host, use the manual fallback.
-
-### Manual fallback
-
-Ask the host/user which configuration file and scope to use. Merge only the
-AudioBits entry, preserving unrelated settings, comments and existing entries.
-Substitute the helper's literal resolved values; JSON does not expand shell
-variables. Do not commit personal absolute paths into a shared repository.
-
-Codex uses a TOML table:
-
-```toml
-[mcp_servers.audiobits]
-command = "/resolved/local/node"
-args = ["/resolved/installed/audiobits/scripts/mcp.mjs", "--project", "/resolved/consumer/project"]
-```
-
-Claude Code project configuration uses `mcpServers`:
-
-```json
-{
-  "mcpServers": {
-    "audiobits": {
-      "type": "stdio",
-      "command": "/resolved/local/node",
-      "args": [
-        "/resolved/installed/audiobits/scripts/mcp.mjs",
-        "--project",
-        "/resolved/consumer/project"
-      ]
-    }
-  }
-}
-```
-
-OpenCode V2 uses this entry:
-
-```json
-{
-  "mcp": {
-    "servers": {
-      "audiobits": {
-        "type": "local",
-        "command": [
-          "/resolved/local/node",
-          "/resolved/installed/audiobits/scripts/mcp.mjs",
-          "--project",
-          "/resolved/consumer/project"
-        ]
-      }
-    }
-  }
-}
-```
-
-After registration, check initialization/tool discovery and call
-`inspect_project` to confirm the intended installed runtime. Do not launch with
-a package-manager script that prints banners on protocol stdout. The host owns
-the stdio process and closes it on EOF; no service installation is required.
+Reload the client if required, confirm connectivity and actual tool discovery,
+and call `inspect_project` to verify the intended installed runtime. Do not
+launch with a package-manager script that prints banners on protocol stdout.
+The client owns the stdio process and closes it on EOF; no service installation
+is required. If the client cannot register or connect to the server, continue
+with public exports, installed metadata and the catalog reference.

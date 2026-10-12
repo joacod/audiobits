@@ -1,6 +1,6 @@
 import { defineSound, type Recipe } from "audiobits";
 
-/** Short tactile feedback. Listening acceptance is separate from signal tests. */
+/** Short tactile feedback. */
 export const tactileClick: Omit<
   Extract<Recipe, { kind: "one-shot" }>,
   "parameters"

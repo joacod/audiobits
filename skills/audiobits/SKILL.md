@@ -57,8 +57,7 @@ on MCP setup. Installing this Skill does not register or start the server.
    require a new gesture on return, and dispose on navigation/unmount. Clean up
    listeners, frames, subscriptions and caller-owned native connections.
 5. Typecheck through public exports, validate recipes, and check relevant control
-   extrema and browser lifecycle behavior. Report observed evidence separately
-   from listening quality, devices and other-browser compatibility.
+   extrema and browser lifecycle behavior. Report the checks run and their results.
 
 Do not invent runtime APIs, unsupported primitives, or executable recipe strings.
 Compose supported features first. Add no recording, worklets, framework adapters,

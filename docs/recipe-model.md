@@ -24,7 +24,7 @@ Do not create an empty migration framework before a real migration exists.
 
 Use the exported `recipeSchema`, `audiobits/schema.json`, and generated TypeScript
 declarations for fields and structural limits. The
-[recipe guide](https://audiobits.joacod.com/docs/recipes) explains supported sources,
+[recipe guide](https://www.audiobits.dev/docs/recipes) explains supported sources,
 filters, envelopes and controls. Layer effects process their
 layer before all layer outputs sum into recipe effects. Resource limits constrain
 allocation; they are not quality recommendations.
@@ -103,8 +103,8 @@ modulation, which is deferred.
 ## Effects
 
 The model supports a lowpass/highpass/bandpass filter with frequency and Q.
-Q obeys the generated bounds. Saturation remains unimplemented; listening has not
-established a need for it. Do not ship placeholder descriptors for unsupported effects.
+Q obeys the generated bounds. Saturation is unsupported.
+Do not ship placeholder descriptors for unsupported effects.
 
 Shared effects are deferred; bus gain, mute and routing remain runtime
 configuration outside recipe JSON. No convolution files, feedback graph DSL, or arbitrary

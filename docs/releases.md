@@ -36,8 +36,7 @@ On Linux, run [centralized audio setup](../scripts/ci/setup-linux-audio.sh) befo
 browser verification. The gate runs lint, typechecking, units, production builds,
 Chromium integration and `test:package`. The package rehearsal includes strict
 publint, archive inventory, a clean offline consumer install, SSR-safe imports,
-TypeScript examples, tree-shaking and packed Chromium host checks. Automated
-correctness does not establish listening quality or physical-device support.
+TypeScript examples, tree-shaking and packed Chromium host checks.
 
 ## Verified artifact
 
@@ -45,8 +44,7 @@ Successful package rehearsal retains the `.tgz` and `evidence.json` under ignore
 `node_modules/.cache/audiobits-release/`. Inspect the archive allowlist/content,
 version, SHA-256, source identity and dirty-source flag. Keep artifacts and
 local diagnostics out of Git. Merging the Version Packages PR is the human
-release decision; listening acceptance remains separate from automated artifact
-verification. Recreate and review after any shipped-file change.
+release decision. Recreate and review after any shipped-file change.
 
 ## Publication
 

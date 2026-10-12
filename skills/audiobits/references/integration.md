@@ -1,8 +1,8 @@
 # Integration and ownership
 
 Read the consumer's installed metadata and declarations before using these
-schema-1 examples. Human-readable [API](https://audiobits.joacod.com/docs/api)
-and [lifecycle](https://audiobits.joacod.com/docs/lifecycle) guides are secondary
+schema-1 examples. Human-readable [API](https://www.audiobits.dev/docs/api)
+and [lifecycle](https://www.audiobits.dev/docs/lifecycle) guides are secondary
 to that contract. Keep engine creation in the host's client lifecycle; imports
 and recipe data can remain safe for server rendering. Do not start audio during
 render, module load, an effect, or a timer.

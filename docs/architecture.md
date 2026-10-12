@@ -1,7 +1,7 @@
 # Architecture design
 
 Architecture and ownership invariants for AudioBits contributors. The
-[website API reference](https://audiobits.joacod.com/docs/api) explains public usage.
+[website API reference](https://www.audiobits.dev/docs/api) explains public usage.
 Exported [API declarations](../packages/audiobits/src/runtime/engine.ts),
 [runtime implementation](../packages/audiobits/src/runtime/engine.ts), and generated
 [schema and capabilities](../packages/audiobits/src/recipe/) define supported
@@ -130,7 +130,7 @@ resume on navigation. The engine does not impose this policy on every game/app.
 
 Voice options and defaults come from the exported declarations and
 [runtime validation](../packages/audiobits/src/runtime/engine.ts); the
-[API guide](https://audiobits.joacod.com/docs/api#playback-options) explains usage. Stealing
+[API guide](https://www.audiobits.dev/docs/api#playback-options) explains usage. Stealing
 fades the oldest eligible voice; keep at most one retiring voice beyond each
 applicable limit. Further steals finish the oldest retiring voice before creating
 another. Counters distinguish active and retiring resources so totals stay bounded.

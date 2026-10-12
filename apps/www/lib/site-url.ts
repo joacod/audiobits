@@ -1,1 +1,1 @@
-export const siteUrl = "https://audiobits.joacod.com";
+export const siteUrl = "https://www.audiobits.dev";

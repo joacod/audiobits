@@ -1,7 +1,7 @@
 # Local development
 
 Use [architecture](architecture.md) for system boundaries, the
-[website documentation](https://audiobits.joacod.com/docs) for usage and
+[website documentation](https://www.audiobits.dev/docs) for usage and
 [validation](validation.md) for evidence expectations.
 
 ## Setup
@@ -85,7 +85,7 @@ those outputs.
 | Prose/docs            | `pnpm lint`; relevant docs/build or executable-example check         |
 | Visual CSS/layout     | Lint, `pnpm typecheck`, `pnpm build:site`, focused visual inspection |
 | Website interaction   | Above plus affected Chromium test(s)                                 |
-| Sound tuning          | Focused unit/signal checks; Chromium and listening when relevant     |
+| Sound tuning          | Focused unit/signal checks; affected Chromium behavior               |
 | Runtime/compiler      | Focused units plus affected Chromium integration                     |
 | Package exports/build | `pnpm test:package` (includes static verification)                   |
 | CI harness            | Directly affected script checks and Chromium tests                   |
@@ -102,10 +102,9 @@ The independent package publication flow is described in the
 The browser suite owns ports 3100 and 4173; neither may already be occupied.
 [Centralized Linux audio setup](../scripts/ci/setup-linux-audio.sh) provisions
 PulseAudio with a clocked null sink. `norewinds=1` bounds buffering to 50 ms.
-Run it before Chromium checks on Linux. This provides an output clock, not
-physical speakers or listening evidence. Do not duplicate setup or workarounds
-inside individual tests. CI retains failure traces and uploads browser artifacts
-for seven days; healthy runs retain no traces.
+Run it before Chromium checks on Linux to provide the output clock.
+Do not duplicate setup or workarounds inside individual tests. CI retains failure
+traces and uploads browser artifacts for seven days; healthy runs retain no traces.
 
 ### Flake investigation
 
@@ -157,9 +156,9 @@ remain enabled. Offline cleanup waits for ended callbacks after rendering; those
 callbacks never schedule audio.
 
 The broader `pnpm test:browser` suite supplies UI, native signal, resource and
-lifecycle regressions. Neither kind of automation establishes listening quality.
-CI installs Chromium and uses the centralized Linux audio setup. The runtime has zero runtime
-dependencies; only the runtime workspace is publishable. See
+lifecycle regressions. CI installs Chromium and uses the centralized Linux audio
+setup. The runtime has zero runtime dependencies; only the runtime workspace is
+publishable. See
 [release preparation](releases.md) for the aggregate gate and activation boundary.
 
 Relative Markdown checks verify file targets, not remote links or heading anchors.
@@ -204,5 +203,4 @@ text is evaluated.
 control/seed extrema through public exports. `pnpm test:browser` bundles the
 exact displayed host examples, then exercises activation, Stop, and disposal
 alongside signal equivalence and the catalog UI. Generated inputs/bundles and
-browser artifacts stay under ignored directories. This evidence is distinct
-from the maintainer-reported listening acceptance.
+browser artifacts stay under ignored directories.

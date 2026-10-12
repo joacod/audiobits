@@ -12,8 +12,8 @@
 effects from editable recipes, copy catalog sounds, and connect sound parameters
 to application state. No required audio files or runtime dependencies.
 
-[Live catalog](https://audiobits.joacod.com/catalog) ·
-[Documentation](https://audiobits.joacod.com/docs) ·
+[Live catalog](https://www.audiobits.dev/catalog) ·
+[Documentation](https://www.audiobits.dev/docs) ·
 [npm](https://www.npmjs.com/package/audiobits) ·
 [Copy-paste examples](https://github.com/joacod/audiobits/tree/main/catalog)
 
@@ -52,7 +52,7 @@ Construction is silent. Bind `play()` directly to a user gesture, such as a
 button click, and surface activation failures with `void play().catch(console.error)`.
 Retry from a fresh gesture. Bind `stop()` to Stop to cut voice tails, and await
 `dispose()` when the host is removed. See the
-[lifecycle guide](https://audiobits.joacod.com/docs/lifecycle) for pending activation,
+[lifecycle guide](https://www.audiobits.dev/docs/lifecycle) for pending activation,
 page hiding, and navigation.
 
 ## Explore AudioBits
@@ -61,16 +61,16 @@ page hiding, and navigation.
 
 Copy or install ready-to-use recipes from the [source registry](catalog/README.md),
 import their local files, preview them in the
-[live catalog](https://audiobits.joacod.com/catalog), and adjust supported
-[parameters and seeds](https://audiobits.joacod.com/docs/parameters). Use them as
+[live catalog](https://www.audiobits.dev/catalog), and adjust supported
+[parameters and seeds](https://www.audiobits.dev/docs/parameters). Use them as
 starting points for your own sounds. See the
-[recipe guide](https://audiobits.joacod.com/docs/recipes) for editable, versioned
+[recipe guide](https://www.audiobits.dev/docs/recipes) for editable, versioned
 recipe data.
 
 ### Interactive examples
 
-[Energy Charge](https://audiobits.joacod.com/catalog/energy-charge) and
-[Reactive Thruster](https://audiobits.joacod.com/catalog/reactive-thruster) show
+[Energy Charge](https://www.audiobits.dev/catalog/energy-charge) and
+[Reactive Thruster](https://www.audiobits.dev/catalog/reactive-thruster) show
 sound responding continuously to application state and user input. Copy their
 independent source code from the repository-root
 [`catalog/`](https://github.com/joacod/audiobits/tree/main/catalog) into your app
@@ -91,8 +91,8 @@ in the [AudioBits Skill](skills/audiobits/SKILL.md).
 
 ## Learn more
 
-- [Documentation](https://audiobits.joacod.com/docs) and
-  [live catalog](https://audiobits.joacod.com/catalog).
+- [Documentation](https://www.audiobits.dev/docs) and
+  [live catalog](https://www.audiobits.dev/catalog).
 - Contribute: [development and checks](docs/development.md),
   [architecture](docs/architecture.md), and [recipe invariants](docs/recipe-model.md).
 - [Browser verification and evidence limits](docs/validation.md#browser-policy).
