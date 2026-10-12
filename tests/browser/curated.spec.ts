@@ -1,12 +1,10 @@
 import { expect, test } from "@playwright/test";
 import { resolve } from "node:path";
-import {
-  tactileClick,
-  gentleRejection,
-  glassNotification,
-  whoosh,
-  powerUp,
-} from "../../packages/audiobits/src/recipes";
+import { tactileClick } from "../../catalog/recipes/tactile-click/recipe";
+import { gentleRejection } from "../../catalog/recipes/gentle-rejection/recipe";
+import { glassNotification } from "../../catalog/recipes/glass-notification/recipe";
+import { whoosh } from "../../catalog/recipes/whoosh/recipe";
+import { powerUp } from "../../catalog/recipes/power-up/recipe";
 import type { Recipe } from "../../packages/audiobits/src/recipe/generated";
 
 test("new sounds render finite, bounded, repeatable output and clear their tails", async ({

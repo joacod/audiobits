@@ -1,5 +1,6 @@
 import { createAudio } from "audiobits";
-import { confirmation, impact } from "audiobits/recipes";
+import { confirmation } from "../../../catalog/recipes/confirmation/recipe";
+import { impact } from "../../../catalog/recipes/impact/recipe";
 import { attachPointerThruster } from "../../../catalog/experiences/reactive-thruster/pointer";
 
 const status = document.querySelector<HTMLParagraphElement>("#status");

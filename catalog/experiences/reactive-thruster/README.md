@@ -11,7 +11,7 @@ npm install audiobits
 The recipe is the single acoustic definition: serializable schema-1 data with
 one live `throttle` control in `[0, 1]`, 60 ms smoothing, and up to 280 ms release.
 It has no assets, UI state, or website imports. `audio.sound()` validates it.
-The bundled `audiobits/recipes` thruster remains available separately.
+The simpler Thruster recipe is available separately in `catalog/recipes/thruster/`.
 
 The integration translates CSS-pixel velocity into throttle, reaching full thrust
 at 1200 px/s. It bounds input, averages event velocity over 40 ms, sends at most

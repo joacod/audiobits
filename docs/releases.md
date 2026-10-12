@@ -2,13 +2,32 @@
 
 ## Delivery boundaries
 
-Only the runtime package is publishable.
+Only the engine runtime package is publishable. Its archive contains runtime
+ESM, declarations, schema, capabilities, manifest, license, README and changelog.
+Creative recipes and experiences are copy-owned catalog source; agent guidance
+lives separately in `skills/audiobits/`. None is shipped in the npm archive.
 The [release workflow](../.github/workflows/release.yml) directly publishes npm releases
 through OIDC Trusted Publishing and then creates matching Git tags and GitHub
 Releases. Root, site and example workspaces
 remain private.
 
 Follow the [browser policy](validation.md#browser-policy).
+
+## Pre-1.0 breaking changes
+
+Before 1.0, breaking public API or package-content changes use a **minor**
+Changeset with migration guidance. Compatible corrections use patch; new
+compatible functionality uses minor. At 1.0 and later, breaking changes use
+major. A 1.0 release requires an explicit maintainer readiness decision.
+
+The engine-only migration removes the recipe subpath and shipped Skill from the
+0.1.x line and targets 0.2.x. Its Changeset is minor, despite the intentional
+break. This keeps the next breaking line pre-1.0 rather than allowing a major
+Changeset to select 1.0.0. See the
+[migration guide](../apps/www/content/docs/recipes.mdx#migrating-from-bundled-recipes).
+The manifest and generated capabilities retain their current version until the
+Version Packages workflow applies pending Changesets. Do not manually bump,
+publish, tag or bypass the existing Changesets/OIDC pipeline.
 
 ## Release verification
 

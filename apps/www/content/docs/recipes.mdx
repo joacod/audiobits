@@ -38,16 +38,37 @@ if (result.ok) {
 }
 ```
 
-## Bundled presets and source you own
+## Catalog source you own
 
 All eight existing sounds have canonical source in `catalog/recipes/`. Install
 an individual recipe from the [source registry](https://github.com/joacod/audiobits/blob/main/catalog/README.md),
 import its local `recipe.ts`, create a sound, and play it after gesture activation.
-You own that source. The legacy `audiobits/recipes` exports remain available
-during migration and are generated from the same definitions. See [Quick start](/docs).
+You own that source. The npm package supplies only the engine and recipe language.
+See [Quick start](/docs) for a complete local recipe using public engine APIs.
+
+## Migrating from bundled recipes
+
+The pre-1.0 breaking minor line removes `audiobits/recipes` and the npm-shipped
+`skill/` directory. Replace former recipe imports with local catalog source:
+
+1. Copy the required `catalog/recipes/<id>/recipe.ts` and MIT license, or install
+   that item through the source registry. Keep the installed source in your app.
+2. Import from its local path, such as `./sounds/recipes/confirmation/recipe`.
+   Export names, sound data, controls and schema version 1 remain the same.
+3. Keep `createAudio`, `defineSound`, `validateRecipe`, recipe types,
+   `audiobits/schema.json` and `audiobits/capabilities.json` imports unchanged.
+   Capabilities describe runtime/language support; use `registry.json` for catalog discovery.
+4. Install agent guidance separately from
+   [skills/audiobits](https://github.com/joacod/audiobits/tree/main/skills/audiobits)
+   if needed. It is independent of npm installation.
+
+Activation, playback and cleanup behavior are unchanged. The package does not
+provide a replacement recipe subpath or catalog runtime dependency.
+
+## Interactive source
 
 [Reactive thruster](/catalog/reactive-thruster) is a developer-owned catalog
-recipe, separate from the bundled `thruster` preset. Copy `recipe.ts` for its
+recipe, separate from the catalog’s simpler `thruster` recipe. Copy `recipe.ts` for its
 sound definition, or take `pointer.ts`, `host.ts`, and `index.html` too for a
 complete vanilla interaction. Include canonical Impact at
 `../../recipes/impact/recipe.ts` relative to the host, or install the complete
@@ -95,8 +116,8 @@ sound. Play again to hear the new definition.
 
 Keep the sound's playback kind and its primary parameter's range, default, and
 mode. Additional parameters use their declared defaults. Restore and Reset return to the
-bundled recipe, seed 42, and primary control defaults.
-Raw comparisons apply only to bundled definitions. Edited recipes still have a
+catalog recipe, seed 42, and primary control defaults.
+Raw comparisons apply only to catalog definitions. Edited recipes still have a
 copyable AudioBits example containing the entire accepted JSON.
 
 Typed authoring preserves recipe structure, parameter names and parameter modes.

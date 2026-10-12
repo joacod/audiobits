@@ -33,7 +33,7 @@ export function CatalogDetail({
 
 function CatalogEntryHeader({ entry }: { entry: CatalogEntry }) {
   const group =
-    entry.category === "bundled" ? "Bundled sounds" : "Interactive experiences";
+    entry.category === "bundled" ? "Catalog sounds" : "Interactive experiences";
   const groupHref =
     entry.category === "bundled"
       ? "/catalog#catalog-sounds"
@@ -66,13 +66,13 @@ function sourceLabel(entry: CatalogEntry) {
   if (entry.category === "bundled") {
     return (
       <>
-        Bundled sound · {entry.use}. Source <code>{entry.source.file}</code>.
+        Copy-owned sound · {entry.use}. Source <code>{entry.source.file}</code>.
       </>
     );
   }
   return (
     <>
-      Independent catalog source, not an audiobits/recipes export.{" "}
+      Independent catalog source you own.{" "}
       {entry.source.files.map((file, index) => (
         <span key={file}>
           {index > 0 ? ", " : null}

@@ -12,17 +12,15 @@ control; update the active voice with `voice.set({ throttle })` and release
 with `voice.stop()`. Dispose the engine when removing its host. See the
 [recipe documentation](../../apps/www/content/docs/recipes.mdx).
 
-Edit acoustic definitions here, never in the transitional npm recipe module.
-`pnpm build:lib` runs `scripts/generate-legacy-recipes.mjs`, producing the existing
-`audiobits/recipes` exports with their original types and package-local imports.
-The published runtime has no catalog dependency. `pnpm test` detects generated
-drift and compares every legacy recipe and seeded execution plan with its
-canonical definition at control minima, defaults and maxima.
+Edit acoustic definitions here. The npm package contains only the engine and
+recipe language; it does not generate or export creative recipe definitions.
+`pnpm test` verifies recipe round trips and deterministic seeded execution plans
+at control minima, defaults and maxima.
 
 `registry.json` at the repository root records stable item IDs, export names,
 discovery metadata, required capabilities and complete file/license manifests.
 Keep metadata and manifests accurate when editing source. `pnpm test:package`
 copies all ten registry items into separate installed source trees, typechecks
 every TypeScript file against the packed public runtime, validates the recipes,
-checks legacy equivalence and exercises both complete experiences in Chromium.
+and exercises both complete experiences in Chromium.
 Browser evidence does not establish listening quality or physical-device support.

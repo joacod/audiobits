@@ -248,7 +248,7 @@ export function ThrusterDetail({
         <ExperienceSource
           symbol="reactiveThruster"
           parameter="throttle"
-          soundNote="recipe.ts is independent copy-in source for the motor, turbine, and exhaust. It is not the bundled thruster preset and it is not an export from audiobits/recipes. Install audiobits, copy this file, and create the sound with audio.sound(reactiveThruster). From a user gesture, start audio, play the sound, then update throttle on that voice and stop it."
+          soundNote="recipe.ts is independent copy-in source for the motor, turbine, and exhaust. It is separate from the simpler catalog Thruster recipe. Install audiobits, copy this file, and create the sound with audio.sound(reactiveThruster). From a user gesture, start audio, play the sound, then update throttle on that voice and stop it."
           interactionNote="Copy recipe.ts, pointer.ts, host.ts, and index.html into one folder. pointer.ts turns pointer velocity into throttle and reaches full thrust at 1200 px/s. Keep pointer capture on the play surface. Start from a direct user gesture. Release keeps up to 280 ms of tail. Stop cuts it. The host shares one engine with impact, suspends on hide, stops on blur, and closes on pagehide. Call host.dispose() when you remove the view. No React or Next.js is required."
           presentation="The ribbons on this page follow the same pointer and throttle as the sound. They are website presentation and are not part of these files."
           sources={sources}

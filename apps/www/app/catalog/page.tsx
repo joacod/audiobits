@@ -4,7 +4,7 @@ import { CatalogPage } from "../catalog-page";
 export const metadata: Metadata = {
   title: "Catalog",
   description:
-    "Browse interactive experiences and bundled sounds. Play a recipe, then open its workbench or the full example.",
+    "Browse interactive experiences and catalog sounds. Play a recipe, then open its workbench or the full example.",
   alternates: { canonical: "/catalog" },
 };
 

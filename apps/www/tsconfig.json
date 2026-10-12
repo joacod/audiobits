@@ -3,8 +3,7 @@
   "compilerOptions": {
     "allowImportingTsExtensions": true,
     "paths": {
-      "audiobits": ["./node_modules/audiobits"],
-      "audiobits/recipes": ["./node_modules/audiobits/dist/recipes/index.js"]
+      "audiobits": ["./node_modules/audiobits"]
     },
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "jsx": "react-jsx",

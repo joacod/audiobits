@@ -21,7 +21,7 @@ const bundledOrder = [
 test("catalog index covers every current entry once, in collection order", () => {
   expect(catalogGroups.map((group) => [group.category, group.title])).toEqual([
     ["experience", "Interactive experiences"],
-    ["bundled", "Bundled sounds"],
+    ["bundled", "Catalog sounds"],
   ]);
   expect(catalogEntries.map((entry) => entry.category)).toEqual([
     "experience",

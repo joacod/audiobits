@@ -95,5 +95,5 @@ Avoid cutting other components' voices with a shared `stopAll`.
 
 Keep guarded live engine objects in stable refs or accessors instead of ordinary
 React state/props that tooling might enumerate. Adapt to existing conventions
-without adding a framework adapter. The installed `audiobits/recipes` export can
-also supply a sound if present, but a local recipe remains independently editable.
+without adding a framework adapter. Define a local recipe or install copy-owned
+catalog source separately; the npm package supplies the engine and recipe language.

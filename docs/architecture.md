@@ -17,19 +17,18 @@ packages/audiobits/
   src/recipe/              Pure recipe types, validation, normalization
   src/compiler/            Internal execution plan and native graph construction
   src/runtime/             Engine, Sound, Voice, resource ownership
-  src/recipes/             Generated transitional recipe exports
   tests/                   Unit and type checks
-  skill/                   Installed-version consumer guidance
 examples/vanilla/          Private consumer using only public package exports
 catalog/
   recipes/                Individually distributable, copy-owned recipes
   experiences/            Complete interactive source examples
+skills/audiobits/          Separately distributed agent instructions
 docs/                     Contributor architecture and operational guides
 ```
 
 One runtime package owns its version and public exports. Do not split schema,
-presets, effects, and runtime into independent packages. Curated recipe exports
-must not inflate a consumer that imports only the engine. Website rendering,
+effects and runtime into independent packages. Creative recipes, experiences
+and agent instructions stay outside the published runtime. Website rendering,
 controls, and visualization dependencies stay in `apps/www`.
 
 The runtime package owns the engine, recipe language, validation, compilation,
@@ -45,12 +44,13 @@ Thruster's host imports canonical Impact with a relative path. Its registry
 manifest includes that source and license at matching installed paths. Both
 experiences use public `audiobits` APIs without runtime internals or website imports.
 
-During migration, `audiobits/recipes` remains available. The build generates
-`packages/audiobits/src/recipes/index.ts` from canonical recipe source, adapting
-only public imports/types to package-local equivalents. No runtime catalog
-import or dependency is shipped. The generated acoustic definitions and legacy
-types are unchanged; drift and deterministic equivalence tests protect this
-bridge. The catalog is developer-owned source, not an npm package.
+The npm package ships only the runtime entrypoint, its declarations, schema,
+capabilities and normal package documentation. It exports `audiobits`,
+`audiobits/schema.json` and `audiobits/capabilities.json`. There is no generated
+creative recipe module or shipped Skill. Catalog source imports public engine
+APIs and is verified against an isolated packed runtime. Capabilities describe
+runtime and recipe-language support; `registry.json` owns catalog discovery.
+The catalog and agent Skill are independently owned source, not npm packages.
 
 ## Execution boundary
 

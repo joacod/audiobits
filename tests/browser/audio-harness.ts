@@ -4,11 +4,9 @@ import { reactiveThruster } from "../../catalog/experiences/reactive-thruster/re
 import { compile } from "../../packages/audiobits/src/compiler/plan";
 import { createGraph } from "../../packages/audiobits/src/compiler/graph";
 import { createEngine } from "../../packages/audiobits/src/runtime/engine";
-import {
-  confirmation,
-  impact,
-  thruster,
-} from "../../packages/audiobits/src/recipes";
+import { confirmation } from "../../catalog/recipes/confirmation/recipe";
+import { impact } from "../../catalog/recipes/impact/recipe";
+import { thruster } from "../../catalog/recipes/thruster/recipe";
 
 async function waitForCleanup(ready: () => boolean) {
   const deadline = performance.now() + 1000;

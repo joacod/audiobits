@@ -1,4 +1,4 @@
-/** Standalone Web Audio comparison for the three bundled dry sounds (MIT). */
+/** Standalone Web Audio comparison for the three catalog dry sounds (MIT). */
 export function playRaw(
   context: BaseAudioContext,
   kind: "confirmation" | "impact" | "thruster",

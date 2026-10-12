@@ -49,7 +49,10 @@ accurate. Briefly justify substantial README additions in the relevant PR.
   package-shipped documentation, unless the user explicitly says not to.
 - Choose the smallest correct semver: patch for compatible bug fixes or shipped
   package corrections; minor for new backward-compatible public functionality;
-  major for backward-incompatible public changes.
+  major for backward-incompatible public changes at 1.0 and later. Before 1.0,
+  use a minor Changeset for breaking public API or package-content changes,
+  document migration, and keep the release on a pre-1.0 line. Reserve the 1.0
+  transition for an explicit maintainer readiness decision.
 - Website-only, CI/release infrastructure, tests-only, agent/process docs and
   internal refactors without published behavior changes generally need no Changeset.
 - During ordinary feature/fix work, do not run `changeset version`,

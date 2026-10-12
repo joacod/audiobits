@@ -36,7 +36,7 @@ test("public pages expose unique metadata and content without JavaScript", async
       path: "/catalog",
       title: "AudioBits | Catalog",
       description:
-        "Browse interactive experiences and bundled sounds. Play a recipe, then open its workbench or the full example.",
+        "Browse interactive experiences and catalog sounds. Play a recipe, then open its workbench or the full example.",
     },
     ...catalogEntriesByCategory("experience").map((entry) => ({
       path: entry.href,

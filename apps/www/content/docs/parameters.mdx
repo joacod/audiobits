@@ -8,9 +8,13 @@ description: Change play-only controls, smooth live updates, and reproduce seeds
 Impact's `intensity` is play-only; thruster's
 `throttle` is live. Both range from 0 to 1. Defaults are 0.5 and 0.2 respectively.
 
+Install impact, thruster from the [source registry](https://github.com/joacod/audiobits/blob/main/catalog/README.md)
+under `src/sounds/recipes/`, then use this host code in `src/`:
+
 ```ts
 import { createAudio } from "audiobits";
-import { impact, thruster } from "audiobits/recipes";
+import { impact } from "./sounds/recipes/impact/recipe";
+import { thruster } from "./sounds/recipes/thruster/recipe";
 const audio = createAudio();
 const hit = audio.sound(impact);
 const motor = audio.sound(thruster);

@@ -226,7 +226,7 @@ export function EnergyChargeDetail({
         <ExperienceSource
           symbol="energyCharge"
           parameter="charge"
-          soundNote="recipe.ts is independent copy-in source. It is not an export from audiobits/recipes. Install audiobits, copy this file, and create the sound with audio.sound(energyCharge). From a user gesture, start audio, play the sound, then update charge on that voice and stop it."
+          soundNote="recipe.ts is independent copy-in source. It belongs to your application. Install audiobits, copy this file, and create the sound with audio.sound(energyCharge). From a user gesture, start audio, play the sound, then update charge on that voice and stop it."
           interactionNote="Copy recipe.ts, progress.ts, host.ts, and index.html into one folder. Start from a direct user gesture. Supply progress in either direction. Full charge holds until release. Release keeps the tail. Stop cuts it. The host suspends on hide, stops on blur, and closes on pagehide. Call host.dispose() when you remove the view. progress.ts can share an application engine. No React or Next.js is required."
           presentation="The rings on this page follow charge and measured output. They are website presentation and are not part of these files."
           sources={sources}

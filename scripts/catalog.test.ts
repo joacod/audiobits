@@ -5,7 +5,6 @@ import { expect, test } from "vitest";
 import { validateRecipe, type Recipe } from "audiobits";
 import capabilities from "audiobits/capabilities.json";
 import registry from "../registry.json" with { type: "json" };
-import * as legacy from "../packages/audiobits/src/recipes";
 import { compile } from "../packages/audiobits/src/compiler/plan";
 import { controlsFor } from "../packages/audiobits/src/compiler/values";
 
@@ -20,12 +19,6 @@ test("canonical gallery imports resolve in native Node tooling", () => {
 test("registry covers eight recipes and two complete, independent experiences", async () => {
   expect(registry.items).toHaveLength(10);
   expect(new Set(registry.items.map((item) => item.name)).size).toBe(10);
-  expect(
-    registry.items
-      .filter((item) => item.meta.classification === "recipe")
-      .map((item) => item.meta.exportName)
-      .sort(),
-  ).toEqual(Object.keys(legacy).sort());
   expect(registry.items.map((item) => item.name).sort()).toEqual(
     [
       ...["catalog/recipes", "catalog/experiences"].flatMap((directory) =>
@@ -115,19 +108,21 @@ test("registry covers eight recipes and two complete, independent experiences", 
   }
 });
 
-test("canonical recipes preserve legacy definitions, controls and seeded plans", async () => {
+test("canonical recipes round-trip and compile deterministically at control and seed extrema", async () => {
   for (const item of registry.items.filter(
     (item) => item.meta.classification === "recipe",
   )) {
     const canonical = (
       (await import(resolve(item.files[0].path))) as Record<string, Recipe>
     )[item.meta.exportName];
-    const previous = legacy[item.meta.exportName as keyof typeof legacy];
-    expect(canonical).toEqual(previous);
+    const roundTrip = validateRecipe(JSON.parse(JSON.stringify(canonical)));
+    expect(roundTrip.ok).toBe(true);
+    if (!roundTrip.ok) throw new Error("Invalid catalog recipe");
+    expect(roundTrip.recipe).toEqual(canonical);
     expect(Object.isFrozen(canonical)).toBe(true);
     for (const edge of ["min", "default", "max"] as const) {
       const controls = Object.fromEntries(
-        Object.entries(previous.parameters ?? {}).map(([name, parameter]) => [
+        Object.entries(canonical.parameters ?? {}).map(([name, parameter]) => [
           name,
           parameter[edge],
         ]),
@@ -135,12 +130,14 @@ test("canonical recipes preserve legacy definitions, controls and seeded plans",
       for (const seed of [0, 42, 0xffffffff]) {
         expect(
           compile(canonical, controlsFor(canonical, controls), seed),
-        ).toEqual(compile(previous, controlsFor(previous, controls), seed));
+        ).toEqual(
+          compile(
+            roundTrip.recipe,
+            controlsFor(roundTrip.recipe, controls),
+            seed,
+          ),
+        );
       }
     }
   }
-  execFileSync(process.execPath, [
-    "scripts/generate-legacy-recipes.mjs",
-    "--check",
-  ]);
 });

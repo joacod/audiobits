@@ -1,6 +1,6 @@
 import { experienceSourceFiles, registryItem } from "./registry";
 
-// Website metadata is separate from acoustic recipe data and bundled presets.
+// Website metadata is separate from acoustic recipe data and catalog recipes.
 export const reactiveThrusterExperience = {
   title: registryItem("reactive-thruster").title,
   href: "/catalog/reactive-thruster",
@@ -24,7 +24,7 @@ export const energyChargeExperience = {
 export const experienceSourcePurpose = {
   "energy-charge": {
     "recipe.ts":
-      "Sustained energy field. Schema-1 data with a live charge parameter. Independent copy-in source, not an audiobits/recipes export.",
+      "Sustained energy field. Schema-1 data with a live charge parameter. Independent copy-in source you own.",
     "progress.ts":
       "Progress controller with no DOM and no timer. The application supplies charge, release, and cancellation.",
     "host.ts":
@@ -36,7 +36,7 @@ export const experienceSourcePurpose = {
     "../../recipes/impact/recipe.ts":
       "Canonical Impact recipe used by the host. Keep this relative path when copying the complete experience.",
     "recipe.ts":
-      "Motor, turbine, and exhaust. Schema-1 data with a live throttle parameter. Separate from the bundled thruster preset.",
+      "Motor, turbine, and exhaust. Schema-1 data with a live throttle parameter. Separate from the simpler catalog Thruster recipe.",
     "pointer.ts":
       "Turns pointer velocity into throttle. Full thrust is 1200 px/s. Owns capture, release, and cancellation on the play surface.",
     "host.ts":
