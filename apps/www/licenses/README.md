@@ -28,8 +28,14 @@ Showcase assets and adaptations stay in this website workspace.
   static line and idle painters adapted to the existing caller-owned AudioBits
   analyser. No audio player, microphone or extra context is used.
   The upstream package declares [MIT](audiocn.txt).
-- [Fraunces](https://github.com/google/fonts/tree/main/ofl/fraunces): self-hosted
-  variable display font under the [SIL Open Font License](../public/fonts/OFL.txt).
+- [Big Shoulders Display](https://github.com/xotypeco/big_shoulders): headline
+  face, weights 800 and 900, self-hosted with `next/font/local` from the
+  `@fontsource/big-shoulders-display` package under the
+  [SIL Open Font License 1.1](big-shoulders-display.txt).
+- [Geist Mono](https://github.com/vercel/geist-font): UI, label, code and
+  instrument body face, weights 400 and 500, self-hosted with `next/font/local`
+  from the `@fontsource/geist-mono` package under the
+  [SIL Open Font License 1.1](geist-mono.txt).
 - [shadcn/ui](https://ui.shadcn.com/): accessible primitive/source ownership design
   reference. Existing Base UI buttons, tabs and labelled native controls are retained;
   no shadcn source or dependency is copied.
