@@ -9,22 +9,16 @@
     background:
       radial-gradient(
         circle at 72% 42%,
-        color-mix(in srgb, var(--ink), white 14%) 0%,
+        color-mix(in srgb, var(--void), white 14%) 0%,
         transparent 34rem
       ),
-      var(--ink);
-    color: var(--paper);
-    color-scheme: dark;
-    --focus: var(--signal);
-    --rule: #768b7d;
-  }
-  .landing .charge-hero ::selection {
-    background: var(--signal);
+      var(--void);
     color: var(--ink);
+    color-scheme: dark;
   }
   .landing .charge-hero h1 {
     max-width: 9ch;
-    color: var(--paper);
+    color: var(--ink);
   }
   .landing .charge-hero h1 em {
     display: block;
@@ -32,19 +26,19 @@
   .landing .charge-lede {
     max-width: 34ch;
     margin: 1.25rem 0 0;
-    color: var(--paper);
+    color: var(--ink);
   }
   .landing .charge-hero .landing-links {
     margin-top: 1.5rem;
   }
   .landing .charge-hero .landing-links a {
-    color: var(--paper);
+    color: var(--ink);
   }
   .landing .charge-hero .landing-links a.landing-primary {
-    color: var(--signal);
+    color: var(--ink);
   }
   .landing .charge-hero .landing-links a.landing-quiet {
-    color: var(--instrument-quiet);
+    color: var(--mute);
     font-weight: 500;
   }
   .landing .charge-hero .landing-install {
@@ -60,24 +54,24 @@
   }
   .landing .install-line .landing-install {
     margin-top: 0;
-    font-family: var(--font-code);
+    font-family: var(--font-mono);
     user-select: all;
   }
   .landing .copy-install {
-    color: var(--paper);
-    border-color: var(--instrument-line);
+    color: var(--ink);
+    border-color: var(--graphite-edge);
     background: transparent;
   }
   .landing .charge-hero .copy-install:enabled:hover {
-    color: var(--ink);
-    background: var(--signal);
-    border-color: var(--signal);
+    color: var(--void);
+    background: var(--ink);
+    border-color: var(--ink);
   }
   .landing .copy-status {
     flex-basis: 100%;
     margin: 0;
     font-size: 0.8rem;
-    color: var(--instrument-quiet);
+    color: var(--mute);
   }
   .landing .copy-status:empty {
     position: absolute;
@@ -97,7 +91,7 @@
     margin-inline: auto;
     aspect-ratio: 1;
     border-radius: 50%;
-    background: radial-gradient(circle, #1a2c24 0%, transparent 70%);
+    background: radial-gradient(circle, var(--graphite) 0%, transparent 70%);
   }
   .landing .charge-rings {
     --level: 0;
@@ -125,7 +119,22 @@
   .landing .charge-ring {
     inset: calc(5% + var(--i) * 5.2%);
     border: 1.5px solid
-      color-mix(in srgb, var(--signal), var(--accent) calc(var(--i) * 9%));
+      color-mix(
+        in srgb,
+        var(--signal-low),
+        var(--signal-high) calc(var(--i) * 12%)
+      );
+    /* Resting rings stay Mute; the signal colour arrives with charge. */
+    border-color: color-mix(
+      in srgb,
+      color-mix(
+          in srgb,
+          var(--signal-low),
+          var(--signal-high) calc(var(--i) * 12%)
+        )
+        min(100%, calc(var(--charge) * 600%)),
+      var(--mute)
+    );
     opacity: clamp(0, calc(var(--charge) * 7.2 - var(--i) + 0.55), 1);
     transform: scale(calc(0.96 + var(--charge) * 0.04 + var(--level) * 0.035));
   }
@@ -137,7 +146,7 @@
     transform: translate(-50%, -50%);
     background: radial-gradient(
       circle,
-      color-mix(in srgb, var(--signal), white calc(var(--level) * 30%)) 0%,
+      color-mix(in srgb, var(--signal-high), white calc(var(--level) * 30%)) 0%,
       transparent 72%
     );
     opacity: calc(0.28 + var(--charge) * 0.72);
@@ -164,7 +173,7 @@
     justify-content: center;
     touch-action: none;
     user-select: none;
-    color: var(--paper);
+    color: var(--ink);
     background: transparent;
   }
   .landing .charge-hold::before {
@@ -178,33 +187,45 @@
     border-radius: 50%;
     transform: translate(-50%, -50%);
     background:
-      radial-gradient(circle, rgb(26 44 36 / 0.92) 0 62%, transparent 64%),
+      radial-gradient(
+        circle,
+        color-mix(in srgb, var(--void) 92%, transparent) 0 62%,
+        transparent 64%
+      ),
       conic-gradient(
         from -90deg,
-        var(--accent) calc(var(--charge) * 1turn),
-        rgb(118 139 125 / 0.55) 0
+        var(--signal-low) 0,
+        var(--signal-mid) calc(var(--charge) * 0.6turn),
+        var(--signal-high) calc(var(--charge) * 1turn),
+        var(--graphite-edge) calc(var(--charge) * 1turn)
       );
   }
   .landing .charge-hero .charge-hold:enabled:hover {
-    color: var(--signal);
+    color: var(--ink);
     border-color: transparent;
     background: transparent;
   }
   .landing .charge-hero .charge-hold:enabled:hover::before {
     background:
-      radial-gradient(circle, rgb(26 44 36 / 0.92) 0 62%, transparent 64%),
+      radial-gradient(
+        circle,
+        color-mix(in srgb, var(--void) 92%, transparent) 0 62%,
+        transparent 64%
+      ),
       conic-gradient(
         from -90deg,
-        var(--signal) calc(var(--charge) * 1turn),
-        rgb(118 139 125 / 0.55) 0
+        var(--signal-low) 0,
+        var(--signal-mid) calc(var(--charge) * 0.6turn),
+        var(--signal-high) calc(var(--charge) * 1turn),
+        var(--graphite-edge) calc(var(--charge) * 1turn)
       );
   }
   .landing .charge-hero .charge-hold:focus-visible {
-    outline: 3px solid var(--signal);
+    outline: 3px solid var(--ink);
     outline-offset: 8px;
   }
   .landing .charge-percent {
-    font-family: Fraunces, Georgia, serif;
+    font-family: var(--font-display);
     font-size: clamp(2rem, 4vw, 3.4rem);
     font-weight: 450;
     letter-spacing: -0.03em;
@@ -223,7 +244,7 @@
   .landing .charge-legend {
     max-width: 52ch;
     margin: 0 0 0.75rem;
-    color: color-mix(in srgb, var(--paper) 78%, var(--ink));
+    color: var(--mute);
   }
   .landing .charge-panel [role="status"] {
     margin: 0;
@@ -234,7 +255,7 @@
   }
   .landing .charge-binding figcaption {
     margin-bottom: 0.4rem;
-    color: color-mix(in srgb, var(--paper) 78%, var(--ink));
+    color: var(--mute);
     font-size: 0.8rem;
   }
   .landing .charge-binding pre {
@@ -242,43 +263,43 @@
     overflow: auto;
     padding: 0.9rem 1rem;
     border-radius: var(--control-radius);
-    background: var(--code);
+    background: var(--graphite);
     color: var(--ink);
-    font-family: monospace;
+    font-family: var(--font-mono);
     font-size: 0.8rem;
     line-height: 1.6;
   }
   .landing .charge-hero label {
     margin: 0.75rem 0 0.35rem;
-    color: color-mix(in srgb, var(--paper) 78%, var(--ink));
+    color: var(--mute);
     font-size: 0.9rem;
   }
   .landing .charge-hero label output {
-    color: var(--paper);
+    color: var(--ink);
     font-variant-numeric: tabular-nums;
   }
   .landing .charge-hero input[type="range"] {
-    accent-color: var(--signal);
+    accent-color: var(--ink);
     max-width: none;
   }
   .landing .charge-hero .audio-controls {
     margin-top: 0.35rem;
   }
   .landing .charge-hero .audio-controls button:not(.play-action) {
-    color: var(--paper);
-    border-color: #768b7d;
+    color: var(--ink);
+    border-color: var(--graphite-edge);
     background: transparent;
   }
   .landing .charge-hero .audio-controls button:not(.play-action):enabled:hover {
-    color: var(--paper);
-    border-color: var(--signal);
-    background: #344e40;
+    color: var(--ink);
+    border-color: var(--ink);
+    background: var(--graphite);
   }
   .landing .charge-error {
     margin: 0.9rem 0 0;
     padding: 0.75rem 0.9rem;
-    border: 1px solid var(--signal);
-    color: var(--paper);
+    border: 1px solid var(--ink);
+    color: var(--ink);
   }
   @keyframes charge-turn {
     to {
@@ -321,6 +342,36 @@
   @media (prefers-reduced-motion: reduce) {
     .landing .charge-rings {
       animation: none;
+    }
+  }
+}
+
+@layer components {
+  .landing .charge-hero {
+    background: var(--void);
+  }
+  .landing .charge-hero h1 em {
+    font-style: normal;
+  }
+  .landing .charge-percent {
+    font-weight: 800;
+    letter-spacing: 0;
+  }
+  .landing .charge-signal {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
+}
+@layer components {
+  @media (max-width: 900px) {
+    .landing .charge-hero h1 {
+      font-size: clamp(2.75rem, 10vw, 5rem);
+      max-width: none;
+    }
+  }
+  @media (max-width: 760px) {
+    .landing .charge-hero .landing-links {
+      gap: 0 1.25rem;
     }
   }
 }
