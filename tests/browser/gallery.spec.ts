@@ -285,7 +285,11 @@ test("failed gallery activation identifies Retry Play and recovers with a fresh 
     "Retry Play",
   );
   await play.click();
-  await expect(page.getByRole("status")).toHaveText("Audio: running");
+  await expect(
+    page
+      .getByRole("group", { name: "Playback", exact: true })
+      .getByRole("status"),
+  ).toHaveText("Audio: running");
   await expect(page.locator(".catalog-transport [role=alert]")).toHaveCount(0);
 });
 
