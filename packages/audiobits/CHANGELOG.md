@@ -1,5 +1,11 @@
 # audiobits
 
+## 0.1.5
+
+### Patch Changes
+
+- d341fd9: Align the npm README with AudioBits' current product positioning, reactive sound capabilities, and interactive catalog examples.
+
 ## 0.1.4
 
 ### Patch Changes
