@@ -1,15 +1,15 @@
-# Validation and acceptance
+# Validation
 
 Use unit, type, browser and packed-package checks for the affected boundary.
-Automated results and listening acceptance are separate evidence.
+Automated tests check technical behavior; audible quality is evaluated through curation.
 
 ## Browser policy
 
 Current Chromium is the only automated browser verification target. Other
 browsers and operating systems are unverified and deliberately deferred.
 
-Listening, background interruptions and device changes need separate review. Compare signal properties
-within Chromium; native sample identity is not guaranteed.
+Background interruptions and device changes are outside automated coverage.
+Compare signal properties within Chromium; native sample identity is not guaranteed.
 
 ## Checks by boundary
 
@@ -29,7 +29,6 @@ but the corresponding public workflow also needs a real browser check.
 ## Signal and resource invariants
 
 Use these property and resource bounds with documented gain and concurrency.
-They do not establish subjective quality.
 
 - All rendered samples are finite. Curated single-voice default peaks remain
   below -6 dBFS at the master; eight simultaneous finite core voices must stay
@@ -47,22 +46,6 @@ Document the number of simultaneous voices and default master settings used for
 peak checks. These checks do not guarantee clipping-free output for arbitrary
 recipes, native extensions, or maximum engine concurrency.
 
-## Listening gate
-
-The current eight curated sounds have passed the maintainer-reported listening
-gate in Chrome. Output devices and detailed control/seed coverage were not
-specified; automated checks remain separate from this acceptance.
-
-For each core sound, listen at default settings and control extrema, with
-repeated triggers, fast parameter changes, and stop during attack/sustain/release.
-Identify the reviewer, browser, output device category and coverage when reporting
-acceptance. Do not record personal machine paths or identifiers.
-
-Review tonal character, transient smoothness, noise loop seams, fatigue, relative
-loudness, and usefulness of controls. A user listening report is valid evidence;
-absence of one must remain an explicit gap. Automated screenshots or sample
-energy cannot establish pleasantness.
-
 ## Public-content review
 
 Review all changed and new files, not just the tracked diff. Inspect prose,
@@ -72,10 +55,3 @@ claims. Check relative Markdown links. Preserve the license.
 
 Record the scope of review accurately: a local content review does not establish
 that remote Git history, hosted previews, or registry artifacts were inspected.
-
-## Evidence limits
-
-Automated correctness, subjective listening quality and physical-device
-compatibility are separate evidence. Current Chromium automation does not
-establish physical-device support. Broader compatibility work is deliberately
-deferred.

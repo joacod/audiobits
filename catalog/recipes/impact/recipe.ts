@@ -1,6 +1,5 @@
 import { defineSound, type Recipe } from "audiobits";
 
-/** Development fixture; listening acceptance is recorded separately. */
 export const impact: Omit<
   Extract<Recipe, { kind: "one-shot" }>,
   "parameters"

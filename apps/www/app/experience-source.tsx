@@ -9,9 +9,7 @@ export type ExperienceSourceFile = {
   code: string;
 };
 
-const setup = `npm install audiobits
-npm install --save-dev vite typescript
-npx vite`;
+const setup = `npm install audiobits`;
 
 export function ExperienceSource({
   symbol,
@@ -85,8 +83,12 @@ export function ExperienceSource({
             <code>{setup}</code>
           </pre>
           <p>
-            Keep the displayed relative paths and open the demo in Vite. These
-            files are the portable example.
+            Keep the displayed relative paths and use your application&apos;s
+            existing toolchain. To run the HTML demo independently, follow the{" "}
+            <a href="https://github.com/joacod/audiobits/blob/main/catalog/README.md#optional-standalone-demo">
+              optional standalone demo setup
+            </a>
+            . AudioBits does not require Vite.
           </p>
           <div className="catalog-source-files">
             {sources.map((file) => (

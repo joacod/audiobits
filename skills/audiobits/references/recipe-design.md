@@ -62,5 +62,4 @@ unsupported keys to hide errors, or evaluate text as JavaScript.
 Validate both the original and its JSON round trip. Typecheck the actual host
 and exercise defaults, min/max controls, rapid changes and stopping during
 sustain/release. Native signal checks can establish finite output, useful control
-changes and bounded resources. They do not establish a pleasant sound; listening
-is a separate creative review, not an automated merge gate.
+changes and bounded resources.

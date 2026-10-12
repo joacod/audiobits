@@ -23,20 +23,17 @@ range input offer the same sound without precise pointer movement.
 
 ## Complete interactive example
 
-The [interactive showcase](https://audiobits.joacod.com/catalog/reactive-thruster)
+The [interactive showcase](https://www.audiobits.dev/catalog/reactive-thruster)
 uses [host.ts](host.ts) with the same recipe and pointer integration. Copy
 `recipe.ts`, `pointer.ts`, `host.ts`, and [index.html](index.html) with their
 relative paths. Also copy [canonical Impact](../../recipes/impact/recipe.ts) at
 `../../recipes/impact/recipe.ts` relative to the host. The registry installs this
-complete manifest, including both licenses:
+complete manifest, including both licenses. Use your application's existing
+toolchain, or follow the
+[optional standalone demo setup](https://github.com/joacod/audiobits/blob/main/catalog/README.md#optional-standalone-demo).
+AudioBits does not require Vite.
 
-```sh
-npm install audiobits
-npm install --save-dev vite typescript
-npx vite
-```
-
-Open the local Vite URL. The HTML binds pointer and keyboard controls, one-shot
+Open the demo's local URL. The HTML binds pointer and keyboard controls, one-shot
 impact, Mute, Stop, and recoverable activation errors. The host owns a shared
 engine, suspends on hide, and closes on page teardown. In an SPA, call
 `await host.dispose()` when removing the view.
@@ -166,7 +163,6 @@ entry resolves the installed public package for source outside its workspace;
 a copied recipe next to your host needs no such entry.
 
 Automated checks cover recipe validation, control mapping, activation races,
-release, signal bounds, and Chromium lifecycle behavior. Sound character and
-physical-device quality remain for maintainer listening review. Output is tuned
+release, signal bounds, and Chromium lifecycle behavior. Output is tuned
 for the example's default master gain and bounded voices; arbitrary mixes are
 not guaranteed to avoid clipping.

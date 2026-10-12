@@ -128,6 +128,7 @@ test("social metadata resolves to matching generated OG and Twitter cards", asyn
     const imageUrl = await page.locator(selector).getAttribute("content");
     expect(imageUrl).toBeTruthy();
     const url = new URL(imageUrl!);
+    expect(url.origin).toBe(siteUrl);
     expect(url.pathname).toBe(route);
     const response = await request.get(`${home}${url.pathname}${url.search}`);
     expect(response.status()).toBe(200);

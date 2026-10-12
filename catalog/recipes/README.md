@@ -23,4 +23,3 @@ Keep metadata and manifests accurate when editing source. `pnpm test:package`
 copies all ten registry items into separate installed source trees, typechecks
 every TypeScript file against the packed public runtime, validates the recipes,
 and exercises both complete experiences in Chromium.
-Browser evidence does not establish listening quality or physical-device support.

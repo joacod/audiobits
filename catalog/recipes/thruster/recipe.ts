@@ -1,6 +1,5 @@
 import { defineSound, type Recipe } from "audiobits";
 
-/** Development fixture; listening acceptance is recorded separately. */
 export const thruster: Omit<
   Extract<Recipe, { kind: "sustained" }>,
   "parameters"

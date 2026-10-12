@@ -36,18 +36,14 @@ field, opening lowpass filters as progress rises. A quiet bandpass noise layer
 adds air. All pitch, filter and gain mappings retarget over 80 ms. Full charge
 sustains until released; decreasing progress reduces intensity on the same voice.
 Signal bounds are verified for the default master level and bounded voices,
-not arbitrary application mixes. Automated checks do not judge listening quality.
+not arbitrary application mixes.
 
 ## Complete browser example
 
 Copy `recipe.ts`, `progress.ts`, [host.ts](host.ts) and [index.html](index.html)
-into one folder, then run:
-
-```sh
-npm install audiobits
-npm install --save-dev vite typescript
-npx vite
-```
+into one folder. Use your application's existing toolchain, or follow the
+[optional standalone demo setup](https://github.com/joacod/audiobits/blob/main/catalog/README.md#optional-standalone-demo).
+AudioBits does not require Vite.
 
 Start charge activates audio explicitly. The slider supplies arbitrary progress,
 Release preserves the tail (300 ms fade plus 50 ms filter cleanup), Stop all
@@ -58,7 +54,7 @@ The host suspends on hide, stops on blur, closes on pagehide and exposes
 The host owns its engine; `progress.ts` can instead share an application engine.
 Per-sound limits bound overlapping tails during rapid release/restart.
 
-The [website showcase](https://audiobits.joacod.com/catalog/energy-charge)
+The [website showcase](https://www.audiobits.dev/catalog/energy-charge)
 uses these exact sources, adding a three-second hold interaction at the UI layer.
 No completion accent is included: releasing is the recipe's clean tail, while
 cancellation never produces a success sound. A game or task may supply its own
