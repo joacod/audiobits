@@ -141,7 +141,10 @@ test("catalog playback stays on one session until Stop all and cleanup", async (
   await expect(page.getByTestId("thruster-state")).toHaveText(
     "Thruster: stopped",
   );
-  await page.getByRole("link", { name: "Home", exact: true }).click();
+  await page
+    .getByRole("navigation", { name: "Main navigation" })
+    .getByRole("link", { name: "AudioBits", exact: true })
+    .click();
   await expect.poll(() => contexts(page)).toEqual(["closed"]);
 });
 

@@ -215,7 +215,7 @@ test("vanilla impact and one continuous thruster through public exports", async 
     .toEqual(["closed"]);
 });
 
-test("homepage energy charge keeps one voice through live updates and hide", async ({
+test("homepage reactive thruster keeps one voice through live updates and hide", async ({
   page,
 }) => {
   await page.addInitScript(() => {
@@ -248,35 +248,41 @@ test("homepage energy charge keeps one voice through live updates and hide", asy
     ),
   ).toBe(0);
   const state = page.getByTestId("landing-playback-state");
-  await page.getByRole("slider", { name: "Charge", exact: true }).fill("0.4");
-  await page.getByRole("button", { name: "Start charge", exact: true }).click();
-  await expect(state).toHaveText("Charge: running");
+  await page.getByRole("slider", { name: "Throttle", exact: true }).fill("0.4");
+  await page
+    .getByRole("button", { name: "Start thruster", exact: true })
+    .click();
+  await expect(state).toHaveText("Thruster: running");
   const count = await page.evaluate(
     () => (globalThis as unknown as { sources: unknown[] }).sources.length,
   );
-  expect(count).toBe(4);
+  expect(count).toBe(3);
   for (const value of ["1", "0.2", "0.8", "1"])
-    await page.getByRole("slider", { name: "Charge", exact: true }).fill(value);
+    await page
+      .getByRole("slider", { name: "Throttle", exact: true })
+      .fill(value);
   expect(
     await page.evaluate(
       () => (globalThis as unknown as { sources: unknown[] }).sources.length,
     ),
   ).toBe(count);
-  await expect(page.locator(".charge-binding code")).toHaveText(
-    "voice.set({ charge: 1.00 })",
-  );
+  await expect(page.locator(".flight-readout output")).toHaveText("100%");
   await expect(
-    page.getByRole("region", { name: "Energy charge hero" }).getByRole("alert"),
+    page
+      .getByRole("region", { name: "Reactive Thruster hero" })
+      .getByRole("alert"),
   ).toHaveCount(0);
   await page.getByRole("button", { name: "Stop", exact: true }).click();
-  await expect(state).toHaveText("Charge: stopped");
-  await page.getByRole("button", { name: "Start charge", exact: true }).click();
-  await expect(state).toHaveText("Charge: running");
+  await expect(state).toHaveText("Thruster: stopped");
+  await page
+    .getByRole("button", { name: "Start thruster", exact: true })
+    .click();
+  await expect(state).toHaveText("Thruster: running");
   expect(
     await page.evaluate(
       () => (globalThis as unknown as { sources: unknown[] }).sources.length,
     ),
-  ).toBe(8);
+  ).toBe(6);
   await page.evaluate(() => {
     Object.defineProperty(document, "hidden", {
       configurable: true,
@@ -284,7 +290,7 @@ test("homepage energy charge keeps one voice through live updates and hide", asy
     });
     document.dispatchEvent(new Event("visibilitychange"));
   });
-  await expect(state).toHaveText("Charge: stopped");
+  await expect(state).toHaveText("Thruster: stopped");
   await expect
     .poll(() =>
       page.evaluate(() =>
@@ -297,8 +303,10 @@ test("homepage energy charge keeps one voice through live updates and hide", asy
   await page.evaluate(() => {
     Reflect.deleteProperty(document, "hidden");
   });
-  await page.getByRole("button", { name: "Start charge", exact: true }).click();
-  await expect(state).toHaveText("Charge: running");
+  await page
+    .getByRole("button", { name: "Start thruster", exact: true })
+    .click();
+  await expect(state).toHaveText("Thruster: running");
   await page
     .getByRole("navigation", { name: "Main navigation" })
     .getByRole("link", { name: "Docs" })

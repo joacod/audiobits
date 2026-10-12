@@ -77,7 +77,7 @@ test("public pages expose unique metadata and content without JavaScript", async
     await expect(page.locator("h1")).not.toBeEmpty();
     if (route.path === "/") {
       await expect(page.locator("h1")).toHaveText("Sound that reacts.");
-      await expect(page.locator(".charge-lede")).toContainText(
+      await expect(page.locator(".thruster-intro p")).toContainText(
         "Procedural sound effects for the web.",
       );
       for (const selector of [

@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import manifest from "../../packages/audiobits/package.json" with { type: "json" };
 
-test("site uses public exports and keyboard-operated charge playback", async ({
+test("site uses public exports and keyboard-operated thruster playback", async ({
   page,
   browser,
 }) => {
@@ -25,11 +25,15 @@ test("site uses public exports and keyboard-operated charge playback", async ({
   await expect(
     page.getByText(`Available on npm · ${manifest.version}`),
   ).toBeVisible();
-  const start = page.getByRole("button", { name: "Start charge", exact: true });
+  const start = page.getByRole("button", {
+    name: "Start thruster",
+    exact: true,
+  });
+  await expect(start).toBeEnabled();
   await start.focus();
   await page.keyboard.press("Enter");
   await expect(page.getByTestId("landing-playback-state")).toHaveText(
-    "Charge: running",
+    "Thruster: running",
   );
   expect(errors).toEqual([]);
 });
