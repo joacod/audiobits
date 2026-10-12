@@ -1,5 +1,15 @@
 # audiobits
 
+## 0.2.0
+
+### Minor Changes
+
+- f9fe119: Make the npm package engine-only: ship the runtime, recipe language, types,
+  schema and capabilities. Remove bundled creative recipes and agent instructions
+  from the package. Recipes, interactive experiences and agent guidance live
+  separately as repository source. Capabilities describe the runtime and recipe
+  language.
+
 ## 0.1.5
 
 ### Patch Changes
