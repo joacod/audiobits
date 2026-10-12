@@ -5,7 +5,9 @@ import { ExperienceMark } from "../icons/experience-mark";
 import { SoundPortrait } from "../icons/sound-portrait";
 import { ThrusterHero } from "./thruster-hero";
 import { SiteHeader } from "./site-header";
+import { LandingCommand } from "./landing-command";
 import { catalogEntries, catalogEntriesByCategory } from "../lib/catalog";
+import { registryItem } from "../lib/registry";
 import { siteBuild } from "../lib/site-build";
 import "./landing.css";
 import "./thruster-hero.css";
@@ -23,51 +25,82 @@ const previews = previewSlugs.map((slug) => {
   }
   return entry;
 });
-const experiences = catalogEntriesByCategory("experience");
+const experiences = catalogEntriesByCategory("experience").filter(
+  (entry) => entry.slug !== "reactive-thruster",
+);
+const thrusterInstall = `npx shadcn@latest add joacod/audiobits/${registryItem("reactive-thruster").name}`;
 
 export default function Home() {
   return (
     <main className="foundation landing">
       <SiteHeader current="home" />
       <ThrusterHero />
-      <section className="landing-use" aria-labelledby="use-heading">
-        <h2 id="use-heading">How you use this</h2>
-        <div className="use-grid">
-          <article>
-            <h3>The package</h3>
-            <p>
-              AudioBits is the runtime you install. Create an engine, then play
-              from a click, tap, or key press.
-            </p>
-          </article>
-          <article>
-            <h3>Recipes you own</h3>
-            <p>
-              Eight sounds live in the catalog. Open one, change its parameters,
-              and copy the example into your app.
-            </p>
-          </article>
-          <article>
-            <h3>Independent examples</h3>
-            <p>
-              Energy Charge and Reactive Thruster are complete pages you can
-              copy. Each includes sound source and wires a small interaction to
-              the same engine.
-            </p>
-          </article>
+      <section
+        className="landing-own landing-adopt"
+        aria-labelledby="own-heading"
+      >
+        <div>
+          <h2 id="own-heading">Hear it. Own it.</h2>
+          <p>Add editable sounds to your project. Powered by AudioBits.</p>
+        </div>
+        <div className="landing-action">
+          <LandingCommand command={thrusterInstall} label="thruster install" />
+          <p className="landing-context">
+            Run in your project. The registry adds editable Thruster source and
+            the required{" "}
+            <a href="https://www.npmjs.com/package/audiobits">
+              audiobits npm runtime
+            </a>
+            .
+          </p>
+          <div className="landing-links">
+            <Link href="/docs/catalog">
+              Install editable source <ArrowIcon />
+            </Link>
+            <Link href="/docs">
+              Build with the runtime <ArrowIcon />
+            </Link>
+          </div>
+        </div>
+      </section>
+      <section
+        className="landing-agents landing-adopt"
+        aria-labelledby="agents-heading"
+      >
+        <div>
+          <h2 id="agents-heading">Let your agent build the sound.</h2>
+          <p>
+            The official AudioBits Skill guides your coding agent to create
+            sounds and wire them into your app.
+          </p>
+          <div className="landing-links">
+            <Link href="/docs/agents">
+              Build with AI agents <ArrowIcon />
+            </Link>
+          </div>
+        </div>
+        <div className="landing-action">
+          <LandingCommand
+            command="npx skills add joacod/audiobits --skill audiobits"
+            label="Skill install"
+          />
+          <blockquote className="landing-agent-request">
+            Use the AudioBits Skill to add a soft confirmation sound to my Save
+            button. Start from the click and clean up when the view closes.
+          </blockquote>
+          <p className="landing-context">
+            For complex workflows, explore{" "}
+            <Link href="/docs/mcp">optional local MCP tooling</Link>.
+          </p>
         </div>
       </section>
       <section className="landing-catalog" aria-labelledby="catalog-heading">
         <div className="landing-section-heading">
-          <h2 id="catalog-heading">Examples and catalog sounds</h2>
+          <h2 id="catalog-heading">Explore more</h2>
           <Link href="/catalog">
-            Open the catalog <ArrowIcon />
+            Explore the full catalog <ArrowIcon />
           </Link>
         </div>
-        <p className="catalog-note">
-          Examples are complete hosts. The three sounds are copy-owned recipes.
-          Open a page to hear it.
-        </p>
         <div className="landing-experiences">
           {experiences.map((experience) => (
             <Link
@@ -108,14 +141,13 @@ export default function Home() {
           <p className="landing-fineprint">
             Available on npm · {siteBuild.version}
           </p>
-          <pre>
-            <code>npm install audiobits</code>
-          </pre>
         </div>
         <div className="landing-links">
           <Link href="/docs">
-            Documentation <ArrowIcon />
+            Docs <ArrowIcon />
           </Link>
+          <Link href="/catalog">Catalog</Link>
+          <a href="https://www.npmjs.com/package/audiobits">npm</a>
           <a href="https://github.com/joacod/audiobits">GitHub</a>
         </div>
       </footer>

@@ -22,49 +22,90 @@
     font-size: 0.9rem;
     font-weight: 600;
   }
-  .landing .landing-install {
-    display: inline-block;
-    margin-top: 0.75rem;
-    font-family: var(--font-mono);
-    font-size: 0.85rem;
-    line-height: 1.4;
-    padding: 0.5rem 0.75rem;
-    background: var(--graphite);
-    border-radius: var(--control-radius);
-    overflow-wrap: anywhere;
-  }
-  .landing .landing-use {
-    padding: 2.5rem 0 2.25rem;
+  .landing .landing-adopt {
+    display: grid;
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    gap: 1.5rem 3rem;
+    padding: 3rem 0;
     border-top: 1px solid var(--graphite-edge);
   }
-  .landing .landing-use h2,
+  .landing .landing-adopt h2 {
+    margin: 0;
+    font-size: clamp(2.25rem, 4vw, 3.4rem);
+    line-height: 1;
+  }
+  .landing .landing-adopt p {
+    color: var(--mute);
+    font-size: 0.9rem;
+  }
+  .landing .landing-action {
+    min-width: 0;
+  }
+  .landing .landing-agents {
+    margin: 0 calc(var(--gutter) * -1);
+    padding: 3rem var(--gutter);
+    background: var(--graphite);
+  }
+  .landing .landing-command-row {
+    display: flex;
+    align-items: start;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--graphite);
+    border: 1px solid var(--graphite-edge);
+    border-radius: var(--control-radius);
+  }
+  .landing .landing-agents .landing-command-row {
+    background: var(--void);
+  }
+  .landing .landing-command pre {
+    flex: 1;
+    min-width: 0;
+    align-self: center;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  .landing .landing-command button {
+    flex: none;
+    color: var(--void);
+    background: var(--ink);
+    border-color: var(--ink);
+  }
+  .landing .landing-command button:enabled:hover {
+    color: var(--ink);
+    background: var(--void);
+    border-color: var(--ink);
+  }
+  .landing .landing-copy-status {
+    min-height: 1.5em;
+    margin: 0.35rem 0 0;
+    font-size: 0.8rem;
+  }
+  .landing .landing-context {
+    margin: 0.5rem 0;
+    font-size: 0.8rem;
+  }
+  .landing .landing-context a {
+    color: var(--ink);
+  }
+  .landing .landing-agent-request {
+    margin: 0.75rem 0 1rem;
+    font-size: 0.9rem;
+    line-height: 1.65;
+  }
   .landing .landing-catalog h2 {
     margin: 0;
     font-size: clamp(1.65rem, 2.6vw, 2.2rem);
     line-height: 1.15;
   }
-  .landing .use-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    margin-top: 1.25rem;
-    border-top: 1px solid var(--graphite-edge);
-  }
-  .landing .use-grid article {
-    min-width: 0;
-    padding: 1.15rem 1.5rem 0.25rem 0;
-  }
-  .landing .use-grid article + article {
-    padding-left: 1.5rem;
-    border-left: 1px solid var(--graphite-edge);
-  }
-  .landing .use-grid h3,
   .landing .landing-sound-entry h3 {
     margin: 0;
     font-size: 1.4rem;
     line-height: 1.2;
   }
-  .landing .use-grid p,
-  .landing .catalog-note,
   .landing .landing-experience p,
   .landing .landing-sound-entry p {
     margin: 0.45rem 0 0;
@@ -92,10 +133,6 @@
   }
   .landing .landing-section-heading > a {
     color: var(--ink);
-  }
-  .landing .catalog-note {
-    max-width: 62ch;
-    margin-top: 0.75rem;
   }
   .landing .landing-experiences {
     margin-top: 1.25rem;
@@ -173,7 +210,7 @@
     padding: 1.75rem var(--gutter) calc(1.75rem + env(safe-area-inset-bottom));
     background: var(--void);
     color: var(--ink);
-    color-scheme: light;
+    color-scheme: dark;
   }
   .landing .landing-footer p {
     margin: 0 0 0.35rem;
@@ -181,17 +218,6 @@
   .landing .landing-fineprint {
     color: var(--mute);
     font-size: 0.8rem;
-  }
-  .landing .landing-footer pre {
-    margin: 0;
-    padding: 0;
-    background: transparent;
-    color: var(--ink);
-    font-size: 1.05rem;
-    line-height: 1.4;
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
-    border-radius: 0;
   }
   .landing .landing-footer .landing-links a {
     color: var(--ink);
@@ -201,11 +227,11 @@
       --gutter: 1rem;
       padding-bottom: 0;
     }
-    .landing .landing-use {
-      padding-top: 1.75rem;
-    }
-    .landing .landing-install {
-      margin-top: 0;
+    .landing .landing-adopt {
+      grid-template-columns: 1fr;
+      gap: 1.25rem;
+      padding-top: 2rem;
+      padding-bottom: 2rem;
     }
     .landing .landing-experience {
       grid-template-columns: auto minmax(0, 1fr);
@@ -213,11 +239,9 @@
     .landing .landing-experience .landing-open {
       grid-column: 2;
     }
-    .landing .use-grid,
     .landing .landing-sound-list {
       grid-template-columns: 1fr;
     }
-    .landing .use-grid article + article,
     .landing .landing-sound-entry + .landing-sound-entry {
       margin-top: 0.25rem;
       padding-top: 1rem;
