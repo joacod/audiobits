@@ -4,14 +4,8 @@
 @import "fumadocs-ui/css/neutral.css";
 @import "fumadocs-ui/css/preset.css";
 
-@layer base {
-  body {
-    margin: 0;
-  }
-}
-
-@layer components {
-  .foundation {
+@layer tokens {
+  :root {
     /* Live Signal identity, GUIDE v1.0. The only place colour and type values live. */
     --void: #050507;
     --ink: #f2f2f2;
@@ -32,6 +26,39 @@
     --font-mono:
       var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Consolas,
       monospace;
+  }
+}
+
+/* Fumadocs theme mapped to Live Signal (dark theme only; docs default to dark).
+   Unlayered so it follows fumadocs-ui's own unlayered .dark rule. */
+:root.dark,
+.dark #nd-sidebar {
+  --color-fd-background: var(--void);
+  --color-fd-foreground: var(--ink);
+  --color-fd-muted: var(--graphite);
+  --color-fd-muted-foreground: var(--mute);
+  --color-fd-popover: var(--graphite);
+  --color-fd-popover-foreground: var(--ink);
+  --color-fd-card: var(--graphite);
+  --color-fd-card-foreground: var(--ink);
+  --color-fd-border: var(--graphite-edge);
+  --color-fd-primary: var(--ink);
+  --color-fd-primary-foreground: var(--void);
+  --color-fd-secondary: var(--graphite);
+  --color-fd-secondary-foreground: var(--ink);
+  --color-fd-accent: var(--graphite-edge);
+  --color-fd-accent-foreground: var(--ink);
+  --color-fd-ring: var(--mute);
+}
+
+@layer base {
+  body {
+    margin: 0;
+  }
+}
+
+@layer components {
+  .foundation {
     --gutter: max(1.5rem, calc((100vw - 76rem) / 2));
     --gap: 1.5rem;
     --control-radius: 4px;
