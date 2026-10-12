@@ -1,5 +1,5 @@
-import { energyCharge } from "../../catalog/energy-charge/recipe";
-import { reactiveThruster } from "../../catalog/reactive-thruster/recipe";
+import { energyCharge } from "../../catalog/experiences/energy-charge/recipe";
+import { reactiveThruster } from "../../catalog/experiences/reactive-thruster/recipe";
 // Browser-only test bundle. Internal compiler access does not add a public API.
 import { compile } from "../../packages/audiobits/src/compiler/plan";
 import { createGraph } from "../../packages/audiobits/src/compiler/graph";

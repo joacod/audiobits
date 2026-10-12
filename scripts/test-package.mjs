@@ -89,14 +89,14 @@ try {
   );
   for (const name of ["recipe.ts", "pointer.ts", "host.ts", "index.html"]) {
     await copyFile(
-      join(root, "catalog/reactive-thruster", name),
+      join(root, "catalog/experiences/reactive-thruster", name),
       join(consumer, name),
     );
   }
   await mkdir(join(consumer, "energy-charge"));
   for (const name of ["recipe.ts", "progress.ts", "host.ts", "index.html"]) {
     await copyFile(
-      join(root, "catalog/energy-charge", name),
+      join(root, "catalog/experiences/energy-charge", name),
       join(consumer, "energy-charge", name),
     );
   }
@@ -450,7 +450,7 @@ Object.assign(globalThis, { probe });`,
         .toEqual(["closed"]);
       assert.deepEqual(errors, []);
       evidence.browser.push({
-        file: "catalog/reactive-thruster/index.html",
+        file: "catalog/experiences/reactive-thruster/index.html",
         independentHost: true,
         closed: true,
       });
@@ -503,7 +503,7 @@ Object.assign(globalThis, { probe });`,
         .toEqual(["closed"]);
       assert.deepEqual(errors, []);
       evidence.browser.push({
-        file: "catalog/energy-charge/index.html",
+        file: "catalog/experiences/energy-charge/index.html",
         independentHost: true,
         closed: true,
       });

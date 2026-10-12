@@ -50,7 +50,7 @@ function readExperienceSources(slug: "energy-charge" | "reactive-thruster") {
     name,
     purpose: purposes[name],
     code: readFileSync(
-      join(process.cwd(), "../../catalog", slug, name),
+      join(process.cwd(), "../../catalog/experiences", slug, name),
       "utf8",
     ),
   }));
