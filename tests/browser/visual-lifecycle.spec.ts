@@ -1,8 +1,9 @@
 import { expect, test } from "@playwright/test";
+import { instrument, probe } from "./experience-probe";
 
 const home = "http://127.0.0.1:3100";
 
-for (const route of ["/", "/catalog/energy-charge"]) {
+for (const route of ["/catalog/energy-charge"]) {
   test(`charge keyboard repeats preserve the hold without page scrolling on ${route}`, async ({
     page,
   }) => {
@@ -34,6 +35,43 @@ for (const route of ["/", "/catalog/energy-charge"]) {
     await expect(hold).toHaveAttribute("data-state", "stopped");
   });
 }
+
+test("homepage thruster keyboard repeats keep one voice without page scrolling", async ({
+  page,
+}) => {
+  await instrument(page, "normal", "/");
+  const state = page.getByTestId("landing-playback-state");
+  const start = page.getByRole("button", {
+    name: "Start thruster",
+    exact: true,
+  });
+  await expect(start).toBeEnabled();
+  await start.focus();
+  const startScroll = await page.evaluate(() => scrollY);
+  await page.keyboard.down("Enter");
+  await expect(state).toHaveText("Thruster: running");
+  for (let repeat = 0; repeat < 3; repeat++) await page.keyboard.down("Enter");
+  await page.keyboard.up("Enter");
+  expect(await page.evaluate(() => scrollY)).toBe(startScroll);
+  expect((await probe(page)).sources).toBe(3);
+  expect((await probe(page)).contexts).toEqual(["running"]);
+
+  const throttle = page.getByRole("slider", { name: "Throttle", exact: true });
+  await throttle.focus();
+  const throttleScroll = await page.evaluate(() => scrollY);
+  for (let repeat = 0; repeat < 3; repeat++) await page.keyboard.down("End");
+  await page.keyboard.up("End");
+  await expect(throttle).toHaveValue("1");
+  await expect(page.locator(".flight-readout output")).toHaveText("100%");
+  expect(await page.evaluate(() => scrollY)).toBe(throttleScroll);
+  expect((await probe(page)).sources).toBe(3);
+  await expect(state).toHaveText("Thruster: running");
+
+  await page.getByRole("button", { name: "Stop", exact: true }).focus();
+  await page.keyboard.press("Space");
+  await expect(state).toHaveText("Thruster: stopped");
+  await expect.poll(async () => (await probe(page)).ended).toBe(3);
+});
 
 async function trackGraphics(
   page: import("@playwright/test").Page,

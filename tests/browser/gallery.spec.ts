@@ -348,17 +348,13 @@ test("workbench controls stay disabled until hydration owns them", async ({
   await expect(page.locator(".gallery-mixer > [role=alert]")).toHaveCount(0);
 });
 
-test("homepage charge uses one engine, reports output and disposes on navigation", async ({
+test("homepage thruster uses one engine, reports output and disposes on navigation", async ({
   page,
 }) => {
   await instrument(page);
   await page.setViewportSize({ width: 375, height: 844 });
   await page.goto("http://127.0.0.1:3100");
-  const hold = page.getByRole("button", {
-    name: "Hold to charge",
-    exact: true,
-  });
-  const bounds = await hold.boundingBox();
+  const bounds = await page.locator(".flight-pad").boundingBox();
   expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(844);
   expect(
     await page.evaluate(
@@ -372,10 +368,10 @@ test("homepage charge uses one engine, reports output and disposes on navigation
           .galleryContexts.length,
     ),
   ).toBe(0);
-  await page.getByRole("slider", { name: "Charge", exact: true }).fill("0.42");
-  await expect(page.locator(".charge-binding code")).toHaveText(
-    "voice.set({ charge: 0.42 })",
-  );
+  await page
+    .getByRole("slider", { name: "Throttle", exact: true })
+    .fill("0.42");
+  await expect(page.locator(".flight-readout output")).toHaveText("42%");
   await expect(page.locator(".recipe-tools")).toHaveCount(0);
   const previews = page.locator(".landing-sound-entry");
   await expect(previews).toHaveCount(3);
@@ -384,13 +380,18 @@ test("homepage charge uses one engine, reports output and disposes on navigation
       page.locator(`.landing-sound-entry[href="/catalog/${kind}"]`),
     ).toHaveCount(1);
   }
-  await page.getByRole("button", { name: "Start charge", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Start thruster", exact: true })
+    .click();
   await expect(page.getByTestId("landing-playback-state")).toHaveText(
-    "Charge: running",
+    "Thruster: running",
   );
   await expect
     .poll(() =>
-      page.locator(".charge-rings").getAttribute("data-level").then(Number),
+      page
+        .locator(".thruster-signal canvas")
+        .getAttribute("data-peak")
+        .then(Number),
     )
     .toBeGreaterThan(0);
   await page.getByRole("button", { name: "Mute", exact: true }).click();
@@ -398,17 +399,19 @@ test("homepage charge uses one engine, reports output and disposes on navigation
     page.getByRole("button", { name: "Mute", exact: true }),
   ).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByTestId("landing-playback-state")).toHaveText(
-    "Charge: running · muted",
+    "Thruster: running · muted",
   );
   await expect
-    .poll(() => page.locator(".charge-rings").getAttribute("data-level"))
+    .poll(() =>
+      page.locator(".thruster-signal canvas").getAttribute("data-peak"),
+    )
     .toBe("0");
   await page.getByRole("button", { name: "Stop", exact: true }).click();
   await expect(page.getByTestId("landing-playback-state")).toHaveText(
-    "Charge: stopped · muted",
+    "Thruster: stopped · muted",
   );
-  await expect(page.locator(".charge-rings")).toHaveAttribute(
-    "data-level",
+  await expect(page.locator(".thruster-signal canvas")).toHaveAttribute(
+    "data-peak",
     "0",
   );
   expect(
