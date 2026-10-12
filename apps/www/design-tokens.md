@@ -1,17 +1,19 @@
 # Showcase design tokens
 
-Showcase colour and type tokens live once, on `.foundation` in
-[app/globals.css](app/globals.css). They cover the homepage, the shared header
-and the catalog. Fumadocs keeps its own theme. The document light and dark
-classes do not repaint `.foundation`.
+Live Signal colour and type tokens live once, on `:root` inside the `tokens`
+layer of [app/globals.css](app/globals.css). The showcase (`.foundation`) reads
+them directly. Fumadocs reads them only through its `--color-fd-*` theme
+variables, which globals.css maps to the tokens for the dark theme (the default).
+Fumadocs' light theme keeps its neutral palette.
 
 ## Source of truth
 
-CSS custom properties on `.foundation` are the source of truth. The stylesheet
-declares the layer order `theme, tokens, base, components, utilities`. The
-showcase custom properties are set inside the `components` layer, on
-`.foundation`, so they do not leak into documentation pages. Values follow the
-approved brand guide v1.0 (Live Signal).
+CSS custom properties on `:root` in the `tokens` layer are the source of truth.
+The stylesheet declares the layer order `theme, tokens, base, components,
+utilities`. Layout values (`--gutter`, `--gap`, `--control-radius`,
+`--motion-ui`) stay on `.foundation`. Values follow the approved brand guide
+v1.0 (Live Signal). `lib/brand-colors.ts` mirrors the colours for the OG card
+and `lib/brand-colors.test.ts` fails if they drift.
 
 Roles:
 
@@ -23,7 +25,7 @@ Roles:
 
 Canvas and WebGL painters read the signal and mute values at mount with
 `readSignalPalette` in [lib/signal-palette.ts](lib/signal-palette.ts). Do not
-copy a hex value into a component, shader or stylesheet outside `.foundation`.
+copy a hex value into a component, shader or stylesheet outside the tokens block.
 The only literal outside it is `#050507` in the Next.js viewport `themeColor`
 and the web manifest, which cannot read CSS.
 
@@ -40,5 +42,6 @@ Buttons keep a pressed state with `aria-pressed`. Hover applies to enabled
 buttons. Playback uses `.play-action`. Reduced motion removes showcase
 transitions; the waveform stays still and only meters update.
 
-When this stylesheet changes, check a documentation page as well as the
-homepage. The docs page should still follow Fumadocs in both document themes.
+When this stylesheet changes, check a documentation page in both document
+themes as well as the homepage. Restyle docs only through the `--color-fd-*`
+mapping; do not fork Fumadocs layout components.

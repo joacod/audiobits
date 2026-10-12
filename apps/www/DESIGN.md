@@ -101,7 +101,7 @@ components:
 
 The waveform is the logo, and it moves only when sound moves. The showcase is dark-first: Void ground, Ink text, Mute for secondary copy. The blue, violet and magenta signal gradient belongs to live elements and to the mark, nothing else. The home page and the instrument pages speak in huge condensed Big Shoulders Display headlines and Geist Mono UI. The workbench borrows a hardware panel language: graphite panels, knob-capped faders and LED meters.
 
-Source: the approved brand guide v1.0 (direction B Live Signal for home and instruments, A Hardware Panel controls for the workbench). Documentation stays on Fumadocs and is not re-skinned by this system.
+Source: the approved brand guide v1.0 (direction B Live Signal for home and instruments, A Hardware Panel controls for the workbench). Documentation keeps the Fumadocs layout; its dark theme (the default) maps the Fumadocs colour variables to these tokens and uses Geist Mono for code.
 
 **Key Characteristics:**
 
@@ -126,7 +126,7 @@ The wordmark is `audiobits`, lowercase, Big Shoulders Display 800, set beside th
 
 ## Colors
 
-All values live once, as custom properties on `.foundation` in [app/globals.css](app/globals.css). Canvas and WebGL painters read the same properties at mount through [lib/signal-palette.ts](lib/signal-palette.ts), so no component owns a hex value.
+All values live once, as custom properties on `:root` in the `tokens` layer of [app/globals.css](app/globals.css). Fumadocs' dark theme maps its `--color-fd-*` variables to them. Canvas and WebGL painters read the same properties at mount through [lib/signal-palette.ts](lib/signal-palette.ts), so no component owns a hex value.
 
 - **Void** (`--void`): page ground, inverted text on Ink buttons, selection text.
 - **Ink** (`--ink`): text, primary buttons, focus outlines, the resting mark.
@@ -196,6 +196,6 @@ Charge rings and the progress ring rest in Mute and Graphite edge and take the s
 - **Don't** use warm paper, serif display faces, glassmorphism, blobs, bento grids, gradient text or stock sparkles.
 - **Don't** put the signal gradient on text or flat surfaces.
 - **Don't** animate anything that is not following sound or state.
-- **Don't** restyle Fumadocs with the showcase tokens.
+- **Don't** fork Fumadocs layout components; restyle docs only through the `--color-fd-*` mapping.
 
 Source of truth: [global styles](app/globals.css), [landing styles](app/landing.css), [hero styles](app/charge-hero.css), [catalog styles](app/catalog.css), [mark](app/brand-mark.tsx), [header](app/site-header.tsx), [output scope](app/output-scope.tsx).
