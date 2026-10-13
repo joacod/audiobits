@@ -9,20 +9,11 @@ import {
 } from "react";
 import { mountPlasmaBlade } from "../../../catalog/experiences/plasma-blade/host";
 import { mountBladeStage } from "../../../catalog/experiences/plasma-blade/stage";
-import { CatalogInstall } from "./catalog-install";
-import {
-  ExperienceSource,
-  type ExperienceSourceFile,
-} from "./experience-source";
 import "./plasma-blade.css";
 
 const subscribeHydration = () => () => {};
 
-export function PlasmaBladeDetail({
-  sources,
-}: {
-  sources: readonly ExperienceSourceFile[];
-}) {
+export function PlasmaBladeDetail() {
   const canvas = useRef<HTMLCanvasElement>(null);
   const host = useRef<ReturnType<typeof mountPlasmaBlade> | null>(null);
   const stage = useRef<ReturnType<typeof mountBladeStage> | null>(null);
@@ -147,14 +138,6 @@ export function PlasmaBladeDetail({
           strikes, Escape retracts.
         </p>
         {error ? <p role="alert">{error}</p> : null}
-      </div>
-      <CatalogInstall slug="plasma-blade" />
-      <div className="catalog-inspector">
-        <h2>Inspect source</h2>
-        <ExperienceSource
-          presentation="Five original recipes, motion mapping, voice ownership, browser lifecycle, and the canvas stage. The same source powers this page and the standalone demo."
-          sources={sources}
-        />
       </div>
     </>
   );
