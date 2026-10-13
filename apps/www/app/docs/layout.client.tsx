@@ -1,12 +1,14 @@
 "use client";
 
 import { useId } from "react";
-import { Header } from "fumadocs-ui/layouts/docs/slots/header";
+import Link from "next/link";
 import { ThemeSwitch } from "fumadocs-ui/layouts/shared/slots/theme-switch";
 import { buttonVariants } from "fumadocs-ui/components/ui/button";
 import { GithubIcon } from "../../icons/github-icon";
 import { NpmIcon } from "../../icons/npm-icon";
 import { BrandMark } from "../../icons/brand-mark";
+import { HomeIcon } from "../../icons/home-icon";
+import { CatalogIcon } from "../../icons/catalog-icon";
 
 export function DocsBrand() {
   // The native desktop and mobile titles coexist, even when one is hidden.
@@ -28,7 +30,7 @@ export function DocsUtilities() {
     <div
       role="group"
       aria-label="Documentation utilities"
-      className="flex items-center justify-end gap-1 text-fd-muted-foreground"
+      className="flex items-center gap-1 text-fd-muted-foreground"
     >
       <a
         href="https://github.com/joacod/audiobits"
@@ -55,13 +57,34 @@ export function DocsUtilities() {
   );
 }
 
-export function DocsHeader() {
+export function DocsSidebarFooter() {
   return (
-    <>
-      <Header />
-      <header className="[grid-area:header] sticky top-(--fd-docs-row-1) z-30 flex items-center justify-end border-b bg-fd-background/80 px-4 backdrop-blur-sm h-(--fd-header-height) max-md:hidden md:layout:[--fd-header-height:--spacing(14)]">
-        <DocsUtilities />
-      </header>
-    </>
+    <nav
+      aria-label="AudioBits site"
+      className="grid grid-cols-2 gap-1 rounded-lg border bg-fd-secondary/50 p-1"
+    >
+      <Link
+        href="/"
+        className={buttonVariants({
+          variant: "ghost",
+          size: "sm",
+          className: "gap-2",
+        })}
+      >
+        <HomeIcon className="shrink-0 text-fd-muted-foreground" />
+        Home
+      </Link>
+      <Link
+        href="/catalog"
+        className={buttonVariants({
+          variant: "ghost",
+          size: "sm",
+          className: "gap-2",
+        })}
+      >
+        <CatalogIcon className="shrink-0 text-fd-muted-foreground" />
+        Catalog
+      </Link>
+    </nav>
   );
 }

@@ -16,6 +16,7 @@ import { MarkdownCopyButton } from "fumadocs-ui/layouts/docs/page";
 import { buttonVariants } from "fumadocs-ui/components/ui/button";
 import { source } from "../../../lib/source";
 import { getPageGithubUrl, getPageMarkdownUrl } from "../../../lib/docs-urls";
+import { DocsUtilities } from "../layout.client";
 
 function DocsLink(props: ComponentProps<typeof defaultMdxComponents.a>) {
   const external = /^https?:\/\//.test(props.href ?? "");
@@ -58,7 +59,16 @@ export default async function Page({
   const Content = page.data.body;
   const markdownUrl = getPageMarkdownUrl(page);
   return (
-    <DocsPage toc={page.data.toc}>
+    <DocsPage
+      toc={page.data.toc}
+      tableOfContent={{
+        header: (
+          <div className="mb-6">
+            <DocsUtilities />
+          </div>
+        ),
+      }}
+    >
       <DocsTitle>{page.data.title}</DocsTitle>
       <DocsDescription>{page.data.description}</DocsDescription>
       <div

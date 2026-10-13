@@ -66,17 +66,16 @@ for (const mobile of [false, true]) {
       expect(red).toBeGreaterThan(green);
       expect(blue).toBeGreaterThan(red);
 
-      // The desktop scroll area is the last child; the empty mobile footer is hidden.
-      if (mobile)
-        await expect(
-          sidebar.locator(":scope > div:last-child"),
-        ).not.toBeVisible();
-      else
-        await expect(
-          sidebar.locator(
-            ":scope > div:last-child [data-radix-scroll-area-viewport]",
-          ),
-        ).toBeVisible();
+      const siteNavigation = sidebar.getByRole("navigation", {
+        name: "AudioBits site",
+      });
+      await expect(siteNavigation).toBeInViewport();
+      await expect(
+        siteNavigation.getByRole("link", { name: "Home" }),
+      ).toHaveAttribute("href", "/");
+      await expect(
+        siteNavigation.getByRole("link", { name: "Catalog" }),
+      ).toHaveAttribute("href", "/catalog");
       await expect(
         sidebar.getByRole("button", { name: "Toggle Theme" }),
       ).toHaveCount(mobile ? 1 : 0);
@@ -201,3 +200,107 @@ for (const width of [375, 768, 1024, 1440]) {
     });
   }
 }
+
+for (const width of [768, 1024, 1440]) {
+  test(`collapsed docs navigation stays aligned at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto(`${site}/docs`);
+    const toc = page.locator("#nd-toc");
+    if (width >= 1280) {
+      const utilities = toc.getByRole("group", {
+        name: "Documentation utilities",
+      });
+      await expect(utilities).toBeVisible();
+      const utilitiesBox = (await utilities.boundingBox())!;
+      const titleBox = (await toc.locator("#toc-title").boundingBox())!;
+      expect(utilitiesBox.y + utilitiesBox.height).toBeLessThan(titleBox.y);
+      expect(utilitiesBox.x).toBe(titleBox.x);
+    } else {
+      await expect(
+        page.locator("#nd-sidebar").getByRole("group", {
+          name: "Documentation utilities",
+        }),
+      ).toBeVisible();
+    }
+    await page
+      .locator("#nd-sidebar")
+      .getByRole("button", {
+        name: "Collapse Sidebar",
+        exact: true,
+      })
+      .click();
+    const toolbar = page.locator("[data-sidebar-panel]");
+    await expect(toolbar).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Expand Sidebar" }),
+    ).toHaveCount(0);
+    await expect(page.locator("#nd-sidebar")).toHaveAttribute("inert", "");
+    const expand = toolbar.getByRole("button", {
+      name: "Collapse Sidebar",
+      exact: true,
+    });
+    await expect(expand).toBeInViewport();
+    // Read both positions in one frame while the native grid animates.
+    const alignment = await page.evaluate(() => {
+      const button = document
+        .querySelector("[data-sidebar-panel]")!
+        .getBoundingClientRect();
+      const heading = document
+        .querySelector("#nd-page h1")!
+        .getBoundingClientRect();
+      return {
+        offset: Math.abs(button.x - heading.x),
+        gap: heading.y - button.bottom,
+      };
+    });
+    expect(alignment.offset).toBeLessThanOrEqual(1);
+    expect(alignment.gap).toBeGreaterThan(0);
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth),
+    ).toBeLessThanOrEqual(width);
+    await toolbar.getByRole("button", { name: "Open Search" }).click();
+    await expect(page.getByRole("dialog")).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("dialog")).not.toBeVisible();
+    await expand.click();
+    await expect(page.locator("#nd-sidebar")).toHaveAttribute(
+      "data-collapsed",
+      "false",
+    );
+    await expect(toolbar).not.toBeVisible();
+    await page
+      .locator("#nd-sidebar")
+      .getByRole("navigation", {
+        name: "AudioBits site",
+      })
+      .getByRole("link", { name: "Catalog" })
+      .click();
+    await expect(page).toHaveURL(`${site}/catalog`);
+  });
+}
+
+test("documentation external links open new tabs and local links stay in this tab", async ({
+  page,
+}) => {
+  for (const path of [
+    "/docs",
+    "/docs/catalog",
+    "/docs/agents",
+    "/docs/mcp",
+    "/docs/api",
+  ]) {
+    await page.goto(`${site}${path}`);
+    const external = page.locator('#nd-page a[href^="https://"]');
+    for (const link of await external.all()) {
+      await expect(link).toHaveAttribute("target", "_blank");
+      await expect(link).toHaveAttribute("rel", /noopener/);
+      await expect(link).toHaveAttribute("rel", /noreferrer/);
+    }
+    const internal = page.locator('#nd-page a[href^="/"]');
+    for (const link of await internal.all()) {
+      expect(await link.getAttribute("target")).toBeNull();
+    }
+  }
+});
