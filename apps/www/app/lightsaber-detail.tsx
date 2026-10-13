@@ -7,15 +7,15 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
-import { mountPlasmaBlade } from "../../../catalog/experiences/plasma-blade/host";
-import { mountBladeStage3D } from "./plasma-blade-stage";
-import "./plasma-blade.css";
+import { mountLightsaber } from "../../../catalog/experiences/lightsaber/host";
+import { mountBladeStage3D } from "./lightsaber-stage";
+import "./lightsaber.css";
 
 const subscribeHydration = () => () => {};
 
-export function PlasmaBladeDetail() {
+export function LightsaberDetail() {
   const surface = useRef<HTMLDivElement>(null);
-  const host = useRef<ReturnType<typeof mountPlasmaBlade> | null>(null);
+  const host = useRef<ReturnType<typeof mountLightsaber> | null>(null);
   const stage = useRef<ReturnType<typeof mountBladeStage3D> | null>(null);
   const [state, setState] = useState("stopped");
   const ready = useSyncExternalStore(
@@ -38,7 +38,7 @@ export function PlasmaBladeDetail() {
     );
   }, []);
   useEffect(() => {
-    const current = mountPlasmaBlade({
+    const current = mountLightsaber({
       state(value) {
         setState(value);
         if (value === "starting") setError("");
@@ -73,21 +73,21 @@ export function PlasmaBladeDetail() {
   }, [reportError, reportDisplayError]);
   return (
     <>
-      <div className="plasma-stage catalog-gesture-stage">
+      <div className="lightsaber-stage catalog-gesture-stage">
         <div
           ref={surface}
-          className="plasma-canvas"
+          className="lightsaber-canvas"
           role="group"
-          aria-label="Plasma blade stage"
-          aria-describedby="plasma-help"
+          aria-label="Lightsaber stage"
+          aria-describedby="lightsaber-help"
           tabIndex={ready && !displayError ? 0 : -1}
         />
         {displayError ? (
-          <p className="plasma-display-error" role="alert">
+          <p className="lightsaber-display-error" role="alert">
             {displayError}
           </p>
         ) : null}
-        <div className="plasma-stage-caption" aria-hidden="true">
+        <div className="lightsaber-stage-caption" aria-hidden="true">
           <span>
             {state === "stopped"
               ? "Hold to ignite"
@@ -98,8 +98,8 @@ export function PlasmaBladeDetail() {
           <span>Procedural audio · No samples</span>
         </div>
       </div>
-      <div className="plasma-controls catalog-experience-feedback">
-        <div className="plasma-actions">
+      <div className="lightsaber-controls catalog-experience-feedback">
+        <div className="lightsaber-actions">
           <button
             type="button"
             disabled={!ready || state === "starting"}
@@ -141,14 +141,14 @@ export function PlasmaBladeDetail() {
             Stop all
           </button>
         </div>
-        <div className="plasma-readout">
+        <div className="lightsaber-readout">
           <p role="status">{`Blade: ${state}`}</p>
           <p>
             <span>Targets struck</span>{" "}
             <output aria-label="Targets struck">{hits}</output>
           </p>
         </div>
-        <p id="plasma-help">
+        <p id="lightsaber-help">
           Hold the stage and drag to swing through the amber targets. Release to
           retract. The Ignite button keeps the blade on until Retract. Keyboard:
           Enter ignites, arrows move, Space strikes, Escape retracts.

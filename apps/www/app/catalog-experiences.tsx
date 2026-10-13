@@ -1,4 +1,4 @@
-import "./plasma-blade.css";
+import "./lightsaber.css";
 import type { CSSProperties } from "react";
 import Link from "next/link";
 import { ThrusterPreviewMark } from "../icons/thruster-preview";
@@ -21,7 +21,7 @@ export function CatalogExperiences() {
             {entry.preview.family === "charge" && <ChargePreview />}
             {entry.preview.family === "blade" && (
               <svg
-                className="plasma-preview"
+                className="lightsaber-preview"
                 viewBox="0 0 300 200"
                 aria-hidden="true"
               >

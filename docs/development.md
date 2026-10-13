@@ -208,7 +208,7 @@ version from the manifest.
 Copy-owned interactive sources live in `catalog/experiences/`:
 [Energy Charge](../catalog/experiences/energy-charge/README.md),
 [Reactive Thruster](../catalog/experiences/reactive-thruster/README.md), and
-[Plasma Blade](../catalog/experiences/plasma-blade/README.md). Edit their
+[Lightsaber](../catalog/experiences/lightsaber/README.md). Edit their
 recipe, interaction, host, or demo files there; `apps/www` imports and displays
 these sources while owning website presentation. The
 [GitHub source registry](../catalog/README.md) installs canonical recipes and

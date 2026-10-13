@@ -4,7 +4,7 @@ import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
-import type { Point } from "../../../catalog/experiences/plasma-blade/motion";
+import type { Point } from "../../../catalog/experiences/lightsaber/motion";
 import { readSignalPalette } from "../lib/signal-palette";
 
 interface BladeFrame {

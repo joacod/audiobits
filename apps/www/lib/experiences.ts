@@ -21,17 +21,17 @@ export const energyChargeExperience = {
   sourceFiles: experienceSourceFiles("energy-charge").map((file) => file.name),
 } as const;
 
-export const plasmaBladeExperience = {
-  title: registryItem("plasma-blade").title,
-  href: "/catalog/plasma-blade",
-  description: registryItem("plasma-blade").description,
+export const lightsaberExperience = {
+  title: registryItem("lightsaber").title,
+  href: "/catalog/lightsaber",
+  description: registryItem("lightsaber").description,
   controls: ["Ignite", "Motion", "Strike", "Retract"],
   relatedSounds: [],
-  sourceFiles: experienceSourceFiles("plasma-blade").map((file) => file.name),
+  sourceFiles: experienceSourceFiles("lightsaber").map((file) => file.name),
 } as const;
 
 export const experienceSourcePurpose = {
-  "plasma-blade": {
+  lightsaber: {
     "recipe.ts":
       "Five original schema-1 recipes: hum, ignition, swing, clash, and retraction.",
     "motion.ts":

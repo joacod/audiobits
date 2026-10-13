@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Plasma Blade · AudioBits</title>
+    <title>Lightsaber · AudioBits</title>
     <style>
       :root {
         color-scheme: dark;
@@ -69,12 +69,12 @@
     </style>
   </head>
   <body>
-    <h1>Plasma Blade</h1>
+    <h1>Lightsaber</h1>
     <p>An electrical arc in your hands. Every sound is generated locally.</p>
     <canvas
       id="stage"
       role="group"
-      aria-label="Plasma blade stage"
+      aria-label="Lightsaber stage"
       aria-describedby="help"
       tabindex="0"
     ></canvas>
@@ -92,14 +92,14 @@
     </p>
     <p id="error" role="alert"></p>
     <script type="module">
-      import { mountPlasmaBlade } from "./host.ts";
+      import { mountLightsaber } from "./host.ts";
       import { mountBladeStage } from "./stage.ts";
       const ignite = document.querySelector("#ignite"),
         strike = document.querySelector("#strike"),
         mute = document.querySelector("#mute");
       let display,
         muted = false;
-      const host = mountPlasmaBlade({
+      const host = mountLightsaber({
         state(value) {
           document.querySelector("#state").textContent = `Blade: ${value}`;
           ignite.textContent = value === "running" ? "Retract" : "Ignite";

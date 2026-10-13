@@ -137,7 +137,7 @@ test("public pages expose unique metadata and content without JavaScript", async
             exact: true,
           }),
         ).toHaveAttribute("href", "/docs/catalog#install-source");
-        if (entry.slug === "plasma-blade") {
+        if (entry.slug === "lightsaber") {
           await expect(
             page.getByRole("heading", { name: "Inspect source", exact: true }),
           ).toBeVisible();

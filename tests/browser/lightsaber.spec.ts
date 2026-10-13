@@ -6,14 +6,14 @@ import { instrument, probe } from "./experience-probe";
 import { requireOfflineCheckpoints } from "./offline-capabilities";
 
 const stage = (page: import("@playwright/test").Page) =>
-  page.getByRole("group", { name: "Plasma blade stage", exact: true });
+  page.getByRole("group", { name: "Lightsaber stage", exact: true });
 
 test("ignition, held pointer swings and swept target hits, release retraction and teardown", async ({
   page,
 }) => {
   const errors: string[] = [];
   page.on("pageerror", (cause) => errors.push(cause.message));
-  await instrument(page, "normal", "plasma-blade");
+  await instrument(page, "normal", "lightsaber");
   await expect(
     page.getByRole("button", { name: "Ignite", exact: true }),
   ).toBeEnabled();
@@ -95,7 +95,7 @@ for (const mode of ["held", "failed"] as const)
   test(`${mode} activation remains cancelled or exposes retry`, async ({
     page,
   }) => {
-    await instrument(page, mode, "plasma-blade");
+    await instrument(page, mode, "lightsaber");
     const pad = stage(page);
     await expect(
       page.getByRole("button", { name: "Ignite", exact: true }),
@@ -122,14 +122,16 @@ for (const mode of ["held", "failed"] as const)
       await expect(pad).toHaveAttribute("data-extension", "0.000");
     } else {
       await page.getByRole("button", { name: "Ignite", exact: true }).click();
-      await expect(page.locator(".plasma-controls [role=alert]")).toContainText(
-        "Tap Ignite to retry",
-      );
+      await expect(
+        page.locator(".lightsaber-controls [role=alert]"),
+      ).toContainText("Tap Ignite to retry");
     }
     expect((await probe(page)).sources).toBe(0);
     await page.getByRole("button", { name: "Ignite", exact: true }).click();
     await expect(pad).toHaveAttribute("data-state", "running");
-    await expect(page.locator(".plasma-controls [role=alert]")).toHaveCount(0);
+    await expect(page.locator(".lightsaber-controls [role=alert]")).toHaveCount(
+      0,
+    );
     await page.evaluate(() => {
       Object.defineProperty(document, "hidden", {
         value: true,
@@ -161,7 +163,7 @@ test("keyboard alternatives, touch release and cancellation, reduced motion, sou
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await instrument(page, "normal", "plasma-blade");
+  await instrument(page, "normal", "lightsaber");
   await expect(
     page.getByRole("button", { name: "Ignite", exact: true }),
   ).toBeEnabled();
@@ -196,7 +198,7 @@ test("keyboard alternatives, touch release and cancellation, reduced motion, sou
       await page.evaluate(
         () => (globalThis as unknown as { copiedSource: string }).copiedSource,
       ),
-    ).toBe(readFileSync(`catalog/experiences/plasma-blade/${name}`, "utf8"));
+    ).toBe(readFileSync(`catalog/experiences/lightsaber/${name}`, "utf8"));
   }
   expect(
     await page.evaluate(
@@ -260,7 +262,7 @@ test("Chromium native signal: five timbres, control extrema, rapid ramps and eig
   await requireOfflineCheckpoints(page);
   const results = await page.evaluate(async () => {
     const h = globalThis as unknown as {
-      plasmaSignal(
+      lightsaberSignal(
         name: string,
         value: number,
         count?: number,
@@ -282,30 +284,30 @@ test("Chromium native signal: five timbres, control extrema, rapid ramps and eig
     const singles = [];
     for (const rate of [44100, 48000])
       for (const name of [
-        "plasmaBlade",
+        "lightsaber",
         "bladeIgnition",
         "bladeSwing",
         "bladeClash",
         "bladeRetraction",
       ])
         for (const value of [0, 0.5, 1])
-          singles.push(await h.plasmaSignal(name, value, 1, false, rate));
+          singles.push(await h.lightsaberSignal(name, value, 1, false, rate));
     return {
       singles,
-      moving: await h.plasmaSignal("plasmaBlade", 0.2, 1, true),
+      moving: await h.lightsaberSignal("lightsaber", 0.2, 1, true),
       directions: await Promise.all(
         [-1, 0, 1].map((sweep) =>
-          h.plasmaSignal("plasmaBlade", 0.8, 1, false, 48000, sweep),
+          h.lightsaberSignal("lightsaber", 0.8, 1, false, 48000, sweep),
         ),
       ),
       stacks: await Promise.all(
         [
-          "plasmaBlade",
+          "lightsaber",
           "bladeIgnition",
           "bladeSwing",
           "bladeClash",
           "bladeRetraction",
-        ].map((name) => h.plasmaSignal(name, 1, 8)),
+        ].map((name) => h.lightsaberSignal(name, 1, 8)),
       ),
     };
   });
@@ -441,9 +443,9 @@ test("development Strict Mode replays effects with a fresh graphics canvas", asy
       contents: `
         import { StrictMode } from "react";
         import { createRoot } from "react-dom/client";
-        import { PlasmaBladeDetail } from "./app/plasma-blade-detail";
+        import { LightsaberDetail } from "./app/lightsaber-detail";
         const root = createRoot(document.getElementById("strict-root"));
-        root.render(<StrictMode><PlasmaBladeDetail /></StrictMode>);
+        root.render(<StrictMode><LightsaberDetail /></StrictMode>);
         globalThis.unmountBlade = () => root.unmount();
       `,
       resolveDir: resolve("apps/www"),
@@ -478,7 +480,7 @@ test("development Strict Mode replays effects with a fresh graphics canvas", asy
   await page.setContent(
     '<main id="strict-root" class="foundation" style="width:700px"></main>',
   );
-  await page.addStyleTag({ path: resolve("apps/www/app/plasma-blade.css") });
+  await page.addStyleTag({ path: resolve("apps/www/app/lightsaber.css") });
   await page.addScriptTag({ content: outputFiles[0].text });
   const pad = stage(page);
   await expect(pad).toHaveAttribute("data-renderer", "three");
@@ -506,7 +508,7 @@ test("3D blade graphics release on navigation and remain static at rest", async 
   page,
 }) => {
   await trackBladeGraphics(page);
-  await instrument(page, "normal", "plasma-blade");
+  await instrument(page, "normal", "lightsaber");
   await expect(
     page.getByRole("button", { name: "Ignite", exact: true }),
   ).toBeEnabled();
@@ -551,7 +553,7 @@ for (const failure of ["context", "shader", "lost"] as const)
     page,
   }) => {
     await trackBladeGraphics(page, failure === "lost" ? undefined : failure);
-    await instrument(page, "normal", "plasma-blade");
+    await instrument(page, "normal", "lightsaber");
     await expect(
       page.getByRole("button", { name: "Ignite", exact: true }),
     ).toBeEnabled();
@@ -570,7 +572,7 @@ for (const failure of ["context", "shader", "lost"] as const)
       await expect(pad).toHaveAttribute("data-state", "stopped");
     }
     await expect(pad).toHaveAttribute("data-renderer", "unavailable");
-    await expect(page.locator(".plasma-display-error")).toContainText(
+    await expect(page.locator(".lightsaber-display-error")).toContainText(
       "3D display is unavailable",
     );
     await expect.poll(() => bladeResourceCount(page)).toBe(0);

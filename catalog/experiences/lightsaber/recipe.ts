@@ -1,7 +1,7 @@
 import { defineSound } from "audiobits";
 
 /** Full electrical hum with rounded buzz and a soft shimmer, shaped by movement. */
-export const plasmaBlade = defineSound({
+export const lightsaber = defineSound({
   schemaVersion: 1,
   kind: "sustained",
   parameters: {

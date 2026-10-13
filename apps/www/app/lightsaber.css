@@ -1,27 +1,27 @@
-.foundation .plasma-stage {
+.foundation .lightsaber-stage {
   position: relative;
   overflow: hidden;
   background: #08080c;
   border: 1px solid var(--graphite-edge, #34363a);
   border-radius: 6px;
 }
-.foundation .plasma-canvas {
+.foundation .lightsaber-canvas {
   display: block;
   width: 100%;
   height: clamp(380px, 58vh, 580px);
   touch-action: none;
   cursor: crosshair;
 }
-.foundation .plasma-canvas:focus-visible {
+.foundation .lightsaber-canvas:focus-visible {
   outline: 3px solid var(--ink, #f2f2f2);
   outline-offset: -6px;
 }
-.foundation .plasma-renderer {
+.foundation .lightsaber-renderer {
   display: block;
   width: 100%;
   height: 100%;
 }
-.foundation .plasma-display-error {
+.foundation .lightsaber-display-error {
   position: absolute;
   inset: 25% 24px auto;
   max-width: 54ch;
@@ -31,7 +31,7 @@
   background: var(--void, #050507);
   line-height: 1.65;
 }
-.foundation .plasma-stage-caption {
+.foundation .lightsaber-stage-caption {
   position: absolute;
   inset: auto 24px 20px;
   display: flex;
@@ -41,42 +41,42 @@
   color: #b9b6c7;
   font-size: 0.75rem;
 }
-.foundation .plasma-stage-caption span:last-child {
+.foundation .lightsaber-stage-caption span:last-child {
   color: #a5a2b1;
 }
-.foundation .plasma-controls {
+.foundation .lightsaber-controls {
   padding-block: 20px;
 }
-.foundation .plasma-actions {
+.foundation .lightsaber-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
 }
-.foundation .plasma-actions button {
+.foundation .lightsaber-actions button {
   min-height: 44px;
 }
-.foundation .plasma-actions button:first-child {
+.foundation .lightsaber-actions button:first-child {
   background: var(--ink, #f2f2f2);
   color: var(--void, #050507);
 }
-.foundation .plasma-actions button:first-child:hover {
+.foundation .lightsaber-actions button:first-child:hover {
   background: #d7c2fa;
 }
-.foundation .plasma-readout {
+.foundation .lightsaber-readout {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 8px 24px;
   margin-top: 16px;
 }
-.foundation .plasma-readout p {
+.foundation .lightsaber-readout p {
   margin: 0;
 }
-.foundation .plasma-readout output {
+.foundation .lightsaber-readout output {
   color: var(--ink, #f2f2f2);
   font-variant-numeric: tabular-nums;
 }
-.foundation .plasma-controls #plasma-help {
+.foundation .lightsaber-controls #lightsaber-help {
   max-width: 72ch;
   margin-top: 16px;
   color: #b9b6c7;
@@ -88,23 +88,23 @@
   position: relative;
   overflow: hidden;
 }
-.foundation .plasma-preview {
+.foundation .lightsaber-preview {
   width: 42%;
   height: 200px;
   flex-shrink: 0;
 }
 @media (max-width: 760px) {
-  .foundation .plasma-canvas {
+  .foundation .lightsaber-canvas {
     height: 420px;
   }
-  .foundation .plasma-stage-caption {
+  .foundation .lightsaber-stage-caption {
     inset-inline: 16px;
     font-size: 0.6875rem;
   }
-  .foundation .plasma-stage-caption span:last-child {
+  .foundation .lightsaber-stage-caption span:last-child {
     display: none;
   }
-  .foundation .plasma-preview {
+  .foundation .lightsaber-preview {
     width: 100%;
     height: 150px;
   }

@@ -47,14 +47,12 @@ const ThrusterDetail = dynamic(
   { loading: ThrusterStageFallback },
 );
 
-const PlasmaBladeDetail = dynamic(
+const LightsaberDetail = dynamic(
   () =>
-    import("../../plasma-blade-detail").then(
-      (module) => module.PlasmaBladeDetail,
-    ),
+    import("../../lightsaber-detail").then((module) => module.LightsaberDetail),
   {
     loading: () => (
-      <div className="catalog-stage" aria-label="Loading Plasma Blade" />
+      <div className="catalog-stage" aria-label="Loading Lightsaber" />
     ),
   },
 );
@@ -118,10 +116,10 @@ export default async function CatalogEntryPage({
   }
   const experience = experienceCatalogEntry(slug);
   if (!experience) notFound();
-  if (experience.slug === "plasma-blade") {
+  if (experience.slug === "lightsaber") {
     return (
       <CatalogDetail entry={experience}>
-        <PlasmaBladeDetail />
+        <LightsaberDetail />
         <CatalogInstall slug={experience.slug} />
         <div className="catalog-inspector">
           <h2>Inspect source</h2>

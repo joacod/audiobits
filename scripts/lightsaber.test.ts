@@ -5,13 +5,13 @@ import {
   type Voice,
   type Recipe,
 } from "audiobits";
-import * as recipes from "../catalog/experiences/plasma-blade/recipe";
-import { createPlasmaBlade } from "../catalog/experiences/plasma-blade/controller";
+import * as recipes from "../catalog/experiences/lightsaber/recipe";
+import { createLightsaber } from "../catalog/experiences/lightsaber/controller";
 import {
   motionLevel,
   smoothMotion,
   segmentDistance,
-} from "../catalog/experiences/plasma-blade/motion";
+} from "../catalog/experiences/lightsaber/motion";
 import { compile } from "../packages/audiobits/src/compiler/plan";
 
 test("all five original recipes round-trip and compile at control/seed extrema", () => {
@@ -30,17 +30,17 @@ test("all five original recipes round-trip and compile at control/seed extrema",
         );
     }
   }
-  const rest = compile(recipes.plasmaBlade, {
+  const rest = compile(recipes.lightsaber, {
     motion: 0,
     drift: 0.5,
     sweep: 0,
   });
-  const fast = compile(recipes.plasmaBlade, {
+  const fast = compile(recipes.lightsaber, {
     motion: 1,
     drift: 0.5,
     sweep: 1,
   });
-  const returning = compile(recipes.plasmaBlade, {
+  const returning = compile(recipes.lightsaber, {
     motion: 1,
     drift: 0.5,
     sweep: -1,
@@ -55,8 +55,8 @@ test("all five original recipes round-trip and compile at control/seed extrema",
   expect(fast.layers[0].layer.gainDb).toBeGreaterThan(
     rest.layers[0].layer.gainDb,
   );
-  expect(() => compile(recipes.plasmaBlade, { motion: 1.01 })).toThrow();
-  expect(() => compile(recipes.plasmaBlade, { sweep: -1.01 })).toThrow();
+  expect(() => compile(recipes.lightsaber, { motion: 1.01 })).toThrow();
+  expect(() => compile(recipes.lightsaber, { sweep: -1.01 })).toThrow();
 });
 
 test("motion bounds, frame-independent smoothing, recovery, and swept geometry", () => {
@@ -166,7 +166,7 @@ function setup() {
   } as unknown as AudioEngine;
   const feedback = { state: vi.fn(), error: vi.fn(), impact: vi.fn() };
   return {
-    control: createPlasmaBlade(audio, feedback),
+    control: createLightsaber(audio, feedback),
     resolve,
     reject,
     records,

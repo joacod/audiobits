@@ -1,7 +1,7 @@
 import registry from "../../../registry.json" with { type: "json" };
 import {
   energyChargeExperience,
-  plasmaBladeExperience,
+  lightsaberExperience,
   reactiveThrusterExperience,
 } from "./experiences";
 import { demos, type SoundKind } from "./gallery";
@@ -48,7 +48,7 @@ const experienceEntries = [
     preview: "thruster",
     experience: reactiveThrusterExperience,
   },
-  { slug: "plasma-blade", preview: "blade", experience: plasmaBladeExperience },
+  { slug: "lightsaber", preview: "blade", experience: lightsaberExperience },
 ] as const;
 
 const bundledOrder = [

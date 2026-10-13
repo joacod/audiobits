@@ -1,15 +1,15 @@
-# Plasma Blade
+# Lightsaber
 
 A procedural electrical blade: ignition, a resonant electrical hum, motion-fed
 swells, rapid swing accents, electrical clashes, and retraction. No sampled audio.
 
 Install the complete registry item, or keep this folder and its MIT license
-together. Import `mountPlasmaBlade` from `./host` and call `host.ignite()` directly
+together. Import `mountLightsaber` from `./host` and call `host.ignite()` directly
 in a user gesture. The host owns one engine (eight voices, three per sound,
 master gain -6 dB). It exposes `retract`, `stop`, `mute`, and asynchronous `dispose`.
 Call `dispose` on application removal and handle its rejection.
 
-`createPlasmaBlade` is the DOM-free controller for an application-owned engine.
+`createLightsaber` is the DOM-free controller for an application-owned engine.
 Supply CSS-pixel speed and frame elapsed milliseconds to `update`, with an optional
 signed movement direction from -1 to 1 for continuous pitch bending. Speed reaches
 full motion at 1200 px/s. Attack/recovery smoothing and native parameter ramps
