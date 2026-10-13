@@ -77,8 +77,6 @@ export default async function Page({
         </a>
         <a
           href={markdownUrl}
-          target="_blank"
-          rel="noopener noreferrer"
           className={buttonVariants({ variant: "secondary", size: "sm" })}
         >
           Open Markdown

@@ -136,7 +136,7 @@ test("page actions copy the current page after navigation and link to pathless M
     await expect(github).toHaveAttribute("target", "_blank");
     const openMarkdown = actions.getByRole("link", { name: "Open Markdown" });
     await expect(openMarkdown).toHaveAttribute("href", doc.markdownUrl);
-    await expect(openMarkdown).toHaveAttribute("target", "_blank");
+    expect(await openMarkdown.getAttribute("target")).toBeNull();
     await expect(actions.getByRole("link")).toHaveCount(2);
 
     const expected = await (
