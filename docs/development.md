@@ -24,6 +24,34 @@ Windows process-tree termination has not been verified.
 The site uses Next.js with webpack and Fumadocs MDX. Website dependencies stay
 in `apps/www`; the runtime remains framework-independent.
 
+## Website agent tooling
+
+For catalog sound and experience work, `apps/www` consumes the canonical
+[AudioBits Skill](../skills/audiobits/SKILL.md) through its local
+`.agents/skills/audiobits` symlink. Start the agent in `apps/www` for scoped Skill
+discovery. Website agent rules also link the Skill directly for sessions started
+at the monorepo root. Other repository work does not require the Skill.
+
+AudioBits MCP is optional. With the repository's supported Node selected, build
+the runtime from the root, then print the website's stdio launch settings:
+
+```sh
+pnpm build:lib
+node skills/audiobits/scripts/setup-mcp.mjs --project apps/www
+```
+
+Register the printed command and arguments through your agent harness. For
+Codex, use a local `apps/www/.codex/config.toml` registration and start the chat
+in `apps/www`. That file is ignored because it contains machine-specific paths.
+Reload the client and use `inspect_project` to confirm the website's installed
+runtime. Existing public-API checks remain available without MCP.
+
+Use the bundled Skill executable to exercise the same tooling external consumers
+receive. After changing MCP implementation, run `pnpm build:skill` and
+`pnpm check:skill`, then reconnect the server. Read catalog source directly while
+editing; refresh the reviewed snapshot after committing catalog changes as
+described in [MCP development](../tools/mcp/README.md#offline-metadata-and-explicit-source-review).
+
 ## Local package edits
 
 Edit canonical definitions in `catalog/recipes/<id>/recipe.ts`. Catalog files

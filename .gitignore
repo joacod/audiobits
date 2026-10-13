@@ -16,3 +16,6 @@ test-results/
 # Local showcase visual verification
 apps/www/.impeccable/review/
 apps/www/.impeccable/config.local.json
+
+# Local website agent configuration
+apps/www/.codex/config.toml

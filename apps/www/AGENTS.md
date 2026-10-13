@@ -4,6 +4,22 @@ These instructions apply to `apps/www`.
 
 Read root `AGENTS.md` first.
 
+## Catalog audio workflow
+
+- For creating or tuning catalog sounds and interactive experiences, use the
+  [AudioBits Skill](../../skills/audiobits/SKILL.md) and its relevant references
+  before editing. The website consumes the single canonical Skill through
+  `.agents/skills/audiobits`; do not copy or install another version here.
+- Use `apps/www` as the consumer project for AudioBits MCP inspection,
+  compatibility checks and recipe validation when the tools are available.
+  Continue with public exports and existing checks when MCP is unavailable.
+- Edit owned source in `catalog/` directly. MCP catalog retrieval uses a reviewed
+  snapshot, not uncommitted source. Verify the website behavior and listen to
+  sound changes; MCP validation does not synthesize or assess audio quality.
+- When this workflow exposes a gap in the Skill or MCP, improve its canonical
+  source within the requested scope and rebuild generated MCP output as needed.
+  Do not load the Skill for unrelated layout, copy, documentation or library work.
+
 ## Route purposes
 
 - `/` = discovery. Make a new visitor understand and want AudioBits.
