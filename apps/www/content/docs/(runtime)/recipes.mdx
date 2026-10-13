@@ -80,18 +80,7 @@ references. Diagnostics are capped at 100. See [Parameters](/docs/parameters)
 for mappings and live controls. The exported `recipeSchema` and
 `audiobits/schema.json` describe the published schema version 1 structure.
 
-## Workbench editor
-
-Each catalog workbench (`/catalog/[slug]`) accepts at most 32 KiB of JSON and shows the first ten validation
-issues. Apply explicitly; invalid input preserves the last valid playable
-sound. Applying a valid definition stops current playback and disposes the old
-sound. Play again to hear the new definition.
-
-Keep the sound's playback kind and its primary parameter's range, default, and
-mode. Additional parameters use their declared defaults. Restore and Reset return to the
-catalog recipe, seed 42, and primary control defaults.
-Raw comparisons apply only to catalog definitions. Edited recipes still have a
-copyable AudioBits example containing the entire accepted JSON.
+The Workbench editor is documented in [Catalog](/docs/catalog#workbench-editor).
 
 Typed authoring preserves recipe structure, parameter names and parameter modes.
 Runtime validation remains authoritative for exact schema validity.

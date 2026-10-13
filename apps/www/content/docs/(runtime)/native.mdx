@@ -30,8 +30,8 @@ export async function dispose() {
 }
 ```
 
-Call this single attachment helper once per engine. The tap helper rejects
-foreign contexts, duplicate taps, the output itself, and destination connections.
+You can attach several taps. Connecting the same node twice is rejected, as are
+foreign contexts, the output itself, and destination connections.
 Detach is idempotent. A continuous host visualizer must also cancel its animation
 frame and pause updates when hidden or reduced motion is requested.
 
