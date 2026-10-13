@@ -1,5 +1,11 @@
 # audiobits
 
+## 0.2.2
+
+### Patch Changes
+
+- 8ecc08b: Update the package description and npm keywords, and link the MCP docs from the README.
+
 ## 0.2.1
 
 ### Patch Changes
