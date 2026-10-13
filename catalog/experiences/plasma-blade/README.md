@@ -1,7 +1,7 @@
 # Plasma Blade
 
-A procedural electrical blade: ignition, a beating sustained core, motion-fed
-shear, rapid swing accents, electrical clashes, and retraction. No sampled audio.
+A procedural electrical blade: ignition, a smooth harmonic hum, motion-fed
+swells, rapid swing accents, electrical clashes, and retraction. No sampled audio.
 
 Install the complete registry item, or keep this folder and its MIT license
 together. Import `mountPlasmaBlade` from `./host` and call `host.ignite()` directly
@@ -22,9 +22,11 @@ voices; the dedicated host additionally cuts all engine tails.
 blade collisions, bounded trails/particles, and a measured audio seam. Call its
 `stateChanged` from the host's state callback, and dispose the stage before the
 host. Enter ignites, arrows move, Space strikes a visible target, Escape retracts.
-Pointer release keeps the blade alive; pointer cancellation, lost capture, window
-blur, hiding, Stop, and teardown end activity. Returning remains silent until a
-new gesture. Reduced motion removes trails, particles, target rotation, and audio
+Hold the stage to ignite and drag to swing; pointer release retracts the blade,
+including during pending activation. Hovering does not move the blade. The Ignite
+button and Enter keep it active until Retract or Escape. Pointer cancellation,
+lost capture, window blur, hiding, Stop, and teardown end activity. Returning
+remains silent until a new gesture. Reduced motion removes trails, particles, target rotation, and audio
 ripples. Mute changes output while preserving interaction.
 
 The [standalone demo](./index.html) uses a TypeScript-capable development server;

@@ -7,7 +7,7 @@ import { requireOfflineCheckpoints } from "./offline-capabilities";
 const stage = (page: import("@playwright/test").Page) =>
   page.getByRole("group", { name: "Plasma blade stage", exact: true });
 
-test("ignition, pointer swings and swept target hits, persistent hum, retraction and teardown", async ({
+test("ignition, held pointer swings and swept target hits, release retraction and teardown", async ({
   page,
 }) => {
   const errors: string[] = [];
@@ -40,10 +40,19 @@ test("ignition, pointer swings and swept target hits, persistent hum, retraction
     .poll(async () => Number(await pad.getAttribute("data-hits")))
     .toBeGreaterThan(0);
   await page.mouse.up();
-  await expect(pad).toHaveAttribute("data-state", "running");
+  await expect(pad).toHaveAttribute("data-state", "stopped");
+  await expect(pad).toHaveAttribute("data-extension", "0.000");
   await expect
-    .poll(async () => Number(await pad.getAttribute("data-motion")))
-    .toBeLessThan(0.02);
+    .poll(async () => {
+      const p = await probe(page);
+      return p.sources === p.ended;
+    })
+    .toBe(true);
+  await page.mouse.move(box.x + box.width * 0.4, box.y + box.height * 0.6);
+  await expect(pad).toHaveAttribute("data-state", "stopped");
+  await expect(pad).toHaveAttribute("data-extension", "0.000");
+  await page.getByRole("button", { name: "Ignite", exact: true }).click();
+  await expect(pad).toHaveAttribute("data-state", "running");
   await page.getByRole("button", { name: "Mute", exact: true }).click();
   await expect
     .poll(async () => Number(await pad.getAttribute("data-peak")))
@@ -81,7 +90,7 @@ test("ignition, pointer swings and swept target hits, persistent hum, retraction
 });
 
 for (const mode of ["held", "failed"] as const)
-  test(`${mode} activation never resurrects Stop and exposes retry`, async ({
+  test(`${mode} activation remains cancelled or exposes retry`, async ({
     page,
   }) => {
     await instrument(page, mode, "plasma-blade");
@@ -89,10 +98,14 @@ for (const mode of ["held", "failed"] as const)
     await expect(
       page.getByRole("button", { name: "Ignite", exact: true }),
     ).toBeEnabled();
-    await page.getByRole("button", { name: "Ignite", exact: true }).click();
     if (mode === "held") {
+      await pad.scrollIntoViewIfNeeded();
+      const box = (await pad.boundingBox())!;
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height * 0.8);
+      await page.mouse.down();
       await expect(pad).toHaveAttribute("data-state", "starting");
-      await page.getByRole("button", { name: "Stop all", exact: true }).click();
+      await page.mouse.up();
+      await expect(pad).toHaveAttribute("data-state", "stopped");
       await page.evaluate(() =>
         (
           globalThis as unknown as {
@@ -103,10 +116,14 @@ for (const mode of ["held", "failed"] as const)
       await expect
         .poll(async () => (await probe(page)).contexts)
         .toEqual(["running"]);
-    } else
+      await expect(pad).toHaveAttribute("data-state", "stopped");
+      await expect(pad).toHaveAttribute("data-extension", "0.000");
+    } else {
+      await page.getByRole("button", { name: "Ignite", exact: true }).click();
       await expect(page.locator(".plasma-controls [role=alert]")).toContainText(
         "Tap Ignite to retry",
       );
+    }
     expect((await probe(page)).sources).toBe(0);
     await page.getByRole("button", { name: "Ignite", exact: true }).click();
     await expect(pad).toHaveAttribute("data-state", "running");
@@ -137,7 +154,7 @@ for (const mode of ["held", "failed"] as const)
     expect((await probe(page)).connected).toBe(0);
   });
 
-test("keyboard alternatives, touch cancellation, reduced motion, source fidelity and mobile layout", async ({
+test("keyboard alternatives, touch release and cancellation, reduced motion, source fidelity and mobile layout", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
@@ -199,6 +216,23 @@ test("keyboard alternatives, touch cancellation, reduced motion, source fidelity
   await expect
     .poll(async () => Number(await pad.getAttribute("data-motion")))
     .toBeGreaterThan(0);
+  await touch.send("Input.dispatchTouchEvent", {
+    type: "touchEnd",
+    touchPoints: [],
+  });
+  await expect(pad).toHaveAttribute("data-state", "stopped");
+  await expect(pad).toHaveAttribute("data-extension", "0.000");
+  await expect
+    .poll(async () => {
+      const p = await probe(page);
+      return p.sources === p.ended;
+    })
+    .toBe(true);
+  await touch.send("Input.dispatchTouchEvent", {
+    type: "touchStart",
+    touchPoints: [{ x: box.x + box.width / 2, y: box.y + box.height * 0.8 }],
+  });
+  await expect(pad).toHaveAttribute("data-state", "running");
   await touch.send("Input.dispatchTouchEvent", {
     type: "touchCancel",
     touchPoints: [],

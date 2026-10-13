@@ -428,18 +428,14 @@ export function mountBladeStage(
   canvas.addEventListener(
     "pointermove",
     (event) => {
-      if (
-        pointer === event.pointerId ||
-        (event.pointerType === "mouse" && host.control.state === "running")
-      )
-        place(event);
+      if (pointer === event.pointerId) place(event);
     },
     { signal: events.signal },
   );
   canvas.addEventListener(
     "pointerup",
     (event) => {
-      if (pointer === event.pointerId) releasePointer();
+      if (pointer === event.pointerId) retract();
     },
     { signal: events.signal },
   );

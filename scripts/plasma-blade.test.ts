@@ -32,11 +32,13 @@ test("all five original recipes round-trip and compile at control/seed extrema",
   }
   const rest = compile(recipes.plasmaBlade, { motion: 0, drift: 0 });
   const fast = compile(recipes.plasmaBlade, { motion: 1, drift: 1 });
-  expect(rest.layers[0].layer.source).toMatchObject({ frequency: 73 });
-  expect(fast.layers[0].layer.source).toMatchObject({ frequency: 128 });
-  expect(fast.layers[3].layer.gainDb).toBe(-27);
-  expect(rest.layers[3].layer.gainDb).toBe(-53);
-  expect(fast.layers[3].layer.effects![0].frequency).toBe(4600);
+  expect(rest.layers[0].layer.source).toMatchObject({ frequency: 110 });
+  expect(fast.layers[0].layer.source).toMatchObject({
+    frequency: expect.closeTo(116, 10),
+  });
+  expect(fast.layers[3].layer.gainDb).toBe(-40);
+  expect(rest.layers[3].layer.gainDb).toBe(-60);
+  expect(fast.layers[3].layer.effects![0].frequency).toBe(2600);
   expect(() => compile(recipes.plasmaBlade, { motion: 1.01 })).toThrow();
 });
 

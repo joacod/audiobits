@@ -74,7 +74,7 @@ export function PlasmaBladeDetail() {
         <div className="plasma-stage-caption" aria-hidden="true">
           <span>
             {state === "stopped"
-              ? "Touch to ignite"
+              ? "Hold to ignite"
               : state === "starting"
                 ? "Drawing the arc…"
                 : "Move. Cut through the field."}
@@ -133,9 +133,9 @@ export function PlasmaBladeDetail() {
           </p>
         </div>
         <p id="plasma-help">
-          Tap to ignite. Move or drag to swing through the amber targets.
-          Retract to close the arc. Keyboard: Enter ignites, arrows move, Space
-          strikes, Escape retracts.
+          Hold the stage and drag to swing through the amber targets. Release to
+          retract. The Ignite button keeps the blade on until Retract. Keyboard:
+          Enter ignites, arrows move, Space strikes, Escape retracts.
         </p>
         {error ? <p role="alert">{error}</p> : null}
       </div>
