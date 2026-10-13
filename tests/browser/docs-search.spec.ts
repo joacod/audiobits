@@ -199,3 +199,56 @@ test("empty and unmatched queries return empty results and the dialog recovers",
   await expect(dialog.getByRole("status")).toHaveCount(0);
   await expect(input).toBeFocused();
 });
+
+for (const mobile of [false, true]) {
+  test(`search remains global after section switching on ${mobile ? "mobile" : "desktop"}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(
+      mobile ? { width: 390, height: 844 } : { width: 1280, height: 900 },
+    );
+    await page.goto(`${site}/docs`);
+    if (mobile)
+      await page
+        .locator("#nd-subnav")
+        .getByRole("button", { name: "Open Sidebar", exact: true })
+        .click();
+    const sidebar = page.locator(mobile ? "#nd-sidebar-mobile" : "#nd-sidebar");
+    await sidebar
+      .getByRole("button", { name: "Getting Started", exact: false })
+      .click();
+    await page
+      .getByRole("dialog")
+      .getByRole("link", { name: "AI Agents", exact: false })
+      .click();
+    await expect(page).toHaveURL(`${site}/docs/agents`);
+    if (mobile)
+      await sidebar.getByRole("button", { name: "Close Sidebar" }).click();
+    // The compact trigger is "Open Search"; the wide trigger starts with "Search".
+    await page
+      .getByRole("button", { name: /Search/ })
+      .filter({ visible: true })
+      .first()
+      .click();
+    const dialog = page.getByRole("dialog", { name: "Search", exact: true });
+    await dialog.getByRole("combobox").fill("bus");
+    await dialog
+      .getByRole("option")
+      .filter({ has: page.getByText("Buses and routing", { exact: true }) })
+      .click();
+    await expect(page).toHaveURL(`${site}/docs/buses`);
+    await expect(dialog).not.toBeVisible();
+    if (mobile)
+      await page
+        .locator("#nd-subnav")
+        .getByRole("button", { name: "Open Sidebar", exact: true })
+        .click();
+    await expect(
+      sidebar.getByRole("button", { name: "Runtime Reference", exact: false }),
+    ).toBeVisible();
+    await expect(sidebar.locator('a[data-active="true"]')).toHaveAttribute(
+      "href",
+      "/docs/buses",
+    );
+  });
+}

@@ -54,7 +54,7 @@ pnpm --filter @audiobits/vanilla dev
 | `pnpm build:site`      | Library build followed by site build                                 |
 | `pnpm build`           | Library, site, and vanilla production builds                         |
 | `pnpm typecheck`       | Build library, generate site types, check all workspaces             |
-| `pnpm lint`            | ESLint, formatting, and relative Markdown file-target checks         |
+| `pnpm lint`            | ESLint, formatting, Markdown/MDX files and documentation routes      |
 | `pnpm format`          | Format in-scope source/configuration/onboarding files                |
 | `pnpm test`            | Supervisor, recipe/runtime/release checks; schema/metadata drift     |
 | `pnpm test:package`    | Build, pack, isolated types/imports, tree-shaking and Chromium hosts |
@@ -161,7 +161,11 @@ setup. The runtime has zero runtime dependencies; only the runtime workspace is
 publishable. See
 [release preparation](releases.md) for the aggregate gate and activation boundary.
 
-Relative Markdown checks verify file targets, not remote links or heading anchors.
+Documentation link checks verify relative Markdown/MDX files, literal MDX hrefs,
+and public `/docs` destinations derived from the Fumadocs source folders.
+Folder groups remain pathless. Fenced code, inline code, external URLs and heading
+anchors are excluded; dynamic JSX destinations and other site routes are outside
+this check.
 Ordinary changes use the scripts above; no formal specification CLI is required.
 
 ## Independent delivery
