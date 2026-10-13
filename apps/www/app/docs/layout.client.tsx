@@ -7,6 +7,8 @@ import { buttonVariants } from "fumadocs-ui/components/ui/button";
 import { GithubIcon } from "../../icons/github-icon";
 import { NpmIcon } from "../../icons/npm-icon";
 import { BrandMark } from "../../icons/brand-mark";
+import { HomeIcon } from "../../icons/home-icon";
+import { CatalogIcon } from "../../icons/catalog-icon";
 
 export function DocsBrand() {
   // The native desktop and mobile titles coexist, even when one is hidden.
@@ -69,21 +71,7 @@ export function DocsSidebarFooter() {
           className: "gap-2",
         })}
       >
-        <svg
-          aria-hidden="true"
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="shrink-0 text-fd-muted-foreground"
-        >
-          <path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Z" />
-          <path d="M9 21v-8h6v8" />
-        </svg>
+        <HomeIcon className="shrink-0 text-fd-muted-foreground" />
         Home
       </Link>
       <Link
@@ -94,21 +82,7 @@ export function DocsSidebarFooter() {
           className: "gap-2",
         })}
       >
-        <svg
-          aria-hidden="true"
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          className="shrink-0 text-fd-muted-foreground"
-        >
-          <rect x="3" y="3" width="7" height="7" rx="1.5" />
-          <rect x="14" y="3" width="7" height="7" rx="1.5" />
-          <rect x="3" y="14" width="7" height="7" rx="1.5" />
-          <rect x="14" y="14" width="7" height="7" rx="1.5" />
-        </svg>
+        <CatalogIcon className="shrink-0 text-fd-muted-foreground" />
         Catalog
       </Link>
     </nav>
