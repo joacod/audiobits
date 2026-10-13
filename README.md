@@ -14,6 +14,7 @@ to application state. No required audio files or runtime dependencies.
 
 [Live catalog](https://www.audiobits.dev/catalog) ·
 [Documentation](https://www.audiobits.dev/docs) ·
+[MCP server](https://www.audiobits.dev/docs/mcp) ·
 [npm](https://www.npmjs.com/package/audiobits) ·
 [Copy-paste examples](https://github.com/joacod/audiobits/tree/main/catalog)
 
@@ -25,16 +26,26 @@ Install in a browser application with a bundler:
 npm install audiobits
 ```
 
-Copy [Confirmation’s recipe.ts](catalog/recipes/confirmation/recipe.ts) to
-`src/sounds/recipes/confirmation/recipe.ts` and retain the [MIT license](LICENSE).
-Use this host code in `src/`:
+Define a sound inline and play it from a user gesture:
 
 ```ts
-import { createAudio } from "audiobits";
-import { confirmation } from "./sounds/recipes/confirmation/recipe";
+import { createAudio, defineSound } from "audiobits";
 
+const recipe = defineSound({
+  schemaVersion: 1,
+  kind: "one-shot",
+  duration: 0.15,
+  layers: [
+    {
+      id: "tone",
+      source: { type: "oscillator", waveform: "sine", frequency: 660 },
+      gainDb: -18,
+      envelope: { attack: 0.004, decay: 0.08, sustain: 0.1, release: 0.04 },
+    },
+  ],
+});
 const audio = createAudio();
-const sound = audio.sound(confirmation);
+const sound = audio.sound(recipe);
 
 export async function play() {
   await audio.start();
@@ -47,6 +58,8 @@ export async function dispose() {
   await audio.dispose();
 }
 ```
+
+Or copy a ready-made sound from [catalog/](catalog/).
 
 Construction is silent. Bind `play()` directly to a user gesture, such as a
 button click, and surface activation failures with `void play().catch(console.error)`.

@@ -1,7 +1,7 @@
 {
   "name": "audiobits",
   "version": "0.2.1",
-  "description": "Procedural browser audio: versioned recipes, live controls, managed voices and buses.",
+  "description": "Browser audio engine and recipe language. Copy sounds from the AudioBits catalog and own them.",
   "license": "MIT",
   "homepage": "https://www.audiobits.dev/",
   "keywords": [
@@ -10,7 +10,9 @@
     "sound-effects",
     "sfx",
     "game-audio",
-    "typescript"
+    "typescript",
+    "ai-agents",
+    "mcp"
   ],
   "repository": {
     "type": "git",

@@ -9,6 +9,8 @@ import { LandingCommand } from "./landing-command";
 import { catalogEntries, catalogEntriesByCategory } from "../lib/catalog";
 import { registryItem } from "../lib/registry";
 import { siteBuild } from "../lib/site-build";
+import { siteUrl } from "../lib/site-url";
+import audiobitsPackage from "../../../packages/audiobits/package.json";
 import "./landing.css";
 import "./thruster-hero.css";
 
@@ -16,6 +18,26 @@ export const metadata: Metadata = {
   title: { absolute: "AudioBits | Procedural Sound Effects" },
   alternates: { canonical: "/" },
 };
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareSourceCode",
+    name: "AudioBits",
+    description: audiobitsPackage.description,
+    url: siteUrl,
+    codeRepository: "https://github.com/joacod/audiobits",
+    programmingLanguage: "TypeScript",
+    license: "https://opensource.org/licenses/MIT",
+    version: audiobitsPackage.version,
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "AudioBits",
+    url: siteUrl,
+  },
+];
 
 const previewSlugs = ["impact", "glass-notification", "whoosh"] as const;
 const previews = previewSlugs.map((slug) => {
@@ -33,6 +55,12 @@ const thrusterInstall = `npx shadcn@latest add joacod/audiobits/${registryItem("
 export default function Home() {
   return (
     <main className="foundation landing">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
+        }}
+      />
       <SiteHeader current="home" />
       <ThrusterHero />
       <section

@@ -196,4 +196,4 @@ Charge rings and the progress ring rest in Mute and Graphite edge and take the s
 - **Don't** animate anything that is not following sound or state.
 - **Don't** fork or restyle Fumadocs components. Keep showcase tokens and fonts scoped to `.foundation`.
 
-Source of truth: [global styles](app/globals.css), [landing styles](app/landing.css), [hero styles](app/charge-hero.css), [catalog styles](app/catalog.css), [mark](icons/brand-mark.tsx), [header](app/site-header.tsx), [output scope](app/output-scope.tsx).
+Source of truth: [global styles](app/globals.css), [landing styles](app/landing.css), [hero styles](app/thruster-hero.css), [catalog styles](app/catalog.css), [mark](icons/brand-mark.tsx), [header](app/site-header.tsx), [output scope](app/output-scope.tsx).

@@ -166,6 +166,19 @@ TypeScript-aware browser toolchain. Installation does not replace your root
 entrypoint or create build configuration. Use your existing toolchain, or the
 [optional standalone demo setup](https://github.com/joacod/audiobits/blob/main/catalog/README.md#optional-standalone-demo).
 
+## Workbench editor
+
+Each catalog workbench (`/catalog/[slug]`) accepts at most 32 KiB of JSON and shows the first ten validation
+issues. Apply explicitly; invalid input preserves the last valid playable
+sound. Applying a valid definition stops current playback and disposes the old
+sound. Play again to hear the new definition.
+
+Keep the sound's playback kind and its primary parameter's range, default, and
+mode. Additional parameters use their declared defaults. Restore and Reset return to the
+catalog recipe, seed 42, and primary control defaults.
+Raw comparisons apply only to catalog definitions. Edited recipes still have a
+copyable AudioBits example containing the entire accepted JSON.
+
 ## Customize and verify
 
 Edit the installed `recipe.ts` to change pitch, gain, envelopes, filters, or
