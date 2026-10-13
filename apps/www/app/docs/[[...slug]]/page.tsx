@@ -12,7 +12,10 @@ import defaultMdxComponents from "fumadocs-ui/mdx";
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 import { Step, Steps } from "fumadocs-ui/components/steps";
 import { File, Files, Folder } from "fumadocs-ui/components/files";
+import { MarkdownCopyButton } from "fumadocs-ui/layouts/docs/page";
+import { buttonVariants } from "fumadocs-ui/components/ui/button";
 import { source } from "../../../lib/source";
+import { getPageGithubUrl, getPageMarkdownUrl } from "../../../lib/docs-urls";
 
 function DocsLink(props: ComponentProps<typeof defaultMdxComponents.a>) {
   const external = /^https?:\/\//.test(props.href ?? "");
@@ -53,10 +56,32 @@ export default async function Page({
   const page = source.getPage(slug);
   if (!page) notFound();
   const Content = page.data.body;
+  const markdownUrl = getPageMarkdownUrl(page);
   return (
     <DocsPage toc={page.data.toc}>
       <DocsTitle>{page.data.title}</DocsTitle>
       <DocsDescription>{page.data.description}</DocsDescription>
+      <div
+        role="group"
+        aria-label="Page actions"
+        className="flex flex-wrap items-center gap-2 border-b pb-6"
+      >
+        <MarkdownCopyButton markdownUrl={markdownUrl} />
+        <a
+          href={getPageGithubUrl(page)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={buttonVariants({ variant: "secondary", size: "sm" })}
+        >
+          View on GitHub
+        </a>
+        <a
+          href={markdownUrl}
+          className={buttonVariants({ variant: "secondary", size: "sm" })}
+        >
+          Open Markdown
+        </a>
+      </div>
       <DocsBody>
         <Content
           components={{
