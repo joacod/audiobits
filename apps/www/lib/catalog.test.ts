@@ -2,7 +2,7 @@ import registry from "../../../registry.json" with { type: "json" };
 import { expect, test } from "vitest";
 import {
   energyChargeExperience,
-  plasmaBladeExperience,
+  lightsaberExperience,
   reactiveThrusterExperience,
 } from "./experiences";
 import { demos, soundKinds } from "./gallery";
@@ -33,7 +33,7 @@ test("catalog index covers every current entry once, in collection order", () =>
   expect(catalogEntries.map((entry) => entry.slug)).toEqual([
     "energy-charge",
     "reactive-thruster",
-    "plasma-blade",
+    "lightsaber",
     ...bundledOrder,
   ]);
   expect(new Set(catalogEntries.map((entry) => entry.slug)).size).toBe(
@@ -70,10 +70,12 @@ test("catalog entries derive links and playback from website metadata", () => {
     preview: { family: "thruster" },
   });
   expect(catalogEntries[2]).toMatchObject({
-    title: plasmaBladeExperience.title,
+    title: "Lightsaber",
+    href: "/catalog/lightsaber",
     preview: { family: "blade" },
-    source: { files: plasmaBladeExperience.sourceFiles },
+    source: { files: lightsaberExperience.sourceFiles },
   });
+  expect(lightsaberExperience.title).toBe("Lightsaber");
   expect("playback" in charge).toBe(false);
   expect("playback" in reactive).toBe(false);
 

@@ -160,7 +160,7 @@ try {
   }
   const bladeDirectory = join(
     consumer,
-    "items/plasma-blade/src/sounds/experiences/plasma-blade",
+    "items/lightsaber/src/sounds/experiences/lightsaber",
   );
   const thrusterDirectory = join(
     consumer,
@@ -453,13 +453,13 @@ Object.assign(globalThis, { probe });`,
     format: "esm",
     platform: "browser",
     target: "es2022",
-    outDir: join(browserOutput, "plasma-blade"),
+    outDir: join(browserOutput, "lightsaber"),
     dts: false,
     clean: false,
   });
   const bladeHtml = (await readFile(join(bladeDirectory, "index.html"), "utf8"))
-    .replace('"./host.ts"', '"./plasma-blade/host.js"')
-    .replace('"./stage.ts"', '"./plasma-blade/stage.js"');
+    .replace('"./host.ts"', '"./lightsaber/host.js"')
+    .replace('"./stage.ts"', '"./lightsaber/stage.js"');
   const energyHtml = (
     await readFile(join(energyDirectory, "index.html"), "utf8")
   ).replace('"./host.ts"', '"./energy-charge/host.js"');
@@ -473,8 +473,8 @@ Object.assign(globalThis, { probe });`,
       return;
     }
     if (
-      request.url?.startsWith("/plasma-blade/") &&
-      /^\/plasma-blade\/[A-Za-z0-9_.-]+\.js$/.test(request.url)
+      request.url?.startsWith("/lightsaber/") &&
+      /^\/lightsaber\/[A-Za-z0-9_.-]+\.js$/.test(request.url)
     ) {
       response.setHeader("Content-Type", "text/javascript");
       response.end(await readFile(join(browserOutput, request.url.slice(1))));
@@ -569,7 +569,7 @@ Object.assign(globalThis, { probe });`,
         globalThis.bladeContexts.every((context) => context.state === "closed"),
       );
       assert.deepEqual(errors, []);
-      evidence.catalog.find((item) => item.id === "plasma-blade").chromium =
+      evidence.catalog.find((item) => item.id === "lightsaber").chromium =
         "passed";
       await page.close();
     }

@@ -1,6 +1,6 @@
 import type { AudioEngine, Voice } from "audiobits";
 import {
-  plasmaBlade,
+  lightsaber,
   bladeIgnition,
   bladeSwing,
   bladeClash,
@@ -9,7 +9,7 @@ import {
 import { motionLevel, smoothMotion } from "./motion";
 
 export type BladeState = "stopped" | "starting" | "running";
-export function createPlasmaBlade(
+export function createLightsaber(
   audio: AudioEngine,
   feedback: {
     state(value: BladeState): void;
@@ -17,12 +17,12 @@ export function createPlasmaBlade(
     impact?(target: number, force: number): void;
   },
 ) {
-  const hum = audio.sound(plasmaBlade);
+  const hum = audio.sound(lightsaber);
   const ignition = audio.sound(bladeIgnition);
   const swing = audio.sound(bladeSwing);
   const clash = audio.sound(bladeClash);
   const retraction = audio.sound(bladeRetraction);
-  let voice: Voice<typeof plasmaBlade> | undefined;
+  let voice: Voice<typeof lightsaber> | undefined;
   type Accent = Pick<Voice, "stop" | "ended">;
   const accents = new Set<Accent>();
   let state: BladeState = "stopped",

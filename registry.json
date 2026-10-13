@@ -523,9 +523,9 @@
       "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/main/catalog/README.md for integration and update guidance."
     },
     {
-      "name": "plasma-blade",
+      "name": "lightsaber",
       "type": "registry:item",
-      "title": "Plasma Blade",
+      "title": "Lightsaber",
       "description": "Ignite a living electrical blade. Swing through the field. Strike, spark, retract.",
       "dependencies": ["audiobits"],
       "categories": ["experience"],
@@ -540,7 +540,7 @@
           "browser": "Web Audio; automated verification in Chromium",
           "framework": "none"
         },
-        "exportName": "plasmaBlade",
+        "exportName": "lightsaber",
         "requiredCapabilities": {
           "sources": ["noise", "oscillator"],
           "filters": ["bandpass", "lowpass"],
@@ -562,44 +562,44 @@
       },
       "files": [
         {
-          "path": "catalog/experiences/plasma-blade/recipe.ts",
+          "path": "catalog/experiences/lightsaber/recipe.ts",
           "type": "registry:file",
-          "target": "~/src/sounds/experiences/plasma-blade/recipe.ts"
+          "target": "~/src/sounds/experiences/lightsaber/recipe.ts"
         },
         {
-          "path": "catalog/experiences/plasma-blade/motion.ts",
+          "path": "catalog/experiences/lightsaber/motion.ts",
           "type": "registry:file",
-          "target": "~/src/sounds/experiences/plasma-blade/motion.ts"
+          "target": "~/src/sounds/experiences/lightsaber/motion.ts"
         },
         {
-          "path": "catalog/experiences/plasma-blade/controller.ts",
+          "path": "catalog/experiences/lightsaber/controller.ts",
           "type": "registry:file",
-          "target": "~/src/sounds/experiences/plasma-blade/controller.ts"
+          "target": "~/src/sounds/experiences/lightsaber/controller.ts"
         },
         {
-          "path": "catalog/experiences/plasma-blade/host.ts",
+          "path": "catalog/experiences/lightsaber/host.ts",
           "type": "registry:file",
-          "target": "~/src/sounds/experiences/plasma-blade/host.ts"
+          "target": "~/src/sounds/experiences/lightsaber/host.ts"
         },
         {
-          "path": "catalog/experiences/plasma-blade/stage.ts",
+          "path": "catalog/experiences/lightsaber/stage.ts",
           "type": "registry:file",
-          "target": "~/src/sounds/experiences/plasma-blade/stage.ts"
+          "target": "~/src/sounds/experiences/lightsaber/stage.ts"
         },
         {
-          "path": "catalog/experiences/plasma-blade/index.html",
+          "path": "catalog/experiences/lightsaber/index.html",
           "type": "registry:file",
-          "target": "~/src/sounds/experiences/plasma-blade/index.html"
+          "target": "~/src/sounds/experiences/lightsaber/index.html"
         },
         {
-          "path": "catalog/experiences/plasma-blade/README.md",
+          "path": "catalog/experiences/lightsaber/README.md",
           "type": "registry:file",
-          "target": "~/src/sounds/experiences/plasma-blade/README.md"
+          "target": "~/src/sounds/experiences/lightsaber/README.md"
         },
         {
           "path": "LICENSE",
           "type": "registry:file",
-          "target": "~/src/sounds/experiences/plasma-blade/LICENSE"
+          "target": "~/src/sounds/experiences/lightsaber/LICENSE"
         }
       ],
       "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/main/catalog/README.md for integration and update guidance."

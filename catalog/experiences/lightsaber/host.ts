@@ -1,16 +1,16 @@
 import { createAudio } from "audiobits";
-import { createPlasmaBlade } from "./controller";
+import { createLightsaber } from "./controller";
 
 /** The browser host owns one bounded engine; the controller owns its voices. */
-export function mountPlasmaBlade(
-  feedback: Parameters<typeof createPlasmaBlade>[1],
+export function mountLightsaber(
+  feedback: Parameters<typeof createLightsaber>[1],
 ) {
   const audio = createAudio({
     maxVoices: 8,
     maxVoicesPerSound: 3,
     masterGainDb: -6,
   });
-  const control = createPlasmaBlade(audio, feedback);
+  const control = createLightsaber(audio, feedback);
   const listeners = new AbortController();
   let disposed = false;
   const fail = (cause: unknown) => {

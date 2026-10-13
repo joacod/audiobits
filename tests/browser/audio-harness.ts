@@ -1,4 +1,4 @@
-import * as bladeRecipes from "../../catalog/experiences/plasma-blade/recipe";
+import * as bladeRecipes from "../../catalog/experiences/lightsaber/recipe";
 import { energyCharge } from "../../catalog/experiences/energy-charge/recipe";
 import { reactiveThruster } from "../../catalog/experiences/reactive-thruster/recipe";
 // Browser-only test bundle. Internal compiler access does not add a public API.
@@ -726,7 +726,7 @@ async function curatedSignal(
 }
 Object.assign(globalThis, { curatedSignal });
 
-async function plasmaSignal(
+async function lightsaberSignal(
   name: keyof typeof bladeRecipes,
   motion: number,
   count = 1,
@@ -797,7 +797,7 @@ async function plasmaSignal(
     bodyEnergy = 0,
     upperEnergy = 0;
   for (let i = 0; i < data.length; i++) {
-    require(Number.isFinite(data[i]), "Nonfinite plasma output");
+    require(Number.isFinite(data[i]), "Nonfinite lightsaber output");
     peak = Math.max(peak, Math.abs(data[i]));
     energy += data[i] ** 2;
     if (i / rate >= 0.4 && i / rate < 1.1) {
@@ -814,7 +814,7 @@ async function plasmaSignal(
   // Measure the strongest low hum partial, independently of recipe mappings.
   let humFrequency = 0,
     strongest = 0;
-  if (name === "plasmaBlade" && count === 1 && !update) {
+  if (name === "lightsaber" && count === 1 && !update) {
     const start = Math.floor(rate * 0.4),
       end = Math.floor(rate * 1.1);
     for (let hz = 45; hz <= 128; hz++) {
@@ -846,4 +846,4 @@ async function plasmaSignal(
     upperEnergyRatio: upperEnergy / bodyEnergy,
   };
 }
-Object.assign(globalThis, { plasmaSignal });
+Object.assign(globalThis, { lightsaberSignal });
