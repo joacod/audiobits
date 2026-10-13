@@ -1,0 +1,40 @@
+@layer tokens {
+  .audiobits-docs {
+    --docs-signal-mid: #b44cff;
+    --docs-selected: color-mix(in srgb, var(--docs-signal-mid) 65%, #000);
+    --docs-selected-bg: color-mix(
+      in srgb,
+      var(--docs-signal-mid) 12%,
+      transparent
+    );
+  }
+
+  .audiobits-docs .audiobits-docs-mark {
+    /* Waveform variables belong only to the mark, not the docs content. */
+    --void: #050507;
+    --signal-low: #2a6cff;
+    --signal-mid: var(--docs-signal-mid);
+    --signal-high: #ff2e88;
+  }
+
+  .dark .audiobits-docs {
+    --docs-selected: color-mix(in srgb, var(--docs-signal-mid) 65%, #fff);
+    --docs-selected-bg: color-mix(
+      in srgb,
+      var(--docs-signal-mid) 16%,
+      transparent
+    );
+  }
+}
+
+/* Outside layers so the selected state wins over Fumadocs' utility classes. */
+.audiobits-docs :is(#nd-sidebar, #nd-sidebar-mobile) a[data-active="true"] {
+  color: var(--docs-selected);
+  background-color: var(--docs-selected-bg);
+}
+
+.audiobits-docs
+  :is(#nd-sidebar, #nd-sidebar-mobile)
+  a[data-active="true"]::before {
+  background-color: var(--docs-selected);
+}

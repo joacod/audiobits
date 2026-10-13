@@ -15,15 +15,17 @@ export function BrandMark({
   tone = "signal",
   frame = true,
   className,
+  gradientId,
 }: {
   size: number;
   small?: boolean;
   tone?: "signal" | "mono";
   frame?: boolean;
   className?: string;
+  gradientId?: string;
 }) {
   const shape = small ? paths.small : paths.full;
-  const gradient = `ab-mark-${small ? "small" : "full"}`;
+  const gradient = gradientId ?? `ab-mark-${small ? "small" : "full"}`;
   return (
     <svg
       className={className}
