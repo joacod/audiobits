@@ -1,0 +1,28 @@
+@layer tokens {
+  .audiobits-docs {
+    /* Only the existing waveform palette, without showcase surfaces or fonts. */
+    --void: #050507;
+    --signal-low: #2a6cff;
+    --signal-mid: #b44cff;
+    --signal-high: #ff2e88;
+    --docs-selected: color-mix(in srgb, var(--signal-mid) 65%, #000);
+    --docs-selected-bg: color-mix(in srgb, var(--signal-mid) 12%, transparent);
+  }
+
+  .dark .audiobits-docs {
+    --docs-selected: color-mix(in srgb, var(--signal-mid) 65%, #fff);
+    --docs-selected-bg: color-mix(in srgb, var(--signal-mid) 16%, transparent);
+  }
+}
+
+/* Outside layers so the selected state wins over Fumadocs' utility classes. */
+.audiobits-docs :is(#nd-sidebar, #nd-sidebar-mobile) a[data-active="true"] {
+  color: var(--docs-selected);
+  background-color: var(--docs-selected-bg);
+}
+
+.audiobits-docs
+  :is(#nd-sidebar, #nd-sidebar-mobile)
+  a[data-active="true"]::before {
+  background-color: var(--docs-selected);
+}
