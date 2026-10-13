@@ -13,7 +13,9 @@ import {
 
 test("all documentation fences and current gallery/raw examples typecheck through public exports", () => {
   const snippets: string[] = [];
-  for (const name of readdirSync("apps/www/content/docs")) {
+  for (const name of readdirSync("apps/www/content/docs", {
+    recursive: true,
+  }).filter((file) => file.endsWith(".mdx"))) {
     const text = readFileSync(`apps/www/content/docs/${name}`, "utf8");
     for (const match of text.matchAll(/```ts\n([\s\S]*?)```/g))
       snippets.push(match[1]);

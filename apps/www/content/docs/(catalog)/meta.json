@@ -1,0 +1,6 @@
+{
+  "title": "Catalog & Editable Source",
+  "description": "Install and adapt catalog source in your application.",
+  "root": true,
+  "pages": ["catalog"]
+}

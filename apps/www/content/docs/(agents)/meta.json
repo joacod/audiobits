@@ -1,0 +1,6 @@
+{
+  "title": "AI Agents",
+  "description": "Use the official Skill and optional local MCP tooling.",
+  "root": true,
+  "pages": ["agents", "mcp"]
+}

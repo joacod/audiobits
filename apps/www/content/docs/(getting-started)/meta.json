@@ -1,0 +1,6 @@
+{
+  "title": "Getting Started",
+  "description": "Install AudioBits and play your first sound.",
+  "root": true,
+  "pages": ["index"]
+}
