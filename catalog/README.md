@@ -17,10 +17,11 @@ npx shadcn@4.21.4 view joacod/audiobits/confirmation
 npx shadcn@4.21.4 add joacod/audiobits/confirmation
 npx shadcn@4.21.4 add joacod/audiobits/energy-charge
 npx shadcn@4.21.4 add joacod/audiobits/reactive-thruster
+npx shadcn@4.21.4 add joacod/audiobits/plasma-blade
 ```
 
 For reproducible installs, append `#<reviewed-full-commit-SHA>` to each GitHub
-address. All ten entries use `registry:item` and explicit
+address. All eleven entries use `registry:item` and explicit
 `registry:file` targets relative to the project root (`~/`); React, Tailwind,
 Next.js, framework detection and `components.json` are unnecessary.
 
@@ -101,7 +102,7 @@ projects can use their own config for previews.
 [registry.json](../registry.json) is the canonical discovery and distribution
 manifest. It contains eight recipes: `confirmation`, `impact`, `thruster`,
 `tactile-click`, `gentle-rejection`, `glass-notification`, `whoosh`, and `power-up`;
-and two experiences: `energy-charge` and `reactive-thruster`. Use any ID with
+and three experiences: `energy-charge`, `reactive-thruster`, and `plasma-blade`. Use any ID with
 `view` or `add`. Metadata records classification, categories, schema version,
 required public capabilities and complete source/license manifests. The website
 derives discovery titles, descriptions and source lists from this registry;
@@ -134,6 +135,15 @@ await audio.dispose();
 The recipe preserves the existing confirmation tone. You may change its pitches,
 envelopes or gain locally, keeping recipe schema version 1. The npm package ships
 only the engine and recipe language; install creative source separately.
+
+## Plasma Blade
+
+Installation writes five acoustic recipes in `recipe.ts`, the motion mapper,
+controller, browser host, canvas stage, standalone demo, README and MIT license
+under `src/sounds/experiences/plasma-blade/`. It supports persistent ignition,
+motion-controlled hum, rapid swings, target clashes, and deliberate retraction.
+See the [experience guide](experiences/plasma-blade/README.md) for ownership,
+keyboard and touch controls, cooldowns, and teardown.
 
 ## Energy Charge
 

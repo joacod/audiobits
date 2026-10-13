@@ -1,3 +1,4 @@
+import * as bladeRecipes from "../../catalog/experiences/plasma-blade/recipe";
 import { energyCharge } from "../../catalog/experiences/energy-charge/recipe";
 import { reactiveThruster } from "../../catalog/experiences/reactive-thruster/recipe";
 // Browser-only test bundle. Internal compiler access does not add a public API.
@@ -724,3 +725,81 @@ async function curatedSignal(
   return { peak, energy, onset, tail, delta, finished };
 }
 Object.assign(globalThis, { curatedSignal });
+
+async function plasmaSignal(
+  name: keyof typeof bladeRecipes,
+  motion: number,
+  count = 1,
+  update = false,
+  rate = 48000,
+) {
+  const recipe = bladeRecipes[name];
+  const context = new OfflineAudioContext(1, rate * 2, rate);
+  const controls = Object.fromEntries(
+    Object.keys("parameters" in recipe ? recipe.parameters : {}).map((name) => [
+      name,
+      motion,
+    ]),
+  );
+  const plan = compile(recipe, controls, 42);
+  let finished = 0;
+  const graphs = Array.from({ length: count }, () =>
+    createGraph(context, context.destination, plan, 0.05, -6, 0, () => {
+      finished++;
+    }),
+  );
+  const checkpoints: Promise<void>[] = [];
+  if (recipe.kind === "sustained") {
+    if (update)
+      for (const [time, value] of [
+        [0.35, 1],
+        [0.37, 0],
+        [0.39, 1],
+        [0.55, 0.2],
+      ]) {
+        checkpoints.push(
+          context.suspend(time).then(() => {
+            for (const graph of graphs)
+              graph.set({ motion: value, drift: value });
+            return context.resume();
+          }),
+        );
+      }
+    checkpoints.push(
+      context.suspend(1.2).then(() => {
+        for (const graph of graphs) graph.stop();
+        return context.resume();
+      }),
+    );
+  }
+  const rendering = context.startRendering();
+  await Promise.all(checkpoints);
+  const data = (await rendering).getChannelData(0);
+  let peak = 0,
+    energy = 0,
+    delta = 0,
+    tail = 0,
+    onset = 0,
+    difference = 0;
+  for (let i = 0; i < data.length; i++) {
+    require(Number.isFinite(data[i]), "Nonfinite plasma output");
+    peak = Math.max(peak, Math.abs(data[i]));
+    energy += data[i] ** 2;
+    if (i && i / rate > 0.3 && i / rate < 1.1)
+      difference += (data[i] - data[i - 1]) ** 2;
+    if (i) delta = Math.max(delta, Math.abs(data[i] - data[i - 1]));
+    if (i / rate < 0.05) onset = Math.max(onset, Math.abs(data[i]));
+    if (i / rate > 1.6) tail = Math.max(tail, Math.abs(data[i]));
+  }
+  await waitForCleanup(() => finished === count);
+  return {
+    peak,
+    energy,
+    delta,
+    tail,
+    onset,
+    finished,
+    brightness: difference / energy,
+  };
+}
+Object.assign(globalThis, { plasmaSignal });

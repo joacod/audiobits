@@ -24,6 +24,34 @@ Windows process-tree termination has not been verified.
 The site uses Next.js with webpack and Fumadocs MDX. Website dependencies stay
 in `apps/www`; the runtime remains framework-independent.
 
+## Website agent tooling
+
+For catalog sound and experience work, `apps/www` consumes the canonical
+[AudioBits Skill](../skills/audiobits/SKILL.md) through its local
+`.agents/skills/audiobits` symlink. Start the agent in `apps/www` for scoped Skill
+discovery. Website agent rules also link the Skill directly for sessions started
+at the monorepo root. Other repository work does not require the Skill.
+
+AudioBits MCP is optional. With the repository's supported Node selected, build
+the runtime from the root, then print the website's stdio launch settings:
+
+```sh
+pnpm build:lib
+node skills/audiobits/scripts/setup-mcp.mjs --project apps/www
+```
+
+Register the printed command and arguments through your agent harness. For
+Codex, use a local `apps/www/.codex/config.toml` registration and start the chat
+in `apps/www`. That file is ignored because it contains machine-specific paths.
+Reload the client and use `inspect_project` to confirm the website's installed
+runtime. Existing public-API checks remain available without MCP.
+
+Use the bundled Skill executable to exercise the same tooling external consumers
+receive. After changing MCP implementation, run `pnpm build:skill` and
+`pnpm check:skill`, then reconnect the server. Read catalog source directly while
+editing; refresh the reviewed snapshot after committing catalog changes as
+described in [MCP development](../tools/mcp/README.md#offline-metadata-and-explicit-source-review).
+
 ## Local package edits
 
 Edit canonical definitions in `catalog/recipes/<id>/recipe.ts`. Catalog files
@@ -178,19 +206,20 @@ version from the manifest.
 ## Catalog examples
 
 Copy-owned interactive sources live in `catalog/experiences/`:
-[Energy Charge](../catalog/experiences/energy-charge/README.md) and
-[Reactive Thruster](../catalog/experiences/reactive-thruster/README.md). Edit their
+[Energy Charge](../catalog/experiences/energy-charge/README.md),
+[Reactive Thruster](../catalog/experiences/reactive-thruster/README.md), and
+[Plasma Blade](../catalog/experiences/plasma-blade/README.md). Edit their
 recipe, interaction, host, or demo files there; `apps/www` imports and displays
 these sources while owning website presentation. The
 [GitHub source registry](../catalog/README.md) installs canonical recipes and
-complete experiences as owned source. It covers all eight recipes and both
+complete experiences as owned source. It covers all eight recipes and three
 experiences.
 `registry.json` owns discovery metadata and installation file manifests; website
 metadata is derived from it. No creative recipes are generated into the runtime.
 
-`pnpm test:package` copies each of the ten item manifests into its own source
+`pnpm test:package` copies each of the eleven item manifests into its own source
 tree in an isolated packed-package consumer, typechecks every installed
-TypeScript file, validates every recipe with the actual runtime, and runs both
+TypeScript file, validates every recipe with the actual runtime, and runs all three
 standalone experience entrypoints in Chromium. The site browser tests verify the
 displayed source matches the catalog, along with interaction and lifecycle behavior.
 

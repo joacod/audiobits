@@ -4,6 +4,8 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { notFound } from "next/navigation";
 import { CatalogDetail } from "../../catalog-detail";
+import { CatalogInstall } from "../../catalog-install";
+import { ExperienceSource } from "../../experience-source";
 import { CatalogSoundBench } from "../../catalog-sound-bench";
 import {
   bundledCatalogEntry,
@@ -45,7 +47,19 @@ const ThrusterDetail = dynamic(
   { loading: ThrusterStageFallback },
 );
 
-function readExperienceSources(slug: "energy-charge" | "reactive-thruster") {
+const PlasmaBladeDetail = dynamic(
+  () =>
+    import("../../plasma-blade-detail").then(
+      (module) => module.PlasmaBladeDetail,
+    ),
+  {
+    loading: () => (
+      <div className="catalog-stage" aria-label="Loading Plasma Blade" />
+    ),
+  },
+);
+
+function readExperienceSources(slug: keyof typeof experienceSourcePurpose) {
   const purposes = experienceSourcePurpose[slug];
   return experienceSourceFiles(slug).map(({ name, path }) => ({
     name,
@@ -104,6 +118,21 @@ export default async function CatalogEntryPage({
   }
   const experience = experienceCatalogEntry(slug);
   if (!experience) notFound();
+  if (experience.slug === "plasma-blade") {
+    return (
+      <CatalogDetail entry={experience}>
+        <PlasmaBladeDetail />
+        <CatalogInstall slug={experience.slug} />
+        <div className="catalog-inspector">
+          <h2>Inspect source</h2>
+          <ExperienceSource
+            presentation="Five original recipes, motion mapping, voice ownership, browser lifecycle, and the canvas stage. The same source powers this page and the standalone demo."
+            sources={readExperienceSources(experience.slug)}
+          />
+        </div>
+      </CatalogDetail>
+    );
+  }
   if (experience.slug === "energy-charge") {
     return (
       <CatalogDetail entry={experience}>

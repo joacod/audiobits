@@ -137,6 +137,14 @@ test("public pages expose unique metadata and content without JavaScript", async
             exact: true,
           }),
         ).toHaveAttribute("href", "/docs/catalog#install-source");
+        if (entry.slug === "plasma-blade") {
+          await expect(
+            page.getByRole("heading", { name: "Inspect source", exact: true }),
+          ).toBeVisible();
+          const recipe = page.locator(".catalog-inspector pre");
+          await expect(recipe).toBeVisible();
+          await expect(recipe).toContainText("magnetic-core");
+        }
       }
       await expect(page.locator('a[href="/docs"]').first()).toBeAttached();
     }

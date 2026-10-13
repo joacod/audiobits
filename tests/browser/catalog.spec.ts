@@ -192,7 +192,9 @@ test("catalog experience previews stay silent and link to complete interactions"
       const box = (await hold.boundingBox())!;
       await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
       await page.mouse.down();
-    } else await dragThruster(page);
+    } else if (entry.slug === "plasma-blade")
+      await page.getByRole("button", { name: "Ignite", exact: true }).click();
+    else await dragThruster(page);
     await expect
       .poll(
         async () =>
