@@ -7,7 +7,8 @@ runtime dependencies. Define sounds as versioned recipe data, play managed
 voices, and connect supported live parameters to application state.
 
 [Live catalog](https://www.audiobits.dev/catalog) ·
-[Documentation](https://www.audiobits.dev/docs)
+[Documentation](https://www.audiobits.dev/docs) ·
+[MCP server](https://www.audiobits.dev/docs/mcp)
 
 ## Quick start
 
