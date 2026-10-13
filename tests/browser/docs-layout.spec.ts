@@ -111,3 +111,93 @@ for (const mobile of [false, true]) {
     await expect(page).toHaveURL(`${site}/docs`);
   });
 }
+
+for (const width of [375, 768, 1024, 1440]) {
+  for (const theme of ["light", "dark"]) {
+    test(`documentation fits ${width}px in ${theme} mode`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await page.addInitScript(
+        (value) => localStorage.setItem("theme", value),
+        theme,
+      );
+      for (const path of [
+        "/docs",
+        "/docs/catalog",
+        "/docs/agents",
+        "/docs/api",
+      ]) {
+        await page.goto(`${site}${path}`);
+        await expect(page.locator("html")).toHaveClass(new RegExp(theme));
+        await page.evaluate(() => document.fonts.ready);
+        expect(
+          await page.evaluate(() => document.documentElement.scrollWidth),
+        ).toBeLessThanOrEqual(width);
+        const controls = page
+          .locator(
+            'header a, header button, #nd-subnav button, [aria-label="Documentation utilities"] a, [aria-label="Documentation utilities"] button',
+          )
+          .filter({ visible: true });
+        const boxes = await controls.evaluateAll(
+          (elements, viewport) => {
+            return elements.flatMap((element) => {
+              const { x, y, width, height } = element.getBoundingClientRect();
+              const onScreen =
+                width > 0 &&
+                height > 0 &&
+                x < viewport.width &&
+                x + width > 0 &&
+                y < viewport.height &&
+                y + height > 0;
+              if (!onScreen) return [];
+              return [
+                {
+                  label:
+                    element.getAttribute("aria-label") ??
+                    element.textContent?.trim(),
+                  x,
+                  y,
+                  width,
+                  height,
+                },
+              ];
+            });
+          },
+          { width, height: 900 },
+        );
+        expect(boxes.length).toBeGreaterThan(0);
+        for (const [index, box] of boxes.entries()) {
+          expect(box.x, box.label ?? "control").toBeGreaterThanOrEqual(0);
+          expect(box.x + box.width, box.label ?? "control").toBeLessThanOrEqual(
+            width,
+          );
+          for (const other of boxes.slice(index + 1)) {
+            const overlapX =
+              Math.min(box.x + box.width, other.x + other.width) -
+              Math.max(box.x, other.x);
+            const overlapY =
+              Math.min(box.y + box.height, other.y + other.height) -
+              Math.max(box.y, other.y);
+            expect(
+              overlapX > 1 && overlapY > 1,
+              `${box.label} overlaps ${other.label}`,
+            ).toBe(false);
+          }
+        }
+        if (width < 768) {
+          await page
+            .locator("#nd-subnav")
+            .getByRole("button", { name: "Open Sidebar", exact: true })
+            .click();
+          const sidebar = page.locator("#nd-sidebar-mobile");
+          await expect(sidebar).toBeVisible();
+          await expect(
+            sidebar.locator('a[data-active="true"]'),
+          ).toBeInViewport();
+          expect(
+            await sidebar.evaluate((element) => element.scrollWidth),
+          ).toBeLessThanOrEqual(width);
+        }
+      }
+    });
+  }
+}

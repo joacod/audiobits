@@ -200,3 +200,57 @@ for (const mobile of [false, true]) {
     },
   );
 }
+
+for (const mobile of [false, true]) {
+  test(`introduction cards and installation tabs work on ${mobile ? "mobile" : "desktop"}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(
+      mobile ? { width: 390, height: 844 } : { width: 1280, height: 900 },
+    );
+    for (const { title, path, heading } of [
+      {
+        title: "Runtime",
+        path: "/docs#install-the-runtime",
+        heading: "Introduction and quick start",
+      },
+      {
+        title: "Catalog & Editable Source",
+        path: "/docs/catalog",
+        heading: "Catalog and editable source",
+      },
+      {
+        title: "AI Agents",
+        path: "/docs/agents",
+        heading: "Official Skill and agent workflows",
+      },
+    ]) {
+      await page.goto(`${site}/docs`);
+      await page
+        .locator(".prose a[data-card]")
+        .filter({
+          has: page.getByRole("heading", { name: title, exact: true }),
+        })
+        .click();
+      await expect(page).toHaveURL(`${site}${path}`);
+      await expect(page.getByRole("heading", { level: 1 })).toHaveText(heading);
+      if (title === "Runtime") {
+        await expect(page.locator("#install-the-runtime")).toBeInViewport();
+        for (const [manager, command] of [
+          ["pnpm", "pnpm add audiobits"],
+          ["yarn", "yarn add audiobits"],
+          ["bun", "bun add audiobits"],
+          ["npm", "npm install audiobits"],
+        ]) {
+          await page.getByRole("tab", { name: manager, exact: true }).click();
+          await expect(
+            page.getByRole("tabpanel").filter({ visible: true }),
+          ).toContainText(command);
+        }
+        await expect(
+          page.getByText("Start audio from a user gesture", { exact: true }),
+        ).toBeVisible();
+      }
+    }
+  });
+}
