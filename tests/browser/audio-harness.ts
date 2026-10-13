@@ -732,13 +732,14 @@ async function plasmaSignal(
   count = 1,
   update = false,
   rate = 48000,
+  sweep = motion * 2 - 1,
 ) {
   const recipe = bladeRecipes[name];
   const context = new OfflineAudioContext(1, rate * 2, rate);
   const controls = Object.fromEntries(
     Object.keys("parameters" in recipe ? recipe.parameters : {}).map((name) => [
       name,
-      motion,
+      name === "sweep" ? sweep : name === "drift" ? 0.5 : motion,
     ]),
   );
   const plan = compile(recipe, controls, 42);
@@ -760,7 +761,7 @@ async function plasmaSignal(
         checkpoints.push(
           context.suspend(time).then(() => {
             for (const graph of graphs)
-              graph.set({ motion: value, drift: value });
+              graph.set({ motion: value, drift: value, sweep: value * 2 - 1 });
             return context.resume();
           }),
         );
@@ -792,6 +793,29 @@ async function plasmaSignal(
     if (i / rate > 1.6) tail = Math.max(tail, Math.abs(data[i]));
   }
   await waitForCleanup(() => finished === count);
+  // Measure the strongest low hum partial, independently of recipe mappings.
+  let humFrequency = 0,
+    strongest = 0;
+  if (name === "plasmaBlade" && count === 1 && !update) {
+    const start = Math.floor(rate * 0.4),
+      end = Math.floor(rate * 1.1);
+    for (let hz = 72; hz <= 128; hz++) {
+      let real = 0,
+        imaginary = 0;
+      for (let i = start; i < end; i += 8) {
+        const window =
+          0.5 - 0.5 * Math.cos((2 * Math.PI * (i - start)) / (end - start));
+        const angle = (2 * Math.PI * hz * i) / rate;
+        real += data[i] * window * Math.cos(angle);
+        imaginary += data[i] * window * Math.sin(angle);
+      }
+      const power = real * real + imaginary * imaginary;
+      if (power > strongest) {
+        strongest = power;
+        humFrequency = hz;
+      }
+    }
+  }
   return {
     peak,
     energy,
@@ -800,6 +824,7 @@ async function plasmaSignal(
     onset,
     finished,
     brightness: difference / energy,
+    humFrequency,
   };
 }
 Object.assign(globalThis, { plasmaSignal });

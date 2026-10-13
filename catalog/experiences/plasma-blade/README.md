@@ -1,6 +1,6 @@
 # Plasma Blade
 
-A procedural electrical blade: ignition, a smooth harmonic hum, motion-fed
+A procedural electrical blade: ignition, a beating motor hum, motion-fed
 swells, rapid swing accents, electrical clashes, and retraction. No sampled audio.
 
 Install the complete registry item, or keep this folder and its MIT license
@@ -10,10 +10,12 @@ master gain -6 dB). It exposes `retract`, `stop`, `mute`, and asynchronous `disp
 Call `dispose` on application removal and handle its rejection.
 
 `createPlasmaBlade` is the DOM-free controller for an application-owned engine.
-Supply CSS-pixel speed and frame elapsed milliseconds to `update`. Speed reaches
-full motion at 1800 px/s. Attack/recovery smoothing and native parameter ramps
-keep the hum continuous. Swing accents rearm below 0.32 and trigger above 0.62,
-with a 260 ms cooldown. `impact(target, force)` accepts target IDs 0 through 2,
+Supply CSS-pixel speed and frame elapsed milliseconds to `update`, with an optional
+signed movement direction from -1 to 1 for continuous pitch bending. Speed reaches
+full motion at 1200 px/s. Attack/recovery smoothing and native parameter ramps
+keep the hum continuous. Swing accents rearm below 0.2 or on a direction reversal
+and trigger above 0.48, with a 220 ms cooldown. The stage measures handle and tip
+travel, excluding blade extension. `impact(target, force)` accepts target IDs 0 through 2,
 with an 850 ms target cooldown and 100 ms global cooldown. It returns whether
 the strike was accepted. `stop` invalidates pending activation and stops owned
 voices; the dedicated host additionally cuts all engine tails.

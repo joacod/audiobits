@@ -554,7 +554,7 @@
             "dispose"
           ],
           "kinds": ["one-shot", "sustained"],
-          "waveforms": ["sawtooth", "sine", "square", "triangle"],
+          "waveforms": ["sawtooth", "sine", "square"],
           "noiseColors": ["white"],
           "mappingScales": ["exponential", "linear"],
           "automationCurves": ["exponential"]

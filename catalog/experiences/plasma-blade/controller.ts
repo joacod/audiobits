@@ -33,6 +33,7 @@ export function createPlasmaBlade(
     lastSwing = -Infinity,
     lastImpact = -Infinity;
   let armed = true;
+  let lastDirection = 0;
   const targets = new Map<number, number>();
   function publish(value: BladeState) {
     state = value;
@@ -52,6 +53,7 @@ export function createPlasmaBlade(
     motion = 0;
     clock = 0;
     armed = true;
+    lastDirection = 0;
     lastSwing = lastImpact = -Infinity;
     targets.clear();
     if (!disposed) publish("stopped");
@@ -66,7 +68,10 @@ export function createPlasmaBlade(
       .then(() => {
         if (disposed || token !== generation) return;
         accent(() => ignition.play({ seed: 42 }));
-        voice = hum.play({ seed: 42, parameters: { motion: 0, drift: 0.5 } });
+        voice = hum.play({
+          seed: 42,
+          parameters: { motion: 0, drift: 0.5, sweep: 0 },
+        });
         const current = voice;
         publish("running");
         void current.ended.then(() => {
@@ -79,7 +84,7 @@ export function createPlasmaBlade(
         feedback.error(cause);
       });
   }
-  function update(speed: number, elapsed: number) {
+  function update(speed: number, elapsed: number, direction = 0) {
     if (disposed || state !== "running") return 0;
     const dt = Math.min(
       64,
@@ -87,17 +92,32 @@ export function createPlasmaBlade(
     );
     clock += dt;
     motion = smoothMotion(motion, motionLevel(speed), dt);
+    const signed = Number.isFinite(direction)
+      ? Math.max(-1, Math.min(1, direction))
+      : 0;
     if (voice?.state === "active")
-      voice.set({ motion, drift: 0.5 + 0.45 * Math.sin(clock / 1300) });
-    if (motion < 0.32) armed = true;
-    if (armed && motion > 0.62 && clock - lastSwing >= 260) {
+      voice.set({
+        motion,
+        drift: 0.5 + 0.45 * Math.sin(clock / 1300),
+        sweep: motion * signed,
+      });
+    // A return stroke can sound even when a fast back-and-forth never reaches idle.
+    if (Math.abs(signed) > 0.2 && motion > 0.2) {
+      if (lastDirection && Math.sign(signed) !== lastDirection) armed = true;
+      lastDirection = Math.sign(signed);
+    }
+    if (motion < 0.2) {
+      armed = true;
+      lastDirection = 0;
+    }
+    if (armed && motion > 0.48 && clock - lastSwing >= 220) {
       armed = false;
       lastSwing = clock;
       accent(() =>
         swing.play({
           parameters: { force: motion },
           seed: generation,
-          pan: 0.15 * Math.sin(clock / 300),
+          pan: signed * 0.2,
         }),
       );
     }
