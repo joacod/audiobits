@@ -1,7 +1,8 @@
+import { dragThruster } from "./experience-probe";
 import { expect, test } from "@playwright/test";
 import manifest from "../../packages/audiobits/package.json" with { type: "json" };
 
-test("site uses public exports and keyboard-operated thruster playback", async ({
+test("site uses public exports and gesture-driven thruster playback", async ({
   page,
   browser,
 }) => {
@@ -30,16 +31,11 @@ test("site uses public exports and keyboard-operated thruster playback", async (
   await expect(
     page.getByText(`Available on npm · ${manifest.version}`),
   ).toBeVisible();
-  const start = page.getByRole("button", {
-    name: "Start thruster",
-    exact: true,
-  });
-  await expect(start).toBeEnabled();
-  await start.focus();
-  await page.keyboard.press("Enter");
+  await dragThruster(page);
   await expect(page.getByTestId("landing-playback-state")).toHaveText(
     "Thruster: running",
   );
+  await page.mouse.up();
   expect(errors).toEqual([]);
 });
 

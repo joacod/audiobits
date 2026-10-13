@@ -58,6 +58,7 @@
   .foundation.catalog-page .catalog-nav-panel a[aria-current="location"] {
     font-weight: 700;
     text-decoration-thickness: 2px;
+    text-decoration-color: var(--signal-mid);
   }
   .foundation.catalog-page .catalog-main h2 {
     margin: 0 0 0.7rem;
@@ -237,7 +238,7 @@
   .foundation.catalog-page .catalog-sound[data-status="starting"] .catalog-mark,
   .foundation.catalog-page .catalog-sound[data-status="playing"] .catalog-mark,
   .foundation.catalog-page .catalog-sound[data-status="running"] .catalog-mark {
-    color: var(--ink);
+    color: var(--signal-mid);
   }
   .foundation.catalog-page .catalog-sound-actions {
     grid-column: 1 / -1;
@@ -332,48 +333,25 @@
       justify-content: end;
     }
     .foundation.catalog-page .catalog-output .audio-monitor {
-      position: static;
-      display: flex;
-      flex-direction: row;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 0.65rem 1rem;
-      margin-bottom: 0.35rem;
-      padding: 0 0 0.75rem;
-      border: 0;
-      border-bottom: 1px solid var(--graphite-edge);
-      background: transparent;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 0.5rem 1.5rem;
+      margin-bottom: 1rem;
+      padding: 1rem;
+      background: var(--graphite);
     }
-    .foundation.catalog-page .catalog-output .monitor-heading {
-      display: flex;
-      align-items: baseline;
-      gap: 0.75rem;
-    }
-    .foundation.catalog-page .catalog-output .monitor-heading h2 {
-      margin: 0;
-      font-family: var(--font-mono);
-      font-size: 0.9rem;
-      font-weight: 700;
-      letter-spacing: 0;
-      line-height: 1.3;
-    }
+    .foundation.catalog-page .catalog-output .monitor-heading,
     .foundation.catalog-page .catalog-output .output-scope {
-      width: min(100%, 18rem);
-      margin: 0;
-      padding: 0.2rem 0 0.35rem;
-      background: transparent;
-      border-bottom: 1px solid var(--graphite-edge);
+      grid-column: 1;
     }
-    .foundation.catalog-page .catalog-output .output-scope canvas {
-      height: 3.25rem;
-      margin: 0;
-      color: var(--ink);
+    .foundation.catalog-page .catalog-output .monitor-settings {
+      grid-column: 2;
+      grid-row: 1 / span 3;
+      min-width: 0;
     }
-    .foundation.catalog-page .catalog-output .output-scope figcaption {
-      display: none;
-    }
-    .foundation.catalog-page .catalog-output label {
-      flex: 1 1 12rem;
+    .foundation.catalog-page .catalog-output .output-scope canvas,
+    .foundation.catalog-page .catalog-output .signal-rest {
+      height: 4rem;
       margin: 0;
     }
   }
@@ -392,9 +370,6 @@
   }
 
   @media (max-width: 760px) {
-    .foundation.catalog-page:not(:has(.catalog-detail)) {
-      padding-bottom: calc(9rem + env(safe-area-inset-bottom));
-    }
     .foundation.catalog-page .catalog-menu {
       display: inline-flex;
       flex: none;
@@ -488,7 +463,7 @@
   .foundation.catalog-page .catalog-bench {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    gap: 1rem 1.75rem;
+    gap: 2.25rem 1.75rem;
     min-width: 0;
     margin-top: 0.5rem;
   }
@@ -545,9 +520,10 @@
     color: var(--ink);
   }
   .foundation.catalog-page .catalog-drive {
-    margin: 0.45rem 0 0;
+    margin: 0;
+    padding: 0.5rem 1rem 0.75rem;
     color: var(--mute);
-    font-size: 0.9rem;
+    font-size: 0.75rem;
     font-variant-numeric: tabular-nums;
   }
   .foundation.catalog-page .catalog-transport {
@@ -558,12 +534,6 @@
     margin: 0;
     font-size: 0.9rem;
     font-variant-numeric: tabular-nums;
-  }
-  .foundation.catalog-page .catalog-levels {
-    display: none;
-  }
-  .foundation.catalog-page .catalog-volume {
-    margin: 0.35rem 0 0;
   }
   .foundation.catalog-page .catalog-inspector {
     min-width: 0;
@@ -770,6 +740,33 @@
     color: var(--ink);
     font-weight: 700;
   }
+  .foundation.catalog-page .catalog-bench:has(.catalog-gesture-stage) {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: none;
+    gap: 1.5rem;
+  }
+  .foundation.catalog-page .catalog-bench:has(.catalog-gesture-stage) > * {
+    grid-area: auto;
+  }
+  .foundation.catalog-page .catalog-experience-feedback {
+    min-width: 0;
+  }
+  .foundation.catalog-page .catalog-experience-feedback p {
+    margin: 0.5rem 0;
+    color: var(--mute);
+    font-size: 0.875rem;
+  }
+  .foundation.catalog-page .catalog-experience-status {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+  }
+  .foundation.catalog-page .catalog-experience-feedback .output-scope canvas,
+  .foundation.catalog-page .catalog-experience-feedback .signal-rest {
+    height: 4rem;
+  }
   .foundation.catalog-page .catalog-playback p {
     max-width: 62ch;
   }
@@ -793,6 +790,7 @@
   }
   .foundation.catalog-page .catalog-source-tools pre {
     max-height: 16rem;
+    margin-block: 0.75rem 1.5rem;
   }
   .foundation.catalog-page .catalog-detail .inspector-tabs {
     margin-bottom: 0.75rem;
@@ -804,6 +802,7 @@
   .foundation.catalog-page .catalog-detail .recipe-tools pre,
   .foundation.catalog-page .catalog-detail .recipe-tools textarea {
     max-height: 16rem;
+    margin-block: 0.75rem 1.5rem;
     overflow: auto;
   }
   .foundation.catalog-page .catalog-detail .recipe-tools textarea {
@@ -882,29 +881,8 @@
       width: 2.5rem;
       height: 2.5rem;
     }
-    .foundation.catalog-page:has(.catalog-detail) {
-      padding-bottom: calc(14rem + env(safe-area-inset-bottom));
-    }
-    .foundation.catalog-page .catalog-detail .catalog-transport {
-      position: fixed;
-      inset: auto 0 0;
-      z-index: 20;
-      background: var(--void);
-      border-top: 1px solid var(--graphite-edge);
-      padding: 0.5rem 1rem calc(0.5rem + env(safe-area-inset-bottom));
-    }
-    .foundation.catalog-page .catalog-detail .catalog-levels {
-      display: inline-flex;
-      margin-left: auto;
-    }
-    .foundation.catalog-page
-      .catalog-detail
-      .catalog-transport[data-levels="closed"]
-      .catalog-volume {
-      display: none;
-    }
     .foundation.catalog-page .catalog-detail :is(button, input, textarea, a) {
-      scroll-margin-bottom: 16rem;
+      scroll-margin-block: 1rem;
     }
   }
 }
@@ -953,12 +931,6 @@
   }
   .foundation.catalog-page .catalog-playback input[type="number"] {
     background: var(--void);
-  }
-  @media (max-width: 760px) {
-    .foundation.catalog-page .catalog-detail .catalog-transport {
-      background: var(--graphite);
-      border-top-color: var(--graphite-edge);
-    }
   }
 }
 @layer components {

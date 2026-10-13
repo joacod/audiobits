@@ -6,23 +6,21 @@ import {
   useLayoutEffect,
   useRef,
   useState,
-  useSyncExternalStore,
 } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import { mountThruster } from "../../../catalog/experiences/reactive-thruster/host";
 import { ExperienceSource } from "./experience-source";
 import { CatalogInstall } from "./catalog-install";
 import type { ExperienceSourceFile } from "./experience-source";
+import { OutputScope } from "./output-scope";
 import { ThrusterRibbons } from "./thruster-ribbons";
 import type { ThrusterTarget } from "./thruster-ribbons";
-
-const subscribeHydration = () => () => {};
 
 function recovery(cause: unknown) {
   const message = cause instanceof Error ? cause.message : String(cause);
   return message.includes("Retry Play")
-    ? "Audio did not start. Try Start thruster or drag again."
-    : `${message}. Try Start thruster or drag again.`;
+    ? "Audio did not start. Drag again to retry."
+    : `${message}. Drag again to retry.`;
 }
 
 function clamp(value: number, min: number, max: number) {
@@ -52,14 +50,7 @@ export function ThrusterDetail({
   const wake = useRef<() => void>(() => {});
   const [state, setState] = useState("stopped");
   const [active, setActive] = useState(false);
-  const [muted, setMuted] = useState(false);
   const [error, setError] = useState("");
-  const [throttle, setThrottle] = useState(0.2);
-  const ready = useSyncExternalStore(
-    subscribeHydration,
-    () => true,
-    () => false,
-  );
   const readEngine = useCallback(() => host.current?.audio ?? null, []);
   const applyPoint = useCallback(() => {
     const node = craft.current;
@@ -79,6 +70,7 @@ export function ThrusterDetail({
         setState(value);
         if (value === "starting") setError("");
         if (value === "stopped") {
+          pointer.current = null;
           target.current.throttle = 0;
           target.current.engaged = false;
           surface.style.setProperty("--thrust", "0");
@@ -127,10 +119,10 @@ export function ThrusterDetail({
     target.current.engaged = false;
     wake.current();
   }
-  const sampling = active && !muted;
+  const sampling = active;
   return (
     <>
-      <div className="catalog-stage catalog-thruster-stage">
+      <div className="catalog-stage catalog-thruster-stage catalog-gesture-stage">
         <div
           ref={pad}
           className="flight-pad"
@@ -139,7 +131,12 @@ export function ThrusterDetail({
           aria-label="Drag to fly"
           aria-describedby="flight-help"
           onPointerDown={(event) => {
-            if (!event.isPrimary || event.button !== 0) return;
+            if (
+              !event.isPrimary ||
+              event.button !== 0 ||
+              !event.currentTarget.hasPointerCapture(event.pointerId)
+            )
+              return;
             pointer.current = event.pointerId;
             place(event);
           }}
@@ -159,97 +156,45 @@ export function ThrusterDetail({
           />
           <div ref={craft} className="flight-craft" aria-hidden="true" />
           <p className="flight-invitation">
-            {state === "stopped"
-              ? "Drag in this field."
-              : state === "starting"
-                ? "Activating audio."
-                : "Movement is the throttle."}
+            {state === "stopped" ? (
+              <>
+                <span className="flight-mouse-help">
+                  Click and drag to fly.
+                </span>
+                <span className="flight-touch-help">
+                  Touch and drag to fly.
+                </span>{" "}
+                Faster means louder.
+              </>
+            ) : state === "starting" ? (
+              "Activating audio."
+            ) : (
+              "Movement is the throttle."
+            )}
           </p>
           <p className="flight-readout">
             Live thrust <output ref={meter}>0%</output>
           </p>
         </div>
       </div>
-      <div className="catalog-playback flight-controls">
-        <div className="catalog-transport" role="group" aria-label="Playback">
-          <div className="audio-controls">
-            <button
-              type="button"
-              className="play-action"
-              disabled={!ready || state !== "stopped"}
-              onClick={() => host.current?.start(throttle)}
-            >
-              Start thruster
-            </button>
-            <button
-              type="button"
-              disabled={!ready}
-              onClick={() => host.current?.release()}
-            >
-              Release thruster
-            </button>
-            <button
-              type="button"
-              disabled={!ready}
-              onClick={() => {
-                setError("");
-                void host.current?.impact();
-              }}
-            >
-              Play impact
-            </button>
-            <button
-              type="button"
-              disabled={!ready}
-              aria-pressed={muted}
-              onClick={() => {
-                const next = !muted;
-                host.current?.mute(next);
-                setMuted(next);
-              }}
-            >
-              Mute
-            </button>
-            <button
-              type="button"
-              disabled={!ready}
-              onClick={() => host.current?.stop()}
-            >
-              Stop all
-            </button>
-          </div>
-          <p className="flight-state" role="status">
-            {`Thruster: ${state}${muted ? " · muted" : ""}`}
-          </p>
-          {error ? <p role="alert">{error}</p> : null}
+      <div className="catalog-experience-feedback flight-controls">
+        <OutputScope engine={readEngine} active={sampling} signal measured />
+        <div className="catalog-experience-status">
+          <p className="flight-state" role="status">{`Thruster: ${state}`}</p>
+          <button
+            type="button"
+            onClick={() => {
+              setError("");
+              void host.current?.impact();
+            }}
+          >
+            Play impact
+          </button>
         </div>
-        <div className="catalog-parameters">
-          <h2>Customize</h2>
-          <label>
-            Keyboard throttle: {Math.round(throttle * 100)}%
-            <input
-              aria-label="Throttle"
-              type="range"
-              min="0"
-              max="1"
-              step="0.01"
-              disabled={!ready}
-              value={throttle}
-              onChange={(event) => {
-                const value = Number(event.target.value);
-                setThrottle(value);
-                host.current?.setThrottle(value);
-              }}
-            />
-            <span className="control-mode">
-              Raise throttle for a stronger engine sound while playing.
-            </span>
-          </label>
-        </div>
-        <p id="flight-help">
-          Drag faster for more thrust, or use Start and the throttle. Release
-          keeps the tail. Stop cuts it.
+        <p id="flight-help" className="sr-only">
+          Drag to fly. Release to coast.
         </p>
+        {error ? <p role="alert">{error}</p> : null}
       </div>
       <CatalogInstall slug="reactive-thruster" />
       <div className="catalog-inspector">

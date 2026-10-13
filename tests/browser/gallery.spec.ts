@@ -1,3 +1,4 @@
+import { dragThruster } from "./experience-probe";
 import { requireOfflineCheckpoints } from "./offline-capabilities";
 import { expect, test } from "@playwright/test";
 import manifest from "../../packages/audiobits/package.json" with { type: "json" };
@@ -44,11 +45,6 @@ test("keyboard workflow, narrow layout, reduced motion, and route teardown", asy
   await slider.focus();
   await page.keyboard.press("ArrowRight");
   await expect(slider).toHaveValue("0.21");
-  await page.getByRole("button", { name: "Mute", exact: true }).focus();
-  await page.keyboard.press("Space");
-  await expect(
-    page.getByRole("button", { name: "Mute", exact: true }),
-  ).toHaveAttribute("aria-pressed", "true");
   await page
     .getByRole("button", { name: "Stop thruster", exact: true })
     .focus();
@@ -316,7 +312,7 @@ test("workbench controls stay disabled until hydration owns them", async ({
     await expect(brightness).toBeDisabled();
     await expect(
       page.getByRole("slider", { name: "Effects volume" }),
-    ).toBeDisabled();
+    ).toHaveCount(0);
   } finally {
     hydrate();
   }
@@ -372,10 +368,6 @@ test("homepage thruster uses one engine, reports output and disposes on navigati
           .galleryContexts.length,
     ),
   ).toBe(0);
-  await page
-    .getByRole("slider", { name: "Throttle", exact: true })
-    .fill("0.42");
-  await expect(page.locator(".flight-readout output")).toHaveText("42%");
   await expect(page.locator(".recipe-tools")).toHaveCount(0);
   const previews = page.locator(".landing-sound-entry");
   await expect(previews).toHaveCount(3);
@@ -384,9 +376,7 @@ test("homepage thruster uses one engine, reports output and disposes on navigati
       page.locator(`.landing-sound-entry[href="/catalog/${kind}"]`),
     ).toHaveCount(1);
   }
-  await page
-    .getByRole("button", { name: "Start thruster", exact: true })
-    .click();
+  await dragThruster(page);
   await expect(page.getByTestId("landing-playback-state")).toHaveText(
     "Thruster: running",
   );
@@ -398,21 +388,9 @@ test("homepage thruster uses one engine, reports output and disposes on navigati
         .then(Number),
     )
     .toBeGreaterThan(0);
-  await page.getByRole("button", { name: "Mute", exact: true }).click();
-  await expect(
-    page.getByRole("button", { name: "Mute", exact: true }),
-  ).toHaveAttribute("aria-pressed", "true");
+  await page.mouse.up();
   await expect(page.getByTestId("landing-playback-state")).toHaveText(
-    "Thruster: running · muted",
-  );
-  await expect
-    .poll(() =>
-      page.locator(".thruster-signal canvas").getAttribute("data-peak"),
-    )
-    .toBe("0");
-  await page.getByRole("button", { name: "Stop", exact: true }).click();
-  await expect(page.getByTestId("landing-playback-state")).toHaveText(
-    "Thruster: stopped · muted",
+    "Thruster: stopped",
   );
   await expect(page.locator(".thruster-signal canvas")).toHaveAttribute(
     "data-peak",
@@ -447,7 +425,7 @@ test("homepage thruster uses one engine, reports output and disposes on navigati
 });
 
 for (const width of [375, 430]) {
-  test(`workbench inspector and mobile dock fit ${width}px without covering controls`, async ({
+  test(`workbench inspector and playback fit ${width}px without covering controls`, async ({
     page,
   }) => {
     await page.setViewportSize({ width, height: 844 });
@@ -469,13 +447,11 @@ for (const width of [375, 430]) {
         ),
       ).toBe(true);
     }
-    const levels = page.getByRole("button", { name: "Levels", exact: true });
-    await levels.click();
-    await expect(
-      page.getByRole("slider", { name: "Effects volume" }),
-    ).toBeVisible();
-    await page.getByRole("slider", { name: "Effects volume" }).fill("-12");
-    await page.getByRole("button", { name: "Less", exact: true }).click();
+    expect(
+      await page
+        .locator(".catalog-transport")
+        .evaluate((node) => getComputedStyle(node).position),
+    ).toBe("static");
     await page.getByRole("tab", { name: "Recipe", exact: true }).click();
     await page
       .getByRole("button", { name: "Edit recipe", exact: true })

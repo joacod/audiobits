@@ -106,7 +106,7 @@ export const RecipeTools = memo(function RecipeTools({
         </Tabs.List>
         <Tabs.Panel value="code">
           <h3>Current sound</h3>
-          <p>Current parameters and seed. Mixer settings are separate.</p>
+          <p>Your current parameters and variation.</p>
           <Button disabled={seed === null} onClick={() => void copy(example)}>
             Copy {kind} code
           </Button>

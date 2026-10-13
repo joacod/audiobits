@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 interface Probe {
   contexts: AudioContext[];
   sources: AudioScheduledSourceNode[];
@@ -99,3 +99,19 @@ export const probe = (page: Page) =>
       connected: p.connected.size,
     };
   });
+
+/** Exercise the website gesture path, including hydration and native capture. */
+export async function dragThruster(page: Page) {
+  const pad = page.getByRole("group", { name: "Drag to fly" });
+  await expect(pad.locator(".thruster-ribbons")).toHaveAttribute(
+    "data-renderer",
+    /webgl|canvas|unavailable/,
+  );
+  await pad.scrollIntoViewIfNeeded();
+  const box = (await pad.boundingBox())!;
+  await page.mouse.move(box.x + 40, box.y + 80);
+  await page.mouse.down();
+  await expect(pad).toHaveAttribute("data-state", /running|starting/);
+  await page.mouse.move(box.x + box.width - 40, box.y + 140, { steps: 8 });
+  return box;
+}

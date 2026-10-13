@@ -1,3 +1,4 @@
+import { dragThruster } from "./experience-probe";
 import { requireOfflineCheckpoints } from "./offline-capabilities";
 import { expect, test } from "@playwright/test";
 import { resolve } from "node:path";
@@ -248,35 +249,38 @@ test("homepage reactive thruster keeps one voice through live updates and hide",
     ),
   ).toBe(0);
   const state = page.getByTestId("landing-playback-state");
-  await page.getByRole("slider", { name: "Throttle", exact: true }).fill("0.4");
-  await page
-    .getByRole("button", { name: "Start thruster", exact: true })
-    .click();
+  const box = await dragThruster(page);
   await expect(state).toHaveText("Thruster: running");
   const count = await page.evaluate(
     () => (globalThis as unknown as { sources: unknown[] }).sources.length,
   );
   expect(count).toBe(3);
-  for (const value of ["1", "0.2", "0.8", "1"])
-    await page
-      .getByRole("slider", { name: "Throttle", exact: true })
-      .fill(value);
+  for (const x of [40, box.width - 40, box.width / 2, box.width - 60])
+    await page.mouse.move(box.x + x, box.y + 120, { steps: 6 });
   expect(
     await page.evaluate(
       () => (globalThis as unknown as { sources: unknown[] }).sources.length,
     ),
   ).toBe(count);
-  await expect(page.locator(".flight-readout output")).toHaveText("100%");
+  await expect
+    .poll(async () =>
+      Number(
+        (await page.locator(".flight-readout output").textContent())!.replace(
+          "%",
+          "",
+        ),
+      ),
+    )
+    .toBeGreaterThan(0);
   await expect(
     page
       .getByRole("region", { name: "Reactive Thruster hero" })
       .getByRole("alert"),
   ).toHaveCount(0);
-  await page.getByRole("button", { name: "Stop", exact: true }).click();
+  await page.mouse.up();
   await expect(state).toHaveText("Thruster: stopped");
-  await page
-    .getByRole("button", { name: "Start thruster", exact: true })
-    .click();
+  await page.mouse.up();
+  await dragThruster(page);
   await expect(state).toHaveText("Thruster: running");
   expect(
     await page.evaluate(
@@ -303,14 +307,15 @@ test("homepage reactive thruster keeps one voice through live updates and hide",
   await page.evaluate(() => {
     Reflect.deleteProperty(document, "hidden");
   });
-  await page
-    .getByRole("button", { name: "Start thruster", exact: true })
-    .click();
+  await page.mouse.up();
+  await dragThruster(page);
   await expect(state).toHaveText("Thruster: running");
   await page
     .getByRole("navigation", { name: "Main navigation" })
     .getByRole("link", { name: "Docs" })
-    .click();
+    .focus();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL("http://127.0.0.1:3100/docs");
   await expect
     .poll(() =>
       page.evaluate(() =>

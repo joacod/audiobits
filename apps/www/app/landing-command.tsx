@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
+
+const subscribeHydration = () => () => {};
 
 export function LandingCommand({
   command,
@@ -10,6 +12,11 @@ export function LandingCommand({
   label: string;
 }) {
   const [status, setStatus] = useState("");
+  const ready = useSyncExternalStore(
+    subscribeHydration,
+    () => true,
+    () => false,
+  );
 
   async function copy() {
     setStatus("Copying…");
@@ -30,7 +37,7 @@ export function LandingCommand({
         <button
           type="button"
           aria-label={`Copy ${label} command`}
-          disabled={status === "Copying…"}
+          disabled={!ready || status === "Copying…"}
           onClick={copy}
         >
           Copy

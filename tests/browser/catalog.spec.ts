@@ -1,3 +1,8 @@
+import {
+  dragThruster,
+  instrument as instrumentExperience,
+  probe,
+} from "./experience-probe";
 import { expect, test } from "@playwright/test";
 import { catalogEntries, catalogGroups } from "../../apps/www/lib/catalog";
 
@@ -106,7 +111,7 @@ test("catalog playback stays on one session until Stop all and cleanup", async (
           name: `Stop ${entry.title.toLowerCase()}`,
           exact: true,
         }),
-      ).toBeVisible();
+      ).toHaveCount(0);
     } else {
       await expect(
         page.getByRole("button", {
@@ -143,6 +148,7 @@ test("catalog playback stays on one session until Stop all and cleanup", async (
   );
   await expect(page.getByTestId("impact-state")).toContainText("Impact:");
   expect(await contexts(page)).toEqual(["running"]);
+  await page.getByText("Playback settings", { exact: true }).click();
   const mute = page.getByRole("button", { name: "Mute", exact: true });
   await mute.click();
   await expect(mute).toHaveAttribute("aria-pressed", "true");
@@ -174,21 +180,26 @@ test("catalog experience previews stay silent and link to complete interactions"
     const preview = page.locator(`[data-catalog-entry="${entry.slug}"]`);
     await preview.getByRole("link").click();
     await expect(page).toHaveURL(`${home}${entry.href}`);
-    const start = page.getByRole("button", {
-      name: entry.slug === "energy-charge" ? "Start charge" : "Start thruster",
-      exact: true,
-    });
-    await expect(start).toBeEnabled();
     expect(
       (await contexts(page)).filter((state) => state !== "closed"),
     ).toEqual([]);
-    await start.click();
+    if (entry.slug === "energy-charge") {
+      const hold = page.getByRole("button", {
+        name: "Hold to charge",
+        exact: true,
+      });
+      await expect(hold).toBeEnabled();
+      const box = (await hold.boundingBox())!;
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+      await page.mouse.down();
+    } else await dragThruster(page);
     await expect
       .poll(
         async () =>
           (await contexts(page)).filter((state) => state === "running").length,
       )
       .toBe(1);
+    await page.mouse.up();
     await page
       .getByRole("navigation", { name: "Main navigation" })
       .getByRole("link", { name: "Catalog", exact: true })
@@ -254,18 +265,10 @@ test("catalog navigation, focus, and layout hold on desktop and mobile", async (
     ),
   ).toBe(true);
   expect(
-    await page.evaluate(() => {
-      const field = document.querySelector(".thruster-field");
-      const dock = document.querySelector(".audio-monitor");
-      if (!(field instanceof HTMLElement) || !(dock instanceof HTMLElement))
-        return false;
-      const monitor = dock.getBoundingClientRect();
-      return [field].every((node) => {
-        const box = node.getBoundingClientRect();
-        return box.bottom <= monitor.top || box.top >= monitor.bottom;
-      });
-    }),
-  ).toBe(true);
+    await page
+      .locator(".audio-monitor")
+      .evaluate((node) => getComputedStyle(node).position),
+  ).toBe("static");
   await page.evaluate(() =>
     window.scrollTo(0, document.documentElement.scrollHeight),
   );
@@ -283,7 +286,7 @@ test("catalog navigation, focus, and layout hold on desktop and mobile", async (
         rect.x + Math.min(rect.width / 2, 24),
         rect.y + rect.height / 2,
       );
-      return link.contains(hit) && rect.bottom <= dock.top + 1;
+      return link.contains(hit);
     }),
   ).toBe(true);
   await expect(index).toBeHidden();
@@ -307,7 +310,7 @@ test("catalog navigation, focus, and layout hold on desktop and mobile", async (
   await menu.click();
   await dialog.getByRole("button", { name: "Close", exact: true }).click();
   await expect(menu).toBeFocused();
-  await page.getByRole("button", { name: "Levels", exact: true }).click();
+  await page.getByText("Playback settings", { exact: true }).click();
   await expect(
     page.getByRole("slider", { name: "Effects volume", exact: true }),
   ).toBeVisible();
@@ -327,4 +330,30 @@ test("main navigation opens the canonical catalog", async ({ page }) => {
   await expect(
     page.getByRole("link", { name: "Catalog", exact: true }),
   ).toHaveAttribute("aria-current", "page");
+});
+
+test("catalog Stop all cancels pending activation before any signal starts", async ({
+  page,
+}) => {
+  await instrumentExperience(page, "held", "/catalog");
+  await page
+    .getByRole("button", { name: "Start thruster", exact: true })
+    .click();
+  await expect(page.getByTestId("thruster-state")).toHaveText(
+    "Thruster: starting",
+  );
+  await page.getByText("Playback settings", { exact: true }).click();
+  await page.getByRole("button", { name: "Stop all", exact: true }).click();
+  await page.evaluate(() =>
+    (
+      globalThis as unknown as { thrusterProbe: { releaseActivation(): void } }
+    ).thrusterProbe.releaseActivation(),
+  );
+  await expect
+    .poll(async () => (await probe(page)).contexts)
+    .toEqual(["running"]);
+  await expect(page.getByTestId("thruster-state")).toHaveText(
+    "Thruster: stopped",
+  );
+  expect((await probe(page)).sources).toBe(0);
 });

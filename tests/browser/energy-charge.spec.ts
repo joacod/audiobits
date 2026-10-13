@@ -4,41 +4,42 @@ import { resolve } from "node:path";
 import { instrument, probe } from "./experience-probe";
 import { requireOfflineCheckpoints } from "./offline-capabilities";
 
-test("progress moves both ways on one voice, holds full, releases and tears down", async ({
+test("holding grows charge on one voice, releases and tears down", async ({
   page,
 }) => {
   await instrument(page, "normal", "energy-charge");
-  const slider = page.getByRole("slider", { name: "Charge", exact: true });
-  await slider.fill("0.4");
-  await page.getByRole("button", { name: "Mute", exact: true }).click();
-  await page.getByRole("button", { name: "Stop all" }).click();
+  const hold = page.getByRole("button", {
+    name: "Hold to charge",
+    exact: true,
+  });
+  await expect(hold).toBeEnabled();
+  await expect(
+    page.locator(".energy-controls button, .energy-controls input"),
+  ).toHaveCount(0);
   expect((await probe(page)).contexts).toEqual([]);
-  await page.getByRole("button", { name: "Mute", exact: true }).click();
-  await page.getByRole("button", { name: "Start charge", exact: true }).click();
+  await hold.focus();
+  await page.keyboard.down("Space");
   await expect(page.locator(".energy-state")).toHaveText("Charge: running");
-  for (const value of ["1", "0.2", "0.2", "0.8", "1"]) {
-    await slider.fill(value);
-    expect((await probe(page)).sources).toBe(4);
-    await expect(page.locator(".energy-state")).toHaveText("Charge: running");
-  }
+  await expect(hold).toHaveAttribute("data-full", "true");
+  expect((await probe(page)).sources).toBe(4);
   await expect
     .poll(async () =>
-      Number(await page.locator("canvas").getAttribute("data-peak")),
+      Number(
+        await page.locator(".charge-rings canvas").getAttribute("data-peak"),
+      ),
     )
     .toBeGreaterThan(0);
-  await page.getByRole("button", { name: "Release charge" }).click();
+  await page.keyboard.up("Space");
   await expect.poll(async () => (await probe(page)).ended).toBe(4);
   for (let i = 0; i < 5; i++) {
-    await page
-      .getByRole("button", { name: "Start charge", exact: true })
-      .click();
+    await hold.focus();
+    await page.keyboard.down("Space");
     await expect(page.locator(".energy-state")).toHaveText("Charge: running");
-    const p = await probe(page);
-    expect(p.sources - p.ended).toBeLessThanOrEqual(12);
-    await slider.fill("0.4");
-    await page.getByRole("button", { name: "Release charge" }).click();
+    expect(
+      (await probe(page)).sources - (await probe(page)).ended,
+    ).toBeLessThanOrEqual(12);
+    await page.keyboard.up("Space");
   }
-  await page.getByRole("button", { name: "Stop all" }).click();
   await expect
     .poll(async () => {
       const p = await probe(page);
@@ -82,14 +83,18 @@ for (const mode of ["held", "failed"] as const) {
     page,
   }) => {
     await instrument(page, mode, "energy-charge");
-    await page
-      .getByRole("button", { name: "Start charge", exact: true })
-      .click();
+    const hold = page.getByRole("button", {
+      name: "Hold to charge",
+      exact: true,
+    });
+    await expect(hold).toBeEnabled();
+    await hold.focus();
+    await page.keyboard.down("Space");
     if (mode === "held") {
       await expect(page.locator(".energy-state")).toHaveText(
         "Charge: starting",
       );
-      await page.getByRole("button", { name: "Stop all" }).click();
+      await page.keyboard.up("Space");
       await page.evaluate(() =>
         (
           globalThis as unknown as {
@@ -102,13 +107,13 @@ for (const mode of ["held", "failed"] as const) {
         .toEqual(["running"]);
     } else {
       await expect(page.locator(".energy-controls [role=alert]")).toContainText(
-        "Try Start charge",
+        "Hold to charge again",
       );
     }
     expect((await probe(page)).sources).toBe(0);
-    await page
-      .getByRole("button", { name: "Start charge", exact: true })
-      .click();
+    await page.keyboard.up("Space");
+    await hold.focus();
+    await page.keyboard.down("Space");
     await expect(page.locator(".energy-state")).toHaveText("Charge: running");
     await expect(page.locator(".energy-controls [role=alert]")).toHaveCount(0);
     await page.evaluate(() => {
@@ -280,12 +285,14 @@ test("hold progress uses only frame timestamps and never becomes negative", asyn
   await pad.focus();
   await page.keyboard.down("Enter");
   await expect
-    .poll(async () =>
-      Number(
-        await page
-          .getByRole("slider", { name: "Charge", exact: true })
-          .inputValue(),
-      ),
+    .poll(
+      async () =>
+        Number(
+          (await pad.locator(".charge-percent").textContent())!.replace(
+            "%",
+            "",
+          ),
+        ) / 100,
     )
     .toBeGreaterThan(0.05);
   await page.keyboard.up("Enter");

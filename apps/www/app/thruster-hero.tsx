@@ -7,7 +7,6 @@ import {
   useLayoutEffect,
   useRef,
   useState,
-  useSyncExternalStore,
 } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import { mountThruster } from "../../../catalog/experiences/reactive-thruster/host";
@@ -15,8 +14,6 @@ import { ArrowIcon } from "../icons/arrow-icon";
 import { OutputScope } from "./output-scope";
 import { ThrusterRibbons } from "./thruster-ribbons";
 import type { ThrusterTarget } from "./thruster-ribbons";
-
-const subscribeHydration = () => () => {};
 
 /** Homepage presentation. The portable host owns all sound and pointer mapping. */
 export function ThrusterHero() {
@@ -37,14 +34,7 @@ export function ThrusterHero() {
   const wake = useRef<() => void>(() => {});
   const [state, setState] = useState("stopped");
   const [active, setActive] = useState(false);
-  const [muted, setMuted] = useState(false);
   const [error, setError] = useState("");
-  const [throttle, setThrottle] = useState(0.2);
-  const ready = useSyncExternalStore(
-    subscribeHydration,
-    () => true,
-    () => false,
-  );
   const readEngine = useCallback(() => host.current?.audio ?? null, []);
   const applyPoint = useCallback(() => {
     craft.current?.style.setProperty("left", `${point.current.x}%`);
@@ -73,7 +63,7 @@ export function ThrusterHero() {
       },
       error(cause) {
         const message = cause instanceof Error ? cause.message : String(cause);
-        setError(`${message}. Try Start thruster or drag again.`);
+        setError(`${message}. Drag again to retry.`);
       },
       output: setActive,
       throttle(value) {
@@ -118,7 +108,7 @@ export function ThrusterHero() {
     target.current.engaged = false;
     wake.current();
   }
-  const sampling = active && !muted;
+  const sampling = active;
   return (
     <section className="thruster-hero" aria-label="Reactive Thruster hero">
       <div className="thruster-intro">
@@ -166,71 +156,33 @@ export function ThrusterHero() {
             </span>
           </p>
           <p className="flight-invitation" id="hero-flight-help">
-            {state === "stopped"
-              ? "Drag to fly. Move faster to hear it rise."
-              : state === "starting"
-                ? "Activating audio."
-                : "Movement is the throttle."}
+            {state === "stopped" ? (
+              <>
+                <span className="flight-mouse-help">
+                  Click and drag to fly.
+                </span>
+                <span className="flight-touch-help">
+                  Touch and drag to fly.
+                </span>{" "}
+                Faster means louder.
+              </>
+            ) : state === "starting" ? (
+              "Activating audio."
+            ) : (
+              "Movement is the throttle."
+            )}
           </p>
         </div>
         <div className="thruster-signal">
           <OutputScope engine={readEngine} active={sampling} signal measured />
         </div>
-        <div className="thruster-controls">
-          <div
-            className="audio-controls"
-            role="group"
-            aria-label="Thruster audio controls"
-          >
-            <button
-              type="button"
-              disabled={!ready || state !== "stopped"}
-              onClick={() => host.current?.start(throttle)}
-            >
-              Start thruster
-            </button>
-            <button
-              type="button"
-              disabled={!ready}
-              aria-pressed={muted}
-              onClick={() => {
-                const next = !muted;
-                host.current?.mute(next);
-                setMuted(next);
-              }}
-            >
-              Mute
-            </button>
-            <button
-              type="button"
-              disabled={!ready}
-              onClick={() => host.current?.stop()}
-            >
-              Stop
-            </button>
-          </div>
-          <label className="thruster-throttle">
-            Keyboard throttle
-            <input
-              aria-label="Throttle"
-              type="range"
-              min="0"
-              max="1"
-              step="0.01"
-              disabled={!ready}
-              value={throttle}
-              onChange={(event) => {
-                const value = Number(event.target.value);
-                setThrottle(value);
-                host.current?.setThrottle(value);
-              }}
-            />
-          </label>
-          <p
-            role="status"
-            data-testid="landing-playback-state"
-          >{`Thruster: ${state}${muted ? " · muted" : ""}`}</p>
-        </div>
+        <p
+          className="thruster-state"
+          role="status"
+          data-testid="landing-playback-state"
+        >
+          {`Thruster: ${state}`}
+        </p>
         {error ? (
           <p role="alert" className="thruster-error">
             {error}

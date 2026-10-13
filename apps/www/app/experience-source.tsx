@@ -36,7 +36,7 @@ export function ExperienceSource({
   return (
     <div className="catalog-source-tools">
       <p className="catalog-source-note">
-        Catalog defaults. Demo controls do not change these files.
+        Catalog source, ready to make your own.
       </p>
       <Tabs.Root defaultValue="sound">
         <Tabs.List aria-label="Source inspector" className="inspector-tabs">
@@ -44,10 +44,8 @@ export function ExperienceSource({
           <Tabs.Tab value="interaction">Complete interaction</Tabs.Tab>
         </Tabs.List>
         <Tabs.Panel value="sound">
-          <p>The sound definition, ready to adapt to your own controls.</p>
           {recipe && (
             <>
-              <p>{recipe.purpose}</p>
               <button
                 type="button"
                 onClick={() => void copy(recipe.name, recipe.code)}
@@ -68,7 +66,11 @@ export function ExperienceSource({
               integration guide
             </Link>{" "}
             for setup and lifecycle, or the{" "}
-            <a href="https://github.com/joacod/audiobits/blob/main/catalog/README.md#optional-standalone-demo">
+            <a
+              target="_blank"
+              rel="noopener noreferrer"
+              href="https://github.com/joacod/audiobits/blob/main/catalog/README.md#optional-standalone-demo"
+            >
               standalone demo setup
             </a>
             .

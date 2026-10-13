@@ -18,7 +18,7 @@ Roles:
 
 - `--void` (#050507), `--ink` (#f2f2f2) and `--mute` (#8a8a92) are ground, text and secondary text.
 - `--graphite` (#1b1c1e) and `--graphite-edge` (#34363a) are workbench panels, code panels, rules, borders, fader tracks and unlit LED segments.
-- `--signal-low` (#2a6cff), `--signal-mid` (#b44cff) and `--signal-high` (#ff2e88), plus `--signal-gradient`, are reserved for live elements and the mark.
+- `--signal-low` (#2a6cff), `--signal-mid` (#b44cff) and `--signal-high` (#ff2e88), plus `--signal-gradient`, serve live elements and the mark, plus restrained branded marketing and selected-state accents.
 - `--font-display` is Big Shoulders Display (`--font-big-shoulders` from `next/font/local`). `--font-mono` is Geist Mono (`--font-geist-mono`).
 - `--gutter`, `--gap`, `--control-radius` and `--motion-ui` set the page inset, the base gap, the (4px) control radius and the (160ms) control transition.
 
@@ -33,8 +33,7 @@ state, not design values.
 
 ## Updating styles
 
-Reuse an existing token before adding one. The signal gradient is for live
-elements only: when the element is at rest it falls back to Mute, Ink or
+Reuse an existing token before adding one. Live visuals use the signal gradient: when the element is at rest it falls back to Mute, Ink or
 Graphite edge. Check focus (Ink outline) on Void and on Graphite.
 
 Buttons keep a pressed state with `aria-pressed`. Hover applies to enabled

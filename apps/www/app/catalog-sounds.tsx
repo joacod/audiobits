@@ -63,7 +63,9 @@ export function CatalogSounds() {
         {entries.map((entry, index) => {
           const sustained = entry.playback === "sustained";
           const status = statusFor(entry, playing[entry.slug]);
-          const action = sustained ? "Start" : "Play";
+          const running =
+            sustained && (status === "starting" || status === "running");
+          const action = running ? "Stop" : sustained ? "Start" : "Play";
           return (
             <article
               key={entry.slug}
@@ -92,22 +94,15 @@ export function CatalogSounds() {
                 <PlaySpark>
                   <Button
                     className="play-action"
-                    disabled={
-                      !ready ||
-                      (sustained &&
-                        (status === "starting" || status === "running"))
+                    disabled={!ready}
+                    onClick={() =>
+                      running ? stop(entry.slug) : void play(entry.slug)
                     }
-                    onClick={() => void play(entry.slug)}
                   >
-                    <PlayIcon />
+                    {running ? null : <PlayIcon />}
                     {action} {entry.title.toLowerCase()}
                   </Button>
                 </PlaySpark>
-                {sustained && (
-                  <Button onClick={() => stop(entry.slug)}>
-                    Stop {entry.title.toLowerCase()}
-                  </Button>
-                )}
                 <Link className="catalog-open" href={entry.href}>
                   {openCatalogLabel(entry)}
                 </Link>

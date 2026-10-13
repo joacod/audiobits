@@ -487,8 +487,7 @@
     flex-direction: column;
     align-items: stretch;
     gap: 0.75rem;
-    position: sticky;
-    top: 1rem;
+    position: static;
     padding: 1rem;
     border: 1px solid var(--graphite-edge);
   }
@@ -502,7 +501,8 @@
   .foundation .audio-monitor .output-scope {
     padding: 0.75rem;
   }
-  .foundation .audio-monitor .output-scope canvas {
+  .foundation .audio-monitor .output-scope canvas,
+  .foundation .audio-monitor .signal-rest {
     height: 5rem;
   }
   .foundation .audio-monitor figcaption {
@@ -515,8 +515,11 @@
   .foundation .audio-monitor input {
     max-width: none;
   }
-  .foundation .monitor-expand {
-    display: none;
+  .foundation .monitor-settings summary {
+    padding-block: 0.5rem;
+  }
+  .foundation .monitor-settings label {
+    margin-top: 0.75rem;
   }
   .foundation .variation-controls {
     display: flex;
@@ -580,70 +583,7 @@
   }
   @media (max-width: 760px) {
     .foundation .audio-monitor {
-      position: fixed;
-      inset: auto 0 0;
-      top: auto;
-      z-index: 20;
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      gap: 0.25rem 0.75rem;
-      margin: 0;
-      padding: 0.5rem 1rem calc(0.5rem + env(safe-area-inset-bottom));
-      border: 0;
-      border-top: 1px solid var(--graphite-edge);
-    }
-    .foundation .monitor-heading h2 {
-      display: none;
-    }
-    .foundation .audio-monitor .monitor-heading {
-      grid-column: 1;
-      margin: 0;
-    }
-    .foundation .audio-monitor .audio-controls {
-      grid-column: 1 / -1;
-      grid-row: 2;
-      gap: 0.5rem;
-    }
-    .foundation .audio-monitor .output-scope {
-      grid-column: 2;
-      grid-row: 1;
-      padding: 0;
-      background: transparent;
-      width: 4rem;
-    }
-    .foundation .audio-monitor .output-scope canvas {
-      height: 1.5rem;
-      margin: 0;
-      color: var(--ink);
-    }
-    .foundation .audio-monitor .output-scope figcaption {
-      display: none;
-    }
-    .foundation .audio-monitor > [role="status"] {
-      grid-column: 1 / -1;
-      grid-row: auto;
-      justify-self: start;
-    }
-    .foundation .monitor-expand {
-      display: inline-flex;
-      margin-left: auto;
-    }
-    .foundation .audio-monitor label {
-      grid-column: 1 / -1;
-    }
-    .foundation .audio-monitor input {
-      max-width: none;
-    }
-    .foundation .audio-monitor[data-expanded="false"] label {
-      display: none;
-    }
-    .foundation .audio-monitor[data-expanded="true"] .output-scope {
-      grid-column: 1 / -1;
-      grid-row: auto;
-      width: 100%;
-    }
-    .foundation .audio-monitor[data-expanded="true"] .output-scope canvas {
-      height: 4rem;
+      padding: 0.75rem;
     }
     .foundation .sound-portrait canvas {
       height: 13rem;
@@ -754,5 +694,19 @@
   }
   .foundation input[type="range"]:disabled {
     opacity: 0.5;
+  }
+}
+
+@layer components {
+  .foundation .flight-touch-help {
+    display: none;
+  }
+  @media (pointer: coarse) {
+    .foundation .flight-mouse-help {
+      display: none;
+    }
+    .foundation .flight-touch-help {
+      display: inline;
+    }
   }
 }
