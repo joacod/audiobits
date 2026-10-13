@@ -1,6 +1,6 @@
 {
   "repository": "https://github.com/joacod/audiobits",
-  "revision": "4c1441a67f69a2ed9a8341c9bd99d180f2566ac1",
+  "revision": "39830c308ec84026115921b1fd5ec76f64f328d4",
   "items": [
     {
       "name": "confirmation",
@@ -49,7 +49,7 @@
           "sha256": "03fbc2b99516352931922164b42a05d2e5d14143b9f808449fb1f85ab6c46942"
         }
       ],
-      "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/4c1441a67f69a2ed9a8341c9bd99d180f2566ac1/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/39830c308ec84026115921b1fd5ec76f64f328d4/catalog/README.md for integration and update guidance."
     },
     {
       "name": "energy-charge",
@@ -133,7 +133,7 @@
           "sha256": "03fbc2b99516352931922164b42a05d2e5d14143b9f808449fb1f85ab6c46942"
         }
       ],
-      "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/4c1441a67f69a2ed9a8341c9bd99d180f2566ac1/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/39830c308ec84026115921b1fd5ec76f64f328d4/catalog/README.md for integration and update guidance."
     },
     {
       "name": "gentle-rejection",
@@ -182,7 +182,7 @@
           "sha256": "03fbc2b99516352931922164b42a05d2e5d14143b9f808449fb1f85ab6c46942"
         }
       ],
-      "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/4c1441a67f69a2ed9a8341c9bd99d180f2566ac1/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/39830c308ec84026115921b1fd5ec76f64f328d4/catalog/README.md for integration and update guidance."
     },
     {
       "name": "glass-notification",
@@ -231,7 +231,7 @@
           "sha256": "03fbc2b99516352931922164b42a05d2e5d14143b9f808449fb1f85ab6c46942"
         }
       ],
-      "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/4c1441a67f69a2ed9a8341c9bd99d180f2566ac1/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/39830c308ec84026115921b1fd5ec76f64f328d4/catalog/README.md for integration and update guidance."
     },
     {
       "name": "impact",
@@ -280,7 +280,7 @@
           "sha256": "03fbc2b99516352931922164b42a05d2e5d14143b9f808449fb1f85ab6c46942"
         }
       ],
-      "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/4c1441a67f69a2ed9a8341c9bd99d180f2566ac1/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/39830c308ec84026115921b1fd5ec76f64f328d4/catalog/README.md for integration and update guidance."
     },
     {
       "name": "plasma-blade",
@@ -314,7 +314,7 @@
             "dispose"
           ],
           "kinds": ["one-shot", "sustained"],
-          "waveforms": ["sawtooth", "sine", "square"],
+          "waveforms": ["sawtooth", "sine", "square", "triangle"],
           "noiseColors": ["white"],
           "mappingScales": ["exponential", "linear"],
           "automationCurves": ["exponential"]
@@ -325,8 +325,8 @@
           "path": "catalog/experiences/plasma-blade/recipe.ts",
           "type": "registry:file",
           "target": "~/src/sounds/experiences/plasma-blade/recipe.ts",
-          "bytes": 10996,
-          "sha256": "3aa78a43832e1316af8bf208c799123494d25979e212a72cc576845f580cfb1e"
+          "bytes": 11047,
+          "sha256": "85ddc542fee5b7a8553f9bd5b4d264d56be58f48548f46f5bf3d3687c4b71d6d"
         },
         {
           "path": "catalog/experiences/plasma-blade/motion.ts",
@@ -367,8 +367,8 @@
           "path": "catalog/experiences/plasma-blade/README.md",
           "type": "registry:file",
           "target": "~/src/sounds/experiences/plasma-blade/README.md",
-          "bytes": 2540,
-          "sha256": "a0b264d962980ae7674dee9e26b8fd11d8cdbcd1ad32d478a7fc14c137523a7b"
+          "bytes": 2546,
+          "sha256": "cbf541399025b245b15f20452eef3d281a77d1871e6327a53abe1095388d6271"
         },
         {
           "path": "LICENSE",
@@ -378,7 +378,7 @@
           "sha256": "03fbc2b99516352931922164b42a05d2e5d14143b9f808449fb1f85ab6c46942"
         }
       ],
-      "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/4c1441a67f69a2ed9a8341c9bd99d180f2566ac1/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/39830c308ec84026115921b1fd5ec76f64f328d4/catalog/README.md for integration and update guidance."
     },
     {
       "name": "power-up",
@@ -427,7 +427,7 @@
           "sha256": "03fbc2b99516352931922164b42a05d2e5d14143b9f808449fb1f85ab6c46942"
         }
       ],
-      "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/4c1441a67f69a2ed9a8341c9bd99d180f2566ac1/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/39830c308ec84026115921b1fd5ec76f64f328d4/catalog/README.md for integration and update guidance."
     },
     {
       "name": "reactive-thruster",
@@ -525,7 +525,7 @@
           "sha256": "03fbc2b99516352931922164b42a05d2e5d14143b9f808449fb1f85ab6c46942"
         }
       ],
-      "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/4c1441a67f69a2ed9a8341c9bd99d180f2566ac1/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/39830c308ec84026115921b1fd5ec76f64f328d4/catalog/README.md for integration and update guidance."
     },
     {
       "name": "tactile-click",
@@ -574,7 +574,7 @@
           "sha256": "03fbc2b99516352931922164b42a05d2e5d14143b9f808449fb1f85ab6c46942"
         }
       ],
-      "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/4c1441a67f69a2ed9a8341c9bd99d180f2566ac1/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/39830c308ec84026115921b1fd5ec76f64f328d4/catalog/README.md for integration and update guidance."
     },
     {
       "name": "thruster",
@@ -628,7 +628,7 @@
           "sha256": "03fbc2b99516352931922164b42a05d2e5d14143b9f808449fb1f85ab6c46942"
         }
       ],
-      "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/4c1441a67f69a2ed9a8341c9bd99d180f2566ac1/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/39830c308ec84026115921b1fd5ec76f64f328d4/catalog/README.md for integration and update guidance."
     },
     {
       "name": "whoosh",
@@ -677,7 +677,7 @@
           "sha256": "03fbc2b99516352931922164b42a05d2e5d14143b9f808449fb1f85ab6c46942"
         }
       ],
-      "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/4c1441a67f69a2ed9a8341c9bd99d180f2566ac1/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/39830c308ec84026115921b1fd5ec76f64f328d4/catalog/README.md for integration and update guidance."
     }
   ]
 }
