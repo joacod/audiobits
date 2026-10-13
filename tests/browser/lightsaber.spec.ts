@@ -8,7 +8,7 @@ import { requireOfflineCheckpoints } from "./offline-capabilities";
 const stage = (page: import("@playwright/test").Page) =>
   page.getByRole("group", { name: "Lightsaber stage", exact: true });
 
-test("ignition, held pointer swings and swept target hits, release retraction and teardown", async ({
+test("held pointer ignition, swept target hits, release retraction and teardown", async ({
   page,
 }) => {
   const errors: string[] = [];
@@ -53,8 +53,25 @@ test("ignition, held pointer swings and swept target hits, release retraction an
   await page.mouse.move(box.x + box.width * 0.4, box.y + box.height * 0.6);
   await expect(pad).toHaveAttribute("data-state", "stopped");
   await expect(pad).toHaveAttribute("data-extension", "0.000");
+  await page
+    .getByRole("navigation", { name: "Main navigation" })
+    .getByRole("link", { name: "Catalog", exact: true })
+    .click();
+  await expect
+    .poll(async () => (await probe(page)).contexts)
+    .toEqual(["closed"]);
+  expect((await probe(page)).connected).toBe(0);
+  expect(errors).toEqual([]);
+});
+
+test("button ignition, mute, unmute and retraction", async ({ page }) => {
+  await instrument(page, "normal", "lightsaber");
+  const pad = stage(page);
   await page.getByRole("button", { name: "Ignite", exact: true }).click();
   await expect(pad).toHaveAttribute("data-state", "running");
+  await expect
+    .poll(async () => Number(await pad.getAttribute("data-peak")))
+    .toBeGreaterThan(0);
   await page.getByRole("button", { name: "Mute", exact: true }).click();
   await expect
     .poll(async () => Number(await pad.getAttribute("data-peak")))
@@ -66,6 +83,26 @@ test("ignition, held pointer swings and swept target hits, release retraction an
   await page.getByRole("button", { name: "Retract", exact: true }).click();
   await expect(pad).toHaveAttribute("data-state", "stopped");
   await expect(pad).toHaveAttribute("data-extension", "0.000");
+  await expect
+    .poll(async () => {
+      const p = await probe(page);
+      return p.sources === p.ended;
+    })
+    .toBe(true);
+  await page.evaluate(() => window.dispatchEvent(new Event("pagehide")));
+  await expect
+    .poll(async () => (await probe(page)).contexts)
+    .toEqual(["closed"]);
+  expect((await probe(page)).connected).toBe(0);
+});
+
+test("repeated ignition and Stop bound voices and dispose on navigation", async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on("pageerror", (cause) => errors.push(cause.message));
+  await instrument(page, "normal", "lightsaber");
+  const pad = stage(page);
   for (let i = 0; i < 5; i++) {
     await page.getByRole("button", { name: "Ignite", exact: true }).click();
     await expect(pad).toHaveAttribute("data-state", "running");
@@ -95,6 +132,7 @@ for (const mode of ["held", "failed"] as const)
   test(`${mode} activation remains cancelled or exposes retry`, async ({
     page,
   }) => {
+    if (mode === "held") await trackBladeGraphics(page);
     await instrument(page, mode, "lightsaber");
     const pad = stage(page);
     await expect(
@@ -106,6 +144,24 @@ for (const mode of ["held", "failed"] as const)
       await page.mouse.move(box.x + box.width / 2, box.y + box.height * 0.8);
       await page.mouse.down();
       await expect(pad).toHaveAttribute("data-state", "starting");
+      // Pending activation has no blade to animate. Slow graphics must not
+      // consume the engine's activation deadline before input can be released.
+      const pendingDraws = await page.evaluate(async () => {
+        await new Promise<void>((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+        );
+        return (globalThis as unknown as { bladeDraws(): number }).bladeDraws();
+      });
+      expect(
+        await page.evaluate(async () => {
+          await new Promise<void>((resolve) =>
+            requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+          );
+          return (
+            globalThis as unknown as { bladeDraws(): number }
+          ).bladeDraws();
+        }),
+      ).toBe(pendingDraws);
       await page.mouse.up();
       await expect(pad).toHaveAttribute("data-state", "stopped");
       await page.evaluate(() =>

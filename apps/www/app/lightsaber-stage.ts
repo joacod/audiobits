@@ -319,13 +319,9 @@ export function mountBladeStage3D(
     }
     surface.dataset.extension = extension.toFixed(3);
     surface.dataset.reducedMotion = String(reduced.matches);
-    if (
-      active ||
-      host.control.state === "starting" ||
-      extension > 0 ||
-      particles.length ||
-      trails.length
-    )
+    // State changes wake the stage when activation completes. Waiting for audio
+    // needs no continuous graphics work while the blade is still retracted.
+    if (active || extension > 0 || particles.length || trails.length)
       frame = requestAnimationFrame(draw);
     else previous = 0;
   }
