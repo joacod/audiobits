@@ -735,7 +735,17 @@ async function plasmaSignal(
   sweep = motion * 2 - 1,
 ) {
   const recipe = bladeRecipes[name];
-  const context = new OfflineAudioContext(1, rate * 2, rate);
+  const context = new OfflineAudioContext(2, rate * 2, rate);
+  const output = context.createGain();
+  const upper = context.createBiquadFilter();
+  upper.type = "highpass";
+  upper.frequency.value = 1000;
+  upper.Q.value = Math.SQRT1_2;
+  const channels = context.createChannelMerger(2);
+  output.connect(channels, 0, 0);
+  output.connect(upper);
+  upper.connect(channels, 0, 1);
+  channels.connect(context.destination);
   const controls = Object.fromEntries(
     Object.keys("parameters" in recipe ? recipe.parameters : {}).map((name) => [
       name,
@@ -745,7 +755,7 @@ async function plasmaSignal(
   const plan = compile(recipe, controls, 42);
   let finished = 0;
   const graphs = Array.from({ length: count }, () =>
-    createGraph(context, context.destination, plan, 0.05, -6, 0, () => {
+    createGraph(context, output, plan, 0.05, -6, 0, () => {
       finished++;
     }),
   );
@@ -775,17 +785,25 @@ async function plasmaSignal(
   }
   const rendering = context.startRendering();
   await Promise.all(checkpoints);
-  const data = (await rendering).getChannelData(0);
+  const buffer = await rendering;
+  const data = buffer.getChannelData(0);
+  const upperData = buffer.getChannelData(1);
   let peak = 0,
     energy = 0,
     delta = 0,
     tail = 0,
     onset = 0,
-    difference = 0;
+    difference = 0,
+    bodyEnergy = 0,
+    upperEnergy = 0;
   for (let i = 0; i < data.length; i++) {
     require(Number.isFinite(data[i]), "Nonfinite plasma output");
     peak = Math.max(peak, Math.abs(data[i]));
     energy += data[i] ** 2;
+    if (i / rate >= 0.4 && i / rate < 1.1) {
+      bodyEnergy += data[i] ** 2;
+      upperEnergy += upperData[i] ** 2;
+    }
     if (i && i / rate > 0.3 && i / rate < 1.1)
       difference += (data[i] - data[i - 1]) ** 2;
     if (i) delta = Math.max(delta, Math.abs(data[i] - data[i - 1]));
@@ -799,7 +817,7 @@ async function plasmaSignal(
   if (name === "plasmaBlade" && count === 1 && !update) {
     const start = Math.floor(rate * 0.4),
       end = Math.floor(rate * 1.1);
-    for (let hz = 72; hz <= 128; hz++) {
+    for (let hz = 45; hz <= 128; hz++) {
       let real = 0,
         imaginary = 0;
       for (let i = start; i < end; i += 8) {
@@ -825,6 +843,7 @@ async function plasmaSignal(
     finished,
     brightness: difference / energy,
     humFrequency,
+    upperEnergyRatio: upperEnergy / bodyEnergy,
   };
 }
 Object.assign(globalThis, { plasmaSignal });

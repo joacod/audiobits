@@ -274,6 +274,7 @@ test("Chromium native signal: five timbres, control extrema, rapid ramps and eig
         finished: number;
         brightness: number;
         humFrequency: number;
+        upperEnergyRatio: number;
       }>;
     };
     const singles = [];
@@ -315,6 +316,13 @@ test("Chromium native signal: five timbres, control extrema, rapid ramps and eig
   }
   expect(results.moving.delta).toBeLessThan(0.04);
   expect(results.moving.tail).toBe(0);
+  // Keep the sustained field soft even at full motion; bright impact transients
+  // have their own headroom checks and are not constrained to this tonal balance.
+  for (const offset of [0, 15])
+    for (const index of [0, 1, 2])
+      expect(results.singles[offset + index].upperEnergyRatio).toBeLessThan(
+        0.01,
+      );
   const [returning, idlePitch, forward] = results.directions;
   expect(returning.humFrequency).toBeLessThan(idlePitch.humFrequency - 10);
   expect(forward.humFrequency).toBeGreaterThan(idlePitch.humFrequency + 10);

@@ -1,6 +1,6 @@
 # Plasma Blade
 
-A procedural electrical blade: ignition, a beating motor hum, motion-fed
+A procedural electrical blade: ignition, a resonant electrical hum, motion-fed
 swells, rapid swing accents, electrical clashes, and retraction. No sampled audio.
 
 Install the complete registry item, or keep this folder and its MIT license
