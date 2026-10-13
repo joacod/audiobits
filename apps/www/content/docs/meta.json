@@ -1,18 +1,3 @@
 {
-  "pages": [
-    "---Getting Started---",
-    "index",
-    "---Catalog & Editable Source---",
-    "catalog",
-    "---AI Agents---",
-    "agents",
-    "mcp",
-    "---Runtime Reference---",
-    "recipes",
-    "api",
-    "parameters",
-    "lifecycle",
-    "buses",
-    "native"
-  ]
+  "pages": ["(getting-started)", "(catalog)", "(agents)", "(runtime)"]
 }

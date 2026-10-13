@@ -9,12 +9,16 @@ import {
 import { siteUrl } from "../../apps/www/lib/site-url";
 
 const home = "http://127.0.0.1:3100";
-const docs = readdirSync("apps/www/content/docs")
+const docs = readdirSync("apps/www/content/docs", { recursive: true })
   .filter((file) => file.endsWith(".mdx"))
   .map((file) => {
     const content = readFileSync(`apps/www/content/docs/${file}`, "utf8");
+    const slugs = file
+      .slice(0, -4)
+      .split("/")
+      .filter((segment) => !/^\(.+\)$/.test(segment) && segment !== "index");
     return {
-      path: file === "index.mdx" ? "/docs" : `/docs/${file.slice(0, -4)}`,
+      path: ["/docs", ...slugs].join("/"),
       title: content.match(/^title: (.+)$/m)![1],
       description: content.match(/^description: (.+)$/m)![1],
     };
@@ -100,7 +104,9 @@ test("public pages expose unique metadata and content without JavaScript", async
       }
     }
     if (route.path.startsWith("/docs")) {
-      await expect(page.locator('a[href="/docs/api"]').first()).toBeAttached();
+      await expect(
+        page.locator(`#nd-sidebar a[href="${route.path}"][data-active="true"]`),
+      ).toBeAttached();
     }
     if (!route.path.startsWith("/docs")) {
       if (route.path === "/catalog") {

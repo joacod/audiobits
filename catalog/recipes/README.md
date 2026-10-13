@@ -10,7 +10,7 @@ Create a sound with `audio.sound(recipe)`, activate the engine from a user
 gesture, then play with parameters and a seed. Thruster has a live throttle
 control; update the active voice with `voice.set({ throttle })` and release
 with `voice.stop()`. Dispose the engine when removing its host. See the
-[recipe documentation](../../apps/www/content/docs/recipes.mdx).
+[recipe documentation](../../apps/www/content/docs/%28runtime%29/recipes.mdx).
 
 Edit acoustic definitions here. The npm package contains only the engine and
 recipe language; it does not generate or export creative recipe definitions.
