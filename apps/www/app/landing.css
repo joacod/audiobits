@@ -44,7 +44,17 @@
   .landing .landing-agents {
     margin: 0 calc(var(--gutter) * -1);
     padding: 3rem var(--gutter);
-    background: var(--graphite);
+    background: linear-gradient(
+      115deg,
+      color-mix(in srgb, var(--signal-low) 16%, var(--graphite)),
+      color-mix(in srgb, var(--signal-mid) 14%, var(--graphite)) 55%,
+      color-mix(in srgb, var(--signal-high) 12%, var(--graphite))
+    );
+    border-block: 1px solid
+      color-mix(in srgb, var(--signal-mid) 35%, var(--graphite-edge));
+  }
+  .landing .landing-agents p {
+    color: color-mix(in srgb, var(--ink) 72%, var(--signal-mid));
   }
   .landing .landing-command-row {
     display: flex;
@@ -162,7 +172,7 @@
   }
   .landing .landing-experience:hover h3,
   .landing .landing-sound-entry:hover h3 {
-    color: var(--ink);
+    color: var(--signal-mid);
   }
   .landing .landing-sound-list {
     display: grid;

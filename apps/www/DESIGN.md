@@ -97,14 +97,14 @@ components:
 
 ## Overview
 
-The waveform is the logo, and it moves only when sound moves. The showcase is dark-first: Void ground, Ink text, Mute for secondary copy. The blue, violet and magenta signal gradient belongs to live elements and to the mark, nothing else. The home page and the instrument pages speak in huge condensed Big Shoulders Display headlines and Geist Mono UI. The workbench uses graphite panels, knob-capped faders and segmented LED meters.
+The waveform is the logo, and it moves only when sound moves. The showcase is dark-first: Void ground, Ink text, Mute for secondary copy. The blue, violet and magenta signal gradient belongs to live elements and the mark, with restrained branded accents in key marketing sections and selected states. The home page and the instrument pages speak in huge condensed Big Shoulders Display headlines and Geist Mono UI. The workbench uses graphite panels, knob-capped faders and segmented LED meters.
 
 Documentation uses stock Fumadocs neutral styling, components, layout, typography and light/dark palettes. Dark mode is the default, with normal theme switching.
 
 **Key Characteristics:**
 
 - Void #050507 ground, Ink #F2F2F2 text, Mute #8A8A92 secondary.
-- Signal gradient #2A6CFF to #B44CFF to #FF2E88, mapped to state (low, mid, high), only on live elements and the mark.
+- Signal gradient #2A6CFF to #B44CFF to #FF2E88, mapped to state (low, mid, high), on live elements, the mark, and intentional branded accents.
 - Big Shoulders Display 800 and 900 for headlines and the wordmark. Geist Mono for UI, labels, code and instrument body copy.
 - A live waveform drawn in code from real output samples. At rest it shows the fixed mark as a still frame.
 - Graphite #1B1C1E panels with #34363A edges on the workbench. LED segments light with the gradient value at the current output.
@@ -133,7 +133,7 @@ All showcase values live once, as custom properties on `.foundation` in the `tok
 - **Graphite edge** (`--graphite-edge`): hairline rules, control borders, unlit LED segments, fader tracks.
 - **Signal low, mid, high** (`--signal-low`, `--signal-mid`, `--signal-high`) and `--signal-gradient`: live waveform stroke, charge progress ring, charge rings while charged, thruster trail while thrusting, lit LED segments.
 
-**The Live Rule.** The gradient appears only while something is live: audio is running and real samples are drawn, or state (charge, thrust, output level) is above rest. At rest those elements fall back to Mute or Ink. Never use the gradient on body text, headings or flat surfaces.
+**The Live Rule.** The gradient appears only while something is live: audio is running and real samples are drawn, or state (charge, thrust, output level) is above rest. At rest those elements fall back to Mute or Ink. Keep body text and headings solid. Important marketing sections may use a quiet signal-tinted background, and selected or active controls may use signal accents. These accents never imply that audio is playing.
 
 Contrast on Void: Ink 18.2:1, Mute 5.9:1. On Graphite: Ink 15.2:1, Mute 5.0:1.
 
@@ -154,7 +154,7 @@ Both faces are SIL Open Font License 1.1 and self-hosted with `next/font/local` 
 
 ## Layout
 
-Content width (76rem) with gutter `max(1.5rem, calc((100vw - 76rem) / 2))`, (1rem) below (760px). The home order stays: header, Energy Charge hero, use columns, catalog preview, footer. The hero is two columns above (900px) and stacks below it. A full-width signal band closes the hero: the live waveform when the charge voice is running, the still mark otherwise.
+Content width (76rem) with gutter `max(1.5rem, calc((100vw - 76rem) / 2))`, (1rem) below (760px). The home order stays: header, Reactive Thruster playground, installation, AI agents, catalog preview, footer. The headline and instruction share a row above (900px) and stack below it. A signal band closes the playground: the live waveform during output, the still mark otherwise.
 
 The catalog index uses a grouped navigation sidebar and preview rows; the workbench keeps its stage, playback controls and inspector in one frame. Every interactive target keeps a (44px) minimum height.
 
@@ -192,7 +192,7 @@ Charge rings and the progress ring rest in Mute and Graphite edge and take the s
 ### Don't:
 
 - **Don't** use warm paper, serif display faces, glassmorphism, blobs, bento grids, gradient text or stock sparkles.
-- **Don't** put the signal gradient on text or flat surfaces.
+- **Don't** put the signal gradient on text or unrelated surfaces. Keep branded marketing backgrounds restrained.
 - **Don't** animate anything that is not following sound or state.
 - **Don't** fork or restyle Fumadocs components. Keep showcase tokens and fonts scoped to `.foundation`.
 

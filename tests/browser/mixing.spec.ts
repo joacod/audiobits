@@ -201,10 +201,12 @@ for (const target of ["site", "vanilla"] as const) {
   }) => {
     await page.goto(
       target === "site"
-        ? "http://127.0.0.1:3100/catalog/impact"
+        ? "http://127.0.0.1:3100/catalog"
         : "http://127.0.0.1:4173",
     );
     await page.getByRole("button", { name: "Play impact" }).click();
+    if (target === "site")
+      await page.getByText("Playback settings", { exact: true }).click();
     await page.getByRole("slider", { name: /Effects volume/ }).fill("-6");
     await page.getByRole("button", { name: "Mute", exact: true }).click();
     await page.getByRole("button", { name: "Mute", exact: true }).click();
@@ -212,9 +214,7 @@ for (const target of ["site", "vanilla"] as const) {
     if (target === "vanilla")
       await expect(page.locator("#level")).toContainText("Output peak:");
     if (target === "site")
-      await expect(page.locator(".catalog-transport [role=alert]")).toHaveCount(
-        0,
-      );
+      await expect(page.locator(".audio-monitor [role=alert]")).toHaveCount(0);
     else await expect(page.getByRole("alert")).toBeEmpty();
   });
 }

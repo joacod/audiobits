@@ -19,8 +19,8 @@ const subscribeHydration = () => () => {};
 function recovery(cause: unknown) {
   const message = cause instanceof Error ? cause.message : String(cause);
   return message.includes("Retry Play")
-    ? "Audio did not start. Try Start charge again."
-    : `${message}. Try Start charge again.`;
+    ? "Audio did not start. Hold to charge again."
+    : `${message}. Hold to charge again.`;
 }
 
 /** Detail-page host for the catalog Energy Charge controller. One engine. */
@@ -37,7 +37,6 @@ export function EnergyChargeDetail({
   const progress = useRef(0);
   const [charge, setCharge] = useState(0);
   const [state, setState] = useState("stopped");
-  const [muted, setMuted] = useState(false);
   const [error, setError] = useState("");
   const ready = useSyncExternalStore(
     subscribeHydration,
@@ -104,7 +103,7 @@ export function EnergyChargeDetail({
   const full = charge === 1;
   return (
     <>
-      <div className="catalog-stage catalog-charge-stage">
+      <div className="catalog-stage catalog-charge-stage catalog-gesture-stage">
         <div
           className="catalog-charge-well"
           style={{ "--charge": charge } as CSSProperties}
@@ -163,70 +162,10 @@ export function EnergyChargeDetail({
           </button>
         </div>
       </div>
-      <div className="catalog-playback energy-controls">
-        <div className="catalog-transport" role="group" aria-label="Playback">
-          <div className="audio-controls">
-            <button
-              type="button"
-              className="play-action"
-              disabled={!ready}
-              onClick={() => {
-                endHold();
-                host.current?.start(progress.current);
-              }}
-            >
-              Start charge
-            </button>
-            <button type="button" disabled={!ready} onClick={release}>
-              Release charge
-            </button>
-            <button
-              type="button"
-              disabled={!ready}
-              aria-pressed={muted}
-              onClick={() => {
-                const next = !muted;
-                host.current?.mute(next);
-                setMuted(next);
-              }}
-            >
-              Mute
-            </button>
-            <button type="button" disabled={!ready} onClick={stop}>
-              Stop all
-            </button>
-          </div>
-          <p className="energy-state" role="status">
-            {`Charge: ${state}${muted ? " · muted" : ""}`}
-          </p>
-          {error ? <p role="alert">{error}</p> : null}
-        </div>
-        <div className="catalog-parameters">
-          <h2>Customize</h2>
-          <label>
-            Charge: {Math.round(charge * 100)}%
-            <input
-              aria-label="Charge"
-              type="range"
-              min="0"
-              max="1"
-              step="0.01"
-              value={charge}
-              disabled={!ready}
-              onChange={(event) => {
-                endHold();
-                publish(Number(event.target.value));
-              }}
-            />
-            <span className="control-mode">
-              Raise charge to build intensity, even while playing.
-            </span>
-          </label>
-        </div>
-        <p id="charge-help">
-          Hold with a pointer, touch, Space, or Enter. Three seconds to full
-          charge. Release keeps the tail. Stop cuts it.
-        </p>
+      <div className="catalog-experience-feedback energy-controls">
+        <p id="charge-help">Hold to build. Release to let it ring.</p>
+        <p className="energy-state" role="status">{`Charge: ${state}`}</p>
+        {error ? <p role="alert">{error}</p> : null}
       </div>
       <CatalogInstall slug="energy-charge" />
       <div className="catalog-inspector">

@@ -50,10 +50,10 @@ test("confirmation copies the current seed and has no parameter controls", async
   await expect(
     page.getByRole("heading", { level: 1, name: "Confirmation", exact: true }),
   ).toBeVisible();
-  await expect(page.getByRole("slider")).toHaveCount(1);
+  await expect(page.getByRole("slider")).toHaveCount(0);
   await expect(
-    page.getByRole("slider", { name: "Effects volume", exact: true }),
-  ).toBeVisible();
+    page.getByRole("group", { name: "Playback" }).getByRole("button"),
+  ).toHaveText(["Play confirmation"]);
   await expect(page.getByText("Control position")).toHaveCount(0);
   await expect(
     page.getByRole("button", { name: "Stop confirmation" }),
@@ -316,7 +316,9 @@ test("thruster stays sustained, follows live throttle, and navigation disposes a
   ).toBeVisible();
   await start.click();
   await expect(state).toHaveText("Thruster: running");
-  await expect(start).toBeDisabled();
+  await expect(
+    page.getByRole("button", { name: "Stop thruster", exact: true }),
+  ).toBeEnabled();
   await expect
     .poll(async () => Number(await scope.getAttribute("data-peak")))
     .toBeGreaterThan(0);
@@ -340,10 +342,6 @@ test("thruster stays sustained, follows live throttle, and navigation disposes a
     .toBeGreaterThan(0);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(scope).toHaveAttribute("data-peak", "0");
-  await expect(state).toHaveText("Thruster: running");
-  const mute = page.getByRole("button", { name: "Mute", exact: true });
-  await mute.click();
-  await expect(mute).toHaveAttribute("aria-pressed", "true");
   await expect(state).toHaveText("Thruster: running");
   await page
     .getByRole("button", { name: "Stop thruster", exact: true })
@@ -458,11 +456,6 @@ test("desktop and mobile workbenches put interaction before adoption and source"
   await slider.focus();
   await page.keyboard.press("ArrowRight");
   await expect(slider).toHaveValue("0.21");
-  await page.getByRole("button", { name: "Mute", exact: true }).focus();
-  await page.keyboard.press("Space");
-  await expect(
-    page.getByRole("button", { name: "Mute", exact: true }),
-  ).toHaveAttribute("aria-pressed", "true");
   await page
     .getByRole("button", { name: "Stop thruster", exact: true })
     .focus();
@@ -481,15 +474,17 @@ test("desktop and mobile workbenches put interaction before adoption and source"
       () => document.documentElement.scrollWidth <= window.innerWidth,
     ),
   ).toBe(true);
-  const strip = page.locator(".catalog-transport");
-  const stripBox = await strip.boundingBox();
-  expect(stripBox).not.toBeNull();
-  expect(stripBox!.y + stripBox!.height).toBeLessThanOrEqual(844);
-  expect(stripBox!.y).toBeGreaterThan(600);
-  await page.getByRole("button", { name: "Levels", exact: true }).click();
+  expect(
+    await page
+      .locator(".catalog-transport")
+      .evaluate((node) => getComputedStyle(node).position),
+  ).toBe("static");
   await expect(
-    page.getByRole("slider", { name: "Effects volume", exact: true }),
-  ).toBeVisible();
+    page.getByRole("button", { name: "Levels", exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Mute", exact: true }),
+  ).toHaveCount(0);
   await page.getByRole("tab", { name: "Recipe", exact: true }).click();
   await page.getByRole("button", { name: "Edit recipe", exact: true }).click();
   const apply = page.getByRole("button", {
@@ -555,10 +550,11 @@ test("every catalog item copies its registry command and links to installation d
       name: `Copy ${entry.title} command`,
       exact: true,
     });
+    await expect(copy).toBeEnabled();
     await copy.focus();
     await page.keyboard.press("Enter");
-    expect(await copied(page)).toBe(command);
     await expect(adoption.getByRole("status")).toHaveText("Copied.");
+    expect(await copied(page)).toBe(command);
     expect(await contexts(page)).toEqual([]);
     await expect(
       page
@@ -610,3 +606,63 @@ test("install command clipboard denial preserves a selectable command", async ({
     ),
   ).toBe(true);
 });
+
+for (const [width, height] of [
+  [1440, 900],
+  [1280, 800],
+  [768, 1024],
+  [390, 844],
+]) {
+  test(`catalog surfaces fit ${width}×${height} without obstructing source`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height });
+    for (const slug of [
+      "confirmation",
+      "impact",
+      "thruster",
+      "reactive-thruster",
+      "energy-charge",
+    ]) {
+      await page.goto(`${home}/catalog/${slug}`);
+      await page.evaluate(() => document.fonts.ready);
+      await expect(
+        page.getByRole("button", { name: /^Copy .* command$/ }),
+      ).toBeEnabled();
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth,
+        ),
+      ).toBe(true);
+      const source = page.locator(".catalog-inspector");
+      const adoption = page.locator(".catalog-adoption");
+      const adoptionBox = (await adoption.boundingBox())!;
+      expect(
+        (await source.boundingBox())!.y - adoptionBox.y - adoptionBox.height,
+      ).toBeGreaterThanOrEqual(16);
+      const copy = source.getByRole("button", { name: /^Copy / }).first();
+      await copy.scrollIntoViewIfNeeded();
+      expect(
+        await copy.evaluate((button) => {
+          const rect = button.getBoundingClientRect();
+          return button.contains(
+            document.elementFromPoint(
+              rect.x + rect.width / 2,
+              rect.y + rect.height / 2,
+            ),
+          );
+        }),
+      ).toBe(true);
+    }
+    await page.goto(`${home}/catalog`);
+    await page.getByText("Playback settings", { exact: true }).click();
+    await expect(
+      page.getByRole("slider", { name: "Effects volume" }),
+    ).toBeVisible();
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+  });
+}

@@ -1,46 +1,33 @@
 import { expect, test } from "@playwright/test";
 import { readFileSync } from "node:fs";
 
-import { instrument, probe } from "./experience-probe";
+import { instrument, probe, dragThruster } from "./experience-probe";
 
-test("idle showcase controls stay silent and never read activation-only getters", async ({
+test("idle showcase stays silent and only gestures start the thruster", async ({
   page,
 }) => {
   const errors: string[] = [];
   page.on("pageerror", (cause) => errors.push(cause.message));
   await instrument(page);
-  const start = page.getByRole("button", {
-    name: "Start thruster",
-    exact: true,
-  });
-  await expect(start).toBeEnabled();
-  await page.getByRole("button", { name: "Mute", exact: true }).click();
-  await page.getByRole("button", { name: "Stop all", exact: true }).click();
-  await page
-    .getByRole("button", { name: "Release thruster", exact: true })
-    .click();
-  await page.getByRole("slider", { name: "Throttle", exact: true }).fill("0.8");
+  await expect(page.locator(".flight-controls").getByRole("button")).toHaveText(
+    ["Play impact"],
+  );
+  await expect(page.getByRole("slider")).toHaveCount(0);
   expect((await probe(page)).contexts).toEqual([]);
-  expect(errors).toEqual([]);
-  await page.getByRole("button", { name: "Mute", exact: true }).click();
-  await start.click();
+  await dragThruster(page);
   await expect(page.locator(".flight-state")).toHaveText("Thruster: running");
-  await page.getByRole("button", { name: "Stop all", exact: true }).click();
+  await page.mouse.up();
   await expect(page.locator(".flight-state")).toHaveText("Thruster: stopped");
   expect(errors).toEqual([]);
 });
 
-test("showcase pointer, keyboard, impact, mute and navigation own their lifecycle", async ({
+test("showcase pointer, impact, release and navigation own their lifecycle", async ({
   page,
 }) => {
   await instrument(page);
   expect((await probe(page)).contexts).toEqual([]);
-  const pad = page.locator(".flight-pad");
-  const box = (await pad.boundingBox())!;
-  await page.mouse.move(box.x + 40, box.y + 80);
-  await page.mouse.down();
+  await dragThruster(page);
   await expect(page.locator(".flight-state")).toHaveText("Thruster: running");
-  await page.mouse.move(box.x + box.width - 40, box.y + 140, { steps: 8 });
   await expect
     .poll(async () =>
       Number(
@@ -55,57 +42,51 @@ test("showcase pointer, keyboard, impact, mute and navigation own their lifecycl
     "style",
     /left: 50%/,
   );
+  await expect
+    .poll(async () =>
+      Number(
+        await page
+          .locator(".thruster-ribbons canvas")
+          .getAttribute("data-peak"),
+      ),
+    )
+    .toBeGreaterThan(0);
+  await expect
+    .poll(async () =>
+      Number(
+        await page.locator(".output-scope canvas").getAttribute("data-peak"),
+      ),
+    )
+    .toBeGreaterThan(0);
   await page.mouse.up();
   await expect(page.locator(".flight-state")).toHaveText("Thruster: stopped");
   await expect.poll(async () => (await probe(page)).ended).toBe(3);
-  await page
-    .getByRole("button", { name: "Start thruster", exact: true })
-    .focus();
-  await page.keyboard.press("Enter");
-  await expect(page.locator(".flight-state")).toHaveText("Thruster: running");
-  await page.getByRole("slider", { name: "Throttle", exact: true }).fill("0.8");
-  await expect(page.locator(".flight-readout output")).toHaveText("80%");
-  await expect
-    .poll(async () =>
-      Number(await page.locator("canvas").getAttribute("data-peak")),
-    )
-    .toBeGreaterThan(0);
   await page.getByRole("button", { name: "Play impact" }).click();
-  expect((await probe(page)).sources).toBe(8);
-  await page.getByRole("button", { name: "Mute", exact: true }).click();
-  await expect(
-    page.getByRole("button", { name: "Mute", exact: true }),
-  ).toHaveAttribute("aria-pressed", "true");
-  await expect(page.locator("canvas")).toHaveAttribute("data-peak", "0");
-  await page.getByRole("button", { name: "Stop all" }).click();
+  expect((await probe(page)).sources).toBe(5);
   await expect
     .poll(async () => {
       const p = await probe(page);
       return p.ended === p.sources;
     })
     .toBe(true);
-  await page
-    .getByRole("button", { name: "Start thruster", exact: true })
-    .click();
-  await expect(page.locator(".flight-state")).toContainText("running");
   for (let i = 0; i < 4; i++) {
-    await page
-      .getByRole("button", { name: "Release thruster", exact: true })
-      .click();
-    await page
-      .getByRole("button", { name: "Start thruster", exact: true })
-      .click();
-    await expect(page.locator(".flight-state")).toContainText("running");
+    await dragThruster(page);
+    await expect(page.locator(".flight-state")).toHaveText("Thruster: running");
     const p = await probe(page);
     expect(p.sources - p.ended).toBeLessThanOrEqual(9);
+    await page.mouse.up();
   }
+  await dragThruster(page);
   await page
     .getByRole("navigation", { name: "Main navigation" })
     .getByRole("link", { name: "Catalog", exact: true })
-    .click();
+    .focus();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL("http://127.0.0.1:3100/catalog");
   await expect
     .poll(async () => (await probe(page)).contexts)
     .toEqual(["closed"]);
+  await expect.poll(async () => (await probe(page)).connected).toBe(0);
   await page.getByRole("link", { name: "Impact", exact: true }).click();
   await page.getByRole("button", { name: "Play impact", exact: true }).click();
   await expect
@@ -115,16 +96,20 @@ test("showcase pointer, keyboard, impact, mute and navigation own their lifecycl
 
 test("activation failure recovers with a fresh gesture", async ({ page }) => {
   await instrument(page, "failed");
-  await page
-    .getByRole("button", { name: "Start thruster", exact: true })
-    .click();
+  const pad = page.locator(".flight-pad");
+  await expect(pad.locator(".thruster-ribbons")).toHaveAttribute(
+    "data-renderer",
+    /webgl|canvas|unavailable/,
+  );
+  const box = (await pad.boundingBox())!;
+  await page.mouse.move(box.x + 40, box.y + 80);
+  await page.mouse.down();
   await expect(page.locator(".flight-controls [role=alert]")).toContainText(
-    "Try Start thruster",
+    "Drag again to retry",
   );
   expect((await probe(page)).sources).toBe(0);
-  await page
-    .getByRole("button", { name: "Start thruster", exact: true })
-    .click();
+  await page.mouse.up();
+  await dragThruster(page);
   await expect(page.locator(".flight-state")).toHaveText("Thruster: running");
   await expect(page.locator(".flight-controls [role=alert]")).toHaveCount(0);
 });
@@ -133,11 +118,10 @@ test("cancelled activation and visibility cleanup require a fresh gesture", asyn
   page,
 }) => {
   await instrument(page, "held");
-  await page
-    .getByRole("button", { name: "Start thruster", exact: true })
-    .click();
+  await page.mouse.up();
+  await dragThruster(page);
   await expect(page.locator(".flight-state")).toHaveText("Thruster: starting");
-  await page.getByRole("button", { name: "Stop all" }).click();
+  await page.mouse.up();
   await page.evaluate(() =>
     (
       globalThis as unknown as { thrusterProbe: Probe }
@@ -147,9 +131,8 @@ test("cancelled activation and visibility cleanup require a fresh gesture", asyn
     .poll(async () => (await probe(page)).contexts)
     .toEqual(["running"]);
   expect((await probe(page)).sources).toBe(0);
-  await page
-    .getByRole("button", { name: "Start thruster", exact: true })
-    .click();
+  await page.mouse.up();
+  await dragThruster(page);
   await expect(page.locator(".flight-state")).toHaveText("Thruster: running");
   await page.evaluate(() => {
     Object.defineProperty(document, "hidden", {
@@ -175,6 +158,15 @@ test("copy actions return every complete canonical source file and report clipbo
   const interaction = page.getByRole("tabpanel", {
     name: "Complete interaction",
   });
+  const soundPanel = page.getByRole("tabpanel", {
+    name: "Sound only",
+    exact: true,
+  });
+  const copyBox = (await soundPanel
+    .getByRole("button", { name: "Copy recipe.ts", exact: true })
+    .boundingBox())!;
+  const codeBox = (await soundPanel.locator("pre").boundingBox())!;
+  expect(codeBox.y - copyBox.y - copyBox.height).toBeGreaterThanOrEqual(12);
   await page.getByRole("tab", { name: "Complete interaction" }).click();
   await expect(interaction).toBeVisible();
   const files = [
@@ -222,7 +214,7 @@ test("discovery links, narrow touch input and reduced motion remain usable", asy
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
   ).toBe(true);
-  await expect(page.getByRole("button", { name: "Stop all" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Stop all" })).toHaveCount(0);
   const pad = page.locator(".flight-pad");
   const box = (await pad.boundingBox())!;
   const touch = await page.context().newCDPSession(page);
@@ -240,7 +232,10 @@ test("discovery links, narrow touch input and reduced motion remain usable", asy
     touchPoints: [],
   });
   await expect(page.locator(".flight-state")).toHaveText("Thruster: stopped");
-  await expect(page.locator("canvas")).toHaveAttribute("data-peak", "0");
+  await expect(page.locator(".thruster-ribbons canvas")).toHaveAttribute(
+    "data-peak",
+    "0",
+  );
   await expect(page.locator(".thruster-ribbons")).toHaveAttribute(
     "data-renderer",
     "canvas",

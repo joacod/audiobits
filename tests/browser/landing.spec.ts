@@ -1,11 +1,13 @@
 import { expect, test } from "@playwright/test";
-import { instrument, probe } from "./experience-probe";
+import { instrument, probe, dragThruster } from "./experience-probe";
 
 const home = "http://127.0.0.1:3100";
 
 for (const [width, height] of [
   [320, 667],
   [375, 812],
+  [390, 844],
+  [768, 1024],
   [768, 900],
   [1280, 800],
   [1440, 900],
@@ -16,9 +18,13 @@ for (const [width, height] of [
     await page.setViewportSize({ width, height });
     await page.goto(home);
     await expect(page.locator("h1")).toHaveCount(1);
+    await expect(page.locator(".thruster-ribbons")).toHaveAttribute(
+      "data-renderer",
+      /webgl|canvas|unavailable/,
+    );
     await expect(
-      page.getByRole("button", { name: "Start thruster" }),
-    ).toBeEnabled();
+      page.locator(".thruster-hero button, .thruster-hero input"),
+    ).toHaveCount(0);
     await page.evaluate(() => document.fonts.ready);
     expect(
       await page.evaluate(
@@ -64,7 +70,7 @@ for (const [width, height] of [
     await expect(page.locator(".landing-experience")).toHaveCount(1);
     await expect(page.locator(".landing h2")).toHaveText([
       "Hear it. Own it.",
-      "Let your agent build the sound.",
+      "Let your AI agent build the sound.",
       "Explore more",
     ]);
     await expect(page.locator(".landing-command pre")).toHaveCount(2);
@@ -204,65 +210,28 @@ test("landing copy failure keeps the command available for manual copying", asyn
   ).toBe(true);
 });
 
-test("landing stays silent until a gesture, measures output, mutes and disposes on navigation", async ({
+test("landing stays silent until dragging, measures real output and disposes on navigation", async ({
   page,
 }) => {
   const errors: string[] = [];
   page.on("pageerror", (cause) => errors.push(cause.message));
   await instrument(page, "normal", "/");
-  const start = page.getByRole("button", {
-    name: "Start thruster",
-    exact: true,
-  });
-  const mute = page.getByRole("button", { name: "Mute", exact: true });
-  const stop = page.getByRole("button", { name: "Stop", exact: true });
-  const slider = page.getByRole("slider", { name: "Throttle", exact: true });
-  await expect(start).toBeEnabled();
-  await slider.fill("0.8");
-  await mute.click();
-  await stop.click();
   expect((await probe(page)).contexts).toEqual([]);
-  await mute.click();
-  await start.click();
+  await dragThruster(page);
   await expect(page.getByTestId("landing-playback-state")).toHaveText(
     "Thruster: running",
   );
-  await expect(page.locator(".flight-readout output")).toHaveText("80%");
-  await expect
-    .poll(async () =>
-      Number(
-        await page.locator(".thruster-signal canvas").getAttribute("data-peak"),
-      ),
-    )
-    .toBeGreaterThan(0);
-  await expect
-    .poll(async () =>
-      Number(
-        await page
-          .locator(".thruster-ribbons canvas")
-          .getAttribute("data-peak"),
-      ),
-    )
-    .toBeGreaterThan(0);
-  await mute.click();
-  await expect(mute).toHaveAttribute("aria-pressed", "true");
-  await expect(page.locator(".thruster-signal canvas")).toHaveAttribute(
-    "data-peak",
-    "0",
-  );
-  await expect(page.locator(".thruster-ribbons canvas")).toHaveAttribute(
-    "data-peak",
-    "0",
-  );
-  await mute.click();
-  await expect
-    .poll(async () =>
-      Number(
-        await page.locator(".thruster-signal canvas").getAttribute("data-peak"),
-      ),
-    )
-    .toBeGreaterThan(0);
-  await stop.click();
+  for (const selector of [
+    ".thruster-signal canvas",
+    ".thruster-ribbons canvas",
+  ]) {
+    await expect
+      .poll(async () =>
+        Number(await page.locator(selector).getAttribute("data-peak")),
+      )
+      .toBeGreaterThan(0);
+  }
+  await page.mouse.up();
   await expect(page.getByTestId("landing-playback-state")).toHaveText(
     "Thruster: stopped",
   );
@@ -272,15 +241,17 @@ test("landing stays silent until a gesture, measures output, mutes and disposes 
       return p.ended === p.sources;
     })
     .toBe(true);
-  expect((await probe(page)).contexts).toEqual(["running"]);
-  await start.click();
-  await expect(page.getByTestId("landing-playback-state")).toHaveText(
-    "Thruster: running",
+  await expect(page.locator(".thruster-signal canvas")).toHaveAttribute(
+    "data-peak",
+    "0",
   );
+  await dragThruster(page);
   await page
     .getByRole("navigation", { name: "Main navigation" })
     .getByRole("link", { name: "Docs", exact: true })
-    .click();
+    .focus();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL("http://127.0.0.1:3100/docs");
   await expect
     .poll(async () => (await probe(page)).contexts)
     .toEqual(["closed"]);
@@ -348,14 +319,7 @@ test("landing pointer acceleration, release, touch cancellation and interruption
     "Thruster: stopped",
   );
   await touch.detach();
-  const start = page.getByRole("button", {
-    name: "Start thruster",
-    exact: true,
-  });
-  await start.click();
-  await expect(page.getByTestId("landing-playback-state")).toHaveText(
-    "Thruster: running",
-  );
+  await dragThruster(page);
   await page.evaluate(() => window.dispatchEvent(new Event("blur")));
   await expect(page.getByTestId("landing-playback-state")).toHaveText(
     "Thruster: stopped",
@@ -366,7 +330,8 @@ test("landing pointer acceleration, release, touch cancellation and interruption
       return p.ended === p.sources;
     })
     .toBe(true);
-  await start.click();
+  await page.mouse.up();
+  await dragThruster(page);
   await expect(page.getByTestId("landing-playback-state")).toHaveText(
     "Thruster: running",
   );
@@ -394,33 +359,36 @@ test("landing activation failure recovers with a fresh gesture", async ({
   page,
 }) => {
   await instrument(page, "failed", "/");
-  const start = page.getByRole("button", {
-    name: "Start thruster",
-    exact: true,
-  });
-  await start.click();
+  const pad = page.getByRole("group", { name: "Drag to fly" });
+  await expect(pad.locator(".thruster-ribbons")).toHaveAttribute(
+    "data-renderer",
+    /webgl|canvas|unavailable/,
+  );
+  const box = (await pad.boundingBox())!;
+  await page.mouse.move(box.x + 40, box.y + 80);
+  await page.mouse.down();
   await expect(page.locator(".thruster-hero [role=alert]")).toContainText(
-    "Try Start thruster or drag again",
+    "Drag again to retry",
   );
   expect((await probe(page)).sources).toBe(0);
-  await start.click();
+  await page.mouse.up();
+  await dragThruster(page);
   await expect(page.getByTestId("landing-playback-state")).toHaveText(
     "Thruster: running",
   );
   await expect(page.locator(".thruster-hero [role=alert]")).toHaveCount(0);
+  await page.mouse.up();
 });
 
-test("a pending homepage start cannot outlive Stop", async ({ page }) => {
+test("a pending homepage start cannot outlive pointer release", async ({
+  page,
+}) => {
   await instrument(page, "held", "/");
-  const start = page.getByRole("button", {
-    name: "Start thruster",
-    exact: true,
-  });
-  await start.click();
+  await dragThruster(page);
   await expect(page.getByTestId("landing-playback-state")).toHaveText(
     "Thruster: starting",
   );
-  await page.getByRole("button", { name: "Stop", exact: true }).click();
+  await page.mouse.up();
   await page.evaluate(() =>
     (
       globalThis as unknown as { thrusterProbe: { releaseActivation(): void } }
@@ -435,26 +403,16 @@ test("a pending homepage start cannot outlive Stop", async ({ page }) => {
   expect((await probe(page)).sources).toBe(0);
 });
 
-test("reduced motion preserves keyboard throttle, level feedback and focus", async ({
+test("reduced motion preserves gesture feedback, level feedback and navigation focus", async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await instrument(page, "normal", "/");
-  const slider = page.getByRole("slider", { name: "Throttle", exact: true });
-  await slider.focus();
-  await page.keyboard.press("End");
-  await expect(slider).toHaveValue("1");
   expect((await probe(page)).contexts).toEqual([]);
-  const start = page.getByRole("button", {
-    name: "Start thruster",
-    exact: true,
-  });
-  await start.focus();
-  await page.keyboard.press("Enter");
+  await dragThruster(page);
   await expect(page.getByTestId("landing-playback-state")).toHaveText(
     "Thruster: running",
   );
-  await expect(page.locator(".flight-readout output")).toHaveText("100%");
   await expect(page.locator(".thruster-ribbons")).toHaveAttribute(
     "data-renderer",
     "canvas",
@@ -472,12 +430,7 @@ test("reduced motion preserves keyboard throttle, level feedback and focus", asy
         ),
     )
     .toBeGreaterThan(0);
-  const stop = page.getByRole("button", { name: "Stop", exact: true });
-  await stop.focus();
-  expect(
-    await stop.evaluate((node) => getComputedStyle(node).outlineStyle),
-  ).toBe("solid");
-  await page.keyboard.press("Enter");
+  await page.mouse.up();
   await expect(page.getByTestId("landing-playback-state")).toHaveText(
     "Thruster: stopped",
   );
@@ -491,3 +444,96 @@ test("reduced motion preserves keyboard throttle, level feedback and focus", asy
     ).toBe("solid");
   }
 });
+
+test("external links use new tabs and internal navigation stays in this tab", async ({
+  page,
+  context,
+}) => {
+  for (const route of [
+    "/",
+    "/catalog",
+    "/catalog/impact",
+    "/catalog/reactive-thruster",
+    "/catalog/energy-charge",
+    "/docs",
+    "/docs/catalog",
+    "/docs/agents",
+    "/docs/mcp",
+  ]) {
+    await page.goto(`${home}${route}`);
+    if (route.includes("reactive-thruster") || route.includes("energy-charge"))
+      await page
+        .getByRole("tab", { name: "Complete interaction", exact: true })
+        .click();
+    for (const link of await page.locator('a[href^="https://"]').all()) {
+      await expect(link).toHaveAttribute("target", "_blank");
+      await expect(link).toHaveAttribute("rel", /noopener/);
+      await expect(link).toHaveAttribute("rel", /noreferrer/);
+    }
+    for (const link of await page.locator('a[href^="/"]').all())
+      expect(await link.getAttribute("target")).not.toBe("_blank");
+  }
+  // Stub only the remote response; Chromium must still create a real new tab.
+  await context.route("https://github.com/**", (route) =>
+    route.fulfill({
+      contentType: "text/html",
+      body: "<h1>External destination</h1>",
+    }),
+  );
+  await page.goto(home);
+  const popupPromise = page.waitForEvent("popup");
+  await page
+    .getByRole("navigation", { name: "Main navigation" })
+    .getByRole("link", { name: "GitHub", exact: true })
+    .click();
+  const popup = await popupPromise;
+  await expect(popup).toHaveURL("https://github.com/joacod/audiobits");
+  expect(await popup.evaluate(() => window.opener)).toBeNull();
+  await expect(page).toHaveURL(`${home}/`);
+  await popup.close();
+  await page
+    .getByRole("navigation", { name: "Main navigation" })
+    .getByRole("link", { name: "Catalog", exact: true })
+    .click();
+  await expect(page).toHaveURL(`${home}/catalog`);
+  expect(context.pages()).toHaveLength(1);
+});
+
+for (const route of ["/", "/catalog/confirmation"]) {
+  test(`installation copying waits for hydration on ${route}`, async ({
+    page,
+    context,
+  }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    let release!: () => void;
+    const hydration = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    await page.route("**/_next/static/**/*.js", async (request) => {
+      await hydration;
+      await request.continue();
+    });
+    await page.goto(`${home}${route}`, { waitUntil: "commit" });
+    const copy = page.getByRole("button", {
+      name:
+        route === "/"
+          ? "Copy thruster install command"
+          : "Copy Confirmation command",
+      exact: true,
+    });
+    try {
+      await expect(copy).toBeDisabled();
+    } finally {
+      release();
+    }
+    await expect(copy).toBeEnabled();
+    await copy.focus();
+    await page.keyboard.press("Enter");
+    await expect(
+      page
+        .locator(".landing-command")
+        .filter({ has: copy })
+        .getByRole("status"),
+    ).toHaveText("Copied.");
+  });
+}

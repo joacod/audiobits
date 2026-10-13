@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { instrument, probe } from "./experience-probe";
+import { instrument, probe, dragThruster } from "./experience-probe";
 
 const home = "http://127.0.0.1:3100";
 
@@ -36,41 +36,22 @@ for (const route of ["/catalog/energy-charge"]) {
   });
 }
 
-test("homepage thruster keyboard repeats keep one voice without page scrolling", async ({
+test("homepage pointer movement keeps one voice until capture is lost", async ({
   page,
 }) => {
   await instrument(page, "normal", "/");
+  await dragThruster(page);
   const state = page.getByTestId("landing-playback-state");
-  const start = page.getByRole("button", {
-    name: "Start thruster",
-    exact: true,
-  });
-  await expect(start).toBeEnabled();
-  await start.focus();
-  const startScroll = await page.evaluate(() => scrollY);
-  await page.keyboard.down("Enter");
   await expect(state).toHaveText("Thruster: running");
-  for (let repeat = 0; repeat < 3; repeat++) await page.keyboard.down("Enter");
-  await page.keyboard.up("Enter");
-  expect(await page.evaluate(() => scrollY)).toBe(startScroll);
   expect((await probe(page)).sources).toBe(3);
   expect((await probe(page)).contexts).toEqual(["running"]);
-
-  const throttle = page.getByRole("slider", { name: "Throttle", exact: true });
-  await throttle.focus();
-  const throttleScroll = await page.evaluate(() => scrollY);
-  for (let repeat = 0; repeat < 3; repeat++) await page.keyboard.down("End");
-  await page.keyboard.up("End");
-  await expect(throttle).toHaveValue("1");
-  await expect(page.locator(".flight-readout output")).toHaveText("100%");
-  expect(await page.evaluate(() => scrollY)).toBe(throttleScroll);
-  expect((await probe(page)).sources).toBe(3);
-  await expect(state).toHaveText("Thruster: running");
-
-  await page.getByRole("button", { name: "Stop", exact: true }).focus();
-  await page.keyboard.press("Space");
+  await page.locator(".flight-pad").evaluate((pad) => {
+    // Chromium's mouse pointer ID is 1. Exercise actual capture loss.
+    pad.releasePointerCapture(1);
+  });
   await expect(state).toHaveText("Thruster: stopped");
   await expect.poll(async () => (await probe(page)).ended).toBe(3);
+  await page.mouse.up();
 });
 
 async function trackGraphics(
@@ -154,44 +135,43 @@ test("charge graphics release resources on fallback and navigation", async ({
   await expect.poll(() => resourceCount(page)).toBe(0);
 });
 
-test("charge shader failure preserves manual controls without leaking resources", async ({
+test("charge shader failure preserves holding without leaking resources", async ({
   page,
 }) => {
   await trackGraphics(page, true);
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(`${home}/catalog/energy-charge`);
-  const start = page.getByRole("button", { name: "Start charge", exact: true });
+  const start = page.getByRole("button", {
+    name: "Hold to charge",
+    exact: true,
+  });
   await expect(start).toBeEnabled();
   await expect(page.locator(".charge-rings")).toHaveAttribute(
     "data-renderer",
     "css",
   );
-  await start.click();
+  await start.focus();
+  await page.keyboard.down("Space");
   await expect(page.locator(".energy-state")).toHaveText("Charge: running");
-  await page.getByRole("slider", { name: "Charge", exact: true }).fill("0.75");
-  await page.getByRole("button", { name: "Stop all", exact: true }).click();
+  await expect(start).toHaveAttribute("data-full", "true");
+  await page.keyboard.up("Space");
   await expect(page.locator(".energy-state")).toHaveText("Charge: stopped");
   expect(await resourceCount(page)).toBe(0);
 });
 
-test("thruster shader failure preserves manual controls and releases allocations", async ({
+test("thruster shader failure preserves dragging and releases allocations", async ({
   page,
 }) => {
   await trackGraphics(page, true, "webgl2");
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(`${home}/catalog/reactive-thruster`);
-  const start = page.getByRole("button", {
-    name: "Start thruster",
-    exact: true,
-  });
-  await expect(start).toBeEnabled();
   await expect(page.locator(".thruster-ribbons")).toHaveAttribute(
     "data-renderer",
     "unavailable",
   );
-  await start.click();
+  await dragThruster(page);
   await expect(page.locator(".flight-state")).toHaveText("Thruster: running");
-  await page.getByRole("button", { name: "Stop all", exact: true }).click();
+  await page.mouse.up();
   await expect(page.locator(".flight-state")).toHaveText("Thruster: stopped");
   expect(await resourceCount(page)).toBe(0);
 });

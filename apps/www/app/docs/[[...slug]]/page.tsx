@@ -1,3 +1,4 @@
+import type { ComponentProps } from "react";
 import type { Metadata } from "next";
 import { PackageChannel } from "../../package-channel";
 import { notFound } from "next/navigation";
@@ -9,6 +10,21 @@ import {
 } from "fumadocs-ui/page";
 import defaultMdxComponents from "fumadocs-ui/mdx";
 import { source } from "../../../lib/source";
+
+function DocsLink(props: ComponentProps<typeof defaultMdxComponents.a>) {
+  const external = /^https?:\/\//.test(props.href ?? "");
+  return (
+    <defaultMdxComponents.a
+      {...props}
+      {...(external
+        ? {
+            target: "_blank",
+            rel: "noopener noreferrer",
+          }
+        : {})}
+    />
+  );
+}
 
 export async function generateMetadata({
   params,
@@ -39,7 +55,9 @@ export default async function Page({
       <DocsTitle>{page.data.title}</DocsTitle>
       <DocsDescription>{page.data.description}</DocsDescription>
       <DocsBody>
-        <Content components={{ ...defaultMdxComponents, PackageChannel }} />
+        <Content
+          components={{ ...defaultMdxComponents, a: DocsLink, PackageChannel }}
+        />
       </DocsBody>
     </DocsPage>
   );

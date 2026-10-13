@@ -30,7 +30,7 @@ export function OutputScope({
     const style = getComputedStyle(surface);
     const color = style.color;
     let stroke: string | CanvasGradient = color;
-    if (signal) {
+    if (signal || family) {
       const ramp = paint.createLinearGradient(0, 0, surface.width, 0);
       ramp.addColorStop(0, style.getPropertyValue("--signal-low").trim());
       ramp.addColorStop(0.6, style.getPropertyValue("--signal-mid").trim());
@@ -144,9 +144,11 @@ export function OutputScope({
       : family
         ? `${family} sound portrait; driven by live output`
         : "Live output waveform; animation pauses for reduced motion";
-  const idleCaption = measured
-    ? "Play to measure this sound"
-    : "Play to see the generated signal";
+  const idleCaption = signal
+    ? "Waiting for sound"
+    : measured
+      ? "Play to measure this sound"
+      : "Play to see the generated signal";
   const liveCaption = measured
     ? "Live signal"
     : family

@@ -48,7 +48,11 @@ export default function Home() {
           <p className="landing-context">
             Run in your project. The registry adds editable Thruster source and
             the required{" "}
-            <a href="https://www.npmjs.com/package/audiobits">
+            <a
+              target="_blank"
+              rel="noopener noreferrer"
+              href="https://www.npmjs.com/package/audiobits"
+            >
               audiobits npm runtime
             </a>
             .
@@ -68,7 +72,7 @@ export default function Home() {
         aria-labelledby="agents-heading"
       >
         <div>
-          <h2 id="agents-heading">Let your agent build the sound.</h2>
+          <h2 id="agents-heading">Let your AI agent build the sound.</h2>
           <p>
             The official AudioBits Skill guides your coding agent to create
             sounds and wire them into your app.
@@ -147,8 +151,20 @@ export default function Home() {
             Docs <ArrowIcon />
           </Link>
           <Link href="/catalog">Catalog</Link>
-          <a href="https://www.npmjs.com/package/audiobits">npm</a>
-          <a href="https://github.com/joacod/audiobits">GitHub</a>
+          <a
+            target="_blank"
+            rel="noopener noreferrer"
+            href="https://www.npmjs.com/package/audiobits"
+          >
+            npm
+          </a>
+          <a
+            target="_blank"
+            rel="noopener noreferrer"
+            href="https://github.com/joacod/audiobits"
+          >
+            GitHub
+          </a>
         </div>
       </footer>
     </main>

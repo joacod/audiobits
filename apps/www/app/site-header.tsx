@@ -22,6 +22,8 @@ export function SiteHeader({ current }: { current?: "home" | "catalog" }) {
           </Link>
           <Link href="/docs">Docs</Link>
           <a
+            target="_blank"
+            rel="noopener noreferrer"
             href={github}
             className="site-brand-link"
             aria-label="GitHub"
@@ -30,6 +32,8 @@ export function SiteHeader({ current }: { current?: "home" | "catalog" }) {
             <GithubIcon />
           </a>
           <a
+            target="_blank"
+            rel="noopener noreferrer"
             href="https://www.npmjs.com/package/audiobits"
             className="site-brand-link"
             aria-label="npm"

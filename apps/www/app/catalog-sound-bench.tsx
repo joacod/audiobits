@@ -51,28 +51,23 @@ function SoundSession({
     recipes,
     controls,
     playing,
-    volume,
     engine,
     state,
     error,
-    muted,
     play,
     stop,
-    stopAll,
     updateControl,
     resetControl,
     setSeed,
     applyRecipe,
-    toggleMuted,
-    changeVolume,
   } = useCollectionSession();
   const [seed, setSeedText] = useState("42");
-  const [levels, setLevels] = useState(false);
   const recipe = recipes[slug];
   const values = controls[slug];
   const info = soundInfo[slug];
   const sustained = recipe.kind === "sustained";
   const status = playing[slug] ?? (sustained ? "stopped" : "ready");
+  const running = sustained && (status === "starting" || status === "running");
   const seedValue = Number(seed);
   const validSeed =
     seed.trim() !== "" &&
@@ -136,65 +131,27 @@ function SoundSession({
           className="catalog-transport"
           role="group"
           aria-label="Playback"
-          data-levels={levels ? "open" : "closed"}
           aria-busy={ready ? undefined : true}
         >
           <div className="audio-controls">
             <PlaySpark>
               <Button
                 className="play-action"
-                disabled={
-                  !ready ||
-                  (sustained && (status === "starting" || status === "running"))
-                }
-                onClick={() => void play(slug)}
+                disabled={!ready}
+                onClick={() => (running ? stop(slug) : void play(slug))}
               >
-                <PlayIcon />
-                {`${sustained ? "Start" : "Play"} ${info.title.toLowerCase()}`}
+                {running ? null : <PlayIcon />}
+                {`${running ? "Stop" : sustained ? "Start" : "Play"} ${info.title.toLowerCase()}`}
               </Button>
             </PlaySpark>
-            {sustained && (
-              <Button onClick={() => stop(slug)}>
-                Stop {info.title.toLowerCase()}
-              </Button>
-            )}
-            <Button
-              disabled={!ready}
-              aria-pressed={muted}
-              onClick={toggleMuted}
-            >
-              Mute
-            </Button>
-            <Button disabled={!ready} onClick={stopAll}>
-              Stop all
-            </Button>
-            <Button
-              className="catalog-levels"
-              aria-expanded={levels}
-              aria-controls="catalog-volume"
-              onClick={() => setLevels((open) => !open)}
-            >
-              {levels ? "Less" : "Levels"}
-            </Button>
           </div>
           <p data-testid={`${slug}-state`} aria-live="polite">
             {info.title}: {status}
           </p>
-          <p role="status">Audio: {state}</p>
+          <p className="sr-only" role="status">
+            Audio: {state}
+          </p>
           {error && <p role="alert">{error}</p>}
-          <label id="catalog-volume" className="catalog-volume">
-            Effects volume: {volume} dB
-            <input
-              aria-label="Effects volume"
-              disabled={!ready}
-              type="range"
-              min="-60"
-              max="0"
-              step="1"
-              value={volume}
-              onChange={(event) => changeVolume(Number(event.target.value))}
-            />
-          </label>
         </div>
         <div className="catalog-parameters">
           <h2>Customize</h2>
