@@ -13,7 +13,10 @@ import {
 import type { RuntimeInfo } from "./contracts.js";
 
 test("offline metadata and intent search derive from registry fields", () => {
-  expect(catalog.items).toHaveLength(10);
+  expect(catalog.items).toHaveLength(11);
+  expect(
+    searchCatalog("blade ignite spark retract", "experience")[0].name,
+  ).toBe("plasma-blade");
   expect(searchCatalog("soft completed action")[0].name).toBe("confirmation");
   expect(searchCatalog("living move release", "experience")[0].name).toBe(
     "reactive-thruster",
