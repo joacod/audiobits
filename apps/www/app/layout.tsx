@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     template: "AudioBits | %s",
   },
   description:
-    "Hear, customize, and integrate procedural sound effects generated in your browser with Web Audio.",
+    "A tiny Web Audio engine plus a catalog of sounds you copy into your app and own. Play them, tweak them live, or let your coding agent add them.",
   manifest: "/site.webmanifest",
   // Explicit list: setting `icons` replaces the app/ file-convention links.
   icons: {
@@ -22,6 +22,7 @@ export const metadata: Metadata = {
       { rel: "mask-icon", url: "/safari-pinned-tab.svg", color: "#050507" },
     ],
   },
+  openGraph: { siteName: "AudioBits", type: "website", url: "/" },
   twitter: { card: "summary_large_image" },
 };
 

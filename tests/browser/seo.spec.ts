@@ -34,7 +34,7 @@ test("public pages expose unique metadata and content without JavaScript", async
       path: "/",
       title: "AudioBits | Procedural Sound Effects",
       description:
-        "Hear, customize, and integrate procedural sound effects generated in your browser with Web Audio.",
+        "A tiny Web Audio engine plus a catalog of sounds you copy into your app and own. Play them, tweak them live, or let your coding agent add them.",
     },
     {
       path: "/catalog",
@@ -243,4 +243,21 @@ test("crawl files cover exactly the public pages and invalid routes stay 404", a
     expect(response.status(), path).toBe(404);
     expect(response.headers().location, path).toBeUndefined();
   }
+});
+
+test("home page JSON-LD includes the current package version", async ({
+  page,
+}) => {
+  const { version } = JSON.parse(
+    readFileSync("packages/audiobits/package.json", "utf8"),
+  ) as { version: string };
+  await page.goto(home);
+  const scripts = await page
+    .locator('script[type="application/ld+json"]')
+    .allTextContents();
+  const data = scripts.flatMap((text) => JSON.parse(text));
+  const source = data.find((item) => item["@type"] === "SoftwareSourceCode");
+  expect(source.version).toBe(version);
+  expect(source.url).toBe(siteUrl);
+  expect(data.some((item) => item["@type"] === "WebSite")).toBe(true);
 });
