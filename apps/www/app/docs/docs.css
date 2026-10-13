@@ -1,17 +1,29 @@
 @layer tokens {
   .audiobits-docs {
-    /* Only the existing waveform palette, without showcase surfaces or fonts. */
+    --docs-signal-mid: #b44cff;
+    --docs-selected: color-mix(in srgb, var(--docs-signal-mid) 65%, #000);
+    --docs-selected-bg: color-mix(
+      in srgb,
+      var(--docs-signal-mid) 12%,
+      transparent
+    );
+  }
+
+  .audiobits-docs .audiobits-docs-mark {
+    /* Waveform variables belong only to the mark, not the docs content. */
     --void: #050507;
     --signal-low: #2a6cff;
-    --signal-mid: #b44cff;
+    --signal-mid: var(--docs-signal-mid);
     --signal-high: #ff2e88;
-    --docs-selected: color-mix(in srgb, var(--signal-mid) 65%, #000);
-    --docs-selected-bg: color-mix(in srgb, var(--signal-mid) 12%, transparent);
   }
 
   .dark .audiobits-docs {
-    --docs-selected: color-mix(in srgb, var(--signal-mid) 65%, #fff);
-    --docs-selected-bg: color-mix(in srgb, var(--signal-mid) 16%, transparent);
+    --docs-selected: color-mix(in srgb, var(--docs-signal-mid) 65%, #fff);
+    --docs-selected-bg: color-mix(
+      in srgb,
+      var(--docs-signal-mid) 16%,
+      transparent
+    );
   }
 }
 

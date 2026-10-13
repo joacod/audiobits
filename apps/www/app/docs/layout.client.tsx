@@ -13,7 +13,11 @@ export function DocsBrand() {
   const gradientId = useId();
   return (
     <>
-      <BrandMark size={28} gradientId={gradientId} />
+      <BrandMark
+        size={28}
+        gradientId={gradientId}
+        className="audiobits-docs-mark"
+      />
       AudioBits
     </>
   );
@@ -28,6 +32,8 @@ export function DocsUtilities() {
     >
       <a
         href="https://github.com/joacod/audiobits"
+        target="_blank"
+        rel="noopener noreferrer"
         aria-label="AudioBits on GitHub"
         title="AudioBits on GitHub"
         className={buttonVariants({ variant: "ghost", size: "icon-sm" })}
@@ -36,6 +42,8 @@ export function DocsUtilities() {
       </a>
       <a
         href="https://www.npmjs.com/package/audiobits"
+        target="_blank"
+        rel="noopener noreferrer"
         aria-label="AudioBits on npm"
         title="AudioBits on npm"
         className={buttonVariants({ variant: "ghost", size: "icon-sm" })}
