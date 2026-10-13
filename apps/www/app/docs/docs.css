@@ -39,9 +39,34 @@
   background-color: var(--docs-selected);
 }
 
-/* The collapsed header owns expand/search, instead of the floating panel. */
+/* Keep the native compact controls aligned with the article when collapsed. */
 @media (min-width: 768px) {
-  .audiobits-docs [data-sidebar-panel] {
+  .audiobits-docs[data-sidebar-collapsed="false"] [data-sidebar-panel] {
     display: none;
+  }
+
+  .audiobits-docs[data-sidebar-collapsed="true"] {
+    --fd-header-height: 56px;
+  }
+
+  .audiobits-docs [data-sidebar-panel] {
+    position: sticky;
+    grid-area: header;
+    justify-self: start;
+    align-self: start;
+    inset-inline-start: auto;
+    top: calc(var(--fd-docs-row-1) + 16px);
+    margin-block: 16px 6px;
+    margin-inline-start: max(24px, calc((100% - 900px) / 2 + 24px));
+  }
+
+  .audiobits-docs[data-sidebar-collapsed="true"] #nd-page {
+    padding-top: 24px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .audiobits-docs [data-sidebar-panel] {
+    margin-inline-start: max(32px, calc((100% - 900px) / 2 + 32px));
   }
 }

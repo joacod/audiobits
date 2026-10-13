@@ -2,9 +2,6 @@
 
 import { useId } from "react";
 import Link from "next/link";
-import { useDocsLayout } from "fumadocs-ui/layouts/docs";
-import { Header } from "fumadocs-ui/layouts/docs/slots/header";
-import { useSidebar } from "fumadocs-ui/layouts/docs/slots/sidebar";
 import { ThemeSwitch } from "fumadocs-ui/layouts/shared/slots/theme-switch";
 import { buttonVariants } from "fumadocs-ui/components/ui/button";
 import { GithubIcon } from "../../icons/github-icon";
@@ -58,52 +55,60 @@ export function DocsUtilities() {
   );
 }
 
-export function DocsHeader() {
-  const { slots } = useDocsLayout();
-  const { collapsed, setCollapsed } = useSidebar();
-  return (
-    <>
-      <Header />
-      {collapsed && (
-        <header className="audiobits-docs-collapsed-header [grid-area:header] sticky top-(--fd-docs-row-1) z-30 border-b bg-fd-background/80 backdrop-blur-sm h-(--fd-header-height) max-md:hidden md:layout:[--fd-header-height:--spacing(14)]">
-          <div className="mx-auto flex h-full max-w-[900px] items-center gap-2 px-6 xl:px-8">
-            <button
-              type="button"
-              onClick={() => setCollapsed(false)}
-              className={buttonVariants({ variant: "ghost", size: "sm" })}
-            >
-              Expand Sidebar
-            </button>
-            {slots.searchTrigger && <slots.searchTrigger.sm hideIfDisabled />}
-            <Link href="/docs" className="ms-auto text-sm font-medium">
-              AudioBits Docs
-            </Link>
-            <div className="xl:hidden">
-              <DocsUtilities />
-            </div>
-          </div>
-        </header>
-      )}
-    </>
-  );
-}
-
 export function DocsSidebarFooter() {
   return (
     <nav
       aria-label="AudioBits site"
-      className="flex items-center gap-1 rounded-lg border bg-fd-secondary/50 p-1"
+      className="grid grid-cols-2 gap-1 rounded-lg border bg-fd-secondary/50 p-1"
     >
       <Link
         href="/"
-        className={buttonVariants({ variant: "ghost", size: "sm" })}
+        className={buttonVariants({
+          variant: "ghost",
+          size: "sm",
+          className: "gap-2",
+        })}
       >
+        <svg
+          aria-hidden="true"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="shrink-0 text-fd-muted-foreground"
+        >
+          <path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Z" />
+          <path d="M9 21v-8h6v8" />
+        </svg>
         Home
       </Link>
       <Link
         href="/catalog"
-        className={buttonVariants({ variant: "ghost", size: "sm" })}
+        className={buttonVariants({
+          variant: "ghost",
+          size: "sm",
+          className: "gap-2",
+        })}
       >
+        <svg
+          aria-hidden="true"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          className="shrink-0 text-fd-muted-foreground"
+        >
+          <rect x="3" y="3" width="7" height="7" rx="1.5" />
+          <rect x="14" y="3" width="7" height="7" rx="1.5" />
+          <rect x="3" y="14" width="7" height="7" rx="1.5" />
+          <rect x="14" y="14" width="7" height="7" rx="1.5" />
+        </svg>
         Catalog
       </Link>
     </nav>

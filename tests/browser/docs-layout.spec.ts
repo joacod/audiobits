@@ -231,16 +231,21 @@ for (const width of [768, 1024, 1440]) {
         exact: true,
       })
       .click();
-    const toolbar = page.locator(".audiobits-docs-collapsed-header");
+    const toolbar = page.locator("[data-sidebar-panel]");
     await expect(toolbar).toBeVisible();
-    await expect(page.locator("[data-sidebar-panel]")).not.toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Expand Sidebar" }),
+    ).toHaveCount(0);
     await expect(page.locator("#nd-sidebar")).toHaveAttribute("inert", "");
-    const expand = toolbar.getByRole("button", { name: "Expand Sidebar" });
+    const expand = toolbar.getByRole("button", {
+      name: "Collapse Sidebar",
+      exact: true,
+    });
     await expect(expand).toBeInViewport();
     // Read both positions in one frame while the native grid animates.
     const alignment = await page.evaluate(() => {
       const button = document
-        .querySelector(".audiobits-docs-collapsed-header button")!
+        .querySelector("[data-sidebar-panel]")!
         .getBoundingClientRect();
       const heading = document
         .querySelector("#nd-page h1")!
@@ -264,7 +269,7 @@ for (const width of [768, 1024, 1440]) {
       "data-collapsed",
       "false",
     );
-    await expect(toolbar).toHaveCount(0);
+    await expect(toolbar).not.toBeVisible();
     await page
       .locator("#nd-sidebar")
       .getByRole("navigation", {
