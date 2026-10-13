@@ -30,20 +30,37 @@ test("all five original recipes round-trip and compile at control/seed extrema",
         );
     }
   }
-  const rest = compile(recipes.plasmaBlade, { motion: 0, drift: 0 });
-  const fast = compile(recipes.plasmaBlade, { motion: 1, drift: 1 });
-  expect(rest.layers[0].layer.source).toMatchObject({ frequency: 110 });
-  expect(fast.layers[0].layer.source).toMatchObject({
-    frequency: expect.closeTo(116, 10),
+  const rest = compile(recipes.plasmaBlade, {
+    motion: 0,
+    drift: 0.5,
+    sweep: 0,
   });
-  expect(fast.layers[3].layer.gainDb).toBe(-40);
-  expect(rest.layers[3].layer.gainDb).toBe(-60);
-  expect(fast.layers[3].layer.effects![0].frequency).toBe(2600);
+  const fast = compile(recipes.plasmaBlade, {
+    motion: 1,
+    drift: 0.5,
+    sweep: 1,
+  });
+  const returning = compile(recipes.plasmaBlade, {
+    motion: 1,
+    drift: 0.5,
+    sweep: -1,
+  });
+  expect(rest.layers[0].layer.source).toMatchObject({
+    frequency: expect.closeTo(96, 10),
+  });
+  expect(fast.layers[0].layer.source).toMatchObject({
+    frequency: expect.closeTo(115.2, 10),
+  });
+  expect(returning.layers[0].layer.source).toMatchObject({ frequency: 80 });
+  expect(fast.layers[0].layer.gainDb).toBeGreaterThan(
+    rest.layers[0].layer.gainDb,
+  );
   expect(() => compile(recipes.plasmaBlade, { motion: 1.01 })).toThrow();
+  expect(() => compile(recipes.plasmaBlade, { sweep: -1.01 })).toThrow();
 });
 
 test("motion bounds, frame-independent smoothing, recovery, and swept geometry", () => {
-  expect([NaN, Infinity, -4, 0, 900, 1800, 9000].map(motionLevel)).toEqual([
+  expect([NaN, Infinity, -4, 0, 600, 1200, 9000].map(motionLevel)).toEqual([
     0, 0, 0, 0, 0.5, 1, 1,
   ]);
   const once = smoothMotion(0, 1, 32);
@@ -61,6 +78,44 @@ test("motion bounds, frame-independent smoothing, recovery, and swept geometry",
   expect(segmentDistance({ x: 3, y: 4 }, { x: 0, y: 0 }, { x: 0, y: 0 })).toBe(
     5,
   );
+});
+
+test("return strokes bend the existing hum and rearm bounded swing accents without stopping", async () => {
+  const s = setup();
+  s.control.ignite();
+  s.resolve();
+  await settle();
+  for (let i = 0; i < 20; i++) s.control.update(1500, 16, 1);
+  expect(s.records[2].play).toHaveBeenCalledTimes(1);
+  expect(s.voices[1].set).toHaveBeenLastCalledWith(
+    expect.objectContaining({ sweep: expect.closeTo(1, 5) }),
+  );
+  s.control.update(1500, 16, -1);
+  expect(s.records[2].play).toHaveBeenCalledTimes(2);
+  expect(s.voices[1].set).toHaveBeenLastCalledWith(
+    expect.objectContaining({ sweep: expect.closeTo(-1, 5) }),
+  );
+  // A reversal inside the cooldown is remembered, but cannot flood accents.
+  s.control.update(1500, 16, 1);
+  expect(s.records[2].play).toHaveBeenCalledTimes(2);
+  for (let i = 0; i < 14; i++) s.control.update(1500, 16, 1);
+  expect(s.records[2].play).toHaveBeenCalledTimes(3);
+  for (let i = 0; i < 30; i++) s.control.update(0, 16, 1);
+  expect(s.control.motion).toBeLessThan(0.01);
+  expect(s.records[0].play).toHaveBeenCalledTimes(1);
+  s.control.update(NaN, 16, Infinity);
+  expect(s.voices[1].set).toHaveBeenLastCalledWith(
+    expect.objectContaining({ sweep: 0 }),
+  );
+  s.control.stop();
+  s.control.ignite();
+  await settle();
+  expect(s.records[0].play).toHaveBeenLastCalledWith(
+    expect.objectContaining({
+      parameters: { motion: 0, drift: 0.5, sweep: 0 },
+    }),
+  );
+  s.control.dispose();
 });
 
 function setup() {

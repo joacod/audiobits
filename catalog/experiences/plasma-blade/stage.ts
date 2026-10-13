@@ -28,6 +28,7 @@ export function mountBladeStage(
   let desired: Point = { x: 0.5, y: 0.79 };
   const position = { ...desired };
   let lastTip: Point | undefined, lastBase: Point | undefined;
+  let lastMotionTip: Point | undefined;
   let elapsed = 0,
     hits = 0,
     keyboardTarget = 0;
@@ -70,6 +71,7 @@ export function mountBladeStage(
     collapsing = false;
     previous = 0;
     lastTip = lastBase = undefined;
+    lastMotionTip = undefined;
     assistedTarget = null;
     trails.length = particles.length = 0;
     disconnect();
@@ -170,12 +172,7 @@ export function mountBladeStage(
     position.y += (desired.y - position.y) * follow;
     const base = { x: position.x * width, y: position.y * height };
     const vx = dt ? ((base.x - old.x) * 1000) / dt : 0;
-    const speed = dt
-      ? (Math.hypot(base.x - old.x, base.y - old.y) * 1000) / dt
-      : 0;
-    const motion = host.control.update(speed, dt);
-    canvas.dataset.motion = motion.toFixed(3);
-    const duration = active ? 460 : 280;
+    const duration = active ? 460 : 360;
     extension = Math.max(
       0,
       Math.min(1, extension + (active ? dt / duration : -dt / duration)),
@@ -192,7 +189,26 @@ export function mountBladeStage(
       (assistedTarget === null
         ? Math.max(-0.35, Math.min(0.35, vx / 6500))
         : 0);
-    const length = Math.min(height * 0.44, width * 0.62) * extension;
+    const fullLength = Math.min(height * 0.44, width * 0.62);
+    // Measure the full blade's travel, excluding ignition/retraction extension.
+    const motionTip = {
+      x: base.x + Math.sin(angle) * fullLength,
+      y: base.y - Math.cos(angle) * fullLength,
+    };
+    const dx = lastMotionTip ? motionTip.x - lastMotionTip.x : base.x - old.x;
+    const dy = lastMotionTip ? motionTip.y - lastMotionTip.y : base.y - old.y;
+    const travel = Math.hypot(dx, dy);
+    const speed = dt
+      ? (Math.max(travel, Math.hypot(base.x - old.x, base.y - old.y)) * 1000) /
+        dt
+      : 0;
+    const direction = travel
+      ? (Math.abs(dx) >= Math.abs(dy) ? dx : -dy) / travel
+      : 0;
+    const motion = host.control.update(speed, dt, direction);
+    canvas.dataset.motion = motion.toFixed(3);
+    lastMotionTip = motionTip;
+    const length = fullLength * extension;
     const tip = {
       x: base.x + Math.sin(angle) * length,
       y: base.y - Math.cos(angle) * length,
@@ -401,6 +417,7 @@ export function mountBladeStage(
     canvas.height = Math.round(height * ratio);
     paint.setTransform(ratio, 0, 0, ratio, 0, 0);
     lastTip = lastBase = undefined;
+    lastMotionTip = undefined;
     wake();
   }
   function place(event: PointerEvent) {

@@ -264,6 +264,7 @@ test("Chromium native signal: five timbres, control extrema, rapid ramps and eig
         count?: number,
         update?: boolean,
         rate?: number,
+        sweep?: number,
       ): Promise<{
         peak: number;
         energy: number;
@@ -272,6 +273,8 @@ test("Chromium native signal: five timbres, control extrema, rapid ramps and eig
         onset: number;
         finished: number;
         brightness: number;
+        humFrequency: number;
+        upperEnergyRatio: number;
       }>;
     };
     const singles = [];
@@ -288,6 +291,11 @@ test("Chromium native signal: five timbres, control extrema, rapid ramps and eig
     return {
       singles,
       moving: await h.plasmaSignal("plasmaBlade", 0.2, 1, true),
+      directions: await Promise.all(
+        [-1, 0, 1].map((sweep) =>
+          h.plasmaSignal("plasmaBlade", 0.8, 1, false, 48000, sweep),
+        ),
+      ),
       stacks: await Promise.all(
         [
           "plasmaBlade",
@@ -308,6 +316,16 @@ test("Chromium native signal: five timbres, control extrema, rapid ramps and eig
   }
   expect(results.moving.delta).toBeLessThan(0.04);
   expect(results.moving.tail).toBe(0);
+  // Keep the sustained field soft even at full motion; bright impact transients
+  // have their own headroom checks and are not constrained to this tonal balance.
+  for (const offset of [0, 15])
+    for (const index of [0, 1, 2])
+      expect(results.singles[offset + index].upperEnergyRatio).toBeLessThan(
+        0.01,
+      );
+  const [returning, idlePitch, forward] = results.directions;
+  expect(returning.humFrequency).toBeLessThan(idlePitch.humFrequency - 10);
+  expect(forward.humFrequency).toBeGreaterThan(idlePitch.humFrequency + 10);
   for (const stack of results.stacks) {
     expect(stack.peak).toBeLessThan(1);
     expect(stack.finished).toBe(8);
