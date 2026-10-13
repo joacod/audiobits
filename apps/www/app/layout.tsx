@@ -22,7 +22,7 @@ export const metadata: Metadata = {
       { rel: "mask-icon", url: "/safari-pinned-tab.svg", color: "#050507" },
     ],
   },
-  openGraph: { siteName: "AudioBits", type: "website", url: "/" },
+  openGraph: { siteName: "AudioBits", type: "website" },
   twitter: { card: "summary_large_image" },
 };
 
