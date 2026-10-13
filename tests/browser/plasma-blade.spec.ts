@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { build } from "esbuild";
 import { instrument, probe } from "./experience-probe";
 import { requireOfflineCheckpoints } from "./offline-capabilities";
 
@@ -18,6 +19,7 @@ test("ignition, held pointer swings and swept target hits, release retraction an
   ).toBeEnabled();
   expect((await probe(page)).contexts).toEqual([]);
   const pad = stage(page);
+  await expect(pad).toHaveAttribute("data-renderer", "three");
   await pad.scrollIntoViewIfNeeded();
   const box = (await pad.boundingBox())!;
   await page.mouse.move(box.x + box.width * 0.5, box.y + box.height * 0.8);
@@ -339,3 +341,257 @@ test("Chromium native signal: five timbres, control extrema, rapid ramps and eig
     );
   }
 });
+
+async function trackBladeGraphics(
+  page: import("@playwright/test").Page,
+  failure?: "context" | "shader",
+) {
+  await page.addInitScript((failure) => {
+    const resources = new Map<object, () => boolean>();
+    let draws = 0;
+    const gl = WebGL2RenderingContext.prototype;
+    for (const name of [
+      "Shader",
+      "Program",
+      "Buffer",
+      "Texture",
+      "Framebuffer",
+      "Renderbuffer",
+      "VertexArray",
+    ] as const) {
+      const create = `create${name}` as keyof WebGL2RenderingContext;
+      const remove = `delete${name}` as keyof WebGL2RenderingContext;
+      const make = gl[create] as (...args: unknown[]) => object | null;
+      const drop = gl[remove] as (...args: unknown[]) => void;
+      Object.defineProperty(gl, create, {
+        value: function (this: WebGL2RenderingContext, ...args: unknown[]) {
+          const resource = Reflect.apply(make, this, args);
+          if (resource) {
+            const valid = this[`is${name}` as keyof WebGL2RenderingContext] as (
+              resource: object,
+            ) => boolean;
+            resources.set(resource, () => valid.call(this, resource));
+          }
+          return resource;
+        },
+      });
+      Object.defineProperty(gl, remove, {
+        value: function (this: WebGL2RenderingContext, resource: object) {
+          resources.delete(resource);
+          return Reflect.apply(drop, this, [resource]);
+        },
+      });
+    }
+    for (const method of ["drawArrays", "drawElements"] as const) {
+      const draw = gl[method];
+      Object.defineProperty(gl, method, {
+        value: function (this: WebGL2RenderingContext, ...args: unknown[]) {
+          draws++;
+          return Reflect.apply(draw, this, args);
+        },
+      });
+    }
+    if (failure === "context") {
+      const getContext = HTMLCanvasElement.prototype.getContext;
+      HTMLCanvasElement.prototype.getContext = function (
+        ...args: Parameters<typeof getContext>
+      ) {
+        if (args[0] === "webgl2") return null;
+        return Reflect.apply(getContext, this, args);
+      } as typeof getContext;
+    }
+    if (failure === "shader") {
+      const getShaderParameter = gl.getShaderParameter;
+      gl.getShaderParameter = function (shader, parameter) {
+        return parameter === this.COMPILE_STATUS
+          ? false
+          : getShaderParameter.call(this, shader, parameter);
+      };
+      const getProgramParameter = gl.getProgramParameter;
+      gl.getProgramParameter = function (program, parameter) {
+        return parameter === this.LINK_STATUS
+          ? false
+          : getProgramParameter.call(this, program, parameter);
+      };
+    }
+    Object.assign(globalThis, {
+      bladeGraphics: resources,
+      bladeDraws: () => draws,
+    });
+  }, failure);
+}
+
+const bladeResourceCount = (page: import("@playwright/test").Page) =>
+  page.evaluate(
+    () =>
+      // Context loss releases Three's internal default textures without JS delete calls.
+      // Ask Chromium which native objects remain valid, including those allocations.
+      [
+        ...(
+          globalThis as unknown as { bladeGraphics: Map<object, () => boolean> }
+        ).bladeGraphics.values(),
+      ].filter((valid) => valid()).length,
+  );
+
+test("development Strict Mode replays effects with a fresh graphics canvas", async ({
+  page,
+}) => {
+  const { outputFiles } = await build({
+    stdin: {
+      contents: `
+        import { StrictMode } from "react";
+        import { createRoot } from "react-dom/client";
+        import { PlasmaBladeDetail } from "./app/plasma-blade-detail";
+        const root = createRoot(document.getElementById("strict-root"));
+        root.render(<StrictMode><PlasmaBladeDetail /></StrictMode>);
+        globalThis.unmountBlade = () => root.unmount();
+      `,
+      resolveDir: resolve("apps/www"),
+      loader: "tsx",
+    },
+    bundle: true,
+    format: "iife",
+    platform: "browser",
+    jsx: "automatic",
+    define: { "process.env.NODE_ENV": '"development"' },
+    loader: { ".css": "empty" },
+    write: false,
+  });
+  const errors: string[] = [];
+  page.on("pageerror", (cause) => errors.push(cause.message));
+  page.on("console", (message) => {
+    if (message.type() === "error") errors.push(message.text());
+  });
+  await trackBladeGraphics(page);
+  await page.addInitScript(() => {
+    const canvases = new Set<HTMLCanvasElement>();
+    const getContext = HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext = function (
+      ...args: Parameters<typeof getContext>
+    ) {
+      if (args[0] === "webgl2") canvases.add(this);
+      return Reflect.apply(getContext, this, args);
+    } as typeof getContext;
+    Object.assign(globalThis, { bladeCanvases: canvases });
+  });
+  await page.goto("about:blank");
+  await page.setContent(
+    '<main id="strict-root" class="foundation" style="width:700px"></main>',
+  );
+  await page.addStyleTag({ path: resolve("apps/www/app/plasma-blade.css") });
+  await page.addScriptTag({ content: outputFiles[0].text });
+  const pad = stage(page);
+  await expect(pad).toHaveAttribute("data-renderer", "three");
+  await expect(pad.locator("canvas")).toHaveCount(1);
+  expect(
+    await page.evaluate(() =>
+      [
+        ...(globalThis as unknown as { bladeCanvases: Set<HTMLCanvasElement> })
+          .bladeCanvases,
+      ].map((canvas) => canvas.getContext("webgl2")!.isContextLost()),
+    ),
+  ).toEqual([true, false]);
+  await page.getByRole("button", { name: "Ignite", exact: true }).click();
+  await expect(pad).toHaveAttribute("data-state", "running");
+  await expect(pad).toHaveAttribute("data-extension", "1.000");
+  await page.getByRole("button", { name: "Stop all", exact: true }).click();
+  await page.evaluate(() =>
+    (globalThis as unknown as { unmountBlade(): void }).unmountBlade(),
+  );
+  await expect.poll(() => bladeResourceCount(page)).toBe(0);
+  expect(errors).toEqual([]);
+});
+
+test("3D blade graphics release on navigation and remain static at rest", async ({
+  page,
+}) => {
+  await trackBladeGraphics(page);
+  await instrument(page, "normal", "plasma-blade");
+  await expect(
+    page.getByRole("button", { name: "Ignite", exact: true }),
+  ).toBeEnabled();
+  const pad = stage(page);
+  await expect(pad).toHaveAttribute("data-renderer", "three");
+  expect(await bladeResourceCount(page)).toBeGreaterThan(0);
+  await pad.focus();
+  await page.keyboard.press("Enter");
+  await expect(pad).toHaveAttribute("data-extension", "1.000");
+  await page.keyboard.press("Space");
+  await expect
+    .poll(async () => Number(await pad.getAttribute("data-hits")))
+    .toBeGreaterThan(0);
+  await page.keyboard.press("Escape");
+  await expect(pad).toHaveAttribute("data-extension", "0.000");
+  const restingDraws = await page.evaluate(async () => {
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+    );
+    return (globalThis as unknown as { bladeDraws(): number }).bladeDraws();
+  });
+  expect(
+    await page.evaluate(async () => {
+      await new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+      );
+      return (globalThis as unknown as { bladeDraws(): number }).bladeDraws();
+    }),
+  ).toBe(restingDraws);
+  await page
+    .getByRole("navigation", { name: "Main navigation" })
+    .getByRole("link", { name: "Catalog", exact: true })
+    .click();
+  await expect.poll(() => bladeResourceCount(page)).toBe(0);
+  await expect
+    .poll(async () => (await probe(page)).contexts)
+    .toEqual(["closed"]);
+});
+
+for (const failure of ["context", "shader", "lost"] as const)
+  test(`3D blade ${failure} failure preserves audio controls and frees graphics`, async ({
+    page,
+  }) => {
+    await trackBladeGraphics(page, failure === "lost" ? undefined : failure);
+    await instrument(page, "normal", "plasma-blade");
+    await expect(
+      page.getByRole("button", { name: "Ignite", exact: true }),
+    ).toBeEnabled();
+    const pad = stage(page);
+    if (failure === "lost") {
+      await expect(pad).toHaveAttribute("data-renderer", "three");
+      await page.getByRole("button", { name: "Ignite", exact: true }).click();
+      await expect(pad).toHaveAttribute("data-state", "running");
+      await pad.evaluate((canvas) => {
+        canvas
+          .querySelector("canvas")!
+          .getContext("webgl2")!
+          .getExtension("WEBGL_lose_context")!
+          .loseContext();
+      });
+      await expect(pad).toHaveAttribute("data-state", "stopped");
+    }
+    await expect(pad).toHaveAttribute("data-renderer", "unavailable");
+    await expect(page.locator(".plasma-display-error")).toContainText(
+      "3D display is unavailable",
+    );
+    await expect.poll(() => bladeResourceCount(page)).toBe(0);
+    await page.getByRole("button", { name: "Ignite", exact: true }).click();
+    await expect(
+      page
+        .getByRole("status", { name: "", exact: true })
+        .filter({ hasText: "Blade:" }),
+    ).toHaveText("Blade: running");
+    await expect(
+      page.getByRole("button", { name: "Strike target", exact: true }),
+    ).toBeDisabled();
+    await page.getByRole("button", { name: "Mute", exact: true }).click();
+    await expect(
+      page.getByRole("button", { name: "Unmute", exact: true }),
+    ).toHaveAttribute("aria-pressed", "true");
+    await page.getByRole("button", { name: "Stop all", exact: true }).click();
+    await expect
+      .poll(async () => {
+        const p = await probe(page);
+        return p.sources === p.ended;
+      })
+      .toBe(true);
+  });

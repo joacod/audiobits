@@ -16,6 +16,21 @@
   outline: 3px solid var(--ink, #f2f2f2);
   outline-offset: -6px;
 }
+.foundation .plasma-renderer {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.foundation .plasma-display-error {
+  position: absolute;
+  inset: 25% 24px auto;
+  max-width: 54ch;
+  margin-inline: auto;
+  padding: 20px;
+  color: var(--ink, #f2f2f2);
+  background: var(--void, #050507);
+  line-height: 1.65;
+}
 .foundation .plasma-stage-caption {
   position: absolute;
   inset: auto 24px 20px;

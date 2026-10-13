@@ -8,15 +8,15 @@ import {
   useSyncExternalStore,
 } from "react";
 import { mountPlasmaBlade } from "../../../catalog/experiences/plasma-blade/host";
-import { mountBladeStage } from "../../../catalog/experiences/plasma-blade/stage";
+import { mountBladeStage3D } from "./plasma-blade-stage";
 import "./plasma-blade.css";
 
 const subscribeHydration = () => () => {};
 
 export function PlasmaBladeDetail() {
-  const canvas = useRef<HTMLCanvasElement>(null);
+  const surface = useRef<HTMLDivElement>(null);
   const host = useRef<ReturnType<typeof mountPlasmaBlade> | null>(null);
-  const stage = useRef<ReturnType<typeof mountBladeStage> | null>(null);
+  const stage = useRef<ReturnType<typeof mountBladeStage3D> | null>(null);
   const [state, setState] = useState("stopped");
   const ready = useSyncExternalStore(
     subscribeHydration,
@@ -26,9 +26,15 @@ export function PlasmaBladeDetail() {
   const [muted, setMuted] = useState(false);
   const [hits, setHits] = useState(0);
   const [error, setError] = useState("");
+  const [displayError, setDisplayError] = useState("");
   const reportError = useCallback((cause: unknown) => {
     setError(
       `${cause instanceof Error ? cause.message : String(cause)}. Tap Ignite to retry.`,
+    );
+  }, []);
+  const reportDisplayError = useCallback(() => {
+    setDisplayError(
+      "The 3D display is unavailable. You can still use Ignite, Retract, Mute and Stop below. Reload the page to retry the display.",
     );
   }, []);
   useEffect(() => {
@@ -44,14 +50,19 @@ export function PlasmaBladeDetail() {
       error: reportError,
     });
     host.current = current;
-    let display: ReturnType<typeof mountBladeStage> | undefined;
+    let display: ReturnType<typeof mountBladeStage3D> | undefined;
     try {
-      if (canvas.current) display = mountBladeStage(canvas.current, current);
+      if (surface.current)
+        display = mountBladeStage3D(
+          surface.current,
+          current,
+          reportDisplayError,
+        );
       stage.current = display ?? null;
-    } catch (cause) {
-      // Canvas is initialized after mount; a synchronous native failure needs visible recovery.
+    } catch {
+      if (surface.current) surface.current.dataset.renderer = "unavailable";
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      reportError(cause);
+      reportDisplayError();
     }
     return () => {
       display?.dispose();
@@ -59,18 +70,23 @@ export function PlasmaBladeDetail() {
       host.current = null;
       void current.dispose().catch(console.error);
     };
-  }, [reportError]);
+  }, [reportError, reportDisplayError]);
   return (
     <>
       <div className="plasma-stage catalog-gesture-stage">
-        <canvas
-          ref={canvas}
+        <div
+          ref={surface}
           className="plasma-canvas"
           role="group"
           aria-label="Plasma blade stage"
           aria-describedby="plasma-help"
-          tabIndex={ready ? 0 : -1}
+          tabIndex={ready && !displayError ? 0 : -1}
         />
+        {displayError ? (
+          <p className="plasma-display-error" role="alert">
+            {displayError}
+          </p>
+        ) : null}
         <div className="plasma-stage-caption" aria-hidden="true">
           <span>
             {state === "stopped"
@@ -98,7 +114,7 @@ export function PlasmaBladeDetail() {
           </button>
           <button
             type="button"
-            disabled={state !== "running"}
+            disabled={state !== "running" || !!displayError}
             onClick={() => stage.current?.strike()}
           >
             Strike target
