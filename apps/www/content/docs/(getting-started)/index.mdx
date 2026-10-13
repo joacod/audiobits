@@ -17,27 +17,76 @@ write yourself.
 
 ## Choose a starting point
 
-| You want to…                                     | Start here                                                             |
-| ------------------------------------------------ | ---------------------------------------------------------------------- |
-| Play a small sound or write an original recipe   | Install the runtime and try the tone below.                            |
-| Adapt a catalog sound or complete interaction    | [Install editable catalog source](/docs/catalog).                      |
-| Ask a coding agent to integrate or design audio  | [Install the official AudioBits Skill](/docs/agents).                  |
-| Extend a complex agent workflow with local tools | Read [optional MCP tooling](/docs/mcp). Normal use needs no MCP setup. |
+<Cards>
+<Card title="Runtime" href="/docs#install-the-runtime">
+
+Install `audiobits` from npm, then write or integrate an original sound with
+the quick start below.
+
+</Card>
+<Card title="Catalog & Editable Source" href="/docs/catalog">
+
+Discover ready-made recipes and interactive experiences. Install or copy their
+editable source into your application.
+
+</Card>
+<Card title="AI Agents" href="/docs/agents">
+
+Install the official AudioBits Skill to help coding agents create sounds and
+wire them into your application.
+
+</Card>
+</Cards>
+
+Browse the [live catalog](/catalog) for sounds to adapt, or see the
+[runtime reference](/docs/api) for public APIs. The agent guide also links to
+[optional MCP tooling](/docs/mcp) for complex workflows.
 
 ## Install the runtime
 
 For an original sound, install AudioBits directly with your project's package
-manager. With npm:
+manager. This installs the runtime, not catalog source or the agent Skill.
+
+<Tabs items={["npm", "pnpm", "yarn", "bun"]}>
+<Tab value="npm">
 
 ```sh
 npm install audiobits
 ```
 
+</Tab>
+<Tab value="pnpm">
+
+```sh
+pnpm add audiobits
+```
+
+</Tab>
+<Tab value="yarn">
+
+```sh
+yarn add audiobits
+```
+
+</Tab>
+<Tab value="bun">
+
+```sh
+bun add audiobits
+```
+
+</Tab>
+</Tabs>
+
 ## Play a tone
+
+<Callout type="warn" title="Start audio from a user gesture">
 
 Create the engine and definition without allocating browser audio. Call `play()`
 directly from your button's click handler and report rejected promises to the user.
 Retry a failed start with a fresh Play gesture.
+
+</Callout>
 
 ```ts
 import { createAudio, defineSound } from "audiobits";
@@ -70,10 +119,14 @@ export async function dispose() {
 }
 ```
 
+<Callout title="Own the host lifecycle">
+
 Bind `play()` to your button click and surface failures with
 `void play().catch(showError)`. For hiding, SPA navigation, suspension and disposal,
 bind `stop()` to Stop and await `dispose()` when removing the host.
 See [Production lifecycle](/docs/lifecycle). The catalog never plays on load.
+
+</Callout>
 
 ## Next
 

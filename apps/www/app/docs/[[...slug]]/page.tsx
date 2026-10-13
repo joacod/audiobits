@@ -9,6 +9,9 @@ import {
   DocsTitle,
 } from "fumadocs-ui/page";
 import defaultMdxComponents from "fumadocs-ui/mdx";
+import { Tab, Tabs } from "fumadocs-ui/components/tabs";
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import { File, Files, Folder } from "fumadocs-ui/components/files";
 import { source } from "../../../lib/source";
 
 function DocsLink(props: ComponentProps<typeof defaultMdxComponents.a>) {
@@ -56,7 +59,18 @@ export default async function Page({
       <DocsDescription>{page.data.description}</DocsDescription>
       <DocsBody>
         <Content
-          components={{ ...defaultMdxComponents, a: DocsLink, PackageChannel }}
+          components={{
+            ...defaultMdxComponents,
+            a: DocsLink,
+            PackageChannel,
+            Tab,
+            Tabs,
+            Step,
+            Steps,
+            File,
+            Files,
+            Folder,
+          }}
         />
       </DocsBody>
     </DocsPage>

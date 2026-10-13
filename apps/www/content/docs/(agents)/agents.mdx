@@ -14,20 +14,46 @@ It does not play audio by itself or add a framework adapter.
 
 ## Install the Skill
 
+<Steps>
+<Step>
+
+### Add the official Skill
+
 Install through the [Skills CLI](https://skills.sh/docs/cli):
 
 ```sh
 npx skills add joacod/audiobits --skill audiobits
 ```
 
+</Step>
+<Step>
+
+### Choose your agent and scope
+
 Follow the CLI prompts to choose your agent and installation scope. Use the
 installed location reported by the CLI or your agent's Skill inventory. The
 authoritative instructions and references live in
 [`skills/audiobits/`](https://github.com/joacod/audiobits/tree/main/skills/audiobits).
 
+</Step>
+<Step>
+
+### Start a task in your application
+
+Open your application project with the chosen agent and ask it to use the
+AudioBits Skill. [Choose the depth](#choose-the-depth) below for an example
+prompt, from a button sound to a complete interactive experience.
+
+</Step>
+</Steps>
+
+<Callout title="MCP is optional">
+
 Installing the Skill does not install the runtime into your application or
 register an MCP server. [Optional local MCP tooling](/docs/mcp) is available for
 complex workflows, but every workflow below works with ordinary coding tools.
+
+</Callout>
 
 ## Choose the depth
 

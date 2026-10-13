@@ -23,12 +23,27 @@ controller to your UI, or study the complete host.
 
 ## Install source
 
+<Steps>
+<Step>
+
+### Discover and inspect an item
+
 From an existing project with a `package.json`, list the registry and inspect a
 recipe before adding it:
 
 ```sh
 npx shadcn@latest list joacod/audiobits
 npx shadcn@latest view joacod/audiobits/confirmation
+```
+
+</Step>
+<Step>
+
+### Add the editable source
+
+Install the recipe you inspected:
+
+```sh
 npx shadcn@latest add joacod/audiobits/confirmation
 ```
 
@@ -39,6 +54,11 @@ npx shadcn@latest add joacod/audiobits/energy-charge
 npx shadcn@latest add joacod/audiobits/reactive-thruster
 ```
 
+</Step>
+<Step>
+
+### Review source and dependencies
+
 These are [shadcn GitHub registry addresses](https://ui.shadcn.com/docs/registry/github).
 The CLI resolves the repository's root `registry.json` and its declared files;
 there is no separate AudioBits registry server to configure. Each item declares
@@ -47,25 +67,72 @@ dependency. Review dependency changes if your project already has AudioBits;
 compare the source requirements with your installed `audiobits/capabilities.json`.
 For runtime-only installation, use the [quick start](/docs#install-the-runtime).
 
-The items use explicit project-relative file targets. Normal installation needs
-no React, Tailwind, Next.js, or `components.json`. The source is TypeScript using
-public AudioBits exports and bundler module resolution, not precompiled JavaScript.
-
-| Item                             | Installed files                                                                                                                                                                    |
-| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| A recipe, such as `confirmation` | `src/sounds/recipes/<id>/recipe.ts` and `LICENSE`                                                                                                                                  |
-| `energy-charge`                  | `recipe.ts`, `progress.ts`, `host.ts`, `index.html`, `README.md`, and `LICENSE` under `src/sounds/experiences/energy-charge/`                                                      |
-| `reactive-thruster`              | Recipe, pointer controller, host, HTML demo, README, and license under `src/sounds/experiences/reactive-thruster/`, plus Impact and its license under `src/sounds/recipes/impact/` |
-
 For a reproducible install, append `#` followed by a reviewed full commit SHA
 to the GitHub address. Without a ref, the CLI uses the default branch. Review
 existing-file overwrite prompts and retain your local changes when appropriate.
 Later catalog installs are source updates to review in version control.
 
+</Step>
+</Steps>
+
 Use the top-level `view` command above for inspection. In the currently verified
 CLI, `add --dry-run`, `--diff`, and `--view` can prompt for `components.json` in
 an unconfigured project. Decline unrelated framework setup or use the
 [disposable preview setup](https://github.com/joacod/audiobits/blob/main/catalog/README.md#preview-limitation-in-shadcn-4214).
+
+## Files you own
+
+The items use explicit project-relative file targets. Normal installation needs
+no React, Tailwind, Next.js, or `components.json`. The source is TypeScript using
+public AudioBits exports and bundler module resolution, not precompiled JavaScript.
+
+This tree shows the registry targets for Confirmation, Energy Charge, and
+Reactive Thruster. Only the selected item's files are installed. Reactive
+Thruster also includes Impact, which its complete host imports.
+
+<Files>
+  <Folder name="src" defaultOpen>
+    <Folder name="sounds" defaultOpen>
+      <Folder name="recipes" defaultOpen>
+        <Folder name="confirmation" defaultOpen>
+          <File name="recipe.ts" />
+          <File name="LICENSE" />
+        </Folder>
+        <Folder name="impact">
+          <File name="recipe.ts" />
+          <File name="LICENSE" />
+        </Folder>
+      </Folder>
+      <Folder name="experiences" defaultOpen>
+        <Folder name="energy-charge" defaultOpen>
+          <File name="recipe.ts" />
+          <File name="progress.ts" />
+          <File name="host.ts" />
+          <File name="index.html" />
+          <File name="README.md" />
+          <File name="LICENSE" />
+        </Folder>
+        <Folder name="reactive-thruster">
+          <File name="recipe.ts" />
+          <File name="pointer.ts" />
+          <File name="host.ts" />
+          <File name="index.html" />
+          <File name="README.md" />
+          <File name="LICENSE" />
+        </Folder>
+      </Folder>
+    </Folder>
+  </Folder>
+</Files>
+
+<Callout title="Application-owned source, npm runtime">
+
+Recipes and experiences become source you own and edit in your application.
+Retain the included MIT license when redistributing it. `audiobits` remains the
+runtime dependency; builds and playback use local files and the runtime without
+registry access.
+
+</Callout>
 
 ## Integrate into your application
 
@@ -112,7 +179,5 @@ gesture activation, errors, Stop, hiding, and teardown in the browser. Static
 validation does not prove audio playback or audible quality. AudioBits automated
 browser evidence targets Chromium.
 
-You own the copied source. Retain the included MIT license when redistributing
-it. After installation, builds and playback use local files and `audiobits`
-without registry access. For help adapting or creating source, use the
+For help adapting or creating source, use the
 [official agent Skill](/docs/agents).
