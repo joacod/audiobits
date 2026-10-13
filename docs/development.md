@@ -178,19 +178,20 @@ version from the manifest.
 ## Catalog examples
 
 Copy-owned interactive sources live in `catalog/experiences/`:
-[Energy Charge](../catalog/experiences/energy-charge/README.md) and
-[Reactive Thruster](../catalog/experiences/reactive-thruster/README.md). Edit their
+[Energy Charge](../catalog/experiences/energy-charge/README.md),
+[Reactive Thruster](../catalog/experiences/reactive-thruster/README.md), and
+[Plasma Blade](../catalog/experiences/plasma-blade/README.md). Edit their
 recipe, interaction, host, or demo files there; `apps/www` imports and displays
 these sources while owning website presentation. The
 [GitHub source registry](../catalog/README.md) installs canonical recipes and
-complete experiences as owned source. It covers all eight recipes and both
+complete experiences as owned source. It covers all eight recipes and three
 experiences.
 `registry.json` owns discovery metadata and installation file manifests; website
 metadata is derived from it. No creative recipes are generated into the runtime.
 
-`pnpm test:package` copies each of the ten item manifests into its own source
+`pnpm test:package` copies each of the eleven item manifests into its own source
 tree in an isolated packed-package consumer, typechecks every installed
-TypeScript file, validates every recipe with the actual runtime, and runs both
+TypeScript file, validates every recipe with the actual runtime, and runs all three
 standalone experience entrypoints in Chromium. The site browser tests verify the
 displayed source matches the catalog, along with interaction and lifecycle behavior.
 

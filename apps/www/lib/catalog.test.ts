@@ -2,6 +2,7 @@ import registry from "../../../registry.json" with { type: "json" };
 import { expect, test } from "vitest";
 import {
   energyChargeExperience,
+  plasmaBladeExperience,
   reactiveThrusterExperience,
 } from "./experiences";
 import { demos, soundKinds } from "./gallery";
@@ -26,11 +27,13 @@ test("catalog index covers every current entry once, in collection order", () =>
   expect(catalogEntries.map((entry) => entry.category)).toEqual([
     "experience",
     "experience",
+    "experience",
     ...bundledOrder.map(() => "bundled" as const),
   ]);
   expect(catalogEntries.map((entry) => entry.slug)).toEqual([
     "energy-charge",
     "reactive-thruster",
+    "plasma-blade",
     ...bundledOrder,
   ]);
   expect(new Set(catalogEntries.map((entry) => entry.slug)).size).toBe(
@@ -40,7 +43,7 @@ test("catalog index covers every current entry once, in collection order", () =>
     catalogEntries.length,
   );
   expect([...soundKinds].sort()).toEqual([...bundledOrder].sort());
-  expect(catalogEntries).toHaveLength(soundKinds.length + 2);
+  expect(catalogEntries).toHaveLength(soundKinds.length + 3);
   expect(catalogEntries.map((item) => item.slug).sort()).toEqual(
     registry.items.map((item) => item.name).sort(),
   );
@@ -65,6 +68,11 @@ test("catalog entries derive links and playback from website metadata", () => {
     controls: reactiveThrusterExperience.controls,
     source: { files: reactiveThrusterExperience.sourceFiles },
     preview: { family: "thruster" },
+  });
+  expect(catalogEntries[2]).toMatchObject({
+    title: plasmaBladeExperience.title,
+    preview: { family: "blade" },
+    source: { files: plasmaBladeExperience.sourceFiles },
   });
   expect("playback" in charge).toBe(false);
   expect("playback" in reactive).toBe(false);

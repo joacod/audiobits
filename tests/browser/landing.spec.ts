@@ -67,7 +67,7 @@ for (const [width, height] of [
     await expect(
       page.locator(".landing-experience").filter({ hasText: "Energy Charge" }),
     ).toHaveAttribute("href", "/catalog/energy-charge");
-    await expect(page.locator(".landing-experience")).toHaveCount(1);
+    await expect(page.locator(".landing-experience")).toHaveCount(2);
     await expect(page.locator(".landing h2")).toHaveText([
       "Hear it. Own it.",
       "Let your AI agent build the sound.",
@@ -118,7 +118,7 @@ for (const [width, height] of [
       .getByRole("link", { name: "Explore the full catalog", exact: true })
       .click();
     await expect(page).toHaveURL(`${home}/catalog`);
-    await expect(page.locator("[data-catalog-entry]")).toHaveCount(10);
+    await expect(page.locator("[data-catalog-entry]")).toHaveCount(11);
     await expect(page.locator("article.sound-card")).toHaveCount(0);
   });
 }

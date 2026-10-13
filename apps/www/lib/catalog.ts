@@ -1,13 +1,14 @@
 import registry from "../../../registry.json" with { type: "json" };
 import {
   energyChargeExperience,
+  plasmaBladeExperience,
   reactiveThrusterExperience,
 } from "./experiences";
 import { demos, type SoundKind } from "./gallery";
 
 // Navigation metadata only. Recipes stay in the gallery module.
 export type CatalogFamily =
-  "charge" | "thruster" | "pulse" | "harmonic" | "flow";
+  "charge" | "thruster" | "blade" | "pulse" | "harmonic" | "flow";
 
 type CatalogEntryBase = {
   slug: string;
@@ -19,7 +20,7 @@ type CatalogEntryBase = {
 export type ExperienceCatalogEntry = CatalogEntryBase & {
   category: "experience";
   controls: readonly string[];
-  preview: { family: "charge" | "thruster" };
+  preview: { family: "charge" | "thruster" | "blade" };
   source: { files: readonly string[] };
   relatedSounds: readonly string[];
 };
@@ -47,6 +48,7 @@ const experienceEntries = [
     preview: "thruster",
     experience: reactiveThrusterExperience,
   },
+  { slug: "plasma-blade", preview: "blade", experience: plasmaBladeExperience },
 ] as const;
 
 const bundledOrder = [

@@ -1,4 +1,24 @@
-export function ExperienceMark({ kind }: { kind: "charge" | "thruster" }) {
+export function ExperienceMark({
+  kind,
+}: {
+  kind: "charge" | "thruster" | "blade";
+}) {
+  if (kind === "blade")
+    return (
+      <svg className="experience-mark" viewBox="0 0 64 64" aria-hidden="true">
+        <path
+          d="M23 44 L47 7"
+          stroke="currentColor"
+          strokeWidth="4"
+          strokeLinecap="round"
+        />
+        <path
+          d="M14 58 L23 44 M16 41 L29 49"
+          stroke="currentColor"
+          strokeWidth="4"
+        />
+      </svg>
+    );
   if (kind === "charge") {
     return (
       <svg className="experience-mark" viewBox="0 0 64 64" aria-hidden="true">

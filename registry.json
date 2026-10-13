@@ -521,6 +521,88 @@
         }
       ],
       "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/main/catalog/README.md for integration and update guidance."
+    },
+    {
+      "name": "plasma-blade",
+      "type": "registry:item",
+      "title": "Plasma Blade",
+      "description": "Ignite a living electrical blade. Swing through the field. Strike, spark, retract.",
+      "dependencies": ["audiobits"],
+      "categories": ["experience"],
+      "meta": {
+        "classification": "experience",
+        "tags": ["blade", "sustained", "motion", "impact"],
+        "schemaVersion": 1,
+        "compatibility": {
+          "runtime": "audiobits public API with recipe schema 1",
+          "language": "TypeScript",
+          "moduleResolution": "Bundler",
+          "browser": "Web Audio; automated verification in Chromium",
+          "framework": "none"
+        },
+        "exportName": "plasmaBlade",
+        "requiredCapabilities": {
+          "sources": ["noise", "oscillator"],
+          "filters": ["bandpass", "lowpass"],
+          "parameterModes": ["live", "play"],
+          "runtime": [
+            "gesture-start",
+            "live-controls",
+            "seeded-replay",
+            "buses",
+            "suspend",
+            "dispose"
+          ],
+          "kinds": ["one-shot", "sustained"],
+          "waveforms": ["sawtooth", "sine", "square", "triangle"],
+          "noiseColors": ["white"],
+          "mappingScales": ["exponential", "linear"],
+          "automationCurves": ["exponential"]
+        }
+      },
+      "files": [
+        {
+          "path": "catalog/experiences/plasma-blade/recipe.ts",
+          "type": "registry:file",
+          "target": "~/src/sounds/experiences/plasma-blade/recipe.ts"
+        },
+        {
+          "path": "catalog/experiences/plasma-blade/motion.ts",
+          "type": "registry:file",
+          "target": "~/src/sounds/experiences/plasma-blade/motion.ts"
+        },
+        {
+          "path": "catalog/experiences/plasma-blade/controller.ts",
+          "type": "registry:file",
+          "target": "~/src/sounds/experiences/plasma-blade/controller.ts"
+        },
+        {
+          "path": "catalog/experiences/plasma-blade/host.ts",
+          "type": "registry:file",
+          "target": "~/src/sounds/experiences/plasma-blade/host.ts"
+        },
+        {
+          "path": "catalog/experiences/plasma-blade/stage.ts",
+          "type": "registry:file",
+          "target": "~/src/sounds/experiences/plasma-blade/stage.ts"
+        },
+        {
+          "path": "catalog/experiences/plasma-blade/index.html",
+          "type": "registry:file",
+          "target": "~/src/sounds/experiences/plasma-blade/index.html"
+        },
+        {
+          "path": "catalog/experiences/plasma-blade/README.md",
+          "type": "registry:file",
+          "target": "~/src/sounds/experiences/plasma-blade/README.md"
+        },
+        {
+          "path": "LICENSE",
+          "type": "registry:file",
+          "target": "~/src/sounds/experiences/plasma-blade/LICENSE"
+        }
+      ],
+      "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/main/catalog/README.md for integration and update guidance."
     }
   ]
 }

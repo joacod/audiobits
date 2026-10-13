@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Plasma Blade · AudioBits</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: ui-monospace, monospace;
+        background: #08080c;
+        color: #f2f2f2;
+      }
+      body {
+        margin: 0 auto;
+        max-width: 1000px;
+        padding: 24px;
+      }
+      h1 {
+        font-size: clamp(2rem, 6vw, 4rem);
+        margin-bottom: 8px;
+      }
+      canvas {
+        --signal-mid: #b44cff;
+        --signal-low: #2a6cff;
+        display: block;
+        width: 100%;
+        height: min(65vh, 580px);
+        min-height: 360px;
+        touch-action: none;
+        border: 1px solid #34363a;
+        border-radius: 6px;
+      }
+      button {
+        padding: 12px 16px;
+        min-height: 44px;
+        font: inherit;
+        color: inherit;
+        background: #1b1c1e;
+        border: 1px solid #34363a;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+      button:hover:not(:disabled) {
+        background: #34363a;
+      }
+      :focus-visible {
+        outline: 3px solid #f2f2f2;
+        outline-offset: 4px;
+      }
+      nav {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 16px;
+      }
+      p {
+        max-width: 72ch;
+        color: #b9b6c7;
+        line-height: 1.6;
+      }
+      [role="alert"] {
+        color: #ffc577;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Plasma Blade</h1>
+    <p>An electrical arc in your hands. Every sound is generated locally.</p>
+    <canvas
+      id="stage"
+      role="group"
+      aria-label="Plasma blade stage"
+      aria-describedby="help"
+      tabindex="0"
+    ></canvas>
+    <nav aria-label="Blade controls">
+      <button id="ignite">Ignite</button
+      ><button id="strike" disabled>Strike target</button
+      ><button id="mute" aria-pressed="false">Mute</button
+      ><button id="stop">Stop all</button>
+    </nav>
+    <p id="state" role="status">Blade: stopped</p>
+    <p id="help">
+      Tap to ignite. Move or drag through the amber targets. Enter ignites,
+      arrows move, Space strikes, Escape retracts.
+    </p>
+    <p id="error" role="alert"></p>
+    <script type="module">
+      import { mountPlasmaBlade } from "./host.ts";
+      import { mountBladeStage } from "./stage.ts";
+      const ignite = document.querySelector("#ignite"),
+        strike = document.querySelector("#strike"),
+        mute = document.querySelector("#mute");
+      let display,
+        muted = false;
+      const host = mountPlasmaBlade({
+        state(value) {
+          document.querySelector("#state").textContent = `Blade: ${value}`;
+          ignite.textContent = value === "running" ? "Retract" : "Ignite";
+          ignite.disabled = value === "starting";
+          strike.disabled = value !== "running";
+          if (value === "starting")
+            document.querySelector("#error").textContent = "";
+          display?.stateChanged();
+        },
+        error(cause) {
+          document.querySelector("#error").textContent =
+            `${cause}. Tap Ignite to retry.`;
+        },
+      });
+      try {
+        display = mountBladeStage(document.querySelector("#stage"), host);
+      } catch (cause) {
+        document.querySelector("#error").textContent = String(cause);
+      }
+      ignite.addEventListener("click", () => {
+        if (host.control.state === "running") {
+          if (display) display.retract();
+          else host.retract();
+        } else host.ignite();
+      });
+      strike.addEventListener("click", () => display?.strike());
+      mute.addEventListener("click", () => {
+        muted = !muted;
+        host.mute(muted);
+        mute.textContent = muted ? "Unmute" : "Mute";
+        mute.setAttribute("aria-pressed", String(muted));
+      });
+      document.querySelector("#stop").addEventListener("click", () => {
+        display?.reset();
+        host.stop();
+      });
+      window.addEventListener("pagehide", () => display?.dispose(), {
+        once: true,
+      });
+    </script>
+  </body>
+</html>

@@ -145,8 +145,8 @@ try {
         `
       import assert from "node:assert/strict";
       import { validateRecipe } from "audiobits";
-      import { ${item.meta.exportName} as recipe } from "./validation/recipe.mjs";
-      assert.equal(validateRecipe(recipe).ok, true);
+      import * as recipes from "./validation/recipe.mjs";
+      for (const recipe of Object.values(recipes)) assert.equal(validateRecipe(recipe).ok, true);
     `,
       ],
       directory,
@@ -158,6 +158,10 @@ try {
       validation: "passed",
     });
   }
+  const bladeDirectory = join(
+    consumer,
+    "items/plasma-blade/src/sounds/experiences/plasma-blade",
+  );
   const thrusterDirectory = join(
     consumer,
     "items/reactive-thruster/src/sounds/experiences/reactive-thruster",
@@ -444,6 +448,18 @@ Object.assign(globalThis, { probe });`,
     dts: false,
     clean: false,
   });
+  await build({
+    entry: [join(bladeDirectory, "host.ts"), join(bladeDirectory, "stage.ts")],
+    format: "esm",
+    platform: "browser",
+    target: "es2022",
+    outDir: join(browserOutput, "plasma-blade"),
+    dts: false,
+    clean: false,
+  });
+  const bladeHtml = (await readFile(join(bladeDirectory, "index.html"), "utf8"))
+    .replace('"./host.ts"', '"./plasma-blade/host.js"')
+    .replace('"./stage.ts"', '"./plasma-blade/stage.js"');
   const energyHtml = (
     await readFile(join(energyDirectory, "index.html"), "utf8")
   ).replace('"./host.ts"', '"./energy-charge/host.js"');
@@ -451,6 +467,19 @@ Object.assign(globalThis, { probe });`,
     await readFile(join(thrusterDirectory, "index.html"), "utf8")
   ).replace('"./host.ts"', '"./host.js"');
   const server = createServer(async (request, response) => {
+    if (request.url === "/blade") {
+      response.setHeader("Content-Type", "text/html");
+      response.end(bladeHtml);
+      return;
+    }
+    if (
+      request.url?.startsWith("/plasma-blade/") &&
+      /^\/plasma-blade\/[A-Za-z0-9_.-]+\.js$/.test(request.url)
+    ) {
+      response.setHeader("Content-Type", "text/javascript");
+      response.end(await readFile(join(browserOutput, request.url.slice(1))));
+      return;
+    }
     if (request.url === "/energy") {
       response.setHeader("Content-Type", "text/html");
       response.end(energyHtml);
@@ -487,6 +516,63 @@ Object.assign(globalThis, { probe });`,
     });
     browser = await chromium.launch();
     evidence.chromium = browser.version();
+    {
+      const page = await browser.newPage();
+      const errors = [];
+      page.on("pageerror", (cause) => errors.push(cause.message));
+      await page.addInitScript(() => {
+        const Native = globalThis.AudioContext;
+        globalThis.bladeContexts = [];
+        globalThis.AudioContext = class extends Native {
+          constructor() {
+            super();
+            globalThis.bladeContexts.push(this);
+          }
+        };
+      });
+      await page.goto(`http://127.0.0.1:${server.address().port}/blade`);
+      assert.equal(
+        await page.evaluate(() => globalThis.bladeContexts.length),
+        0,
+      );
+      await page.getByRole("button", { name: "Ignite", exact: true }).click();
+      await page.waitForFunction(
+        () =>
+          globalThis.document.querySelector("#stage").dataset.state ===
+          "running",
+      );
+      await page.waitForFunction(
+        () =>
+          Number(globalThis.document.querySelector("#stage").dataset.peak) > 0,
+      );
+      await page
+        .getByRole("button", { name: "Strike target", exact: true })
+        .click();
+      await expect(page.locator("#stage")).toHaveAttribute("data-hits", "1");
+      await page.getByRole("button", { name: "Retract", exact: true }).click();
+      await page.waitForFunction(
+        () =>
+          globalThis.document.querySelector("#stage").dataset.extension ===
+          "0.000",
+      );
+      await page.getByRole("button", { name: "Ignite", exact: true }).click();
+      await page.waitForFunction(
+        () =>
+          globalThis.document.querySelector("#stage").dataset.state ===
+          "running",
+      );
+      await page.getByRole("button", { name: "Stop all", exact: true }).click();
+      await page.evaluate(() =>
+        globalThis.dispatchEvent(new globalThis.Event("pagehide")),
+      );
+      await page.waitForFunction(() =>
+        globalThis.bladeContexts.every((context) => context.state === "closed"),
+      );
+      assert.deepEqual(errors, []);
+      evidence.catalog.find((item) => item.id === "plasma-blade").chromium =
+        "passed";
+      await page.close();
+    }
     {
       const page = await browser.newPage();
       const errors = [];

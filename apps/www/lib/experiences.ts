@@ -21,7 +21,30 @@ export const energyChargeExperience = {
   sourceFiles: experienceSourceFiles("energy-charge").map((file) => file.name),
 } as const;
 
+export const plasmaBladeExperience = {
+  title: registryItem("plasma-blade").title,
+  href: "/catalog/plasma-blade",
+  description: registryItem("plasma-blade").description,
+  controls: ["Ignite", "Motion", "Strike", "Retract"],
+  relatedSounds: [],
+  sourceFiles: experienceSourceFiles("plasma-blade").map((file) => file.name),
+} as const;
+
 export const experienceSourcePurpose = {
+  "plasma-blade": {
+    "recipe.ts":
+      "Five original schema-1 recipes: hum, ignition, swing, clash, and retraction.",
+    "motion.ts":
+      "CSS-pixel speed mapping, asymmetric motion smoothing, and segment collision geometry.",
+    "controller.ts":
+      "DOM-free voice ownership, live modulation, swing hysteresis, and impact cooldowns.",
+    "host.ts":
+      "Gesture activation, bounded engine, Mute, Stop, hide, blur, and disposal.",
+    "stage.ts":
+      "Portable canvas stage with mouse, touch, keyboard, swept collisions, trails, sparks, and measured output.",
+    "index.html":
+      "Standalone demo using the same host and canvas stage as this page.",
+  },
   "energy-charge": {
     "recipe.ts":
       "Sustained energy field. Schema-1 data with a live charge parameter. Independent copy-in source you own.",

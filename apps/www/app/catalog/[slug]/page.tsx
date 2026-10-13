@@ -45,7 +45,19 @@ const ThrusterDetail = dynamic(
   { loading: ThrusterStageFallback },
 );
 
-function readExperienceSources(slug: "energy-charge" | "reactive-thruster") {
+const PlasmaBladeDetail = dynamic(
+  () =>
+    import("../../plasma-blade-detail").then(
+      (module) => module.PlasmaBladeDetail,
+    ),
+  {
+    loading: () => (
+      <div className="catalog-stage" aria-label="Loading Plasma Blade" />
+    ),
+  },
+);
+
+function readExperienceSources(slug: keyof typeof experienceSourcePurpose) {
   const purposes = experienceSourcePurpose[slug];
   return experienceSourceFiles(slug).map(({ name, path }) => ({
     name,
@@ -104,6 +116,13 @@ export default async function CatalogEntryPage({
   }
   const experience = experienceCatalogEntry(slug);
   if (!experience) notFound();
+  if (experience.slug === "plasma-blade") {
+    return (
+      <CatalogDetail entry={experience}>
+        <PlasmaBladeDetail sources={readExperienceSources(experience.slug)} />
+      </CatalogDetail>
+    );
+  }
   if (experience.slug === "energy-charge") {
     return (
       <CatalogDetail entry={experience}>

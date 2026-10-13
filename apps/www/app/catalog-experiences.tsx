@@ -1,3 +1,4 @@
+import "./plasma-blade.css";
 import type { CSSProperties } from "react";
 import Link from "next/link";
 import { ThrusterPreviewMark } from "../icons/thruster-preview";
@@ -18,6 +19,32 @@ export function CatalogExperiences() {
             data-catalog-entry={entry.slug}
           >
             {entry.preview.family === "charge" && <ChargePreview />}
+            {entry.preview.family === "blade" && (
+              <svg
+                className="plasma-preview"
+                viewBox="0 0 300 200"
+                aria-hidden="true"
+              >
+                <path
+                  d="M110 162 L192 30"
+                  stroke="#b44cff"
+                  strokeWidth="10"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M110 162 L192 30"
+                  stroke="#eee8ff"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                />
+                <path d="M95 188 L110 162" stroke="#777781" strokeWidth="10" />
+                <path
+                  d="M205 105 l12 -7 12 7 v14 l-12 7 -12 -7z"
+                  fill="none"
+                  stroke="#bc8e53"
+                />
+              </svg>
+            )}
             <div className="catalog-experience-copy">
               <h3>{entry.title}</h3>
               <p>{entry.description}</p>

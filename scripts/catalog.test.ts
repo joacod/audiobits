@@ -16,9 +16,9 @@ test("canonical gallery imports resolve in native Node tooling", () => {
   ]);
 });
 
-test("registry covers eight recipes and two complete, independent experiences", async () => {
-  expect(registry.items).toHaveLength(10);
-  expect(new Set(registry.items.map((item) => item.name)).size).toBe(10);
+test("registry covers eight recipes and three complete, independent experiences", async () => {
+  expect(registry.items).toHaveLength(11);
+  expect(new Set(registry.items.map((item) => item.name)).size).toBe(11);
   expect(registry.items.map((item) => item.name).sort()).toEqual(
     [
       ...["catalog/recipes", "catalog/experiences"].flatMap((directory) =>
