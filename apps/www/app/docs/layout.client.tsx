@@ -1,7 +1,10 @@
 "use client";
 
 import { useId } from "react";
+import Link from "next/link";
+import { useDocsLayout } from "fumadocs-ui/layouts/docs";
 import { Header } from "fumadocs-ui/layouts/docs/slots/header";
+import { useSidebar } from "fumadocs-ui/layouts/docs/slots/sidebar";
 import { ThemeSwitch } from "fumadocs-ui/layouts/shared/slots/theme-switch";
 import { buttonVariants } from "fumadocs-ui/components/ui/button";
 import { GithubIcon } from "../../icons/github-icon";
@@ -28,7 +31,7 @@ export function DocsUtilities() {
     <div
       role="group"
       aria-label="Documentation utilities"
-      className="flex items-center justify-end gap-1 text-fd-muted-foreground"
+      className="flex items-center gap-1 text-fd-muted-foreground"
     >
       <a
         href="https://github.com/joacod/audiobits"
@@ -56,12 +59,53 @@ export function DocsUtilities() {
 }
 
 export function DocsHeader() {
+  const { slots } = useDocsLayout();
+  const { collapsed, setCollapsed } = useSidebar();
   return (
     <>
       <Header />
-      <header className="[grid-area:header] sticky top-(--fd-docs-row-1) z-30 flex items-center justify-end border-b bg-fd-background/80 px-4 backdrop-blur-sm h-(--fd-header-height) max-md:hidden md:layout:[--fd-header-height:--spacing(14)]">
-        <DocsUtilities />
-      </header>
+      {collapsed && (
+        <header className="audiobits-docs-collapsed-header [grid-area:header] sticky top-(--fd-docs-row-1) z-30 border-b bg-fd-background/80 backdrop-blur-sm h-(--fd-header-height) max-md:hidden md:layout:[--fd-header-height:--spacing(14)]">
+          <div className="mx-auto flex h-full max-w-[900px] items-center gap-2 px-6 xl:px-8">
+            <button
+              type="button"
+              onClick={() => setCollapsed(false)}
+              className={buttonVariants({ variant: "ghost", size: "sm" })}
+            >
+              Expand Sidebar
+            </button>
+            {slots.searchTrigger && <slots.searchTrigger.sm hideIfDisabled />}
+            <Link href="/docs" className="ms-auto text-sm font-medium">
+              AudioBits Docs
+            </Link>
+            <div className="xl:hidden">
+              <DocsUtilities />
+            </div>
+          </div>
+        </header>
+      )}
     </>
+  );
+}
+
+export function DocsSidebarFooter() {
+  return (
+    <nav
+      aria-label="AudioBits site"
+      className="flex items-center gap-1 rounded-lg border bg-fd-secondary/50 p-1"
+    >
+      <Link
+        href="/"
+        className={buttonVariants({ variant: "ghost", size: "sm" })}
+      >
+        Home
+      </Link>
+      <Link
+        href="/catalog"
+        className={buttonVariants({ variant: "ghost", size: "sm" })}
+      >
+        Catalog
+      </Link>
+    </nav>
   );
 }

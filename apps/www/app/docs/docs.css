@@ -38,3 +38,10 @@
   a[data-active="true"]::before {
   background-color: var(--docs-selected);
 }
+
+/* The collapsed header owns expand/search, instead of the floating panel. */
+@media (min-width: 768px) {
+  .audiobits-docs [data-sidebar-panel] {
+    display: none;
+  }
+}

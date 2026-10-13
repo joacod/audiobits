@@ -1,7 +1,12 @@
 import type { ReactNode } from "react";
 import { DocsLayout } from "fumadocs-ui/layouts/docs";
 import { source } from "../../lib/source";
-import { DocsBrand, DocsHeader, DocsUtilities } from "./layout.client";
+import {
+  DocsBrand,
+  DocsHeader,
+  DocsSidebarFooter,
+  DocsUtilities,
+} from "./layout.client";
 import "./docs.css";
 
 export default function Layout({ children }: { children: ReactNode }) {
@@ -16,9 +21,9 @@ export default function Layout({ children }: { children: ReactNode }) {
       slots={{ header: DocsHeader }}
       themeSwitch={{ enabled: false }}
       sidebar={{
-        footer: null,
+        footer: <DocsSidebarFooter />,
         banner: (
-          <div className="md:hidden">
+          <div className="xl:hidden">
             <DocsUtilities />
           </div>
         ),
