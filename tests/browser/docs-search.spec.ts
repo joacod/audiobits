@@ -12,6 +12,52 @@ const queries = [
   { query: "bus", path: "/docs/buses", title: "Buses and routing" },
 ];
 
+test("search indexes onboarding component prose and procedure anchors", async ({
+  request,
+}) => {
+  for (const { query, type, url } of [
+    {
+      query: "ready-made",
+      type: "text",
+      url: "/docs#choose-a-starting-point",
+    },
+    {
+      query: "Discover and inspect an item",
+      type: "heading",
+      url: "/docs/catalog#discover-and-inspect-an-item",
+    },
+    {
+      query: "Choose your agent and scope",
+      type: "heading",
+      url: "/docs/agents#choose-your-agent-and-scope",
+    },
+    {
+      query: "Resolve the local launch command",
+      type: "heading",
+      url: "/docs/mcp#resolve-the-local-launch-command",
+    },
+    {
+      query: "Recipes and experiences become source",
+      type: "text",
+      url: "/docs/catalog#files-you-own",
+    },
+  ]) {
+    const response = await request.get(`${site}/api/search`, {
+      params: { query },
+    });
+    expect(response.status()).toBe(200);
+    const results = await response.json();
+    expect(results).toEqual(
+      expect.arrayContaining([expect.objectContaining({ type, url })]),
+    );
+    for (const result of results) {
+      expect(result.content).not.toMatch(
+        /<\/?(?:Card|File|Folder|Step|Callout)\b/,
+      );
+    }
+  }
+});
+
 for (const { query, path, title } of queries) {
   test(`search endpoint returns relevant documentation for ${query}`, async ({
     request,

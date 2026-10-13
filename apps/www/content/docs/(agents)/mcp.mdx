@@ -37,18 +37,24 @@ executes it. Install reviewed source through the [registry workflow](/docs/catal
 
 ## Configure a local client
 
-1. [Install the Skill](/docs/agents#install-the-skill) and install `audiobits` in
-   your consumer project if needed. Use Node **24.21.0 or later in the 24.x
-   series** for the server. Other Node series are unverified.
-2. Find the actual installed Skill directory in the CLI output or your agent's
-   inventory. From your consumer project, run the read-only helper below,
-   replacing `/path/to/installed/audiobits` with that directory.
-3. Inspect your MCP client's existing registrations, configuration scope, and
-   supported local stdio mechanism. Reuse an existing AudioBits registration
-   when appropriate. Register the helper's exact `command` and `args` through
-   the client's documented configuration mechanism, preserving unrelated settings.
-4. Reload the client if required, confirm connectivity and tool discovery, then
-   call `inspect_project` to verify that it resolves the intended runtime.
+<Steps>
+<Step>
+
+### Prepare the Skill and consumer project
+
+[Install the Skill](/docs/agents#install-the-skill) and install `audiobits` in
+your consumer project if needed, using the [runtime quick start](/docs#install-the-runtime).
+Use Node **24.21.0 or later in the 24.x series** for the server. Other Node series
+are unverified.
+
+</Step>
+<Step>
+
+### Resolve the local launch command
+
+Find the actual installed Skill directory in the CLI output or your agent's
+inventory. From your consumer project, run the read-only helper below,
+replacing `/path/to/installed/audiobits` with that directory.
 
 ```sh
 node "/path/to/installed/audiobits/scripts/setup-mcp.mjs" --project "$PWD"
@@ -60,12 +66,39 @@ the server. The arguments include the installed `scripts/mcp.mjs` executable and
 `--project` with your consumer root, so clients without a configurable working
 directory can still resolve that project.
 
+</Step>
+<Step>
+
+### Register with your MCP client
+
+Inspect your MCP client's existing registrations, configuration scope, and
+supported local stdio mechanism. Reuse an existing AudioBits registration
+when appropriate. Register the helper's exact `command` and `args` through
+the client's documented configuration mechanism, preserving unrelated settings.
+
 Configuration formats differ across clients. Use your client's help or
 documentation rather than assuming a shared config path or schema. Keep resolved
 personal paths in local configuration. The client owns the stdio process and
 closes it on EOF; launch the executable directly, since package-manager banners
-can contaminate protocol stdout. If your client cannot register or connect to
-the server, continue with public exports and the Skill's normal workflow.
+can contaminate protocol stdout.
+
+</Step>
+<Step>
+
+### Verify the selected runtime
+
+Reload the client if required, confirm connectivity and tool discovery, then
+call `inspect_project` to verify that it resolves the intended runtime.
+
+</Step>
+</Steps>
+
+<Callout title="Continue without MCP when needed">
+
+If your client cannot register or connect to the server, continue with public
+exports and the [Skill's normal workflow](/docs/agents#choose-the-depth).
+
+</Callout>
 
 ## Verification limits
 
