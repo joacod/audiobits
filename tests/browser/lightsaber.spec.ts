@@ -20,6 +20,9 @@ async function holdStage(page: Page) {
 test("held pointer ignition, swept target hits, release retraction and teardown", async ({
   page,
 }) => {
+  // Bound software WebGL's pixel cost while retaining the full gesture and
+  // timed collision contract. Desktop graphics coverage remains below.
+  await page.setViewportSize({ width: 390, height: 844 });
   const errors: string[] = [];
   page.on("pageerror", (cause) => errors.push(cause.message));
   await page.clock.install({ time: new Date("2026-01-01T00:00:00Z") });
