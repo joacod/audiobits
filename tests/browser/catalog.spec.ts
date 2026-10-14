@@ -267,9 +267,17 @@ test("experience cards stay silent and full interactions clean up on return", as
       const box = (await hold.boundingBox())!;
       await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
       await page.mouse.down();
-    } else if (entry.slug === "lightsaber")
-      await page.getByRole("button", { name: "Ignite", exact: true }).click();
-    else await dragThruster(page);
+    } else if (entry.slug === "lightsaber") {
+      const stage = page.getByRole("group", {
+        name: "Lightsaber stage",
+        exact: true,
+      });
+      await expect(stage).toHaveAttribute("data-state", "stopped");
+      await stage.scrollIntoViewIfNeeded();
+      const box = (await stage.boundingBox())!;
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height * 0.8);
+      await page.mouse.down();
+    } else await dragThruster(page);
     await expect
       .poll(
         async () =>
