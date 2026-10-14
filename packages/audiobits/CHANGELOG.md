@@ -1,5 +1,11 @@
 # audiobits
 
+## 0.2.4
+
+### Patch Changes
+
+- a9a1802: Document the shadcn command for installing catalog items in the package README.
+
 ## 0.2.3
 
 ### Patch Changes
