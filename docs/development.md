@@ -211,16 +211,18 @@ Copy-owned interactive sources live in `catalog/experiences/`:
 [Lightsaber](../catalog/experiences/lightsaber/README.md). Edit their
 recipe, interaction, host, or demo files there; `apps/www` imports and displays
 these sources while owning website presentation. The
-[GitHub source registry](../catalog/README.md) installs canonical recipes and
-complete experiences as owned source. It covers all eight recipes and three
+[GitHub source registry](../catalog/README.md) installs minimal recipes and
+sound controllers with integration guidance as owned source. Repository demos
+remain separate from installation. It covers all eight recipes and three
 experiences.
 `registry.json` owns discovery metadata and installation file manifests; website
 metadata is derived from it. No creative recipes are generated into the runtime.
 
 `pnpm test:package` copies each of the eleven item manifests into its own source
 tree in an isolated packed-package consumer, typechecks every installed
-TypeScript file, validates every recipe with the actual runtime, and runs all three
-standalone experience entrypoints in Chromium. The site browser tests verify the
+TypeScript file and documented integration, validates every recipe with the
+actual runtime, exercises all eleven installed integrations, and runs all three
+repository demonstration entrypoints in Chromium. The site browser tests verify the
 displayed source matches the catalog, along with interaction and lifecycle behavior.
 
 `/catalog` keeps one engine for the catalog sound rows. The output strip is a

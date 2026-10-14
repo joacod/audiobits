@@ -238,11 +238,35 @@ import { ${demos[kind].exportName} } from "./sounds/recipes/${kind}/recipe";
 
 const audio = createAudio();
 const sound = audio.sound(${demos[kind].exportName});
+let request = 0;
+${sounds[kind].kind === "sustained" ? "let voice: ReturnType<typeof sound.play> | undefined;\n" : ""}
 
 // Bind directly to a button click; surface a failed start and allow retry.
 export async function play() {
+  const token = ++request;
   await audio.start();
-  sound.play({ parameters: ${JSON.stringify(controls)}, seed: ${seed} });
+  if (token !== request) return;
+  ${sounds[kind].kind === "sustained" ? "voice?.stop();\n  voice = " : ""}sound.play({ parameters: ${JSON.stringify(controls)}, seed: ${seed} });
+}
+${
+  sounds[kind].kind === "sustained"
+    ? `
+// Connect your application's live throttle to this function.
+export function update(throttle: number) {
+  voice?.set({ throttle });
+}
+`
+    : ""
+}
+export function stop() {
+  request++;
+  audio.stopAll({ tails: "cut" });
+${sounds[kind].kind === "sustained" ? "  voice = undefined;\n" : ""}}
+
+// Call when removing this integration.
+export async function dispose() {
+  stop();
+  await audio.dispose();
 }
 `;
 }

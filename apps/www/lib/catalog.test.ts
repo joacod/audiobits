@@ -7,6 +7,8 @@ import {
 } from "./experiences";
 import { demos, soundKinds } from "./gallery";
 import { catalogEntries, catalogGroups } from "./catalog";
+import { experienceSourceFiles } from "./registry";
+import { readFileSync } from "node:fs";
 
 const bundledOrder = [
   "confirmation",
@@ -18,6 +20,30 @@ const bundledOrder = [
   "power-up",
   "thruster",
 ] as const;
+
+test("sound-only installation keeps complete showcase sources available", () => {
+  for (const experience of [
+    energyChargeExperience,
+    reactiveThrusterExperience,
+    lightsaberExperience,
+  ]) {
+    const id = experience.href.split("/").at(-1)!;
+    expect(experienceSourceFiles(id).map((file) => file.name)).toEqual([
+      "recipe.ts",
+      id === "energy-charge"
+        ? "progress.ts"
+        : id === "reactive-thruster"
+          ? "pointer.ts"
+          : "controller.ts",
+    ]);
+    expect(experience.sourceFiles).toContain("host.ts");
+    expect(experience.sourceFiles).toContain("index.html");
+    for (const file of experience.sourceFiles)
+      expect(
+        readFileSync(`catalog/experiences/${id}/${file}`, "utf8").length,
+      ).toBeGreaterThan(0);
+  }
+});
 
 test("catalog index covers every current entry once, in collection order", () => {
   expect(catalogGroups.map((group) => [group.category, group.title])).toEqual([

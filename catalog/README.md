@@ -114,10 +114,19 @@ so relative imports survive copying and installation.
 
 See [recipe ownership](recipes/README.md) for editing and verification.
 
-## Confirmation
+## Application integration
 
-Installation writes `src/sounds/recipes/confirmation/recipe.ts` and `LICENSE`.
-Import the owned recipe from your application:
+Each recipe installs only `recipe.ts` and `LICENSE` under
+`src/sounds/recipes/<id>/`. Use the examples below in `src/integration.ts`.
+Connect `play()` directly to a user gesture, handle activation errors, call
+`stop()` on cancellation, and `dispose()` when removing the integration.
+For sustained Thruster, connect `update(throttle)` to live application state.
+The application owns visibility, suspension, and shared-engine lifecycle; see
+the [lifecycle guide](https://www.audiobits.dev/docs/lifecycle).
+
+### Confirmation
+
+`npx shadcn@latest add joacod/audiobits/confirmation`
 
 ```ts
 import { createAudio } from "audiobits";
@@ -125,58 +134,274 @@ import { confirmation } from "./sounds/recipes/confirmation/recipe";
 
 const audio = createAudio();
 const sound = audio.sound(confirmation);
-// Inside an async click or other direct user gesture:
-await audio.start();
-sound.play();
-// When removing this integration:
-await audio.dispose();
+let request = 0;
+
+// Bind directly to a button click; surface a failed start and allow retry.
+export async function play() {
+  const token = ++request;
+  await audio.start();
+  if (token !== request) return;
+  sound.play({ parameters: {}, seed: 42 });
+}
+
+export function stop() {
+  request++;
+  audio.stopAll({ tails: "cut" });
+}
+
+// Call when removing this integration.
+export async function dispose() {
+  stop();
+  await audio.dispose();
+}
 ```
 
-The recipe preserves the existing confirmation tone. You may change its pitches,
-envelopes or gain locally, keeping recipe schema version 1. The npm package ships
-only the engine and recipe language; install creative source separately.
+### Impact
 
-## Lightsaber
+`npx shadcn@latest add joacod/audiobits/impact`
 
-Installation writes five acoustic recipes in `recipe.ts`, the motion mapper,
-controller, browser host, canvas stage, standalone demo, README and MIT license
-under `src/sounds/experiences/lightsaber/`. It supports persistent ignition,
-motion-controlled hum, rapid swings, target clashes, and deliberate retraction.
-See the [experience guide](experiences/lightsaber/README.md) for ownership,
-keyboard and touch controls, cooldowns, and teardown.
+```ts
+import { createAudio } from "audiobits";
+import { impact } from "./sounds/recipes/impact/recipe";
 
-## Energy Charge
+const audio = createAudio();
+const sound = audio.sound(impact);
+let request = 0;
 
-Installation writes `recipe.ts`, `progress.ts`, `host.ts`, `index.html`,
-`README.md` and `LICENSE` under `src/sounds/experiences/energy-charge/`. All relative
-imports stay within that directory. See the [experience guide](experiences/energy-charge/README.md).
+// Bind directly to a button click; surface a failed start and allow retry.
+export async function play() {
+  const token = ++request;
+  await audio.start();
+  if (token !== request) return;
+  sound.play({ parameters: { intensity: 0.5 }, seed: 42 });
+}
 
-- `recipe.ts` is reusable sound data.
-- `progress.ts` is the reusable controller for application-supplied progress.
-- `host.ts` adds browser activation, mute, Stop and lifecycle cleanup with its
-  own engine. Call its `dispose()` when removing an SPA view.
-- `index.html` is an optional standalone demo, not your application's entrypoint.
-  It references `./host.ts` and requires a TypeScript-aware browser build tool.
+export function stop() {
+  request++;
+  audio.stopAll({ tails: "cut" });
+}
 
-For independent playback, see [optional standalone demo](#optional-standalone-demo).
-Installation never writes a root `index.html`, build configuration, CSS or
-framework setup. Your application can import the recipe or controller without
-using the demo. Customize sound data,
-progress mapping or presentation independently; start audio in a user gesture
-and dispose owned resources during teardown.
+// Call when removing this integration.
+export async function dispose() {
+  stop();
+  await audio.dispose();
+}
+```
 
-## Reactive Thruster
+### Thruster
 
-Installation includes the complete recipe, pointer controller, host, demo, guide
-and license under `src/sounds/experiences/reactive-thruster/`. The same item also
-includes canonical Impact and its license under `src/sounds/recipes/impact/`.
-The host imports `../../recipes/impact/recipe`; keep that path intact. No
-runtime internals or site-private modules are needed. See
-the [experience guide](experiences/reactive-thruster/README.md).
+`npx shadcn@latest add joacod/audiobits/thruster`
 
-All entries use public runtime APIs and recipe schema 1. The TypeScript source
-supports bundler module resolution; it is not precompiled JavaScript.
-Browser verification targets Chromium.
+```ts
+import { createAudio } from "audiobits";
+import { thruster } from "./sounds/recipes/thruster/recipe";
+
+const audio = createAudio();
+const sound = audio.sound(thruster);
+let request = 0;
+let voice: ReturnType<typeof sound.play> | undefined;
+
+// Bind directly to a button click; surface a failed start and allow retry.
+export async function play() {
+  const token = ++request;
+  await audio.start();
+  if (token !== request) return;
+  voice?.stop();
+  voice = sound.play({ parameters: { throttle: 0.2 }, seed: 42 });
+}
+
+// Connect your application's live throttle to this function.
+export function update(throttle: number) {
+  voice?.set({ throttle });
+}
+
+export function stop() {
+  request++;
+  audio.stopAll({ tails: "cut" });
+  voice = undefined;
+}
+
+// Call when removing this integration.
+export async function dispose() {
+  stop();
+  await audio.dispose();
+}
+```
+
+### Tactile click
+
+`npx shadcn@latest add joacod/audiobits/tactile-click`
+
+```ts
+import { createAudio } from "audiobits";
+import { tactileClick } from "./sounds/recipes/tactile-click/recipe";
+
+const audio = createAudio();
+const sound = audio.sound(tactileClick);
+let request = 0;
+
+// Bind directly to a button click; surface a failed start and allow retry.
+export async function play() {
+  const token = ++request;
+  await audio.start();
+  if (token !== request) return;
+  sound.play({ parameters: { intensity: 0.5 }, seed: 42 });
+}
+
+export function stop() {
+  request++;
+  audio.stopAll({ tails: "cut" });
+}
+
+// Call when removing this integration.
+export async function dispose() {
+  stop();
+  await audio.dispose();
+}
+```
+
+### Gentle rejection
+
+`npx shadcn@latest add joacod/audiobits/gentle-rejection`
+
+```ts
+import { createAudio } from "audiobits";
+import { gentleRejection } from "./sounds/recipes/gentle-rejection/recipe";
+
+const audio = createAudio();
+const sound = audio.sound(gentleRejection);
+let request = 0;
+
+// Bind directly to a button click; surface a failed start and allow retry.
+export async function play() {
+  const token = ++request;
+  await audio.start();
+  if (token !== request) return;
+  sound.play({ parameters: {}, seed: 42 });
+}
+
+export function stop() {
+  request++;
+  audio.stopAll({ tails: "cut" });
+}
+
+// Call when removing this integration.
+export async function dispose() {
+  stop();
+  await audio.dispose();
+}
+```
+
+### Glass notification
+
+`npx shadcn@latest add joacod/audiobits/glass-notification`
+
+```ts
+import { createAudio } from "audiobits";
+import { glassNotification } from "./sounds/recipes/glass-notification/recipe";
+
+const audio = createAudio();
+const sound = audio.sound(glassNotification);
+let request = 0;
+
+// Bind directly to a button click; surface a failed start and allow retry.
+export async function play() {
+  const token = ++request;
+  await audio.start();
+  if (token !== request) return;
+  sound.play({ parameters: { brightness: 0.5 }, seed: 42 });
+}
+
+export function stop() {
+  request++;
+  audio.stopAll({ tails: "cut" });
+}
+
+// Call when removing this integration.
+export async function dispose() {
+  stop();
+  await audio.dispose();
+}
+```
+
+### Whoosh
+
+`npx shadcn@latest add joacod/audiobits/whoosh`
+
+```ts
+import { createAudio } from "audiobits";
+import { whoosh } from "./sounds/recipes/whoosh/recipe";
+
+const audio = createAudio();
+const sound = audio.sound(whoosh);
+let request = 0;
+
+// Bind directly to a button click; surface a failed start and allow retry.
+export async function play() {
+  const token = ++request;
+  await audio.start();
+  if (token !== request) return;
+  sound.play({ parameters: { size: 0.5 }, seed: 42 });
+}
+
+export function stop() {
+  request++;
+  audio.stopAll({ tails: "cut" });
+}
+
+// Call when removing this integration.
+export async function dispose() {
+  stop();
+  await audio.dispose();
+}
+```
+
+### Power-up
+
+`npx shadcn@latest add joacod/audiobits/power-up`
+
+```ts
+import { createAudio } from "audiobits";
+import { powerUp } from "./sounds/recipes/power-up/recipe";
+
+const audio = createAudio();
+const sound = audio.sound(powerUp);
+let request = 0;
+
+// Bind directly to a button click; surface a failed start and allow retry.
+export async function play() {
+  const token = ++request;
+  await audio.start();
+  if (token !== request) return;
+  sound.play({ parameters: { intensity: 0.5 }, seed: 42 });
+}
+
+export function stop() {
+  request++;
+  audio.stopAll({ tails: "cut" });
+}
+
+// Call when removing this integration.
+export async function dispose() {
+  stop();
+  await audio.dispose();
+}
+```
+
+## Interactive experiences
+
+Each item installs its recipes, reusable controller, concise guide, and license.
+Connect your application state and events to the controller using its guide:
+
+- [Energy Charge](experiences/energy-charge/README.md): `recipe.ts`, `progress.ts`, `README.md`, `LICENSE`.
+- [Reactive Thruster](experiences/reactive-thruster/README.md): `recipe.ts`, `pointer.ts`, `README.md`, `LICENSE`.
+- [Lightsaber](experiences/lightsaber/README.md): `recipe.ts`, `controller.ts`, `README.md`, `LICENSE`.
+
+Reactive Thruster accepts throttle without Impact. Lightsaber owns five acoustic
+recipes in one file; its motion helper is showcase geometry and is not installed.
+The browser hosts, input stages, HTML, and visuals stay in the public repository
+and power the existing showcases. All entries use public runtime APIs and
+recipe schema 1 with TypeScript bundler module resolution.
 
 ## Optional standalone demo
 
@@ -184,17 +409,17 @@ Integrate copied recipes or controllers into an existing application with its
 own toolchain. AudioBits is framework-independent and does not require Vite.
 
 To run a catalog HTML demo independently, use a local server that handles
-TypeScript imports. Vite is one optional development tool. From a project with
-`package.json` and the complete copied or installed source manifest:
+TypeScript imports. Vite is one optional development tool. From a repository checkout:
 
 ```sh
-npm install audiobits
-npm install --save-dev vite typescript
-npx vite
+pnpm install --frozen-lockfile
+pnpm build:lib
+pnpm --filter @audiobits/vanilla exec vite ../..
 ```
 
-Open the printed local URL at the demo's `index.html` path. Registry installs use
-`/src/sounds/experiences/energy-charge/index.html` or
-`/src/sounds/experiences/reactive-thruster/index.html`. Preserve relative paths,
+Open the printed local URL at the demo's `index.html` path. Repository demo paths are
+`/catalog/experiences/energy-charge/index.html`,
+`/catalog/experiences/reactive-thruster/index.html`, and
+`/catalog/experiences/lightsaber/index.html`. Preserve relative paths,
 including Reactive Thruster's Impact recipe. Vite and TypeScript serve the demo;
 `audiobits` remains its only runtime dependency.

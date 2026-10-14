@@ -15,11 +15,12 @@ variation, and parameter mappings. It contains no UI or application state.
 Use a recipe for a button sound, notification, impact, or a sustained sound
 controlled by your own host. See the [recipe reference](/docs/recipes).
 
-An **experience** combines a recipe with a reusable interaction controller and
-a complete browser example. Try [Energy Charge](/catalog/energy-charge) for
+An **experience** installs sound recipes, a reusable sound controller, an
+integration guide, and a license. Try [Energy Charge](/catalog/energy-charge) for
 application-supplied progress or [Reactive Thruster](/catalog/reactive-thruster)
-for pointer-driven live throttle. You can use just the recipe, adapt the
-controller to your UI, or study the complete host.
+for application-supplied throttle, or [Lightsaber](/catalog/lightsaber) for
+motion and collision events. Connect the controller to your application;
+complete browser demonstrations remain in the public repository.
 
 ## Install source
 
@@ -52,6 +53,7 @@ For a complete experience, choose one of these items instead:
 ```sh
 npx shadcn@latest add joacod/audiobits/energy-charge
 npx shadcn@latest add joacod/audiobits/reactive-thruster
+npx shadcn@latest add joacod/audiobits/lightsaber
 ```
 
 </Step>
@@ -86,9 +88,9 @@ The items use explicit project-relative file targets. Normal installation needs
 no React, Tailwind, Next.js, or `components.json`. The source is TypeScript using
 public AudioBits exports and bundler module resolution, not precompiled JavaScript.
 
-This tree shows the registry targets for Confirmation, Energy Charge, and
-Reactive Thruster. Only the selected item's files are installed. Reactive
-Thruster also includes Impact, which its complete host imports.
+This tree shows the registry targets for Confirmation and all three experiences.
+Only the selected item's files are installed. All eight recipe items install
+just their recipe and license. Experience installs exclude demo hosts and UI.
 
 <Files>
   <Folder name="src" defaultOpen>
@@ -98,25 +100,23 @@ Thruster also includes Impact, which its complete host imports.
           <File name="recipe.ts" />
           <File name="LICENSE" />
         </Folder>
-        <Folder name="impact">
-          <File name="recipe.ts" />
-          <File name="LICENSE" />
-        </Folder>
       </Folder>
       <Folder name="experiences" defaultOpen>
         <Folder name="energy-charge" defaultOpen>
           <File name="recipe.ts" />
           <File name="progress.ts" />
-          <File name="host.ts" />
-          <File name="index.html" />
           <File name="README.md" />
           <File name="LICENSE" />
         </Folder>
         <Folder name="reactive-thruster">
           <File name="recipe.ts" />
           <File name="pointer.ts" />
-          <File name="host.ts" />
-          <File name="index.html" />
+          <File name="README.md" />
+          <File name="LICENSE" />
+        </Folder>
+        <Folder name="lightsaber">
+          <File name="recipe.ts" />
+          <File name="controller.ts" />
           <File name="README.md" />
           <File name="LICENSE" />
         </Folder>
@@ -153,18 +153,18 @@ Provide Stop, invalidate pending starts on cancellation, suspend on hide, and
 dispose owned resources on navigation or unmount. The
 [lifecycle guide](/docs/lifecycle) explains those host responsibilities.
 
-For an experience, keep the installed relative paths intact. Reactive Thruster's
-complete host imports Impact at `../../recipes/impact/recipe`. The included
-`host.ts` owns an engine and browser lifecycle; call its `dispose()` when
-removing an SPA view. If your application already owns audio, adapt `progress.ts`
-or `pointer.ts` to that shared engine instead. Those controllers dispose their
-own sounds and listeners; the host remains responsible for engine suspension
-and final disposal.
+For an experience, use the included README's example from `src/integration.ts`.
+Keep installed relative imports intact. Controllers accept an application-owned
+engine and dispose only their own sounds and subscriptions. The application
+owns gesture activation, input/state mapping, suspension, and engine disposal.
+Reactive Thruster takes throttle directly and does not require Impact;
+Lightsaber takes movement and collision events without a visual stage.
 
-The nested `index.html` is an optional standalone demo requiring a
-TypeScript-aware browser toolchain. Installation does not replace your root
-entrypoint or create build configuration. Use your existing toolchain, or the
-[optional standalone demo setup](https://github.com/joacod/audiobits/blob/main/catalog/README.md#optional-standalone-demo).
+[Working examples for all eleven items](https://github.com/joacod/audiobits/blob/main/catalog/README.md#application-integration)
+use the actual installed paths. Complete demonstrations and their visual/input
+adapters remain in the repository and on the public showcases. For a repository
+demo, see the
+[standalone setup](https://github.com/joacod/audiobits/blob/main/catalog/README.md#optional-standalone-demo).
 
 ## Workbench editor
 

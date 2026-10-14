@@ -418,16 +418,6 @@
           "target": "~/src/sounds/experiences/energy-charge/progress.ts"
         },
         {
-          "path": "catalog/experiences/energy-charge/host.ts",
-          "type": "registry:file",
-          "target": "~/src/sounds/experiences/energy-charge/host.ts"
-        },
-        {
-          "path": "catalog/experiences/energy-charge/index.html",
-          "type": "registry:file",
-          "target": "~/src/sounds/experiences/energy-charge/index.html"
-        },
-        {
           "path": "catalog/experiences/energy-charge/README.md",
           "type": "registry:file",
           "target": "~/src/sounds/experiences/energy-charge/README.md"
@@ -462,7 +452,7 @@
         "requiredCapabilities": {
           "sources": ["noise", "oscillator"],
           "filters": ["highpass", "lowpass"],
-          "parameterModes": ["live", "play"],
+          "parameterModes": ["live"],
           "runtime": [
             "gesture-start",
             "live-controls",
@@ -471,11 +461,11 @@
             "suspend",
             "dispose"
           ],
-          "kinds": ["one-shot", "sustained"],
+          "kinds": ["sustained"],
           "waveforms": ["sawtooth", "triangle"],
           "noiseColors": ["white"],
           "mappingScales": ["exponential", "linear"],
-          "automationCurves": ["exponential"]
+          "automationCurves": []
         }
       },
       "files": [
@@ -490,16 +480,6 @@
           "target": "~/src/sounds/experiences/reactive-thruster/pointer.ts"
         },
         {
-          "path": "catalog/experiences/reactive-thruster/host.ts",
-          "type": "registry:file",
-          "target": "~/src/sounds/experiences/reactive-thruster/host.ts"
-        },
-        {
-          "path": "catalog/experiences/reactive-thruster/index.html",
-          "type": "registry:file",
-          "target": "~/src/sounds/experiences/reactive-thruster/index.html"
-        },
-        {
           "path": "catalog/experiences/reactive-thruster/README.md",
           "type": "registry:file",
           "target": "~/src/sounds/experiences/reactive-thruster/README.md"
@@ -508,16 +488,6 @@
           "path": "LICENSE",
           "type": "registry:file",
           "target": "~/src/sounds/experiences/reactive-thruster/LICENSE"
-        },
-        {
-          "path": "catalog/recipes/impact/recipe.ts",
-          "type": "registry:file",
-          "target": "~/src/sounds/recipes/impact/recipe.ts"
-        },
-        {
-          "path": "LICENSE",
-          "type": "registry:file",
-          "target": "~/src/sounds/recipes/impact/LICENSE"
         }
       ],
       "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/main/catalog/README.md for integration and update guidance."
@@ -567,29 +537,9 @@
           "target": "~/src/sounds/experiences/lightsaber/recipe.ts"
         },
         {
-          "path": "catalog/experiences/lightsaber/motion.ts",
-          "type": "registry:file",
-          "target": "~/src/sounds/experiences/lightsaber/motion.ts"
-        },
-        {
           "path": "catalog/experiences/lightsaber/controller.ts",
           "type": "registry:file",
           "target": "~/src/sounds/experiences/lightsaber/controller.ts"
-        },
-        {
-          "path": "catalog/experiences/lightsaber/host.ts",
-          "type": "registry:file",
-          "target": "~/src/sounds/experiences/lightsaber/host.ts"
-        },
-        {
-          "path": "catalog/experiences/lightsaber/stage.ts",
-          "type": "registry:file",
-          "target": "~/src/sounds/experiences/lightsaber/stage.ts"
-        },
-        {
-          "path": "catalog/experiences/lightsaber/index.html",
-          "type": "registry:file",
-          "target": "~/src/sounds/experiences/lightsaber/index.html"
         },
         {
           "path": "catalog/experiences/lightsaber/README.md",

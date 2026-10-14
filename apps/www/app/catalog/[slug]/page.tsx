@@ -15,8 +15,10 @@ import {
   experienceCatalogEntry,
   experienceDetailDescription,
 } from "../../../lib/catalog";
-import { experienceSourceFiles } from "../../../lib/registry";
-import { experienceSourcePurpose } from "../../../lib/experiences";
+import {
+  experienceDemoSourceFiles,
+  experienceSourcePurpose,
+} from "../../../lib/experiences";
 import { rawExampleSource } from "../../../lib/site-build";
 
 function ChargeStageFallback() {
@@ -59,7 +61,7 @@ const LightsaberDetail = dynamic(
 
 function readExperienceSources(slug: keyof typeof experienceSourcePurpose) {
   const purposes = experienceSourcePurpose[slug];
-  return experienceSourceFiles(slug).map(({ name, path }) => ({
+  return experienceDemoSourceFiles(slug).map(({ name, path }) => ({
     name,
     purpose: (purposes as Readonly<Record<string, string>>)[name],
     code: readFileSync(join(process.cwd(), "../..", path), "utf8"),

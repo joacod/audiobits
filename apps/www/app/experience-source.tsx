@@ -61,6 +61,11 @@ export function ExperienceSource({
         <Tabs.Panel value="interaction">
           <p>{presentation}</p>
           <p>
+            Add to project installs sound recipes, the reusable controller, an
+            integration guide, and a license. These complete demonstration files
+            remain available to inspect and copy from the repository.
+          </p>
+          <p>
             Keep these relative paths together. See the{" "}
             <Link href="/docs/catalog#integrate-into-your-application">
               integration guide
