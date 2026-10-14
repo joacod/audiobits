@@ -86,7 +86,9 @@ test("showcase pointer, impact, release and navigation own their lifecycle", asy
     .poll(async () => (await probe(page)).contexts)
     .toEqual(["closed"]);
   await expect.poll(async () => (await probe(page)).connected).toBe(0);
-  await page.getByRole("link", { name: "Impact", exact: true }).click();
+  await page
+    .getByRole("link", { name: "Open impact workbench", exact: true })
+    .click();
   await page.getByRole("button", { name: "Play impact", exact: true }).click();
   await expect
     .poll(async () => (await probe(page)).contexts)

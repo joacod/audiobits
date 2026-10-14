@@ -22,7 +22,6 @@ export type ExperienceCatalogEntry = CatalogEntryBase & {
   controls: readonly string[];
   preview: { family: "charge" | "thruster" | "blade" };
   source: { files: readonly string[] };
-  relatedSounds: readonly string[];
 };
 
 export type BundledCatalogEntry = CatalogEntryBase & {
@@ -51,17 +50,6 @@ const experienceEntries = [
   { slug: "lightsaber", preview: "blade", experience: lightsaberExperience },
 ] as const;
 
-const bundledOrder = [
-  "confirmation",
-  "tactile-click",
-  "gentle-rejection",
-  "glass-notification",
-  "impact",
-  "whoosh",
-  "power-up",
-  "thruster",
-] as const satisfies readonly SoundKind[];
-
 export const catalogGroups = [
   {
     id: "experiences",
@@ -75,7 +63,8 @@ export const catalogGroups = [
   category: CatalogCategory;
 }[];
 
-// Static imports, controls, previews and curated order are website setup.
+// Static imports, controls and previews are website setup. Registry order is
+// shared by the cards, sidebar and detail pagination within each group.
 // A new registry item must declare that setup before it can be presented.
 export function createCatalogEntries(
   items = registry.items,
@@ -96,11 +85,6 @@ export function createCatalogEntries(
   return [
     ...items
       .filter((item) => item.meta.classification === "experience")
-      .sort(
-        (a, b) =>
-          experienceEntries.findIndex((item) => item.slug === a.name) -
-          experienceEntries.findIndex((item) => item.slug === b.name),
-      )
       .map((entry): ExperienceCatalogEntry => {
         const item = experienceEntries.find(
           (item) => item.slug === entry.name,
@@ -114,16 +98,10 @@ export function createCatalogEntries(
           controls: item.experience.controls,
           preview: { family: item.preview },
           source: { files: item.experience.sourceFiles },
-          relatedSounds: item.experience.relatedSounds,
         };
       }),
     ...items
       .filter((item) => item.meta.classification === "recipe")
-      .sort(
-        (a, b) =>
-          bundledOrder.indexOf(a.name as SoundKind) -
-          bundledOrder.indexOf(b.name as SoundKind),
-      )
       .map((item): BundledCatalogEntry => {
         const slug = item.name as SoundKind;
         const demo = demos[slug];

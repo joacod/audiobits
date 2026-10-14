@@ -369,10 +369,10 @@ test("thruster stays sustained, follows live throttle, and navigation disposes a
   await start.click();
   await expect(state).toHaveText("Thruster: running");
   await page
-    .getByRole("navigation", { name: "Related entries" })
-    .getByRole("link", { name: "Next: Confirmation", exact: true })
+    .getByRole("navigation", { name: "Previous and next" })
+    .getByRole("link", { name: "Next: Tactile click →", exact: true })
     .click();
-  await expect(page).toHaveURL(`${home}/catalog/confirmation`);
+  await expect(page).toHaveURL(`${home}/catalog/tactile-click`);
   await expect(
     page.locator(".catalog-transport").getByRole("status"),
   ).toHaveText("Audio: idle");
@@ -711,10 +711,10 @@ for (const [width, height] of [
       ).toBe(true);
     }
     await page.goto(`${home}/catalog`);
-    await page.getByText("Playback settings", { exact: true }).click();
-    await expect(
-      page.getByRole("slider", { name: "Effects volume" }),
-    ).toBeVisible();
+    await expect(page.locator(".audio-monitor")).toHaveCount(0);
+    await expect(page.locator(".catalog-card")).toHaveCount(
+      catalogEntries.length,
+    );
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= innerWidth,

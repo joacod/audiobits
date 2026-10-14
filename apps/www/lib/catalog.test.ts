@@ -46,6 +46,17 @@ test("catalog index discovers every registry entry once and groups collections",
         .map(() => group.category),
     ),
   );
+  expect(catalogEntries.map((entry) => entry.slug)).toEqual(
+    catalogGroups.flatMap((group) =>
+      registry.items
+        .filter(
+          (item) =>
+            item.meta.classification ===
+            (group.category === "bundled" ? "recipe" : "experience"),
+        )
+        .map((item) => item.name),
+    ),
+  );
   expect(new Set(catalogEntries.map((entry) => entry.slug)).size).toBe(
     catalogEntries.length,
   );

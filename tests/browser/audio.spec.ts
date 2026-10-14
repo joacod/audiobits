@@ -104,7 +104,7 @@ test("Native lifecycle and simulated failed activation retry", async ({
   ).toBeVisible();
 });
 
-test("site gesture, mute, stop and route teardown close owned context", async ({
+test("site card gestures, Stop and route teardown close owned context", async ({
   page,
 }) => {
   await page.addInitScript(() => {
@@ -119,11 +119,9 @@ test("site gesture, mute, stop and route teardown close owned context", async ({
     Object.assign(globalThis, { ownedContexts: contexts });
   });
   await page.goto("http://127.0.0.1:3100/catalog");
-  const playback = page.getByRole("complementary", {
-    name: "Audio monitor",
-    exact: true,
-  });
-  await expect(playback.getByRole("status")).toHaveText("Audio: idle");
+  await expect(page.getByTestId("confirmation-state")).toHaveText(
+    "Confirmation: ready",
+  );
   expect(
     await page.evaluate(
       () =>
@@ -132,13 +130,27 @@ test("site gesture, mute, stop and route teardown close owned context", async ({
     ),
   ).toBe(0);
   await page.getByRole("button", { name: "Play confirmation" }).click();
-  await expect(playback.getByRole("status")).toHaveText("Audio: running");
-  await page.getByText("Playback settings", { exact: true }).click();
-  await page.getByRole("button", { name: "Mute", exact: true }).click();
-  await expect(
-    page.getByRole("button", { name: "Mute", exact: true }),
-  ).toHaveAttribute("aria-pressed", "true");
-  await page.getByRole("button", { name: "Stop all" }).click();
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        (
+          globalThis as unknown as { ownedContexts: AudioContext[] }
+        ).ownedContexts.map((context) => context.state),
+      ),
+    )
+    .toEqual(["running"]);
+  await page
+    .getByRole("button", { name: "Start thruster", exact: true })
+    .click();
+  await expect(page.getByTestId("thruster-state")).toHaveText(
+    "Thruster: running",
+  );
+  await page
+    .getByRole("button", { name: "Stop thruster", exact: true })
+    .click();
+  await expect(page.getByTestId("thruster-state")).toHaveText(
+    "Thruster: stopped",
+  );
   await page.getByRole("link", { name: "Docs" }).click();
   await expect
     .poll(() =>
