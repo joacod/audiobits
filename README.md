@@ -59,7 +59,11 @@ export async function dispose() {
 }
 ```
 
-Or copy a ready-made sound from [catalog/](catalog/).
+Or install a ready-made sound from the [catalog](catalog/README.md):
+
+```sh
+npx shadcn@latest add joacod/audiobits/<item>
+```
 
 Construction is silent. Bind `play()` directly to a user gesture, such as a
 button click, and surface activation failures with `void play().catch(console.error)`.
