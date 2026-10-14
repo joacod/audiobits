@@ -1,5 +1,11 @@
 # audiobits
 
+## 0.2.3
+
+### Patch Changes
+
+- 11e9cab: Correct the package README to reflect the catalog's 0BSD license, which requires no retained notices or credit. The runtime remains MIT-licensed.
+
 ## 0.2.2
 
 ### Patch Changes
