@@ -59,8 +59,18 @@ because their human purposes differ.
 - Do not turn the site into a React Bits sampler or generic shadcn layout.
 - Use React Bits, audiocn, shadcn-style primitives, or other website-only tools
   selectively where they materially improve the experience.
-- Respect keyboard accessibility, visible focus, reduced motion, responsive
-  behavior, and audio controls.
+- Interactive AudioBits showcases prioritize direct mouse/touch interaction,
+  strong sound design, and immersive visuals. Do not introduce visible Play,
+  Start, Mute, Stop, or alternative-action panels by default when those actions
+  already work naturally through the stage. Only add visible controls that
+  materially improve the intended experience.
+- Existing unobtrusive keyboard shortcuts, meaningful error recovery, and proper
+  audio cleanup may remain. Do not create a second UI solely to duplicate every
+  pointer gesture or expand accessibility implementation and test scope beyond
+  the requested task.
+- Respect reduced motion and responsive behavior. Keep ordinary documentation,
+  forms, navigation, and installation controls functional and understandable,
+  including keyboard access and visible focus.
 - Use the [installed Impeccable skill](.agents/skills/impeccable/SKILL.md)
   for substantial visual/UX redesign work.
 - Do not load or invoke Impeccable for small bug fixes, copy changes, or

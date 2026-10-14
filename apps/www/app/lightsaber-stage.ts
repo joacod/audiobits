@@ -19,15 +19,17 @@ export function mountBladeStage3D(
   canvas.className = "lightsaber-renderer";
   canvas.setAttribute("aria-hidden", "true");
   surface.append(canvas);
-  let display: ReturnType<typeof createBladeScene>;
+  let display: ReturnType<typeof createBladeScene> | undefined;
+  let initialFailure: unknown;
   try {
     display = createBladeScene(canvas, surface);
   } catch (cause) {
     canvas.remove();
-    throw cause;
+    initialFailure = cause;
   }
   const events = new AbortController();
   const reduced = matchMedia("(prefers-reduced-motion: reduce)");
+  // A failed display retains input and audio motion, but has no visible targets.
   let failed = false;
   let width = 1,
     height = 1,
@@ -110,7 +112,7 @@ export function mountBladeStage3D(
   }
   function stateChanged() {
     surface.dataset.state = host.control.state;
-    if (failed || disposed) return;
+    if (disposed) return;
     if (host.control.state === "stopped") {
       contacts.clear();
       contactClock = 0;
@@ -157,6 +159,7 @@ export function mountBladeStage3D(
   }
   // Keyboard alternative strikes an actual visible target, with the same cooldown.
   function strike() {
+    if (failed) return;
     if (host.control.state !== "running") return;
     const index = keyboardTarget++ % 3;
     const target = targets()[index];
@@ -180,7 +183,7 @@ export function mountBladeStage3D(
   }
   function draw(time: number) {
     frame = 0;
-    if (disposed || failed || document.hidden) return;
+    if (disposed || document.hidden) return;
     const dt = previous ? Math.max(0, Math.min(64, time - previous)) : 16;
     previous = time;
     elapsed += dt;
@@ -242,6 +245,7 @@ export function mountBladeStage3D(
     };
     const points = targets();
     if (
+      !failed &&
       active &&
       extension > 0.75 &&
       (motion > 0.12 || assistedTarget !== null) &&
@@ -313,7 +317,7 @@ export function mountBladeStage3D(
       p.y += (p.vy * dt) / 1000;
     }
     try {
-      display.render({
+      display?.render({
         base,
         tip,
         angle,
@@ -343,10 +347,8 @@ export function mountBladeStage3D(
     if (failed || disposed) return;
     failed = true;
     reset();
-    events.abort();
-    observer.disconnect();
-    cancelAnimationFrame(frame);
-    display.dispose();
+    display?.dispose();
+    display = undefined;
     canvas.remove();
     surface.dataset.renderer = "unavailable";
     host.stop();
@@ -363,7 +365,7 @@ export function mountBladeStage3D(
     signal: events.signal,
   });
   function wake() {
-    if (!disposed && !failed && !document.hidden && !frame)
+    if (!disposed && !document.hidden && !frame)
       frame = requestAnimationFrame(draw);
   }
   function resize() {
@@ -375,7 +377,7 @@ export function mountBladeStage3D(
     position.x = bounded.x;
     position.y = bounded.y;
     try {
-      display.resize(width, height);
+      display?.resize(width, height);
     } catch (cause) {
       fail(cause);
     }
@@ -495,6 +497,7 @@ export function mountBladeStage3D(
   observer.observe(surface);
   surface.dataset.state = host.control.state;
   surface.dataset.hits = "0";
+  if (!display) fail(initialFailure);
   resize();
   function dispose() {
     if (disposed) return;
@@ -505,8 +508,8 @@ export function mountBladeStage3D(
     cancelAnimationFrame(frame);
     disconnect();
     trails.length = particles.length = 0;
-    display.dispose();
+    display?.dispose();
     canvas.remove();
   }
-  return { wake, stateChanged, strike, retract, reset, dispose };
+  return { stateChanged, dispose };
 }
