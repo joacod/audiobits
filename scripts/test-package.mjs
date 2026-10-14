@@ -16,14 +16,80 @@ import {
   cp,
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { join, relative, resolve } from "node:path";
+import {
+  hasRawComparison,
+  libraryExample,
+  parametersFor,
+  quickExample,
+  rawHost,
+  sounds,
+} from "../apps/www/lib/gallery.ts";
 
 const root = process.cwd();
+const args = process.argv.slice(2);
+const github = args.includes("--github");
+const revision = execFileSync("git", ["rev-parse", "HEAD"], {
+  encoding: "utf8",
+}).trim();
+const requestedRevision = args
+  .find((arg) => arg.startsWith("--revision="))
+  ?.slice(11);
+assert.ok(
+  args.every((arg) => arg === "--github" || arg.startsWith("--revision=")),
+  "Unknown package verification argument",
+);
+const dirtySource = Boolean(
+  execFileSync("git", ["status", "--porcelain"], { encoding: "utf8" }).trim(),
+);
+if (github) {
+  assert.match(
+    requestedRevision ?? "",
+    /^[a-f0-9]{40}$/,
+    "GitHub installation requires --revision=<full commit SHA>",
+  );
+  assert.equal(
+    requestedRevision,
+    revision,
+    "GitHub revision must match the checkout being verified",
+  );
+  assert.equal(
+    dirtySource,
+    false,
+    "GitHub installation requires a clean checkout",
+  );
+} else {
+  assert.equal(
+    requestedRevision,
+    undefined,
+    "--revision is only used with --github",
+  );
+}
 const require = createRequire(
   new URL("../packages/audiobits/package.json", import.meta.url),
 );
 const { build } = await import(require.resolve("tsdown"));
 const evidence = { examples: [], browser: [], treeShaking: false };
+const workspace = JSON.parse(
+  await readFile(join(root, "package.json"), "utf8"),
+);
+const cliVersion = workspace.devDependencies.shadcn;
+assert.match(cliVersion, /^\d+\.\d+\.\d+$/, "Pin the installer CLI exactly");
+assert.equal(
+  JSON.parse(
+    await readFile(join(root, "node_modules/shadcn/package.json"), "utf8"),
+  ).version,
+  cliVersion,
+);
+const shadcn = resolve("node_modules/shadcn/dist/index.js");
+evidence.installation = {
+  mode: github ? "github" : "local checkout",
+  cliVersion,
+  revision,
+  dirtySource,
+  items: [],
+};
+evidence.consumerSnippets = [];
 
 const pnpm = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
 const npm = process.platform === "win32" ? "npm.cmd" : "npm";
@@ -96,7 +162,24 @@ try {
   );
   const registry = JSON.parse(await readFile("registry.json", "utf8"));
   const catalogGuide = await readFile("catalog/README.md", "utf8");
+  const rawSource = await readFile("apps/www/lib/raw-example.ts", "utf8");
+  const registryOutput = join(consumer, "registry");
+  if (!github) {
+    // Use the CLI's own build format, with bytes from this checkout, never main.
+    run(process.execPath, [
+      shadcn,
+      "build",
+      "registry.json",
+      "--output",
+      registryOutput,
+    ]);
+  }
+  console.log(
+    `[Actual shadcn installation] CLI ${cliVersion}; ${github ? "GitHub" : "local checkout"}; commit ${revision}; dirty=${dirtySource}; items: ${registry.items.map((item) => item.name).join(", ")}`,
+  );
   const catalogExamples = [];
+  const manifestTypes = [];
+  const consumerTypes = [];
   evidence.catalog = [];
   for (const item of registry.items) {
     // Each item has its own source tree. Sibling items cannot satisfy imports.
@@ -142,21 +225,150 @@ try {
       source: exampleSource,
       sustained: item.meta.requiredCapabilities.kinds.includes("sustained"),
     });
+    manifestTypes.push(...types);
+    // This consumer starts with only the packed runtime. No framework or
+    // components.json is present, and sibling items cannot satisfy imports.
+    const installedDirectory = join(consumer, "installed-items", item.name);
+    await mkdir(installedDirectory, { recursive: true });
+    await writeFile(
+      join(installedDirectory, "package.json"),
+      JSON.stringify({
+        name: `consumer-${item.name}`,
+        private: true,
+        type: "module",
+      }),
+    );
+    run(
+      npm,
+      [
+        "install",
+        archive,
+        "--offline",
+        "--ignore-scripts",
+        "--no-audit",
+        "--no-fund",
+        "--cache",
+        join(consumer, "cache"),
+      ],
+      installedDirectory,
+    );
+    const beforeInstall = await readFile(
+      join(installedDirectory, "package.json"),
+      "utf8",
+    );
+    const address = github
+      ? `${new URL(registry.homepage).pathname.slice(1)}/${item.name}#${requestedRevision}`
+      : join(registryOutput, `${item.name}.json`);
     run(
       process.execPath,
-      [
-        resolve("node_modules/typescript/bin/tsc"),
-        "--noEmit",
-        "--strict",
-        "--module",
-        "ESNext",
-        "--moduleResolution",
-        "Bundler",
-        "--target",
-        "ES2022",
-        ...types,
-      ],
-      directory,
+      [shadcn, "add", address, "--yes", "--cwd", installedDirectory],
+      installedDirectory,
+    );
+    assert.equal(
+      await readFile(join(installedDirectory, "package.json"), "utf8"),
+      beforeInstall,
+      `${item.name}: installer changed dependencies`,
+    );
+    assert.deepEqual(
+      (await readdir(join(installedDirectory, "node_modules"))).sort(),
+      [".package-lock.json", "audiobits"],
+      `${item.name}: unexpected installed dependencies`,
+    );
+    assert.deepEqual(
+      (await readdir(installedDirectory)).sort(),
+      ["node_modules", "package-lock.json", "package.json", "src"].sort(),
+      `${item.name}: unexpected framework/config files`,
+    );
+    const actualFiles = (
+      await readdir(join(installedDirectory, "src"), {
+        recursive: true,
+        withFileTypes: true,
+      })
+    )
+      .filter((file) => file.isFile())
+      .map((file) =>
+        relative(
+          installedDirectory,
+          join(file.parentPath, file.name),
+        ).replaceAll("\\", "/"),
+      );
+    assert.deepEqual(
+      actualFiles.sort(),
+      item.files.map((file) => file.target.replace(/^~\//, "")).sort(),
+      `${item.name}: installed paths differ from manifest`,
+    );
+    for (const file of item.files) {
+      assert.deepEqual(
+        await readFile(
+          join(installedDirectory, file.target.replace(/^~\//, "")),
+        ),
+        await readFile(join(root, file.path)),
+        `${item.name}: installer changed bytes in ${file.target}`,
+      );
+    }
+    evidence.installation.items.push({
+      id: item.name,
+      files: actualFiles.length,
+      paths: "passed",
+      bytes: "passed",
+      dependencies: ["audiobits"],
+    });
+
+    // Compile the same generators the website calls. Presentation can change
+    // without extracting code from rendered markup or rewriting user imports.
+    const snippets = [
+      { source: "catalog integration guide", code: matches[0][1] },
+    ];
+    if (item.meta.classification === "recipe") {
+      assert.ok(
+        item.name in sounds,
+        `${item.name}: missing website snippet generator`,
+      );
+      for (const control of [0, 0.5, 1]) {
+        for (const seed of [0, 42, 0xffffffff]) {
+          snippets.push({
+            source: "quickExample",
+            code: quickExample(
+              item.name,
+              parametersFor(sounds[item.name], control),
+              seed,
+            ),
+          });
+          snippets.push({
+            source: "libraryExample",
+            code: libraryExample(sounds[item.name], control, seed),
+          });
+          if (hasRawComparison(item.name)) {
+            snippets.push({
+              source: "rawHost",
+              code: `${rawSource}\n${rawHost(item.name, control, seed)}`,
+            });
+          }
+        }
+      }
+    }
+    const installedTypes = item.files
+      .filter((file) => file.path.endsWith(".ts"))
+      .map((file) => join(installedDirectory, file.target.replace(/^~\//, "")));
+    for (const [index, snippet] of snippets.entries()) {
+      const source = join(
+        installedDirectory,
+        "src",
+        index === 0 ? "integration.ts" : `snippet-${index}.ts`,
+      );
+      await writeFile(source, snippet.code);
+      installedTypes.push(source);
+    }
+    consumerTypes.push(...installedTypes);
+    evidence.consumerSnippets.push({
+      id: item.name,
+      count: snippets.length,
+      sources: [...new Set(snippets.map((snippet) => snippet.source))],
+      typecheck: "passed",
+    });
+    catalogExamples.at(-1).source = join(
+      installedDirectory,
+      "src/integration.ts",
     );
     const recipeFile = item.files.find(
       (file) =>
@@ -196,6 +408,42 @@ try {
       example: "typechecked",
     });
   }
+  // Each import still resolves from its own isolated item directory. Batching
+  // shares TypeScript's standard-library work, with no aliases or source rewrites.
+  for (const [name, sources] of [
+    ["manifest", manifestTypes],
+    ["consumer", consumerTypes],
+  ]) {
+    const config = join(consumer, `${name}.tsconfig.json`);
+    await writeFile(
+      config,
+      JSON.stringify({
+        compilerOptions: {
+          noEmit: true,
+          strict: true,
+          module: "ESNext",
+          moduleResolution: "Bundler",
+          target: "ES2022",
+          types: [],
+        },
+        files: sources.map((file) => relative(consumer, file)),
+      }),
+    );
+    run(
+      process.execPath,
+      [resolve("node_modules/typescript/bin/tsc"), "--project", config],
+      consumer,
+    );
+  }
+  console.log(
+    `[Manifest/source validation] ${evidence.catalog.length} items: declared files, installed-path README types and runtime recipe validation passed (manifest copies).`,
+  );
+  console.log(
+    `[Actual shadcn installation] ${evidence.installation.items.length} items, ${evidence.installation.items.reduce((count, item) => count + item.files, 0)} files: paths, bytes and only audiobits dependency passed.`,
+  );
+  console.log(
+    `[Exact consumer snippet validation] ${evidence.consumerSnippets.reduce((count, item) => count + item.count, 0)} unchanged snippets across ${evidence.consumerSnippets.length} items passed against shadcn-installed source and packed audiobits.`,
+  );
   // Repository demonstrations are verified separately from installed source.
   await cp(join(root, "catalog"), join(consumer, "showcases/catalog"), {
     recursive: true,
@@ -389,6 +637,9 @@ try {
     typecheck: "passed",
   }));
   examples.push(...catalogExamples);
+  console.log(
+    "[Browser/runtime verification] Chromium: README quick starts, all eleven installed integrations and three repository demonstration hosts.",
+  );
   const browserOutput = join(consumer, "browser");
   await mkdir(browserOutput);
   for (const name of ["baseline", "unused"]) {

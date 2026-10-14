@@ -7,8 +7,6 @@ import {
   rawHost,
   sounds,
   hasRawComparison,
-  quickExample,
-  parametersFor,
 } from "../apps/www/lib/gallery";
 
 test("all documentation fences and current gallery/raw examples typecheck through public exports", () => {
@@ -29,9 +27,8 @@ test("all documentation fences and current gallery/raw examples typecheck throug
     for (const control of [0, 0.5, 1]) {
       for (const seed of [0, 42, 0xffffffff]) {
         snippets.push(libraryExample(sounds[kind], control, seed));
-        snippets.push(
-          quickExample(kind, parametersFor(sounds[kind], control), seed),
-        );
+        // Installed-path quickExample coverage belongs to test:package, where
+        // imports resolve unchanged against actual shadcn-installed files.
         if (hasRawComparison(kind))
           snippets.push(raw + rawHost(kind, control, seed));
       }

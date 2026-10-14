@@ -1,6 +1,6 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { dirname, posix, resolve } from "node:path";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { expect, test } from "vitest";
 import { validateRecipe, type Recipe } from "audiobits";
 import capabilities from "audiobits/capabilities.json";
@@ -14,6 +14,27 @@ test("canonical gallery imports resolve in native Node tooling", () => {
     "-e",
     'await import("./apps/www/lib/gallery.ts")',
   ]);
+});
+
+test("GitHub installer verification rejects missing, floating and mismatched revisions before installation", () => {
+  for (const [args, message] of [
+    [["--github"], "requires --revision=<full commit SHA>"],
+    [["--github", "--revision=main"], "requires --revision=<full commit SHA>"],
+    [
+      ["--github", `--revision=${"0".repeat(40)}`],
+      "revision must match the checkout",
+    ],
+    [[`--revision=${"0".repeat(40)}`], "--revision is only used with --github"],
+  ] as const) {
+    const result = spawnSync(
+      process.execPath,
+      ["scripts/test-package.mjs", ...args],
+      { encoding: "utf8" },
+    );
+    expect(result.error).toBeUndefined();
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain(message);
+  }
 });
 
 test("registry covers eight minimal recipes and three sound-only experiences", async () => {

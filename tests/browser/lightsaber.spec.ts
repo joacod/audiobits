@@ -127,10 +127,13 @@ test("button ignition, mute, unmute and retraction", async ({ page }) => {
 test("repeated ignition and Stop bound voices and dispose on navigation", async ({
   page,
 }) => {
+  // Bound software WebGL's pixel cost in this voice stress test.
+  await page.setViewportSize({ width: 390, height: 844 });
   const errors: string[] = [];
   page.on("pageerror", (cause) => errors.push(cause.message));
   await instrument(page, "normal", "lightsaber");
   const pad = stage(page);
+  await expect(pad).toHaveAttribute("data-renderer", "three");
   for (let i = 0; i < 5; i++) {
     await page.getByRole("button", { name: "Ignite", exact: true }).click();
     await expect(pad).toHaveAttribute("data-state", "running");
