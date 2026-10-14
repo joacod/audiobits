@@ -1,3 +1,4 @@
+import { soundKinds, sounds, type SoundKind } from "../../apps/www/lib/gallery";
 import { dragThruster } from "./experience-probe";
 import { requireOfflineCheckpoints } from "./offline-capabilities";
 import { expect, test } from "@playwright/test";
@@ -135,7 +136,7 @@ test("documentation routes and links render the shipped package API", async ({
   ).toBe(404);
 });
 
-test("raw comparisons match managed dry signals, seeded noise, live smoothing and releases", async ({
+test("catalog dry signals replay seeded noise, live smoothing and releases", async ({
   page,
   browser,
 }) => {
@@ -146,41 +147,54 @@ test("raw comparisons match managed dry signals, seeded noise, live smoothing an
       "node_modules/.cache/audiobits-audio-tests/audio-harness.iife.js",
     ),
   });
-  const results = await page.evaluate(async () => {
-    const helper = globalThis as unknown as {
-      comparisonSignal(
-        rate: number,
-        kind: "confirmation" | "impact" | "thruster",
-        control: number,
-        seed: number,
-        action?: "natural" | "early" | "live" | "cancel",
-      ): Promise<{ difference: number; energy: number; latePeak: number }>;
-    };
-    const results = [];
-    for (const rate of [44100, 48000])
-      for (const kind of ["confirmation", "impact", "thruster"] as const) {
-        for (const control of [0, 0.5, 1])
-          for (const seed of [0, 42, 0xffffffff])
+  const results = await page.evaluate(
+    async (items) => {
+      const helper = globalThis as unknown as {
+        catalogSignal(
+          rate: number,
+          kind: SoundKind,
+          control: number,
+          seed: number,
+          action?: "natural" | "early" | "live" | "cancel",
+        ): Promise<{
+          difference: number;
+          energy: number;
+          latePeak: number;
+          action: string;
+        }>;
+      };
+      const results = [];
+      for (const rate of [44100, 48000])
+        for (const { kind, sustained } of items) {
+          for (const control of [0, 0.5, 1])
+            for (const seed of [0, 42, 0xffffffff])
+              results.push(
+                await helper.catalogSignal(rate, kind, control, seed),
+              );
+          for (const action of ["early", "cancel"] as const)
             results.push(
-              await helper.comparisonSignal(rate, kind, control, seed),
+              await helper.catalogSignal(rate, kind, 0.5, 42, action),
             );
-        for (const action of ["early", "cancel"] as const)
-          results.push(
-            await helper.comparisonSignal(rate, kind, 0.5, 42, action),
-          );
-        if (kind === "thruster")
-          results.push(
-            await helper.comparisonSignal(rate, kind, 0.2, 7, "live"),
-          );
-      }
-    return results;
-  });
+          if (sustained)
+            results.push(
+              await helper.catalogSignal(rate, kind, 0.2, 7, "live"),
+            );
+        }
+      return results;
+    },
+    soundKinds.map((kind) => ({
+      kind,
+      sustained: sounds[kind].kind === "sustained",
+    })),
+  );
   for (const result of results) {
+    if (result.action === "cancel") expect(result.energy).toBe(0);
+    else expect(result.energy).toBeGreaterThan(0);
     expect(result.difference).toBeLessThan(0.000001);
     expect(result.latePeak).toBe(0);
   }
   console.log(
-    `Raw comparison ${browser.browserType().name()} ${browser.version()}: ${results.length} scenarios; max difference ${Math.max(...results.map((r) => r.difference))}`,
+    `Catalog signal ${browser.browserType().name()} ${browser.version()}: ${results.length} scenarios; max difference ${Math.max(...results.map((r) => r.difference))}`,
   );
 });
 
@@ -219,14 +233,7 @@ test("displayed host examples activate from a gesture, stop, and dispose their o
       document.body.append(button);
     }
   });
-  for (const name of [
-    "confirmationLibrary",
-    "confirmationRaw",
-    "impactLibrary",
-    "impactRaw",
-    "thrusterLibrary",
-    "thrusterRaw",
-  ]) {
+  for (const name of soundKinds.map((kind) => `${kind}Library`)) {
     const button = page.getByRole("button", { name, exact: true });
     await button.click();
     await expect(button).toHaveAttribute("data-played", "true");
@@ -251,7 +258,7 @@ test("displayed host examples activate from a gesture, stop, and dispose their o
         ).galleryContexts.map((context) => context.state),
       ),
     )
-    .toEqual(Array(6).fill("closed"));
+    .toEqual(soundKinds.map(() => "closed"));
 });
 
 test("failed gallery activation identifies Retry Play and recovers with a fresh action", async ({

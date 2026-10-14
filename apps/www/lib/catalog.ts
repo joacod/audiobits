@@ -75,51 +75,77 @@ export const catalogGroups = [
   category: CatalogCategory;
 }[];
 
-export const catalogEntries: readonly CatalogEntry[] = [
-  ...registry.items
-    .filter((item) => item.meta.classification === "experience")
-    .sort(
-      (a, b) =>
-        experienceEntries.findIndex((item) => item.slug === a.name) -
-        experienceEntries.findIndex((item) => item.slug === b.name),
+// Static imports, controls, previews and curated order are website setup.
+// A new registry item must declare that setup before it can be presented.
+export function createCatalogEntries(
+  items = registry.items,
+): readonly CatalogEntry[] {
+  for (const entry of items) {
+    if (entry.meta.classification === "recipe" && !(entry.name in demos))
+      throw new Error(
+        `${entry.name}: missing website recipe presentation and usage setup`,
+      );
+    if (
+      entry.meta.classification === "experience" &&
+      !experienceEntries.some((item) => item.slug === entry.name)
     )
-    .map((entry): ExperienceCatalogEntry => {
-      const item = experienceEntries.find((item) => item.slug === entry.name)!;
-      return {
-        slug: entry.name,
-        title: entry.title,
-        description: entry.description,
-        category: "experience",
-        href: `/catalog/${entry.name}`,
-        controls: item.experience.controls,
-        preview: { family: item.preview },
-        source: { files: item.experience.sourceFiles },
-        relatedSounds: item.experience.relatedSounds,
-      };
-    }),
-  ...registry.items
-    .filter((item) => item.meta.classification === "recipe")
-    .map((item) => item.name as SoundKind)
-    .sort((a, b) => bundledOrder.indexOf(a) - bundledOrder.indexOf(b))
-    .map((slug): BundledCatalogEntry => {
-      const demo = demos[slug];
-      return {
-        slug,
-        title: demo.title,
-        description: demo.description,
-        category: "bundled",
-        href: `/catalog/${slug}`,
-        playback: demo.recipe.kind,
-        use: demo.use,
-        preview: { family: demo.visualFamily },
-        source: {
-          exportName: demo.exportName,
-          file: registry.items.find((item) => item.name === slug)!.files[0]
-            .path,
-        },
-      };
-    }),
-];
+      throw new Error(
+        `${entry.name}: missing website experience presentation setup`,
+      );
+  }
+  return [
+    ...items
+      .filter((item) => item.meta.classification === "experience")
+      .sort(
+        (a, b) =>
+          experienceEntries.findIndex((item) => item.slug === a.name) -
+          experienceEntries.findIndex((item) => item.slug === b.name),
+      )
+      .map((entry): ExperienceCatalogEntry => {
+        const item = experienceEntries.find(
+          (item) => item.slug === entry.name,
+        )!;
+        return {
+          slug: entry.name,
+          title: entry.title,
+          description: entry.description,
+          category: "experience",
+          href: `/catalog/${entry.name}`,
+          controls: item.experience.controls,
+          preview: { family: item.preview },
+          source: { files: item.experience.sourceFiles },
+          relatedSounds: item.experience.relatedSounds,
+        };
+      }),
+    ...items
+      .filter((item) => item.meta.classification === "recipe")
+      .sort(
+        (a, b) =>
+          bundledOrder.indexOf(a.name as SoundKind) -
+          bundledOrder.indexOf(b.name as SoundKind),
+      )
+      .map((item): BundledCatalogEntry => {
+        const slug = item.name as SoundKind;
+        const demo = demos[slug];
+        return {
+          slug,
+          title: item.title,
+          description: item.description,
+          category: "bundled",
+          href: `/catalog/${slug}`,
+          playback: demo.recipe.kind,
+          use: demo.use,
+          preview: { family: demo.visualFamily },
+          source: {
+            exportName: item.meta.exportName,
+            file: item.files[0].path,
+          },
+        };
+      }),
+  ];
+}
+
+export const catalogEntries = createCatalogEntries();
 
 export function catalogEntriesByCategory(
   category: "experience",

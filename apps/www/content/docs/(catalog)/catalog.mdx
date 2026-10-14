@@ -50,13 +50,8 @@ Install the recipe you inspected:
 npx shadcn@latest add joacod/audiobits/confirmation
 ```
 
-For coordinated interactive sound, choose one of these controllers instead:
-
-```sh
-npx shadcn@latest add joacod/audiobits/energy-charge
-npx shadcn@latest add joacod/audiobits/reactive-thruster
-npx shadcn@latest add joacod/audiobits/lightsaber
-```
+For coordinated interactive sound, inspect an experience from the catalog and
+install its controller in the same way.
 
 </Step>
 <Step>
@@ -79,10 +74,9 @@ Later catalog installs are source updates to review in version control.
 </Step>
 </Steps>
 
-Use the top-level `view` command above for inspection. In the currently verified
-CLI, `add --dry-run`, `--diff`, and `--view` can prompt for `components.json` in
-an unconfigured project. Decline unrelated framework setup or use the
-[disposable preview setup](https://github.com/joacod/audiobits/blob/main/catalog/README.md#preview-limitation-in-shadcn-4214).
+Use top-level `view` for inspection. In an unconfigured project,
+`add --dry-run`, `--diff`, and `--view` can request component setup;
+decline unrelated setup and use top-level `view` instead.
 
 ## Files you own
 
@@ -90,7 +84,8 @@ The items use explicit project-relative file targets. Normal installation needs
 no React, Tailwind, Next.js, or `components.json`. The source is TypeScript using
 public AudioBits exports and bundler module resolution, not precompiled JavaScript.
 
-This tree shows the registry targets for Confirmation and the interactive sounds.
+This tree shows representative targets for Confirmation and Energy Charge.
+Inspect the registry payload for the selected item's complete file manifest.
 Only the selected item's files are installed. Recipe items install
 just their recipe. Experience installs exclude demo hosts and UI.
 
@@ -106,16 +101,6 @@ just their recipe. Experience installs exclude demo hosts and UI.
         <Folder name="energy-charge" defaultOpen>
           <File name="recipe.ts" />
           <File name="progress.ts" />
-          <File name="README.md" />
-        </Folder>
-        <Folder name="reactive-thruster">
-          <File name="recipe.ts" />
-          <File name="pointer.ts" />
-          <File name="README.md" />
-        </Folder>
-        <Folder name="lightsaber">
-          <File name="recipe.ts" />
-          <File name="controller.ts" />
           <File name="README.md" />
         </Folder>
       </Folder>
@@ -187,8 +172,6 @@ playback and disposes the old sound. Play again to hear the accepted definition.
 Keep the playback kind and primary parameter's range, default and mode.
 Additional parameters use their declared defaults. Restore returns the recipe,
 controls and seed to catalog defaults; Reset variation changes only the seed.
-Raw comparisons, where available under the usage example, apply to catalog
-definitions.
 
 ## Customize and verify
 

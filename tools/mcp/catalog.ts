@@ -91,8 +91,8 @@ export function itemMetadata(item: CatalogItem) {
     ...item,
     source: { repository: catalog.repository, revision: catalog.revision },
     installation: {
-      inspect: `npx shadcn@4.21.4 view ${address}`,
-      install: `npx shadcn@4.21.4 add ${address}`,
+      inspect: `npx shadcn@latest view ${address}`,
+      install: `npx shadcn@latest add ${address}`,
       guidance:
         "Run the established shadcn registry command from the consumer project and review conflicts. Install only the needed sound source; connect recipes or controllers to existing application inputs. The app owns gesture activation, Stop and disposal. Demo hosts and renderers are excluded. This MCP returns source for review and never installs it.",
     },

@@ -17,6 +17,7 @@
     "test": "node scripts/generate-recipe.mjs --check && vitest run",
     "test:browser": "pnpm build && node scripts/build-audio-tests.mjs && playwright test",
     "test:package": "pnpm build:lib && node scripts/test-package.mjs",
+    "test:package:latest": "pnpm build:lib && node scripts/test-package.mjs --latest",
     "test:package:github": "pnpm build:lib && node scripts/test-package.mjs --github",
     "changeset": "changeset",
     "version-packages": "changeset version && node scripts/generate-recipe.mjs",

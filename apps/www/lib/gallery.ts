@@ -99,10 +99,6 @@ export const sounds = Object.fromEntries(
   soundKinds.map((kind) => [kind, demos[kind].recipe]),
 ) as Record<SoundKind, Recipe>;
 export const soundInfo = demos;
-export type RawSoundKind = "confirmation" | "impact" | "thruster";
-export function hasRawComparison(kind: SoundKind): kind is RawSoundKind {
-  return kind === "confirmation" || kind === "impact" || kind === "thruster";
-}
 export function parametersFor(
   recipe: Recipe,
   control: number | Readonly<Record<string, number>> = {},
@@ -186,48 +182,6 @@ export async function dispose() {
 `;
 }
 
-export function rawHost(kind: RawSoundKind, control: number, seed: number) {
-  return `
-// Call directly from the host's Play gesture. Catch errors and show Retry Play.
-let context: AudioContext | undefined;
-let raw: ReturnType<typeof playRaw> | undefined;
-let request = 0;
-export async function play() {
-  const token = ++request;
-  context ??= new AudioContext();
-  let timeout: ReturnType<typeof setTimeout> | undefined;
-  try {
-    await Promise.race([
-      context.resume(),
-      new Promise<never>((_, reject) => {
-        timeout = setTimeout(() => reject(new Error("Audio blocked. Retry Play.")), 2000);
-      }),
-    ]);
-  } finally { clearTimeout(timeout); }
-  if (context.state !== "running") throw new Error("Audio blocked. Retry Play.");
-  if (token !== request || document.hidden) return;
-  raw?.dispose();
-  raw = playRaw(context, "${kind}", ${control}, ${seed});
-}
-export function stop() { request++; raw?.stop(); }
-${kind === "thruster" ? `// While active: raw?.setThrottle(${control});` : ""}
-function hide() {
-  if (document.hidden) {
-    request++;
-    raw?.dispose();
-    void context?.suspend().catch(console.error);
-  }
-}
-document.addEventListener("visibilitychange", hide);
-export async function dispose() {
-  request++;
-  document.removeEventListener("visibilitychange", hide);
-  raw?.dispose();
-  await context?.close();
-}
-`;
-}
-
 // Seeded noise and nonconstant random values affect the audible variation.
 export function hasAudibleVariation(recipe: Recipe): boolean {
   function varies(value: unknown): boolean {
@@ -262,7 +216,7 @@ export function quickExample(
   return `import { createAudio${original ? "" : ", defineSound"} } from "audiobits";
 ${
   original
-    ? `import { ${demos[kind].exportName} } from "./sounds/recipes/${kind}/recipe";`
+    ? `import { ${demos[kind].exportName} } from "./${registryItem(kind).files[0].target.slice("~/src/".length).replace(/\.ts$/, "")}";`
     : `
 const recipe = defineSound(${JSON.stringify(recipe, null, 2)});`
 }
