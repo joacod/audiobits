@@ -178,6 +178,8 @@ try {
     `[Actual shadcn installation] CLI ${cliVersion}; ${github ? "GitHub" : "local checkout"}; commit ${revision}; dirty=${dirtySource}; items: ${registry.items.map((item) => item.name).join(", ")}`,
   );
   const catalogExamples = [];
+  const manifestTypes = [];
+  const consumerTypes = [];
   evidence.catalog = [];
   for (const item of registry.items) {
     // Each item has its own source tree. Sibling items cannot satisfy imports.
@@ -223,22 +225,7 @@ try {
       source: exampleSource,
       sustained: item.meta.requiredCapabilities.kinds.includes("sustained"),
     });
-    run(
-      process.execPath,
-      [
-        resolve("node_modules/typescript/bin/tsc"),
-        "--noEmit",
-        "--strict",
-        "--module",
-        "ESNext",
-        "--moduleResolution",
-        "Bundler",
-        "--target",
-        "ES2022",
-        ...types,
-      ],
-      directory,
-    );
+    manifestTypes.push(...types);
     // This consumer starts with only the packed runtime. No framework or
     // components.json is present, and sibling items cannot satisfy imports.
     const installedDirectory = join(consumer, "installed-items", item.name);
@@ -372,29 +359,7 @@ try {
       await writeFile(source, snippet.code);
       installedTypes.push(source);
     }
-    await writeFile(
-      join(installedDirectory, "tsconfig.json"),
-      JSON.stringify({
-        compilerOptions: {
-          noEmit: true,
-          strict: true,
-          module: "ESNext",
-          moduleResolution: "Bundler",
-          target: "ES2022",
-          types: [],
-        },
-        files: installedTypes.map((file) => relative(installedDirectory, file)),
-      }),
-    );
-    run(
-      process.execPath,
-      [
-        resolve("node_modules/typescript/bin/tsc"),
-        "--project",
-        "tsconfig.json",
-      ],
-      installedDirectory,
-    );
+    consumerTypes.push(...installedTypes);
     evidence.consumerSnippets.push({
       id: item.name,
       count: snippets.length,
@@ -442,6 +407,33 @@ try {
       validation: "passed",
       example: "typechecked",
     });
+  }
+  // Each import still resolves from its own isolated item directory. Batching
+  // shares TypeScript's standard-library work, with no aliases or source rewrites.
+  for (const [name, sources] of [
+    ["manifest", manifestTypes],
+    ["consumer", consumerTypes],
+  ]) {
+    const config = join(consumer, `${name}.tsconfig.json`);
+    await writeFile(
+      config,
+      JSON.stringify({
+        compilerOptions: {
+          noEmit: true,
+          strict: true,
+          module: "ESNext",
+          moduleResolution: "Bundler",
+          target: "ES2022",
+          types: [],
+        },
+        files: sources.map((file) => relative(consumer, file)),
+      }),
+    );
+    run(
+      process.execPath,
+      [resolve("node_modules/typescript/bin/tsc"), "--project", config],
+      consumer,
+    );
   }
   console.log(
     `[Manifest/source validation] ${evidence.catalog.length} items: declared files, installed-path README types and runtime recipe validation passed (manifest copies).`,

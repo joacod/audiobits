@@ -21,6 +21,13 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Cache Next.js build work
+        uses: actions/cache@v4
+        with:
+          path: apps/www/.next/cache
+          key: ${{ runner.os }}-${{ runner.arch }}-next-${{ hashFiles('.node-version', 'pnpm-lock.yaml') }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-next-${{ hashFiles('.node-version', 'pnpm-lock.yaml') }}-
       - run: pnpm check:skill
       # The snapshot check reads its pinned catalog commit, which a depth-1 checkout does not contain.
       - run: git fetch --depth=1 origin "$(jq -r .revision tools/mcp/snapshot.json)"
@@ -40,6 +47,13 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Cache Next.js build work
+        uses: actions/cache@v4
+        with:
+          path: apps/www/.next/cache
+          key: ${{ runner.os }}-${{ runner.arch }}-next-${{ hashFiles('.node-version', 'pnpm-lock.yaml') }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-next-${{ hashFiles('.node-version', 'pnpm-lock.yaml') }}-
       - run: pnpm exec playwright install --with-deps chromium
       - run: bash scripts/ci/setup-linux-audio.sh
       - run: pnpm test:package
