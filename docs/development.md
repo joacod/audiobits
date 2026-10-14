@@ -218,12 +218,31 @@ experiences.
 `registry.json` owns discovery metadata and installation file manifests; website
 metadata is derived from it. No creative recipes are generated into the runtime.
 
-`pnpm test:package` copies each of the eleven item manifests into its own source
-tree in an isolated packed-package consumer, typechecks every installed
-TypeScript file and documented integration, validates every recipe with the
-actual runtime, exercises all eleven installed integrations, and runs all three
-repository demonstration entrypoints in Chromium. The site browser tests verify the
-displayed source matches the catalog, along with interaction and lifecycle behavior.
+`pnpm test:package` keeps deterministic manifest/source checks for all eleven
+items. It also uses the exact-pinned shadcn CLI to build registry payloads from
+the local checkout and run real `add` commands in separate framework-free
+consumers. It checks installed paths and bytes, requires only the packed
+`audiobits` dependency, and rejects framework or component configuration added
+by installation. No GitHub registry request is needed for PR coverage.
+
+The check compiles unchanged website-generated quick, full-library, and raw
+comparison snippets at control and seed extrema, plus all eleven README
+integrations, against the packed public package and actual installed source.
+It retains recipe validation, silent load, gesture activation, signal, update,
+Stop, and disposal checks for all eleven integrations in Chromium, along with
+the three repository demonstration entrypoints. Output and retained evidence
+distinguish manifest/source validation, exact consumer snippets, actual shadcn
+installation, and browser/runtime verification.
+
+For an explicit network integration check, run
+`pnpm test:package:github --revision=<reviewed-full-SHA>` from a clean checkout
+at that published commit. This uses `owner/repo/item#<SHA>` for all eleven
+items and runs the same consumer checks. It rejects missing refs, a revision
+different from the checkout, and dirty source; it never substitutes `main`.
+The installer output reports the CLI version, source commit, and items tested.
+GitHub resolution remains an external integration check, separate from required
+PR coverage. The site browser tests verify displayed catalog source and UI
+interaction/lifecycle behavior.
 
 `/catalog` keeps one engine for the catalog sound rows. The output strip is a
 desktop row and a compact mobile dock. `/catalog/[slug]` uses that same session
