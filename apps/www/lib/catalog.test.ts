@@ -46,17 +46,14 @@ test("catalog index discovers every registry entry once and groups collections",
         .map(() => group.category),
     ),
   );
-  expect(catalogEntries.map((entry) => entry.slug)).toEqual(
-    catalogGroups.flatMap((group) =>
-      registry.items
-        .filter(
-          (item) =>
-            item.meta.classification ===
-            (group.category === "bundled" ? "recipe" : "experience"),
-        )
-        .map((item) => item.name),
-    ),
-  );
+  expect(catalogEntries.map((entry) => entry.slug)).toEqual([
+    "reactive-thruster",
+    "lightsaber",
+    "energy-charge",
+    ...registry.items
+      .filter((item) => item.meta.classification === "recipe")
+      .map((item) => item.name),
+  ]);
   expect(new Set(catalogEntries.map((entry) => entry.slug)).size).toBe(
     catalogEntries.length,
   );
@@ -75,7 +72,7 @@ test("catalog index discovers every registry entry once and groups collections",
 });
 
 test("catalog entries derive links and playback from website metadata", () => {
-  const [charge, reactive] = catalogEntries;
+  const [reactive, lightsaber, charge] = catalogEntries;
   expect(energyChargeExperience.href).toBe("/catalog/energy-charge");
   expect(reactiveThrusterExperience.href).toBe("/catalog/reactive-thruster");
   expect(charge).toMatchObject({
@@ -94,7 +91,7 @@ test("catalog entries derive links and playback from website metadata", () => {
     source: { files: reactiveThrusterExperience.sourceFiles },
     preview: { family: "thruster" },
   });
-  expect(catalogEntries[2]).toMatchObject({
+  expect(lightsaber).toMatchObject({
     title: "Lightsaber",
     href: "/catalog/lightsaber",
     preview: { family: "blade" },

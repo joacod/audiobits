@@ -6,7 +6,6 @@ import type { CSSProperties } from "react";
 import { Button } from "@base-ui/react/button";
 import { OutputScope } from "./output-scope";
 import { PlaySpark } from "./play-spark";
-import { SoundMark } from "../icons/catalog-marks";
 import { PlayIcon } from "../icons/play-icon";
 import { useCollectionSession } from "./collection-session";
 import {
@@ -18,23 +17,11 @@ import {
 import type { SoundKind } from "../lib/gallery";
 
 // One collection session per mounted entry. A new slug remounts and disposes it.
-export function CatalogSoundBench({
-  slug,
-  markIndex,
-}: {
-  slug: SoundKind;
-  markIndex: number;
-}) {
-  return <SoundSession key={slug} slug={slug} markIndex={markIndex} />;
+export function CatalogSoundBench({ slug }: { slug: SoundKind }) {
+  return <SoundSession key={slug} slug={slug} />;
 }
 
-function SoundSession({
-  slug,
-  markIndex,
-}: {
-  slug: SoundKind;
-  markIndex: number;
-}) {
+function SoundSession({ slug }: { slug: SoundKind }) {
   const {
     ready,
     recipes,
@@ -99,9 +86,6 @@ function SoundSession({
         }
       >
         <div className="catalog-stage-field">
-          <div className="catalog-stage-mark" aria-hidden="true">
-            <SoundMark family={info.visualFamily} index={markIndex} />
-          </div>
           <OutputScope
             engine={engine}
             active={status === "running" || status === "playing"}

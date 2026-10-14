@@ -9,7 +9,6 @@ import {
   bundledCatalogEntry,
   bundledDetailDescription,
   catalogEntries,
-  catalogEntriesByCategory,
   experienceCatalogEntry,
   experienceDetailDescription,
 } from "../../../lib/catalog";
@@ -88,12 +87,9 @@ export default async function CatalogEntryPage({
   const { slug } = await params;
   const bundled = bundledCatalogEntry(slug);
   if (bundled) {
-    const markIndex = catalogEntriesByCategory("bundled").findIndex(
-      (item) => item.slug === bundled.slug,
-    );
     return (
       <CatalogDetail entry={bundled}>
-        <CatalogSoundBench slug={bundled.slug} markIndex={markIndex} />
+        <CatalogSoundBench slug={bundled.slug} />
       </CatalogDetail>
     );
   }

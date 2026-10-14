@@ -38,16 +38,16 @@ export type CatalogCategory = CatalogEntry["category"];
 
 const experienceEntries = [
   {
-    slug: "energy-charge",
-    preview: "charge",
-    experience: energyChargeExperience,
-  },
-  {
     slug: "reactive-thruster",
     preview: "thruster",
     experience: reactiveThrusterExperience,
   },
   { slug: "lightsaber", preview: "blade", experience: lightsaberExperience },
+  {
+    slug: "energy-charge",
+    preview: "charge",
+    experience: energyChargeExperience,
+  },
 ] as const;
 
 export const catalogGroups = [
@@ -63,8 +63,8 @@ export const catalogGroups = [
   category: CatalogCategory;
 }[];
 
-// Static imports, controls and previews are website setup. Registry order is
-// shared by the cards, sidebar and detail pagination within each group.
+// Static imports, controls, previews and experience order are website setup.
+// Cards, sidebar and detail pagination share this order; recipes use registry order.
 // A new registry item must declare that setup before it can be presented.
 export function createCatalogEntries(
   items = registry.items,
@@ -85,6 +85,11 @@ export function createCatalogEntries(
   return [
     ...items
       .filter((item) => item.meta.classification === "experience")
+      .sort(
+        (a, b) =>
+          experienceEntries.findIndex((item) => item.slug === a.name) -
+          experienceEntries.findIndex((item) => item.slug === b.name),
+      )
       .map((entry): ExperienceCatalogEntry => {
         const item = experienceEntries.find(
           (item) => item.slug === entry.name,

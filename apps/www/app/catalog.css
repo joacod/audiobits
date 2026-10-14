@@ -318,27 +318,12 @@
   }
   .foundation.catalog-page .catalog-stage-field {
     display: grid;
-    grid-template-columns: 3.25rem minmax(0, 1fr);
-    gap: 0.75rem;
+    grid-template-columns: minmax(0, 1fr);
     align-items: center;
     min-width: 0;
     background: var(--void);
     color: var(--ink);
     padding: 0.85rem 1rem 0.35rem;
-  }
-  .foundation.catalog-page .catalog-stage-mark {
-    width: 3.25rem;
-    height: 3.25rem;
-    color: var(--ink);
-    opacity: calc(0.4 + var(--drive, 0.35) * 0.6);
-    transform: scale(calc(0.86 + var(--drive, 0.35) * 0.28));
-    transform-origin: center;
-  }
-  .foundation.catalog-page .catalog-stage-harmonic .catalog-stage-mark {
-    color: var(--ink);
-  }
-  .foundation.catalog-page .catalog-stage-flow .catalog-stage-mark {
-    color: var(--mute);
   }
   .foundation.catalog-page .catalog-stage .sound-portrait {
     min-width: 0;
@@ -680,12 +665,7 @@
       height: 8.5rem;
     }
     .foundation.catalog-page .catalog-stage-field {
-      grid-template-columns: 2.5rem minmax(0, 1fr);
       padding-inline: 0.75rem;
-    }
-    .foundation.catalog-page .catalog-stage-mark {
-      width: 2.5rem;
-      height: 2.5rem;
     }
     .foundation.catalog-page .catalog-detail :is(button, input, textarea, a) {
       scroll-margin-block: 1rem;
@@ -846,9 +826,12 @@
     background: var(--void);
     transition: border-color 160ms ease-out;
   }
-  .foundation.catalog-page .catalog-card:has(a:hover),
+  .foundation.catalog-page .catalog-card:hover,
   .foundation.catalog-page .catalog-card:focus-within {
-    border-color: var(--mute);
+    border-color: var(--signal-mid);
+  }
+  .foundation.catalog-page .catalog-card:is(:hover, :focus-within) h3 a {
+    color: var(--signal-mid);
   }
   .foundation.catalog-page .catalog-card-preview {
     display: grid;
@@ -897,6 +880,7 @@
   }
   .foundation.catalog-page .catalog-card h3 a {
     text-decoration: none;
+    transition: color 160ms ease-out;
   }
   .foundation.catalog-page .catalog-card h3 a::after {
     position: absolute;
@@ -965,7 +949,8 @@
     }
   }
   @media (prefers-reduced-motion: reduce) {
-    .foundation.catalog-page .catalog-card {
+    .foundation.catalog-page .catalog-card,
+    .foundation.catalog-page .catalog-card h3 a {
       transition: none;
     }
   }
