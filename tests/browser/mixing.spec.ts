@@ -1,6 +1,7 @@
 import { requireOfflineCheckpoints } from "./offline-capabilities";
 import { expect, test } from "@playwright/test";
 import { resolve } from "node:path";
+import { instrument, probe } from "./experience-probe";
 
 test("native offline bus gain and mute fade to silence", async ({
   page,
@@ -196,25 +197,54 @@ for (const target of ["site", "vanilla"] as const) {
       )
       .toBe(2);
   });
-  test(`${target} gain, mute and cut Stop all use public routing`, async ({
-    page,
-  }) => {
-    await page.goto(
-      target === "site"
-        ? "http://127.0.0.1:3100/catalog"
-        : "http://127.0.0.1:4173",
-    );
-    await page.getByRole("button", { name: "Play impact" }).click();
-    if (target === "site")
-      await page.getByText("Playback settings", { exact: true }).click();
-    await page.getByRole("slider", { name: /Effects volume/ }).fill("-6");
-    await page.getByRole("button", { name: "Mute", exact: true }).click();
-    await page.getByRole("button", { name: "Mute", exact: true }).click();
-    await page.getByRole("button", { name: "Stop all" }).click();
-    if (target === "vanilla")
-      await expect(page.locator("#level")).toContainText("Output peak:");
-    if (target === "site")
-      await expect(page.locator(".audio-monitor [role=alert]")).toHaveCount(0);
-    else await expect(page.getByRole("alert")).toBeEmpty();
-  });
+  test(
+    target === "site"
+      ? "site card previews share routing and replace the previous voice"
+      : "vanilla gain, mute and cut Stop all use public routing",
+    async ({ page }) => {
+      if (target === "site") {
+        await instrument(page, "normal", "/catalog");
+        await page
+          .getByRole("button", { name: "Start thruster", exact: true })
+          .click();
+        await expect(page.getByTestId("thruster-state")).toHaveText(
+          "Thruster: running",
+        );
+        const sources = (await probe(page)).sources;
+        expect(sources).toBeGreaterThan(0);
+        await page
+          .getByRole("button", { name: "Play impact", exact: true })
+          .click();
+        await expect
+          .poll(async () => (await probe(page)).sources)
+          .toBeGreaterThan(sources);
+        await expect(page.getByTestId("thruster-state")).toHaveText(
+          "Thruster: stopped",
+        );
+        await expect(page.getByTestId("impact-state")).toHaveText(
+          "Impact: ready",
+        );
+        await expect
+          .poll(async () => {
+            const result = await probe(page);
+            return result.sources - result.ended;
+          })
+          .toBe(0);
+        expect((await probe(page)).contexts).toEqual(["running"]);
+        await expect(page.locator(".catalog-card [role=alert]")).toHaveCount(0);
+      } else {
+        await page.goto("http://127.0.0.1:4173");
+        await page.getByRole("button", { name: "Play impact" }).click();
+        await page.getByRole("slider", { name: /Effects volume/ }).fill("-6");
+        const mute = page.getByRole("button", { name: "Mute", exact: true });
+        await mute.click();
+        await expect(mute).toHaveAttribute("aria-pressed", "true");
+        await mute.click();
+        await expect(mute).toHaveAttribute("aria-pressed", "false");
+        await page.getByRole("button", { name: "Stop all" }).click();
+        await expect(page.locator("#level")).toContainText("Output peak:");
+        await expect(page.getByRole("alert")).toBeEmpty();
+      }
+    },
+  );
 }
