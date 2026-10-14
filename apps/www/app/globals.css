@@ -120,6 +120,19 @@
     gap: 0.25rem 1rem;
     padding: 0.35rem 0;
   }
+  .foundation .browser-notice {
+    /* Reserve the wrapped text's space before browser identification hydrates. */
+    visibility: hidden;
+    max-width: none;
+    margin: 0;
+    padding-bottom: 0.35rem;
+    color: var(--mute);
+    font-size: 0.75rem;
+    line-height: 1.5;
+  }
+  .foundation .browser-notice[data-visible="true"] {
+    visibility: visible;
+  }
   .foundation .site-nav-links {
     display: flex;
     flex-wrap: wrap;
