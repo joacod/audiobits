@@ -1,97 +1,123 @@
-# Live controls and complete experiences
+# Live controls and sound controllers
 
-Keep a running voice for a sustained interaction. After gesture activation, use
+Keep a running voice for a sustained sound. After gesture activation, use
 `sound.play({ parameters, seed })`, retain its typed voice, and call `voice.set`
-only while `voice.state === "active"`. Clear that reference on Stop/end. Repeated
-slider or frame updates should change the existing voice rather than retrigger
-its attack. `voice.parameters` contains requested values, not measured smoothed
-native values.
+only while `voice.state === "active"`. Clear that reference on Stop/end. Live
+updates change the existing voice rather than retriggering its attack.
+`voice.parameters` contains requested values, not measured native values.
 
-Bound finite application input to the recipe's declared range. Rate-limit dense
-pointer events with the host's frame loop; use the recipe's native smoothing for
-audio ramps. Let application state drive controls, never encode that state inside
-recipe data. Use one consistent clock for elapsed/progress calculations.
-
-For a complete experience, consult [catalog](catalog.md) first. Separate acoustic
-data, the controller and presentation. Adapt a controller to existing Start,
-Stop, input and status/error controls. Keep keyboard alternatives for pointer
-interactions, handle pointer cancellation/lost capture, and cancel owned frames.
-Mute and Stop serve different purposes: mute affects output, Stop ends activity.
-
-For Reactive Thruster, the installed `attachPointerThruster(surface, audio,
-feedback)` owns its sound, listeners and frames; its host owns the engine. It
-exposes `start(value)`, `setThrottle(value)`, `stop()` and `dispose()`. Bind
-`start` directly to a user gesture and update existing application state through
-the feedback callbacks. Use a surface with `touch-action: none` where appropriate.
-
-This adaptation assumes the registry targets described in [catalog](catalog.md).
-It uses an existing application's elements and omits the standalone demo/Impact:
+A sustained recipe does not require a controller. Install `thruster` through
+[catalog](catalog.md), then use this code in `src/integration.ts`:
 
 ```ts
 import { createAudio } from "audiobits";
-import { attachPointerThruster } from "./sounds/experiences/reactive-thruster/pointer";
+import { thruster } from "./sounds/recipes/thruster/recipe";
 
-export function mountThruster(
-  surface: HTMLElement,
-  reportError: (cause: unknown) => void,
-) {
-  const audio = createAudio({ maxVoices: 4, maxVoicesPerSound: 2 });
-  const listeners = new AbortController();
-  let disposed = false;
-  const controller = attachPointerThruster(surface, audio, {
-    state: (state) => {
-      surface.dataset.audioState = state;
-    },
-    throttle: (value) => {
-      surface.dataset.throttle = String(value);
-    },
-    error: reportError,
-  });
-  function stop() {
-    controller.stop();
-    audio.stopAll({ tails: "cut" });
-  }
-  async function dispose() {
-    if (disposed) return;
-    disposed = true;
-    listeners.abort();
-    controller.dispose();
-    await audio.dispose();
-  }
-  document.addEventListener(
-    "visibilitychange",
-    () => {
-      if (document.hidden && !disposed) {
-        stop();
-        void audio.suspend().catch(reportError);
-      }
-    },
-    { signal: listeners.signal },
-  );
-  window.addEventListener(
-    "pagehide",
-    () => {
-      void dispose().catch(reportError);
-    },
-    { signal: listeners.signal },
-  );
-  return {
-    start: (value = 0.2) => controller.start(value),
-    setThrottle: controller.setThrottle,
-    stop,
-    dispose,
-  };
+const audio = createAudio();
+const sound = audio.sound(thruster);
+let request = 0;
+let voice: ReturnType<typeof sound.play> | undefined;
+
+export async function play() {
+  const token = ++request;
+  await audio.start();
+  if (token !== request) return;
+  voice?.stop();
+  voice = sound.play({ parameters: { throttle: 0.2 }, seed: 42 });
+}
+export function update(throttle: number) {
+  if (Number.isFinite(throttle) && voice?.state === "active")
+    voice.set({ throttle: Math.max(0, Math.min(1, throttle)) });
+}
+export function release() {
+  request++;
+  voice?.stop();
+  voice = undefined;
+}
+export function stop() {
+  request++;
+  audio.stopAll({ tails: "cut" });
+  voice = undefined;
+}
+export async function dispose() {
+  stop();
+  await audio.dispose();
 }
 ```
 
-Bind the returned methods to the application's controls, handle disposal errors,
-and call `dispose()` on unmount. The copied controller already guards pending
-activation and stops on pointer release, blur and hide. The engine owner still
-must suspend on hide and dispose on removal. Return remains silent until another
-gesture. If using a shared application engine, omit its disposal and limit Stop
-to this controller; preserve the shared owner's lifecycle.
+Bound finite application input to the recipe's declared range. Rate-limit dense
+events with the application's existing update loop and use native parameter
+smoothing for audio ramps. Keep pointer handling, frame scheduling, canvas and
+3D in application presentation code. Use one clock for elapsed time.
 
-When adding output visuals, use actual analyser data after activation. Detach
-AudioBits output taps and disconnect caller-owned native nodes during cleanup.
-Keep animation/accessibility preferences in the host, and verify repeated
-mount/unmount, fast Start/Stop and release tails before claiming lifecycle safety.
+## Coordinated sound behavior
+
+For layered live sound with accents, consult [catalog](catalog.md). Install only
+the selected item's recipes, controller and guide. Reactive Thruster's
+`createThruster(audio)` accepts throttle through `start(value)` and
+`setThrottle(value)`; its `pointer.ts` filename does not imply a pointer adapter.
+Energy Charge's `createEnergyCharge(audio)` takes progress through `start(value)`
+and `setCharge(value)`, in either direction, and holds until `release()` or Stop.
+
+For Lightsaber, install `lightsaber` and place this in `src/integration.ts`.
+Connect Play to the application's existing gesture, movement updates to its
+existing state, and Strike to a collision or action event after activation:
+
+```ts
+import { createAudio } from "audiobits";
+import { createLightsaber } from "./sounds/experiences/lightsaber/controller";
+
+const audio = createAudio();
+const blade = createLightsaber(audio);
+let request = 0;
+
+export async function play() {
+  const token = ++request;
+  await audio.start();
+  if (token !== request) return;
+  blade.ignite();
+}
+export function update(movement: number, elapsedMs = 16, direction = 0) {
+  blade.update(movement, elapsedMs, direction);
+}
+export function strike(strength = 0.8) {
+  return blade.clash(strength);
+}
+export function retract() {
+  request++;
+  blade.retract();
+}
+export function stop() {
+  request++;
+  blade.stop();
+}
+export async function dispose() {
+  stop();
+  blade.dispose();
+  await audio.dispose();
+}
+```
+
+Supply finite movement and strength in `[0, 1]`, direction in `[-1, 1]`, and
+elapsed milliseconds from the host's clock. The controller coordinates hum,
+ignition, swing, clash and retraction; it needs no stage, renderer or geometry.
+The installed README is the working example for each controller's exact API.
+
+## Host ownership and verification
+
+Call `play()` directly from a user gesture and surface rejected activation
+promises. Bind `update` to existing application state and Stop to cancellation.
+On hide or blur, invalidate pending activation and stop; the engine owner
+suspends on hide. On route removal, call `dispose()`. Returning stays silent until
+a fresh gesture. Use the host pattern in [integration](integration.md) for
+visibility listeners and error reporting.
+
+These examples own dedicated engines. For a shared engine, stop/dispose only
+this integration's voice or controller; the existing owner suspends and disposes
+the engine. Do not use shared `stopAll` to cut other components' voices.
+
+Check silent load, direct gesture activation, live input extrema, fast Play/Stop,
+hide and repeated removal. Validate the actual consuming application's imports
+and browser lifecycle, not just recipe data. When adding visuals, use analyser
+data after activation and detach taps and caller-owned nodes on cleanup. Keep
+visual preferences and accessibility in the application.

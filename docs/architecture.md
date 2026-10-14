@@ -21,7 +21,7 @@ packages/audiobits/
 examples/vanilla/          Private consumer using only public package exports
 catalog/
   recipes/                Individually distributable, copy-owned recipes
-  experiences/            Complete interactive source examples
+  experiences/            Portable sound controllers plus separate repository demos
 skills/audiobits/          Separately distributed agent instructions
 docs/                     Contributor architecture and operational guides
 ```
@@ -32,17 +32,35 @@ and agent instructions stay outside the published runtime. Website rendering,
 controls, and visualization dependencies stay in `apps/www`.
 
 The runtime package owns the engine, recipe language, validation, compilation,
-playback, and lifecycle. The catalog owns reusable creative source, verified
-against the built public package. `catalog/recipes/` owns all eight existing
-sound definitions. `registry.json` is canonical distribution and discovery
-metadata for those recipes and the two experiences. The website derives titles,
-descriptions and source manifests from it and keeps presentation details locally.
+playback, and lifecycle. `catalog/recipes/` owns portable sound definitions;
+`catalog/experiences/` adds small reusable sound controllers when composition
+needs coordinated voices, accents or live state. A sustained recipe can use
+`voice.set()` directly without an extra controller.
 
-`catalog/experiences/` owns complete examples: recipe definitions, interaction
-logic, browser host integration, and standalone demo entrypoints. Reactive
-Thruster's host imports canonical Impact with a relative path. Its sound-only registry
-manifest includes the recipe, controller, and guide without the host or Impact. The
-experiences use public `audiobits` APIs without runtime internals or website imports.
+`registry.json` is the canonical discovery and installation contract. A recipe
+item installs its definition. An experience item installs its acoustic recipes,
+needed controller and integration guide. All imports must resolve within the
+selected installed item or the public `audiobits` exports. App state supplies
+normalized, bounded inputs such as progress, throttle, movement and collision
+strength; controllers own sounds and voices, while the app owns activation,
+input events, suspension and engine disposal.
+
+Presentation and input adapters stay separate from distributed sound behavior.
+Repository `host.ts` and HTML entrypoints demonstrate browser integration;
+Lightsaber's `motion.ts` and `stage.ts` demonstrate geometry and rendering.
+Reactive Thruster's demo adds Impact, but its installed controller does not.
+The website can use rich visuals and website-only dependencies while importing
+portable sound source. It derives discovery metadata and source manifests from
+`registry.json`, keeping visual families, labels and display order locally.
+
+Consumer examples in the catalog guides and the website's usage snippets use
+actual installed paths. `pnpm test:package` installs every item with shadcn into
+separate consumers, checks unchanged examples against the packed public runtime,
+and exercises activation, live inputs, Stop and disposal in Chromium. Registry
+checks reject demo files, missing imports and browser presentation dependencies.
+MCP snapshot checks and the Skill bundle check enforce metadata synchronization;
+public docs and Skill examples also compile against installed source. See
+[development](development.md#catalog-examples) for contributor verification.
 
 The npm package ships only the runtime entrypoint, its declarations, schema,
 capabilities and normal package documentation. It exports `audiobits`,

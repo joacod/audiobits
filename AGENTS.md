@@ -70,6 +70,24 @@ accurate. Briefly justify substantial README additions in the relevant PR.
 - Avoid speculative DAW, MIDI, recording, streaming, framework adapters, MCP,
   AudioWorklet, WASM, and other scope expansion.
 
+## Catalog distribution
+
+- Distribute portable sound behavior. Recipes define sound; simple sounds need
+  no controller. Complex sounds use small controllers driven by bounded,
+  normalized application inputs and events.
+- Keep presentation, pointer handling, canvas, 3D and other visual concerns
+  outside registry sound source. Website showcases may be visually ambitious.
+  Default installs contain recipes, needed sound controllers and integration
+  guidance, never demo hosts or renderers.
+- Every item needs a working consumer example using its actual installed
+  imports, tested against the packed runtime with activation, Stop and disposal.
+  Extend existing registry/package checks when adding an item.
+- Copy actions must reproduce actual source and current accepted settings.
+- Treat `registry.json` as the distribution contract. Propagate relevant changes
+  to public docs, the official Skill, MCP snapshot/bundle and consumer tests.
+  Follow [catalog boundaries](docs/architecture.md#repository-boundaries) and
+  reuse existing infrastructure rather than introducing parallel systems.
+
 ## Verification discipline
 
 - Run the smallest check set that can validate the requested change.

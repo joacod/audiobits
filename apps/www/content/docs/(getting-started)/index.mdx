@@ -11,8 +11,8 @@ use these guides to bring them into your application.
 
 The `audiobits` npm package is the audio runtime: it interprets recipe data and
 creates browser audio. The shadcn registry installs editable recipes and
-experience source into your project. Its items declare `audiobits` as an npm
-dependency, so installed source uses the same runtime as an original sound you
+sound controllers into your project. Demo renderers stay in the showcase. Each
+item declares `audiobits` as an npm dependency, so installed source uses the same runtime as an original sound you
 write yourself.
 
 ## Choose a starting point
@@ -26,8 +26,8 @@ the quick start below.
 </Card>
 <Card title="Catalog & Editable Source" href="/docs/catalog">
 
-Discover ready-made recipes and interactive experiences. Install or copy their
-editable source into your application.
+Hear ready-made sounds in the showcases. Install or copy only their recipes
+or sound controllers, then connect your existing application controls.
 
 </Card>
 <Card title="AI Agents" href="/docs/agents">
@@ -106,15 +106,20 @@ const recipe = defineSound({
 });
 const audio = createAudio();
 const sound = audio.sound(recipe);
+let request = 0;
 
 export async function play() {
+  const token = ++request;
   await audio.start();
+  if (token !== request) return;
   sound.play();
 }
 export function stop() {
+  request++;
   audio.stopAll({ tails: "cut" });
 }
 export async function dispose() {
+  stop();
   await audio.dispose();
 }
 ```

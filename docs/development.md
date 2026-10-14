@@ -209,35 +209,36 @@ Copy-owned interactive sources live in `catalog/experiences/`:
 [Energy Charge](../catalog/experiences/energy-charge/README.md),
 [Reactive Thruster](../catalog/experiences/reactive-thruster/README.md), and
 [Lightsaber](../catalog/experiences/lightsaber/README.md). Edit their
-recipe, interaction, host, or demo files there; `apps/www` imports and displays
-these sources while owning website presentation. The
+recipe or sound controller there; keep host, input adapters and demo files
+separate. `apps/www` imports these sounds while owning website presentation. The
 [GitHub source registry](../catalog/README.md) installs minimal recipes and
 sound controllers with integration guidance as owned source. Repository demos
-remain separate from installation. It covers all eight recipes and three
-experiences.
+remain separate from installation. It covers the items declared in `registry.json`.
 `registry.json` owns discovery metadata and installation file manifests; website
 metadata is derived from it. No creative recipes are generated into the runtime.
 
-`pnpm test:package` keeps deterministic manifest/source checks for all eleven
-items. It also uses the exact-pinned shadcn CLI to build registry payloads from
+`pnpm test:package` keeps deterministic manifest/source checks for every registry
+item. It also uses the exact-pinned shadcn CLI to build registry payloads from
 the local checkout and run real `add` commands in separate framework-free
 consumers. It checks installed paths and bytes, requires only the packed
 `audiobits` dependency, and rejects framework or component configuration added
 by installation. No GitHub registry request is needed for PR coverage.
 
 The check compiles website usage, edited-recipe examples, internal comparison
-fixtures at control and seed extrema, and all eleven README integrations against
-the packed public package and actual installed source.
+fixtures at control and seed extrema, and all catalog README integrations,
+public documentation and Skill snippets
+against the packed public package and actual installed source. It also executes
+three official Skill examples: Confirmation, sustained Thruster and Lightsaber.
 It retains recipe validation, silent load, gesture activation, signal, update,
-Stop, and disposal checks for all eleven integrations in Chromium, along with
+Stop, and disposal checks for all installed integrations in Chromium, along with
 the three repository demonstration entrypoints. Output and retained evidence
 distinguish manifest/source validation, exact consumer snippets, actual shadcn
 installation, and browser/runtime verification.
 
 For an explicit network integration check, run
 `pnpm test:package:github --revision=<reviewed-full-SHA>` from a clean checkout
-at that published commit. This uses `owner/repo/item#<SHA>` for all eleven
-items and runs the same consumer checks. It rejects missing refs, a revision
+at that published commit. This uses `owner/repo/item#<SHA>` for every registry
+item and runs the same consumer checks. It rejects missing refs, a revision
 different from the checkout, and dirty source; it never substitutes `main`.
 The installer output reports the CLI version, source commit, and items tested.
 GitHub resolution remains an external integration check, separate from required
@@ -245,8 +246,9 @@ PR coverage. The site browser tests verify displayed catalog source and UI
 interaction/lifecycle behavior.
 
 `/catalog` keeps one engine for the catalog sound rows. The output strip is a
-desktop row and a compact mobile dock. `/catalog/[slug]` uses that same session
-contract for one catalog sound. Each mounted workbench owns one engine and
+desktop row and a compact mobile dock. Install and usage actions precede the
+collapsed Recipe editor; Copy usage uses accepted recipe data, current parameters and
+seed. `/catalog/[slug]` uses that same session contract for one catalog sound. Each mounted workbench owns one engine and
 disposes it when the visitor leaves the entry. Restore in the Recipe section
 restores the catalog recipe, primary controls and seed 42; Reset variation
 changes only the seed. JSON Apply reports validation issues and preserves

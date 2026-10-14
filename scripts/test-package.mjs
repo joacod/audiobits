@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import ts from "typescript";
 import { createHash } from "node:crypto";
 import { createServer } from "node:http";
 import { createRequire } from "node:module";
@@ -439,6 +440,99 @@ try {
       example: "typechecked",
     });
   }
+  const documentation = [
+    ...(await readdir("skills/audiobits", { recursive: true }).then((files) =>
+      files
+        .filter((file) => file.endsWith(".md"))
+        .map((file) => `skills/audiobits/${file}`),
+    )),
+    ...(await readdir("apps/www/content/docs", { recursive: true }).then(
+      (files) =>
+        files
+          .filter((file) => file.endsWith(".mdx"))
+          .map((file) => `apps/www/content/docs/${file}`),
+    )),
+  ];
+  evidence.documentation = [];
+  for (const [documentIndex, file] of documentation.entries()) {
+    const content = await readFile(file, "utf8");
+    for (const [snippetIndex, match] of [
+      ...content.matchAll(/```ts\n([\s\S]*?)```/g),
+    ].entries()) {
+      const code = match[1];
+      const directory = join(
+        consumer,
+        "documentation",
+        `${documentIndex}-${snippetIndex}`,
+      );
+      const source = join(directory, "src/integration.ts");
+      await mkdir(join(directory, "src"), { recursive: true });
+      const needed = new Set();
+      for (const imported of ts.preProcessFile(code, true, true)
+        .importedFiles) {
+        if (!imported.fileName.startsWith(".")) continue;
+        const specifier = imported.fileName.replace(/\.(?:ts|js)$/, "");
+        const item = registry.items.find((item) =>
+          item.files.some(
+            (entry) =>
+              `./${entry.target.slice("~/src/".length).replace(/\.ts$/, "")}` ===
+              specifier,
+          ),
+        );
+        assert.ok(
+          item,
+          `${file}: example imports noninstalled source ${imported.fileName}`,
+        );
+        needed.add(item);
+      }
+      for (const item of needed) {
+        for (const entry of item.files) {
+          const target = join(directory, entry.target.slice(2));
+          await mkdir(resolve(target, ".."), { recursive: true });
+          await copyFile(
+            join(consumer, "installed-items", item.name, entry.target.slice(2)),
+            target,
+          );
+          if (target.endsWith(".ts")) consumerTypes.push(target);
+        }
+      }
+      await writeFile(source, code);
+      consumerTypes.push(source);
+      evidence.documentation.push({
+        file,
+        snippet: snippetIndex,
+        items: [...needed].map((item) => item.name),
+      });
+      // Follow the official Skill for one-shot, sustained and coordinated sound.
+      if (
+        file.startsWith("skills/") &&
+        needed.size === 1 &&
+        /export async function play\(/.test(code)
+      ) {
+        const [item] = needed;
+        if (["confirmation", "thruster", "lightsaber"].includes(item.name)) {
+          catalogExamples.push({
+            name: `skill-${item.name}`,
+            file: item.name,
+            guide: file,
+            index: snippetIndex,
+            code,
+            source,
+            sustained:
+              item.meta.requiredCapabilities.kinds.includes("sustained"),
+          });
+        }
+      }
+    }
+  }
+  assert.deepEqual(
+    catalogExamples
+      .filter((example) => example.name.startsWith("skill-"))
+      .map((example) => example.file)
+      .sort(),
+    ["confirmation", "lightsaber", "thruster"],
+    "Three real Skill consumer paths are required",
+  );
   // Each import still resolves from its own isolated item directory. Batching
   // shares TypeScript's standard-library work, with no aliases or source rewrites.
   for (const [name, sources] of [
@@ -452,6 +546,7 @@ try {
         compilerOptions: {
           noEmit: true,
           strict: true,
+          noUncheckedSideEffectImports: true,
           module: "ESNext",
           moduleResolution: "Bundler",
           target: "ES2022",
@@ -471,6 +566,9 @@ try {
   );
   console.log(
     `[Actual shadcn installation] ${evidence.installation.items.length} items, ${evidence.installation.items.reduce((count, item) => count + item.files, 0)} files: paths, bytes and only audiobits dependency passed.`,
+  );
+  console.log(
+    `[Documentation/Skill validation] ${evidence.documentation.length} unchanged examples compiled against packed audiobits and actual shadcn-installed source.`,
   );
   console.log(
     `[Exact consumer snippet validation] ${evidence.consumerSnippets.reduce((count, item) => count + item.count, 0)} unchanged snippets across ${evidence.consumerSnippets.length} items passed against shadcn-installed source and packed audiobits.`,
@@ -669,7 +767,7 @@ try {
   }));
   examples.push(...catalogExamples);
   console.log(
-    "[Browser/runtime verification] Chromium: README quick starts, all eleven installed integrations and three repository demonstration hosts.",
+    "[Browser/runtime verification] Chromium: README quick starts, all installed integrations, three Skill consumer paths and three repository demonstration hosts.",
   );
   const browserOutput = join(consumer, "browser");
   await mkdir(browserOutput);
@@ -1145,6 +1243,7 @@ Object.assign(globalThis, { probe });`,
         catalogItem.example = "Chromium playback, update/stop, disposal passed";
       evidence.browser.push({
         file: example.file,
+        guide: example.guide,
         index: example.index,
         peak,
         observation: signal,

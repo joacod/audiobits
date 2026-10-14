@@ -56,6 +56,37 @@ test("external Skill runs all tools without server dependencies and uses the exp
         })
       ).data.compatible,
     ).toBe(true);
+    for (const [query, name, paths] of [
+      ["soft completed action", "confirmation", ["recipe.ts"]],
+      ["thruster", "thruster", ["recipe.ts"]],
+      [
+        "lightsaber ignite spark retract",
+        "lightsaber",
+        ["recipe.ts", "controller.ts", "README.md"],
+      ],
+    ] as const) {
+      const found = await call(connection.client, "search_catalog", {
+        query,
+        category: name === "lightsaber" ? "experience" : "recipe",
+      });
+      expect(
+        found.data.items.some((item: { name: string }) => item.name === name),
+      ).toBe(true);
+      const item = await call(connection.client, "get_catalog_item", {
+        name,
+        projectPath: external.consumer,
+      });
+      expect(item.error).toBe(false);
+      expect(item.data.compatibility.compatible).toBe(true);
+      expect(
+        item.data.files.map((file: { target: string }) =>
+          file.target.split("/").at(-1),
+        ),
+      ).toEqual(paths);
+      expect(item.data.installation.install).toContain(
+        `joacod/audiobits/${name}#${item.data.source.revision}`,
+      );
+    }
     const invalid = await call(connection.client, "validate_recipe", {
       recipe: { schemaVersion: 999 },
     });

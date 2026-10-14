@@ -1,13 +1,14 @@
 ---
 name: audiobits
-description: Build procedural browser audio with AudioBits, from a simple confirmation sound to original recipes, sustained live controls, and complete interactive experiences. Use for integrating AudioBits into an application, designing sounds, or adapting copy-owned catalog source.
+description: Build procedural browser audio with AudioBits, from a simple confirmation sound to original recipes, sustained live controls, and application-driven sound controllers. Use for integrating AudioBits into an application, designing sounds, or adapting copy-owned catalog source.
 ---
 
 # AudioBits
 
 Choose the simplest solution that satisfies the request. Inspect the consumer's
-framework, entrypoints, installed dependencies, audio ownership and existing
-controls before editing. Use its installed `audiobits` public exports, types,
+framework, entrypoints, events, state, installed dependencies, audio ownership
+and existing controls before editing. Use its installed `audiobits` public
+exports, types,
 `audiobits/schema.json` and `audiobits/capabilities.json` as the authority. Do not
 assume the website or this Skill matches that runtime version.
 
@@ -20,10 +21,11 @@ assume the website or this Skill matches that runtime version.
 - **Original sound:** Also read [recipe design](references/recipe-design.md).
   Inspect supported features, design JSON-only data, validate it, and connect
   only the controls the request needs.
-- **Sustained controls or a complete experience:** Read
+- **Sustained controls or interactive sound:** Read
   [interactions](references/interactions.md) and check
-  [catalog](references/catalog.md) for a useful starting point. Install only
-  relevant owned source and adapt its controller to application state and UI.
+  [catalog](references/catalog.md) for a useful starting point. Find a relevant
+  recipe or controller, install or copy only the needed sound source, and connect
+  existing application inputs.
   Keep the application's entrypoint and lifecycle; do not transplant a demo.
 - **Validation or optional tools:** Read [tooling](references/tooling.md) when
   choosing checks, resolving contracts, or considering the bundled local MCP.
@@ -47,7 +49,10 @@ on MCP setup. Installing this Skill does not register or start the server.
 1. Establish the installed runtime's supported contract and the host's resource
    ownership. Install `audiobits` with the project's package manager only if
    needed; do not upgrade an existing consumer incidentally.
-2. Keep recipes serializable and application state in host/controller code.
+2. Find a relevant recipe or sound controller through [catalog](references/catalog.md),
+   or author a local recipe when simpler. Install or copy only needed source and
+   connect existing controls; do not import a visual showcase or rebuild input UI.
+   Keep recipes serializable and bound normalized state before passing sound inputs.
    Use `defineSound` for typed local definitions and `validateRecipe` for
    generated or external data. Fix reported issues before integrating playback.
 3. Call `audio.start()` synchronously in a direct user gesture, await activation,
