@@ -106,8 +106,7 @@ in the [AudioBits Skill](skills/audiobits/SKILL.md).
 
 - [Documentation](https://www.audiobits.dev/docs) and
   [live catalog](https://www.audiobits.dev/catalog).
-- Contribute: [development and checks](docs/development.md),
-  [architecture](docs/architecture.md), and [recipe invariants](docs/recipe-model.md).
+- [Contributing](CONTRIBUTING.md): setup, contribution paths, and focused PRs.
 - [Browser verification and evidence limits](docs/validation.md#browser-policy).
 
 [MIT license](LICENSE), with [0BSD catalog source](catalog/README.md).
