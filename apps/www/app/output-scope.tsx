@@ -41,9 +41,10 @@ export function OutputScope({
       if (figure.current) figure.current.dataset.live = String(live);
     };
     const setLevel = (peak: number) => {
+      // Full display at a 0.025 peak, matching the quiet showcase output range.
       figure.current?.style.setProperty(
         "--level",
-        String(Math.min(1, peak * 8).toFixed(3)),
+        String(Math.min(1, peak / 0.025).toFixed(3)),
       );
     };
     const samples = new Float32Array(1024);
