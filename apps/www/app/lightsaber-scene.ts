@@ -17,6 +17,7 @@ interface BladeFrame {
   elapsed: number;
   reduced: boolean;
   targets: Point[];
+  destroyed: boolean[];
   flashes: number[];
   trails: { base: Point; tip: Point; life: number }[];
   particles: {
@@ -365,6 +366,7 @@ export function createBladeScene(
           .multiplyScalar(2.8);
         for (let i = 0; i < targets.length; i++) {
           const target = targets[i];
+          target.group.visible = !value.destroyed[i];
           place(target.group, value.targets[i]);
           target.surface.emissiveIntensity = 0.12 + value.flashes[i] * 3;
           target.group.scale.setScalar(
@@ -378,6 +380,9 @@ export function createBladeScene(
             );
           }
         }
+        surface.dataset.targetsRemaining = String(
+          targets.filter((target) => target.group.visible).length,
+        );
         let count = 0;
         if (!value.reduced)
           for (let i = 1; i < value.trails.length; i++) {

@@ -80,10 +80,25 @@ test("held pointer ignition, swept target hits, release retraction and teardown"
   await expect
     .poll(async () => Number(await pad.getAttribute("data-motion")))
     .toBeGreaterThan(0.1);
+  await expect(pad).toHaveAttribute("data-hits", "1");
+  await expect(pad).toHaveAttribute("data-targets-remaining", "1");
+  await move(box.x + box.width * 0.8, box.y + box.height * 0.7, 8);
+  await expect(pad).toHaveAttribute("data-hits", "2");
+  await expect(pad).toHaveAttribute("data-targets-remaining", "0");
+  // Sweeping back over destroyed targets creates no further impacts.
+  await move(box.x + box.width * 0.2, box.y + box.height * 0.7, 8);
+  await expect
+    .poll(async () => Number(await pad.getAttribute("data-motion")))
+    .toBeGreaterThan(0.1);
+  await expect(pad).toHaveAttribute("data-hits", "2");
+  // Remaining held at rest lets both balls return without a new gesture.
+  await expect(pad).toHaveAttribute("data-motion", "0.000");
+  await expect(pad).toHaveAttribute("data-targets-remaining", "2");
+  await expect(pad).toHaveAttribute("data-hits", "2");
   await move(box.x + box.width * 0.8, box.y + box.height * 0.7, 8);
   await expect
     .poll(async () => Number(await pad.getAttribute("data-hits")))
-    .toBeGreaterThan(0);
+    .toBeGreaterThan(2);
   await press(false);
   await expect(pad).toHaveAttribute("data-state", "stopped");
   await expect(pad).toHaveAttribute("data-extension", "0.000");
@@ -650,6 +665,8 @@ test("3D blade graphics release on navigation and remain static at rest", async 
     .toBeGreaterThan(0);
   await page.keyboard.press("Escape");
   await expect(pad).toHaveAttribute("data-extension", "0.000");
+  // Respawning at rest wakes one render, then the stage becomes static again.
+  await expect(pad).toHaveAttribute("data-targets-remaining", "2");
   const restingDraws = await page.evaluate(async () => {
     await new Promise<void>((resolve) =>
       requestAnimationFrame(() => requestAnimationFrame(() => resolve())),

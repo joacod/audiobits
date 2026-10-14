@@ -89,7 +89,7 @@ export function LightsaberDetail() {
         <p id="lightsaber-help">
           {displayError
             ? "Hold to ignite. Move to swing. Release to retract."
-            : "Hold to ignite. Drag through the amber targets. Release to retract."}{" "}
+            : "Hold to ignite. Drag through the amber targets. Release to retract. Targets return after a few seconds."}{" "}
           Keyboard: Enter ignites, arrows move,{" "}
           {displayError ? "" : "Space strikes, "}Escape retracts.
         </p>

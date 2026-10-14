@@ -50,8 +50,8 @@ export function mountBladeStage3D(
   const samples = new Float32Array(256);
   let assistedTarget: number | null = null;
   const flashes = [0, 0];
-  const contacts = new Map<number, number>();
-  let contactClock = 0;
+  const destroyed = [false, false];
+  const respawnTimers = [0, 0];
   const trails: { base: Point; tip: Point; life: number }[] = [];
   const particles: {
     x: number;
@@ -101,8 +101,6 @@ export function mountBladeStage3D(
     collapsing = false;
     previous = 0;
     flashes.fill(0);
-    contacts.clear();
-    contactClock = 0;
     lastTip = lastBase = undefined;
     lastMotionTip = undefined;
     assistedTarget = null;
@@ -113,9 +111,9 @@ export function mountBladeStage3D(
   function stateChanged() {
     surface.dataset.state = host.control.state;
     if (disposed) return;
-    if (host.control.state === "stopped") {
-      contacts.clear();
-      contactClock = 0;
+    if (host.control.state === "starting") {
+      keyboardTarget = 0;
+      flashes.fill(0);
     }
     if (host.control.state === "stopped" && !collapsing) reset();
     if (host.control.state === "running" && !analyser) {
@@ -139,6 +137,13 @@ export function mountBladeStage3D(
   function burst(index: number, force: number) {
     hits++;
     surface.dataset.hits = String(hits);
+    destroyed[index] = true;
+    respawnTimers[index] = window.setTimeout(() => {
+      respawnTimers[index] = 0;
+      destroyed[index] = false;
+      flashes[index] = 0;
+      wake();
+    }, 3000);
     flashes[index] = 1;
     if (reduced.matches) return;
     const target = targets()[index];
@@ -157,11 +162,14 @@ export function mountBladeStage3D(
     }
     if (particles.length > 140) particles.splice(0, particles.length - 140);
   }
-  // Keyboard alternative strikes an actual visible target, with the same cooldown.
+  // Keyboard alternative strikes a remaining visible target.
   function strike() {
     if (failed) return;
     if (host.control.state !== "running") return;
-    const index = keyboardTarget++ % flashes.length;
+    let index = keyboardTarget % destroyed.length;
+    if (destroyed[index]) index = (index + 1) % destroyed.length;
+    if (destroyed[index]) return;
+    keyboardTarget = (index + 1) % destroyed.length;
     const target = targets()[index];
     const baseY = Math.min(
       height * 0.86,
@@ -235,7 +243,6 @@ export function mountBladeStage3D(
       ? (Math.abs(dx) >= Math.abs(dy) ? dx : -dy) / travel
       : 0;
     const motion = host.control.update(motionLevel(speed), dt, direction);
-    if (active) contactClock += dt;
     surface.dataset.motion = motion.toFixed(3);
     lastMotionTip = motionTip;
     const length = fullLength * extension;
@@ -266,6 +273,7 @@ export function mountBladeStage3D(
         ),
       );
       for (let index = 0; index < points.length; index++) {
+        if (destroyed[index]) continue;
         for (let step = 0; step <= steps; step++) {
           const t = step / steps;
           const a = {
@@ -281,11 +289,7 @@ export function mountBladeStage3D(
               assistedTarget === index
                 ? Math.max(0.85, motion)
                 : Math.max(0.3, motion);
-            if (
-              contactClock - (contacts.get(index) ?? -Infinity) >= 850 &&
-              host.clash(force, (index * 2 - 1) * 0.35)
-            ) {
-              contacts.set(index, contactClock);
+            if (host.clash(force, (index * 2 - 1) * 0.35)) {
               burst(index, force);
               if (assistedTarget === index) assistedTarget = null;
             }
@@ -327,6 +331,7 @@ export function mountBladeStage3D(
         elapsed,
         reduced: reduced.matches,
         targets: points,
+        destroyed,
         flashes,
         trails,
         particles,
@@ -346,6 +351,7 @@ export function mountBladeStage3D(
   function fail(cause: unknown) {
     if (failed || disposed) return;
     failed = true;
+    respawnTimers.forEach(clearTimeout);
     reset();
     display?.dispose();
     display = undefined;
@@ -503,6 +509,7 @@ export function mountBladeStage3D(
     if (disposed) return;
     releasePointer();
     disposed = true;
+    respawnTimers.forEach(clearTimeout);
     events.abort();
     observer.disconnect();
     cancelAnimationFrame(frame);
