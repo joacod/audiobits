@@ -26,6 +26,8 @@ import {
   sounds,
 } from "../apps/www/lib/gallery.ts";
 
+import { experienceExample } from "../apps/www/lib/experience-example.ts";
+
 const root = process.cwd();
 const args = process.argv.slice(2);
 const github = args.includes("--github");
@@ -321,6 +323,13 @@ try {
     // Compile the same generators the website calls. Presentation can change
     // without extracting code from rendered markup or rewriting user imports.
     const snippets = [
+      {
+        source: "website usage",
+        code:
+          item.meta.classification === "recipe"
+            ? quickExample(item.name, parametersFor(sounds[item.name]), 42)
+            : experienceExample(item.name, guide),
+      },
       { source: "catalog integration guide", code: matches[0][1] },
     ];
     if (item.meta.classification === "recipe") {
@@ -351,6 +360,23 @@ try {
         }
       }
     }
+    if (item.meta.classification === "recipe") {
+      const edited = JSON.parse(JSON.stringify(sounds[item.name]));
+      edited.parameters = {
+        ...edited.parameters,
+        default: {
+          min: 0,
+          max: 1,
+          default: 0.3,
+          mode: edited.kind === "sustained" ? "live" : "play",
+          ...(edited.kind === "sustained" ? { smoothing: 0.06 } : {}),
+        },
+      };
+      snippets.push({
+        source: "edited website usage",
+        code: quickExample(item.name, parametersFor(edited), 7, edited),
+      });
+    }
     const installedTypes = item.files
       .filter((file) => file.path.endsWith(".ts"))
       .map((file) => join(installedDirectory, file.target.replace(/^~\//, "")));
@@ -370,6 +396,7 @@ try {
       sources: [...new Set(snippets.map((snippet) => snippet.source))],
       typecheck: "passed",
     });
+    catalogExamples.at(-1).code = snippets[0].code;
     catalogExamples.at(-1).source = join(
       installedDirectory,
       "src/integration.ts",
@@ -704,6 +731,7 @@ const probe = {
   play,
   stop,
   ${example.sustained ? "update," : ""}
+  ${["thruster", "energy-charge"].includes(example.file) ? "release," : ""}
   ${example.file === "lightsaber" ? "strike, retract," : ""}
   async dispose() { unsubscribe(); detach?.(); analyser?.disconnect(); await dispose(); },
   get signal() { return signal; },
@@ -1064,6 +1092,22 @@ Object.assign(globalThis, { probe });`,
           );
           await page.evaluate(() => globalThis.probe.retract());
         }
+      }
+      if (["thruster", "energy-charge"].includes(example.file)) {
+        await page.evaluate(() => globalThis.probe.release());
+        const releasing = await page.evaluate(() => globalThis.probe.counts);
+        // Natural release stays counted as an owned stopping voice; retiring
+        // is reserved for voice stealing, rather than ordinary release.
+        assert.deepEqual(
+          releasing,
+          { active: 1, retiring: 0 },
+          `${example.name}: release must preserve the owned tail`,
+        );
+        await expect
+          .poll(() => page.evaluate(() => globalThis.probe.counts), {
+            timeout: 2000,
+          })
+          .toEqual({ active: 0, retiring: 0 });
       }
       await page.click("#stop");
       await expect

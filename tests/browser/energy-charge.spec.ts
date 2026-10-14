@@ -1,5 +1,4 @@
 import { expect, test } from "@playwright/test";
-import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { instrument, probe } from "./experience-probe";
 import { requireOfflineCheckpoints } from "./offline-capabilities";
@@ -135,41 +134,37 @@ for (const mode of ["held", "failed"] as const) {
   });
 }
 
-test("canonical source copying, clipboard denial, narrow touch and reduced motion", async ({
+test("controller usage copying, clipboard denial, narrow touch and reduced motion", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.emulateMedia({ reducedMotion: "reduce" });
   await instrument(page, "normal", "energy-charge");
-  const interaction = page.getByRole("tabpanel", {
-    name: "Complete interaction",
-  });
-  await page.getByRole("tab", { name: "Complete interaction" }).click();
-  await expect(interaction).toBeVisible();
+  const interaction = page.locator(".catalog-usage");
   await expect(page.locator(".charge-rings")).toHaveAttribute(
     "data-renderer",
     "css",
   );
-  for (const name of ["recipe.ts", "progress.ts", "host.ts", "index.html"]) {
-    await interaction
-      .getByRole("button", { name: `Copy ${name}`, exact: true })
-      .click();
-    expect(
-      await page.evaluate(
-        () => (globalThis as unknown as { copiedSource: string }).copiedSource,
-      ),
-    ).toBe(readFileSync(`catalog/experiences/energy-charge/${name}`, "utf8"));
-  }
+  await interaction
+    .getByRole("button", { name: "Copy energy-charge code", exact: true })
+    .click();
+  expect(
+    await page.evaluate(
+      () => (globalThis as unknown as { copiedSource: string }).copiedSource,
+    ),
+  ).toBe(await interaction.locator("pre").innerText());
+  await expect(interaction).toContainText("charge.setCharge(value)");
+  await expect(interaction).toContainText("charge.release()");
   await page.evaluate(() => {
     navigator.clipboard.writeText = async () => {
       throw new Error("denied");
     };
   });
   await interaction
-    .getByRole("button", { name: "Copy host.ts", exact: true })
+    .getByRole("button", { name: "Copy energy-charge code", exact: true })
     .click();
   await expect(
-    page.getByRole("status").filter({ hasText: "Copy unavailable" }),
+    page.getByRole("status").filter({ hasText: "Clipboard unavailable" }),
   ).toBeVisible();
   expect(
     await page.evaluate(

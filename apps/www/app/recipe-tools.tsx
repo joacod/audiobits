@@ -1,26 +1,21 @@
 "use client";
 
-import Link from "next/link";
-import { memo, useMemo, useState } from "react";
+import { memo, useState, useSyncExternalStore } from "react";
 import { Button } from "@base-ui/react/button";
-import { Tabs } from "@base-ui/react/tabs";
+import { CatalogInstall } from "./catalog-install";
+import { UsageCode } from "./usage-code";
 import { validateRecipe } from "audiobits";
 import type { Recipe } from "audiobits";
-import {
-  libraryExample,
-  rawHost,
-  sounds,
-  hasRawComparison,
-  quickExample,
-} from "../lib/gallery";
+import { sounds, quickExample } from "../lib/gallery";
 import type { SoundKind } from "../lib/gallery";
+
+const subscribeHydration = () => () => {};
 
 export const RecipeTools = memo(function RecipeTools({
   kind,
   recipe,
   seed,
   controls,
-  rawSource,
   onApply,
   onReset,
 }: {
@@ -28,7 +23,6 @@ export const RecipeTools = memo(function RecipeTools({
   recipe: Recipe;
   seed: number | null;
   controls: Readonly<Record<string, number>>;
-  rawSource: string;
   onApply(kind: SoundKind, recipe: Recipe): void;
   onReset(): void;
 }) {
@@ -36,17 +30,12 @@ export const RecipeTools = memo(function RecipeTools({
   const [editing, setEditing] = useState(false);
   const [issues, setIssues] = useState<string[]>([]);
   const [copyState, setCopyState] = useState("");
-  const original = useMemo(
-    () => JSON.stringify(recipe) === JSON.stringify(sounds[kind]),
-    [recipe, kind],
+  const ready = useSyncExternalStore(
+    subscribeHydration,
+    () => true,
+    () => false,
   );
-  const example = useMemo(
-    () =>
-      original
-        ? quickExample(kind, controls, seed ?? 42)
-        : libraryExample(recipe, controls, seed ?? 42),
-    [original, kind, recipe, controls, seed],
-  );
+  const example = quickExample(kind, controls, seed ?? 42, recipe);
   function apply() {
     if (new TextEncoder().encode(draft).byteLength > 32768) {
       setIssues(["$: Recipe text is limited to 32 KiB."]);
@@ -95,35 +84,35 @@ export const RecipeTools = memo(function RecipeTools({
     }
   }
   return (
-    <div className="recipe-tools">
-      <Tabs.Root defaultValue="code">
-        <Tabs.List aria-label="Sound inspector" className="inspector-tabs">
-          <Tabs.Tab value="code">Code</Tabs.Tab>
-          <Tabs.Tab value="recipe">Recipe</Tabs.Tab>
-          {hasRawComparison(kind) && (
-            <Tabs.Tab value="raw">Raw Web Audio</Tabs.Tab>
-          )}
-        </Tabs.List>
-        <Tabs.Panel value="code">
-          <h3>Current sound</h3>
-          <p>Your current parameters and variation.</p>
-          <Button disabled={seed === null} onClick={() => void copy(example)}>
-            Copy {kind} code
-          </Button>
-          <pre>
-            <code>{example}</code>
-          </pre>
-          <Link href="/docs/lifecycle">Production lifecycle</Link>
-        </Tabs.Panel>
-        <Tabs.Panel value="recipe">
+    <>
+      <CatalogInstall slug={kind}>
+        <UsageCode slug={kind} code={example} disabled={seed === null} />
+      </CatalogInstall>
+      <section className="catalog-inspector recipe-tools">
+        <h2>Customize or inspect</h2>
+        <details>
+          <summary>Recipe</summary>
+          <p>
+            Apply valid JSON edits to hear and copy them. Copy Recipe returns
+            the applied definition; the Add command installs catalog defaults.
+          </p>
           <div className="audio-controls">
-            <Button onClick={() => void copy(JSON.stringify(recipe, null, 2))}>
+            <Button
+              disabled={!ready}
+              onClick={() => void copy(JSON.stringify(recipe, null, 2))}
+            >
               Copy {kind} recipe
             </Button>
-            <Button aria-pressed={editing} onClick={() => setEditing(!editing)}>
+            <Button
+              disabled={!ready}
+              aria-pressed={editing}
+              onClick={() => setEditing(!editing)}
+            >
               {editing ? "View recipe" : "Edit recipe"}
             </Button>
-            <Button onClick={restore}>Restore {kind} recipe</Button>
+            <Button disabled={!ready} onClick={restore}>
+              Restore {kind} recipe
+            </Button>
           </div>
           {editing ? (
             <>
@@ -153,46 +142,9 @@ export const RecipeTools = memo(function RecipeTools({
               </ul>
             </div>
           )}
-        </Tabs.Panel>
-        {hasRawComparison(kind) && (
-          <Tabs.Panel value="raw">
-            <h3>Raw Web Audio · catalog {kind}</h3>
-            <p>
-              Equivalent dry sound, seeded noise, live smoothing, release and
-              cleanup for the catalog definition. Both examples use -12 dB
-              master gain. Voice stealing is outside this single-voice
-              comparison.
-            </p>
-            {original ? (
-              <>
-                <Button
-                  disabled={seed === null}
-                  onClick={() =>
-                    void copy(
-                      `${rawSource}\n${rawHost(kind, Object.values(controls)[0] ?? 0, seed ?? 42)}`,
-                    )
-                  }
-                >
-                  Copy raw {kind} example
-                </Button>
-                <pre>
-                  <code>
-                    {rawSource}
-                    {"\n"}
-                    {rawHost(kind, Object.values(controls)[0] ?? 0, seed ?? 42)}
-                  </code>
-                </pre>
-              </>
-            ) : (
-              <p>
-                Restore the catalog recipe to view its raw comparison. Edited
-                recipes are represented by the current AudioBits code.
-              </p>
-            )}
-          </Tabs.Panel>
-        )}
-      </Tabs.Root>
-      <p aria-live="polite">{copyState}</p>
-    </div>
+          <p aria-live="polite">{copyState}</p>
+        </details>
+      </section>
+    </>
   );
 });

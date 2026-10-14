@@ -52,14 +52,12 @@ test("keyboard workflow, narrow layout, reduced motion, and route teardown", asy
   await expect(page.getByTestId("thruster-state")).toHaveText(
     "Thruster: stopped",
   );
-  await page.getByRole("tab", { name: "Recipe", exact: true }).click();
+  await page.locator(".recipe-tools summary").click();
   await page
     .getByRole("button", { name: "Restore thruster recipe", exact: true })
     .focus();
   await page.keyboard.press("Enter");
   await expect(slider).toHaveValue("0.2");
-  await page.getByRole("tab", { name: "Code", exact: true }).focus();
-  await page.keyboard.press("Enter");
   await page
     .getByRole("button", { name: "Copy thruster code", exact: true })
     .focus();
@@ -69,12 +67,13 @@ test("keyboard workflow, narrow layout, reduced motion, and route teardown", asy
       () => (globalThis as unknown as { copiedExample: string }).copiedExample,
     ),
   ).toContain('"throttle":0.2');
-  await page.getByRole("tab", { name: "Code", exact: true }).focus();
-  await page.keyboard.press("ArrowRight");
+  await page.locator(".recipe-tools summary").focus();
   await page.keyboard.press("Enter");
   await expect(
-    page.getByRole("tab", { name: "Recipe", exact: true }),
-  ).toHaveAttribute("aria-selected", "true");
+    page.getByRole("button", { name: "Edit recipe" }),
+  ).not.toBeVisible();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("button", { name: "Edit recipe" })).toBeVisible();
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,
@@ -431,20 +430,22 @@ for (const width of [375, 430]) {
     await page.setViewportSize({ width, height: 844 });
     await page.goto("http://127.0.0.1:3100/catalog/impact");
     await expect(
-      page.getByRole("tab", { name: "Code", exact: true }),
+      page.getByRole("button", { name: "Copy impact code" }),
     ).toBeVisible();
-    for (const tab of ["Code", "Recipe", "Raw Web Audio"]) {
-      await page.getByRole("tab", { name: tab, exact: true }).click();
+    await expect(page.getByRole("tab")).toHaveCount(0);
+    await page.locator(".recipe-tools summary").click();
+    for (const panel of [".catalog-usage", ".recipe-tools"]) {
       expect(
         await page.evaluate(
           () => document.documentElement.scrollWidth <= innerWidth,
         ),
       ).toBe(true);
-      const panel = page.getByRole("tabpanel", { name: tab, exact: true });
       expect(
-        await panel.evaluate(
-          (element) => element.getBoundingClientRect().right <= innerWidth,
-        ),
+        await page
+          .locator(panel)
+          .evaluate(
+            (element) => element.getBoundingClientRect().right <= innerWidth,
+          ),
       ).toBe(true);
     }
     expect(
@@ -452,7 +453,6 @@ for (const width of [375, 430]) {
         .locator(".catalog-transport")
         .evaluate((node) => getComputedStyle(node).position),
     ).toBe("static");
-    await page.getByRole("tab", { name: "Recipe", exact: true }).click();
     await page
       .getByRole("button", { name: "Edit recipe", exact: true })
       .click();
