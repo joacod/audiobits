@@ -14,38 +14,6 @@ import { catalogEntries, catalogGroups } from "../lib/catalog";
 
 const query = "(max-width: 760px)";
 
-function currentCatalogSlug() {
-  const list = catalogEntries
-    .map((entry) => document.getElementById(entry.slug))
-    .filter((node): node is HTMLElement => node !== null);
-  const fallback = catalogEntries[0]?.slug ?? "";
-  if (list.length === 0) return fallback;
-  const atEnd =
-    window.scrollY + window.innerHeight >=
-    document.documentElement.scrollHeight - 16;
-  if (atEnd) {
-    const visible = list.filter((node) => {
-      const box = node.getBoundingClientRect();
-      return box.bottom > 0 && box.top < window.innerHeight;
-    });
-    return (
-      (visible[visible.length - 1] ?? list[list.length - 1])?.id ?? fallback
-    );
-  }
-  const marker = 72;
-  let next = list[0]?.id ?? fallback;
-  let nextTop = Number.NEGATIVE_INFINITY;
-  for (const node of list) {
-    const top = node.getBoundingClientRect().top;
-    if (top > marker) break;
-    if (top > nextTop + 12) {
-      next = node.id;
-      nextTop = top;
-    }
-  }
-  return next;
-}
-
 const subscribeNarrow = (onChange: () => void) => {
   const media = window.matchMedia(query);
   media.addEventListener("change", onChange);
@@ -63,25 +31,10 @@ export function CatalogLayout({ children }: { children: ReactNode }) {
     () => false,
   );
   const [open, setOpen] = useState(false);
-  const [active, setActive] = useState(catalogEntries[0]?.slug ?? "");
   const trigger = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
   if (!narrow && open) setOpen(false);
   const dialog = narrow && open;
-
-  useEffect(() => {
-    if (routed) return;
-    const sync = () => {
-      const next = currentCatalogSlug();
-      if (next) setActive((current) => (current === next ? current : next));
-    };
-    window.addEventListener("scroll", sync, { passive: true });
-    window.addEventListener("resize", sync);
-    return () => {
-      window.removeEventListener("scroll", sync);
-      window.removeEventListener("resize", sync);
-    };
-  }, [routed]);
 
   useEffect(() => {
     if (!dialog) return;
@@ -124,12 +77,18 @@ export function CatalogLayout({ children }: { children: ReactNode }) {
     trigger.current?.focus();
   }
 
+  if (!detail) {
+    return (
+      <div className="catalog-index">
+        <h1>Catalog</h1>
+        {children}
+      </div>
+    );
+  }
+
   return (
-    <div
-      className={detail ? "catalog-layout catalog-detail" : "catalog-layout"}
-    >
+    <div className="catalog-layout catalog-detail">
       <div className="catalog-toolbar">
-        {detail ? null : <h1>Catalog</h1>}
         <button
           ref={trigger}
           type="button"
@@ -174,13 +133,7 @@ export function CatalogLayout({ children }: { children: ReactNode }) {
                         <Link
                           href={entry.href}
                           aria-current={
-                            routed
-                              ? routed === entry.slug
-                                ? "page"
-                                : undefined
-                              : active === entry.slug
-                                ? "location"
-                                : undefined
+                            routed === entry.slug ? "page" : undefined
                           }
                           onClick={() => setOpen(false)}
                         >

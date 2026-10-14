@@ -51,11 +51,11 @@
     text-decoration: none;
   }
   .foundation.catalog-page .catalog-nav-panel a:hover,
-  .foundation.catalog-page .catalog-nav-panel a[aria-current="location"] {
+  .foundation.catalog-page .catalog-nav-panel a[aria-current="page"] {
     text-decoration: underline;
     text-underline-offset: 0.35rem;
   }
-  .foundation.catalog-page .catalog-nav-panel a[aria-current="location"] {
+  .foundation.catalog-page .catalog-nav-panel a[aria-current="page"] {
     font-weight: 700;
     text-decoration-thickness: 2px;
     text-decoration-color: var(--signal-mid);
@@ -69,31 +69,6 @@
   .foundation.catalog-page .catalog-section + .catalog-section {
     margin-top: 1.5rem;
   }
-  .foundation.catalog-page .catalog-experience {
-    min-width: 0;
-    padding: 0.85rem 0 1.1rem;
-    border-top: 1px solid var(--graphite-edge);
-  }
-  .foundation.catalog-page .catalog-experience h3 {
-    margin: 0;
-    font-size: clamp(1.55rem, 2.2vw, 2rem);
-    letter-spacing: -0.02em;
-    line-height: 1.15;
-  }
-  .foundation.catalog-page .catalog-experience p,
-  .foundation.catalog-page .catalog-sound p {
-    margin: 0.4rem 0 0;
-  }
-  .foundation.catalog-page .catalog-controls {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.25rem 0.9rem;
-    margin: 0.55rem 0 0;
-    padding: 0;
-    list-style: none;
-    color: var(--mute);
-    font-size: 0.9rem;
-  }
   .foundation.catalog-page .catalog-open {
     display: inline-flex;
     align-items: center;
@@ -101,22 +76,6 @@
     margin-top: 0.35rem;
     font-size: 0.875rem;
     font-weight: 600;
-  }
-  .foundation.catalog-page .catalog-experience-charge {
-    display: grid;
-    grid-template-columns: 7.75rem minmax(0, 1fr);
-    gap: 0.75rem 1.25rem;
-    align-items: start;
-  }
-  .foundation.catalog-page .catalog-experience-charge > .charge-well {
-    grid-column: 1;
-    grid-row: 1;
-  }
-  .foundation.catalog-page
-    .catalog-experience-charge
-    > .catalog-experience-copy {
-    grid-column: 2;
-    grid-row: 1;
   }
   .foundation.catalog-page .charge-well {
     position: relative;
@@ -174,11 +133,6 @@
   .foundation.catalog-page .charge-rings[data-renderer="webgl"] .charge-core {
     visibility: hidden;
   }
-  .foundation.catalog-page .catalog-experience-thruster {
-    display: flex;
-    flex-direction: column;
-    gap: 0.8rem;
-  }
   .foundation.catalog-page .thruster-field {
     background: var(--void);
     color: var(--mute);
@@ -198,57 +152,10 @@
   .foundation.catalog-page .thruster-point {
     fill: var(--ink);
   }
-  .foundation.catalog-page .catalog-sound {
-    display: grid;
-    grid-template-columns: 3.25rem minmax(0, 1fr);
-    gap: 0.35rem 0.85rem;
-    align-items: center;
-    min-width: 0;
-    padding: 0.7rem 0;
-    border-top: 1px solid var(--graphite-edge);
-  }
   .foundation.catalog-page .catalog-mark {
     width: 3.25rem;
     height: 3.25rem;
     color: var(--ink);
-  }
-  .foundation.catalog-page .catalog-mark-harmonic {
-    color: var(--ink);
-  }
-  .foundation.catalog-page .catalog-mark-flow {
-    color: var(--mute);
-  }
-  .foundation.catalog-page .catalog-sound-copy {
-    min-width: 0;
-  }
-  .foundation.catalog-page .catalog-sound h3 {
-    margin: 0;
-    font-size: 1.25rem;
-    line-height: 1.2;
-    letter-spacing: -0.02em;
-  }
-  .foundation.catalog-page .catalog-use {
-    color: var(--mute);
-    font-size: 0.9rem;
-  }
-  .foundation.catalog-page .catalog-status {
-    font-size: 0.9rem;
-    font-variant-numeric: tabular-nums;
-  }
-  .foundation.catalog-page .catalog-sound[data-status="starting"] .catalog-mark,
-  .foundation.catalog-page .catalog-sound[data-status="playing"] .catalog-mark,
-  .foundation.catalog-page .catalog-sound[data-status="running"] .catalog-mark {
-    color: var(--signal-mid);
-  }
-  .foundation.catalog-page .catalog-sound-actions {
-    grid-column: 1 / -1;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.5rem 0.75rem;
-  }
-  .foundation.catalog-page .catalog-sound-actions .catalog-open {
-    margin-top: 0;
   }
   .foundation.catalog-page .catalog-footer {
     margin-top: 1.75rem;
@@ -319,54 +226,6 @@
       grid-row: 2;
       min-width: 0;
     }
-    .foundation.catalog-page .catalog-experiences {
-      display: grid;
-      grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
-      gap: 0 1.5rem;
-      align-items: start;
-    }
-    .foundation.catalog-page .catalog-sound {
-      grid-template-columns: 3.25rem minmax(0, 1fr) auto;
-    }
-    .foundation.catalog-page .catalog-sound-actions {
-      grid-column: auto;
-      justify-content: end;
-    }
-    .foundation.catalog-page .catalog-output .audio-monitor {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      gap: 0.5rem 1.5rem;
-      margin-bottom: 1rem;
-      padding: 1rem;
-      background: var(--graphite);
-    }
-    .foundation.catalog-page .catalog-output .monitor-heading,
-    .foundation.catalog-page .catalog-output .output-scope {
-      grid-column: 1;
-    }
-    .foundation.catalog-page .catalog-output .monitor-settings {
-      grid-column: 2;
-      grid-row: 1 / span 3;
-      min-width: 0;
-    }
-    .foundation.catalog-page .catalog-output .output-scope canvas,
-    .foundation.catalog-page .catalog-output .signal-rest {
-      height: 4rem;
-      margin: 0;
-    }
-  }
-
-  @media (max-width: 1100px) and (min-width: 761px) {
-    .foundation.catalog-page .catalog-experiences {
-      grid-template-columns: minmax(0, 1fr);
-    }
-    .foundation.catalog-page .catalog-sound {
-      grid-template-columns: 3.25rem minmax(0, 1fr);
-    }
-    .foundation.catalog-page .catalog-sound-actions {
-      grid-column: 1 / -1;
-      justify-content: start;
-    }
   }
 
   @media (max-width: 760px) {
@@ -396,18 +255,8 @@
       border: 1px solid var(--graphite-edge);
       background: var(--void);
     }
-    .foundation.catalog-page .catalog-experience-charge {
-      grid-template-columns: 5.25rem minmax(0, 1fr);
-      gap: 0.75rem 1rem;
-    }
     .foundation.catalog-page .charge-well {
       width: 5.25rem;
-    }
-    .foundation.catalog-page .catalog-experience {
-      padding-bottom: 0.45rem;
-    }
-    .foundation.catalog-page .catalog-experience-thruster {
-      gap: 0.4rem;
     }
     .foundation.catalog-page .thruster-field svg {
       height: 6rem;
@@ -787,28 +636,6 @@
   .foundation.catalog-page .catalog-detail .recipe-tools textarea {
     min-height: 12rem;
   }
-  .foundation.catalog-page .catalog-related {
-    margin-top: 1.75rem;
-    padding-top: 0.25rem;
-    border-top: 1px solid var(--graphite-edge);
-  }
-  .foundation.catalog-page .catalog-related nav[aria-label="Related entries"],
-  .foundation.catalog-page .catalog-related nav[aria-label="Related sounds"],
-  .foundation.catalog-page .catalog-docs {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.25rem 1.25rem;
-    align-items: center;
-  }
-  .foundation.catalog-page .catalog-related ul {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.25rem 1.25rem;
-    width: 100%;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
   @media (min-width: 761px) {
     .foundation.catalog-page .catalog-detail .catalog-main {
       grid-row: 1 / span 2;
@@ -873,8 +700,7 @@
     line-height: 0.9;
     letter-spacing: 0;
   }
-  .foundation.catalog-page .catalog-nav-panel h2,
-  .foundation.catalog-page .catalog-output .monitor-heading h2 {
+  .foundation.catalog-page .catalog-nav-panel h2 {
     color: var(--mute);
     font-weight: 500;
     font-size: 0.72rem;
@@ -989,6 +815,158 @@
   @media (min-width: 980px) {
     .foundation.catalog-page .catalog-adoption {
       grid-area: adopt;
+    }
+  }
+}
+
+@layer components {
+  .foundation.catalog-page .catalog-index {
+    padding-top: 1.5rem;
+  }
+  .foundation.catalog-page .catalog-index h2 {
+    margin: 0 0 1rem;
+    font-size: 2rem;
+    line-height: 1;
+  }
+  .foundation.catalog-page .catalog-cards {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.25rem;
+  }
+  .foundation.catalog-page .catalog-index .catalog-section + .catalog-section {
+    margin-top: 3rem;
+  }
+  .foundation.catalog-page .catalog-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    border: 1px solid var(--graphite-edge);
+    border-radius: 6px;
+    background: var(--void);
+    transition: border-color 160ms ease-out;
+  }
+  .foundation.catalog-page .catalog-card:has(a:hover),
+  .foundation.catalog-page .catalog-card:focus-within {
+    border-color: var(--mute);
+  }
+  .foundation.catalog-page .catalog-card-preview {
+    display: grid;
+    place-items: center;
+    height: 11rem;
+    overflow: hidden;
+    border-radius: 6px 6px 0 0;
+    border-bottom: 1px solid var(--graphite-edge);
+    background: var(--graphite);
+    color: var(--ink);
+  }
+  .foundation.catalog-page .catalog-card-preview .catalog-mark {
+    width: 8rem;
+    height: 8rem;
+  }
+  .foundation.catalog-page .catalog-card-preview .charge-well {
+    width: 8rem;
+    justify-self: center;
+    background: transparent;
+  }
+  .foundation.catalog-page .catalog-card-preview .thruster-field {
+    width: 85%;
+    background: transparent;
+  }
+  .foundation.catalog-page .catalog-blade-mark {
+    width: 15rem;
+    height: 10rem;
+  }
+  .foundation.catalog-page
+    .catalog-card:is(
+      [data-status="starting"],
+      [data-status="playing"],
+      [data-status="running"]
+    )
+    .catalog-mark {
+    color: var(--signal-mid);
+  }
+  .foundation.catalog-page .catalog-card-copy {
+    min-height: 9rem;
+    padding: 1.25rem 1.25rem 0;
+  }
+  .foundation.catalog-page .catalog-card h3 {
+    margin: 0;
+    font-size: 2rem;
+    line-height: 1.05;
+  }
+  .foundation.catalog-page .catalog-card h3 a {
+    text-decoration: none;
+  }
+  .foundation.catalog-page .catalog-card h3 a::after {
+    position: absolute;
+    inset: 0;
+    content: "";
+    border-radius: 6px;
+  }
+  .foundation.catalog-page .catalog-card h3 a:focus-visible {
+    outline: none;
+  }
+  .foundation.catalog-page .catalog-card h3 a:focus-visible::after {
+    outline: 3px solid var(--ink);
+    outline-offset: 4px;
+  }
+  .foundation.catalog-page .catalog-card-copy p {
+    margin: 0.75rem 0 1rem;
+    color: var(--mute);
+    font-size: 0.85rem;
+    line-height: 1.6;
+  }
+  .foundation.catalog-page .catalog-card-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    min-height: 4.5rem;
+    margin-top: auto;
+    padding: 0.5rem 1.25rem 1.25rem;
+    font-size: 0.8rem;
+  }
+  .foundation.catalog-page .catalog-card-actions button {
+    position: relative;
+    z-index: 1;
+    flex: none;
+    min-height: 44px;
+  }
+  .foundation.catalog-page .catalog-card-error {
+    margin: 0 1.25rem 1rem;
+  }
+  .foundation.catalog-page .catalog-pagination {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.5rem 1.5rem;
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--graphite-edge);
+  }
+  .foundation.catalog-page .catalog-pagination a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    font-size: 0.875rem;
+  }
+  .foundation.catalog-page .catalog-pagination [rel="next"] {
+    margin-left: auto;
+  }
+  @media (max-width: 1000px) {
+    .foundation.catalog-page .catalog-cards {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 600px) {
+    .foundation.catalog-page .catalog-cards {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .foundation.catalog-page .catalog-card {
+      transition: none;
     }
   }
 }

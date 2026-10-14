@@ -45,7 +45,6 @@ export const reactiveThrusterExperience = {
   href: "/catalog/reactive-thruster",
   description: registryItem("reactive-thruster").description,
   controls: ["Pointer velocity", "Throttle", "Impact"],
-  relatedSounds: ["thruster", "impact"],
   sourceFiles: experienceDemoSourceFiles("reactive-thruster").map(
     (file) => file.name,
   ),
@@ -56,7 +55,6 @@ export const energyChargeExperience = {
   href: "/catalog/energy-charge",
   description: registryItem("energy-charge").description,
   controls: ["Hold to charge", "Progress"],
-  relatedSounds: [],
   sourceFiles: experienceDemoSourceFiles("energy-charge").map(
     (file) => file.name,
   ),
@@ -67,7 +65,6 @@ export const lightsaberExperience = {
   href: "/catalog/lightsaber",
   description: registryItem("lightsaber").description,
   controls: ["Ignite", "Motion", "Strike", "Retract"],
-  relatedSounds: [],
   sourceFiles: experienceDemoSourceFiles("lightsaber").map((file) => file.name),
 } as const;
 
