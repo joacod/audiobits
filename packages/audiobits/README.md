@@ -66,6 +66,12 @@ Copy or install the [0BSD source](https://github.com/joacod/audiobits/blob/main/
 you need and import it locally. No license notices or credit are required for catalog use.
 The copied files belong to your application and can be edited independently.
 
+Install an item from the catalog with shadcn:
+
+```sh
+npx shadcn@latest add joacod/audiobits/<item>
+```
+
 ## Controls and composition
 
 - **Reactive sound:** Sustained recipes can expose live parameters through
