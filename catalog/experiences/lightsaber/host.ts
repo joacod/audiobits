@@ -1,16 +1,25 @@
 import { createAudio } from "audiobits";
-import { createLightsaber } from "./controller";
+import { createLightsaber, type BladeState } from "./controller";
 
 /** The browser host owns one bounded engine; the controller owns its voices. */
-export function mountLightsaber(
-  feedback: Parameters<typeof createLightsaber>[1],
-) {
+export function mountLightsaber(feedback: {
+  state(value: BladeState): void;
+  error(cause: unknown): void;
+  impact?(force: number): void;
+}) {
   const audio = createAudio({
     maxVoices: 8,
     maxVoicesPerSound: 3,
     masterGainDb: -6,
   });
-  const control = createLightsaber(audio, feedback);
+  let state: BladeState = "stopped";
+  let generation = 0;
+  const control = createLightsaber(audio, {
+    state(value) {
+      state = value;
+      feedback.state(value);
+    },
+  });
   const listeners = new AbortController();
   let disposed = false;
   const fail = (cause: unknown) => {
@@ -18,6 +27,7 @@ export function mountLightsaber(
   };
   function stop() {
     if (disposed) return;
+    generation++;
     control.stop();
     audio.stopAll({ tails: "cut" });
   }
@@ -47,13 +57,47 @@ export function mountLightsaber(
     control.dispose();
     await audio.dispose();
   }
+  function ignite() {
+    if (disposed || document.hidden || state !== "stopped") return;
+    const token = ++generation;
+    state = "starting";
+    feedback.state(state);
+    void audio
+      .start()
+      .then(() => {
+        if (disposed || document.hidden || token !== generation) return;
+        control.ignite();
+      })
+      .catch((cause: unknown) => {
+        if (disposed || token !== generation) return;
+        stop();
+        fail(cause);
+      });
+  }
+  function retract() {
+    if (disposed) return;
+    generation++;
+    control.retract();
+  }
+  function clash(force: number, pan = 0) {
+    if (!control.clash(force, pan)) return false;
+    feedback.impact?.(Math.max(0, Math.min(1, force)));
+    return true;
+  }
   return {
     audio,
-    control,
-    ignite() {
-      if (!disposed && !document.hidden) control.ignite();
+    control: {
+      update: control.update,
+      get state() {
+        return state;
+      },
+      get motion() {
+        return control.motion;
+      },
     },
-    retract: control.retract,
+    ignite,
+    retract,
+    clash,
     stop,
     mute(value: boolean) {
       if (!disposed) audio.setMuted(value);

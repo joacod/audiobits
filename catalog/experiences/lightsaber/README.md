@@ -9,16 +9,21 @@ in a user gesture. The host owns one engine (eight voices, three per sound,
 master gain -6 dB). It exposes `retract`, `stop`, `mute`, and asynchronous `dispose`.
 Call `dispose` on application removal and handle its rejection.
 
-`createLightsaber` is the DOM-free controller for an application-owned engine.
-Supply CSS-pixel speed and frame elapsed milliseconds to `update`, with an optional
-signed movement direction from -1 to 1 for continuous pitch bending. Speed reaches
-full motion at 1200 px/s. Attack/recovery smoothing and native parameter ramps
-keep the hum continuous. Swing accents rearm below 0.2 or on a direction reversal
-and trigger above 0.48, with a 220 ms cooldown. The stage measures handle and tip
-travel, excluding blade extension. `impact(target, force)` accepts target IDs 0 through 2,
-with an 850 ms target cooldown and 100 ms global cooldown. It returns whether
-the strike was accepted. `stop` invalidates pending activation and stops owned
-voices; the dedicated host additionally cuts all engine tails.
+`createLightsaber(audio)` is the sound controller for an application-owned engine.
+After your host awaits `audio.start()`, call `ignite()`. Supply normalized movement
+in `[0, 1]` and elapsed milliseconds to `update(movement, elapsed, direction)`,
+with signed direction in `[-1, 1]` for continuous pitch bending. Attack/recovery
+smoothing and native parameter ramps keep the hum continuous. Swing accents
+rearm below 0.2 or on a direction reversal and trigger above 0.48, with a 220 ms
+cooldown. `clash(intensity, pan)` accepts intensity in `[0, 1]` and optional pan
+in `[-1, 1]`, with a 100 ms sound cooldown. It returns whether the clash played.
+`retract()` adds the retraction sound; `stop()` stops owned voices, and `dispose()`
+cuts owned sounds without disposing the shared engine.
+
+The stages measure handle and tip travel, excluding blade extension, and convert
+1200 px/s to full normalized movement. They own swept collision detection and
+the 850 ms per-target cooldown. The browser host owns activation cancellation,
+visibility policy, and final engine disposal; its Stop also cuts engine tails.
 
 `mountBladeStage(canvas, host)` supplies mouse, touch, and keyboard input, swept
 blade collisions, bounded trails/particles, and a measured audio seam. Call its

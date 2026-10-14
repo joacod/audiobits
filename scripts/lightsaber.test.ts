@@ -6,10 +6,12 @@ import {
   type Recipe,
 } from "audiobits";
 import * as recipes from "../catalog/experiences/lightsaber/recipe";
-import { createLightsaber } from "../catalog/experiences/lightsaber/controller";
+import {
+  createLightsaber,
+  smoothMotion,
+} from "../catalog/experiences/lightsaber/controller";
 import {
   motionLevel,
-  smoothMotion,
   segmentDistance,
 } from "../catalog/experiences/lightsaber/motion";
 import { compile } from "../packages/audiobits/src/compiler/plan";
@@ -83,22 +85,21 @@ test("motion bounds, frame-independent smoothing, recovery, and swept geometry",
 test("return strokes bend the existing hum and rearm bounded swing accents without stopping", async () => {
   const s = setup();
   s.control.ignite();
-  s.resolve();
   await settle();
-  for (let i = 0; i < 20; i++) s.control.update(1500, 16, 1);
+  for (let i = 0; i < 20; i++) s.control.update(1, 16, 1);
   expect(s.records[2].play).toHaveBeenCalledTimes(1);
   expect(s.voices[1].set).toHaveBeenLastCalledWith(
     expect.objectContaining({ sweep: expect.closeTo(1, 5) }),
   );
-  s.control.update(1500, 16, -1);
+  s.control.update(1, 16, -1);
   expect(s.records[2].play).toHaveBeenCalledTimes(2);
   expect(s.voices[1].set).toHaveBeenLastCalledWith(
     expect.objectContaining({ sweep: expect.closeTo(-1, 5) }),
   );
   // A reversal inside the cooldown is remembered, but cannot flood accents.
-  s.control.update(1500, 16, 1);
+  s.control.update(1, 16, 1);
   expect(s.records[2].play).toHaveBeenCalledTimes(2);
-  for (let i = 0; i < 14; i++) s.control.update(1500, 16, 1);
+  for (let i = 0; i < 14; i++) s.control.update(1, 16, 1);
   expect(s.records[2].play).toHaveBeenCalledTimes(3);
   for (let i = 0; i < 30; i++) s.control.update(0, 16, 1);
   expect(s.control.motion).toBeLessThan(0.01);
@@ -119,14 +120,6 @@ test("return strokes bend the existing hum and rearm bounded swing accents witho
 });
 
 function setup() {
-  let resolve!: () => void, reject!: (cause: Error) => void;
-  const activation = new Promise<void>((yes, no) => {
-    resolve = yes;
-    reject = (cause: Error) => {
-      listener("suspended");
-      no(cause);
-    };
-  });
   const records: {
     recipe: Recipe;
     play: ReturnType<typeof vi.fn>;
@@ -139,7 +132,7 @@ function setup() {
   const unsubscribe = vi.fn();
   const audio = {
     state: "running",
-    start: vi.fn(() => activation),
+    start: vi.fn(),
     sound(recipe: Recipe) {
       const play = vi.fn(() => {
         let finish!: () => void;
@@ -164,11 +157,9 @@ function setup() {
       return unsubscribe;
     },
   } as unknown as AudioEngine;
-  const feedback = { state: vi.fn(), error: vi.fn(), impact: vi.fn() };
+  const feedback = { state: vi.fn() };
   return {
     control: createLightsaber(audio, feedback),
-    resolve,
-    reject,
     records,
     voices,
     audio,
@@ -182,35 +173,36 @@ const settle = async () => {
   await Promise.resolve();
 };
 
-test("one hum survives motion updates, swings rearm, target and global cooldowns bound accents", async () => {
+test("one hum survives normalized updates, swings rearm, and generic clashes are bounded", async () => {
   const s = setup();
   s.control.ignite();
   s.control.ignite();
-  s.resolve();
   await settle();
-  expect(s.audio.start).toHaveBeenCalledTimes(1);
+  expect(s.audio.start).not.toHaveBeenCalled();
   expect(s.records[0].play).toHaveBeenCalledTimes(1);
-  for (let i = 0; i < 20; i++) s.control.update(3000, 16);
+  for (let i = 0; i < 20; i++) s.control.update(1, 16);
   expect(s.records[2].play).toHaveBeenCalledTimes(1);
-  for (let i = 0; i < 20; i++) s.control.update(3000, 16);
+  for (let i = 0; i < 20; i++) s.control.update(1, 16);
   expect(s.records[2].play).toHaveBeenCalledTimes(1);
-  expect(s.control.impact(0, 9)).toBe(true);
+  expect(s.control.clash(9, -0.35)).toBe(true);
   expect(s.records[3].play).toHaveBeenLastCalledWith(
     expect.objectContaining({ parameters: { force: 1 } }),
   );
-  expect(s.control.impact(0, 0.8)).toBe(false);
-  expect(s.control.impact(1, 0.8)).toBe(false);
+  expect(s.control.clash(0.8)).toBe(false);
+  expect(s.control.clash(0.8)).toBe(false);
   s.control.update(0, 64);
   s.control.update(0, 64);
-  expect(s.control.impact(1, 0.8)).toBe(true);
+  expect(s.control.clash(0.8)).toBe(true);
   for (let i = 0; i < 14; i++) s.control.update(0, 64);
-  expect(s.control.impact(0, -4)).toBe(true);
+  expect(s.control.clash(-4, 9)).toBe(true);
   expect(s.records[3].play).toHaveBeenLastCalledWith(
     expect.objectContaining({ parameters: { force: 0 } }),
   );
-  expect(s.control.impact(4, 1)).toBe(false);
-  expect(s.control.impact(1, NaN)).toBe(false);
-  for (let i = 0; i < 5; i++) s.control.update(3000, 16);
+  expect(s.records[3].play).toHaveBeenLastCalledWith(
+    expect.objectContaining({ pan: 1 }),
+  );
+  expect(s.control.clash(NaN)).toBe(false);
+  for (let i = 0; i < 5; i++) s.control.update(1, 16);
   expect(s.records[2].play).toHaveBeenCalledTimes(2);
   expect(s.records[0].play).toHaveBeenCalledTimes(1);
   expect(s.voices[1].set).toHaveBeenCalled();
@@ -225,18 +217,6 @@ test("one hum survives motion updates, swings rearm, target and global cooldowns
   for (const r of s.records) expect(r.dispose).toHaveBeenCalledTimes(1);
 });
 
-for (const action of ["stop", "retract", "dispose"] as const)
-  test(`${action} invalidates pending activation`, async () => {
-    const s = setup();
-    s.control.ignite();
-    s.control[action]();
-    s.resolve();
-    await settle();
-    expect(s.voices).toHaveLength(0);
-    expect(s.control.state).toBe("stopped");
-    s.control.dispose();
-  });
-
 test("rapid restart, old ended callbacks, interruption, and post-disposal calls", async () => {
   const s = setup();
   for (let i = 0; i < 8; i++) {
@@ -244,9 +224,8 @@ test("rapid restart, old ended callbacks, interruption, and post-disposal calls"
     s.control.stop();
   }
   s.control.ignite();
-  s.resolve();
   await settle();
-  expect(s.records[0].play).toHaveBeenCalledTimes(1);
+  expect(s.records[0].play).toHaveBeenCalledTimes(9);
   const first = s.voices[1];
   s.control.stop();
   s.control.ignite();
@@ -258,18 +237,23 @@ test("rapid restart, old ended callbacks, interruption, and post-disposal calls"
   expect(s.control.state).toBe("stopped");
   s.control.dispose();
   s.control.ignite();
-  s.control.update(1000, 16);
-  s.control.impact(0, 1);
-  expect(s.records[0].play).toHaveBeenCalledTimes(2);
+  s.control.update(0.8, 16);
+  s.control.clash(1);
+  expect(s.records[0].play).toHaveBeenCalledTimes(10);
 });
 
-test("activation failure is visible and leaves the controller retryable", async () => {
+test("normalized movement and direction stay finite and bounded", () => {
   const s = setup();
   s.control.ignite();
-  s.reject(new Error("denied"));
-  await settle();
-  expect(s.control.state).toBe("stopped");
-  expect(s.feedback.error).toHaveBeenCalled();
-  expect(s.voices).toHaveLength(0);
+  for (const movement of [-1, 0, 0.5, 1, 9, NaN, Infinity]) {
+    for (const direction of [-9, -1, 0, 1, 9, NaN, Infinity]) {
+      const motion = s.control.update(movement, 64, direction);
+      expect(motion).toBeGreaterThanOrEqual(0);
+      expect(motion).toBeLessThanOrEqual(1);
+      const parameters = vi.mocked(s.voices[1].set).mock.lastCall![0];
+      expect(parameters.sweep).toBeGreaterThanOrEqual(-1);
+      expect(parameters.sweep).toBeLessThanOrEqual(1);
+    }
+  }
   s.control.dispose();
 });

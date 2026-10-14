@@ -29,10 +29,6 @@ it("serializes and validates all charge mappings across the range", () => {
 });
 
 function setup() {
-  let resolve!: () => void;
-  const activation = new Promise<void>((done) => {
-    resolve = done;
-  });
   const voices: (Voice<typeof energyCharge> & { finish(): void })[] = [];
   const play = vi.fn(() => {
     let finish!: () => void;
@@ -53,14 +49,14 @@ function setup() {
   const dispose = vi.fn();
   const unsubscribe = vi.fn();
   const audio = {
-    start: vi.fn(() => activation),
+    start: vi.fn(),
     sound: () => ({ play, dispose }),
     subscribe: () => unsubscribe,
   } as unknown as AudioEngine;
   const feedback = { state: vi.fn(), error: vi.fn() };
   return {
     control: createEnergyCharge(audio, feedback),
-    resolve,
+    audio,
     voices,
     play,
     dispose,
@@ -72,12 +68,12 @@ const settle = async () => {
   await Promise.resolve();
 };
 
-it("updates the latest external progress on one voice and holds without timers", async () => {
+it("uses external progress on one voice without activating the shared engine", () => {
   const s = setup();
-  s.control.start(0);
   s.control.setCharge(0.4);
-  s.resolve();
-  await settle();
+  s.control.start();
+  s.control.start(0.9);
+  expect(s.audio.start).not.toHaveBeenCalled();
   expect(s.play).toHaveBeenCalledWith({
     seed: 42,
     parameters: { charge: 0.4 },
@@ -93,56 +89,21 @@ it("updates the latest external progress on one voice and holds without timers",
   s.control.dispose();
 });
 
-it("cancellation invalidates activation, restart uses latest progress, old ends cannot stop new voices", async () => {
-  const s = setup();
-  s.control.start(0.3);
-  s.control.cancel();
-  s.resolve();
-  await settle();
-  expect(s.play).not.toHaveBeenCalled();
-  s.control.start(0.7);
-  await settle();
-  s.control.release();
-  s.control.start(1);
-  await settle();
-  s.voices[0].finish();
-  await settle();
-  expect(s.voices[1].stop).not.toHaveBeenCalled();
-  s.control.dispose();
-  s.control.dispose();
-  expect(s.voices[1].stop).toHaveBeenCalledTimes(1);
-  expect(s.dispose).toHaveBeenCalledTimes(1);
-  expect(s.unsubscribe).toHaveBeenCalledTimes(1);
-  s.control.start();
-  expect(s.play).toHaveBeenCalledTimes(2);
-});
-
-for (const action of ["release", "dispose"] as const) {
-  it(`cannot play after ${action} during activation`, async () => {
-    const s = setup();
-    s.control.start(1);
-    s.control[action]();
-    s.resolve();
-    await settle();
-    expect(s.play).not.toHaveBeenCalled();
-    s.control.dispose();
-  });
-}
-
-it("only the latest rapid pending restart creates a voice", async () => {
+it("restarts repeatedly, ignores old completion, and disposes only owned resources", async () => {
   const s = setup();
   for (let i = 0; i < 8; i++) {
     s.control.start(i / 10);
-    s.control.cancel();
+    s.control.stop();
   }
-  s.control.start(0.9);
-  s.control.setCharge(0.6);
-  s.resolve();
+  s.control.start(1);
+  s.voices[0].finish();
   await settle();
-  expect(s.play).toHaveBeenCalledTimes(1);
-  expect(s.play).toHaveBeenCalledWith({
-    seed: 42,
-    parameters: { charge: 0.6 },
-  });
+  expect(s.voices[8].stop).not.toHaveBeenCalled();
   s.control.dispose();
+  s.control.dispose();
+  expect(s.voices[8].stop).toHaveBeenCalledTimes(1);
+  expect(s.dispose).toHaveBeenCalledTimes(1);
+  expect(s.unsubscribe).toHaveBeenCalledTimes(1);
+  s.control.start();
+  expect(s.play).toHaveBeenCalledTimes(9);
 });

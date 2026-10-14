@@ -1,6 +1,6 @@
-import { createAudio } from "audiobits";
+import { createAudio, type AudioEngine } from "audiobits";
 import { impact } from "../../recipes/impact/recipe";
-import { attachPointerThruster } from "./pointer";
+import { createThruster } from "./pointer";
 
 /** Framework-independent host. The caller owns presentation and calls dispose on teardown. */
 export function mountThruster(
@@ -73,6 +73,7 @@ export function mountThruster(
     cancelAnimationFrame(frame);
     listeners.abort();
     interaction.dispose();
+    hit.dispose();
     await audio.dispose();
   }
   return {
@@ -85,6 +86,7 @@ export function mountThruster(
       audio.setMuted(value);
     },
     async impact() {
+      if (disposed || document.hidden) return;
       const token = generation;
       try {
         await audio.start();
@@ -101,4 +103,177 @@ export function mountThruster(
     },
     dispose,
   };
+}
+
+const bounded = (value: number) =>
+  Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : 0;
+
+/** CSS pixels per second, independent of pointer position and event frequency. */
+export function velocityThrottle(distance: number, elapsedMs: number) {
+  if (
+    !Number.isFinite(distance) ||
+    !Number.isFinite(elapsedMs) ||
+    distance < 0 ||
+    elapsedMs <= 0
+  )
+    return 0;
+  return bounded(distance / elapsedMs / 1.2); // Full thrust at 1200 px/s.
+}
+
+/** Owns one thruster interaction; the host owns the shared engine and presentation. */
+export function attachPointerThruster(
+  surface: HTMLElement,
+  audio: AudioEngine,
+  feedback: {
+    state(state: "starting" | "running" | "stopped"): void;
+    error(cause: unknown): void;
+    throttle(value: number): void;
+  },
+) {
+  const control = createThruster(audio, {
+    state(value) {
+      if (value === "stopped" && engagedControl) {
+        engagedControl = false;
+        stop();
+      } else if (value === "running") feedback.state(value);
+    },
+  });
+  const listeners = new AbortController();
+  let disposed = false;
+  let generation = 0;
+  let engaged = false;
+  let engagedControl = false;
+  let throttle = 0;
+  let pointer: number | undefined;
+  let previous = { x: 0, y: 0, time: 0 };
+  let speed = 0;
+  let frame = 0;
+
+  function stop() {
+    generation++;
+    engaged = false;
+    cancelAnimationFrame(frame);
+    frame = 0;
+    const captured = pointer;
+    pointer = undefined;
+    if (captured !== undefined && surface.hasPointerCapture(captured))
+      surface.releasePointerCapture(captured);
+    if (engagedControl) {
+      engagedControl = false;
+      control.stop();
+    }
+    if (!disposed) feedback.state("stopped");
+  }
+  function setThrottle(value: number) {
+    if (disposed) return;
+    throttle = bounded(value);
+    feedback.throttle(throttle);
+    control.setThrottle(throttle);
+  }
+  function fail(cause: unknown) {
+    stop();
+    if (!disposed) feedback.error(cause);
+  }
+  function start(value: number) {
+    if (disposed || document.hidden || engaged) return;
+    engaged = true;
+    const token = ++generation;
+    setThrottle(value);
+    feedback.state("starting");
+    // Invoke synchronously in the gesture path; never queue playback after Stop.
+    void audio
+      .start()
+      .then(() => {
+        if (disposed || document.hidden || token !== generation) return;
+        engagedControl = true;
+        control.start(throttle, audio.bus("thruster"));
+      })
+      .catch((cause: unknown) => {
+        if (!disposed && token === generation) fail(cause);
+      });
+  }
+  function tick(time: number) {
+    if (disposed || pointer === undefined) return;
+    // Decay velocity when events stop. Native ramps supply the audio smoothing.
+    try {
+      setThrottle(speed * Math.exp(-Math.max(0, time - previous.time) / 120));
+      frame = requestAnimationFrame(tick);
+    } catch (cause) {
+      fail(cause);
+    }
+  }
+  surface.addEventListener(
+    "pointerdown",
+    (event) => {
+      if (
+        !event.isPrimary ||
+        event.button !== 0 ||
+        engaged ||
+        disposed ||
+        document.hidden
+      )
+        return;
+      pointer = event.pointerId;
+      previous = {
+        x: event.clientX,
+        y: event.clientY,
+        time: performance.now(),
+      };
+      speed = 0;
+      try {
+        surface.setPointerCapture(pointer);
+        start(0);
+        frame = requestAnimationFrame(tick);
+      } catch (cause) {
+        fail(cause);
+      }
+    },
+    { signal: listeners.signal },
+  );
+  surface.addEventListener(
+    "pointermove",
+    (event) => {
+      if (event.pointerId !== pointer) return;
+      const time = performance.now();
+      const elapsed = time - previous.time;
+      if (elapsed <= 0) return;
+      const target = velocityThrottle(
+        Math.hypot(event.clientX - previous.x, event.clientY - previous.y),
+        elapsed,
+      );
+      speed += (target - speed) * (1 - Math.exp(-elapsed / 40));
+      previous = { x: event.clientX, y: event.clientY, time };
+    },
+    { signal: listeners.signal },
+  );
+  for (const type of [
+    "pointerup",
+    "pointercancel",
+    "lostpointercapture",
+  ] as const) {
+    surface.addEventListener(
+      type,
+      (event) => {
+        if (event.pointerId === pointer) stop();
+      },
+      { signal: listeners.signal },
+    );
+  }
+  document.addEventListener(
+    "visibilitychange",
+    () => {
+      if (document.hidden) stop();
+    },
+    { signal: listeners.signal },
+  );
+  window.addEventListener("blur", stop, { signal: listeners.signal });
+  window.addEventListener("pagehide", dispose, { signal: listeners.signal });
+  function dispose() {
+    if (disposed) return;
+    stop();
+    disposed = true;
+    listeners.abort();
+    control.dispose();
+  }
+  return { start, stop, setThrottle, dispose };
 }

@@ -13,7 +13,12 @@ one live `throttle` control in `[0, 1]`, 60 ms smoothing, and up to 280 ms relea
 It has no assets, UI state, or website imports. `audio.sound()` validates it.
 The simpler Thruster recipe is available separately in `catalog/recipes/thruster/`.
 
-The integration translates CSS-pixel velocity into throttle, reaching full thrust
+`createThruster(audio)` in `pointer.ts` accepts application throttle directly.
+After your host awaits `audio.start()`, call `start(value)`, update with
+`setThrottle(value)`, and call `stop()` or `dispose()` on removal. Throttle is
+bounded to `[0, 1]`; the controller owns no DOM, input handlers, or frames.
+
+The showcase adapter in `host.ts` translates CSS-pixel velocity into throttle, reaching full thrust
 at 1200 px/s. It bounds input, averages event velocity over 40 ms, sends at most
 one update per animation frame, and decays toward idle over 120 ms when motion
 stops. The runtime applies native parameter ramps. Captured pointer release,
@@ -24,7 +29,7 @@ range input offer the same sound without precise pointer movement.
 ## Complete interactive example
 
 The [interactive showcase](https://www.audiobits.dev/catalog/reactive-thruster)
-uses [host.ts](host.ts) with the same recipe and pointer integration. Copy
+uses [host.ts](host.ts) with the same recipe and sound controller. Copy
 `recipe.ts`, `pointer.ts`, `host.ts`, and [index.html](index.html) with their
 relative paths. Also copy [canonical Impact](../../recipes/impact/recipe.ts) at
 `../../recipes/impact/recipe.ts` relative to the host. The registry installs this
@@ -53,7 +58,7 @@ The host owns DOM presentation, engine limits, shared mixing, and final cleanup:
 ```ts
 import { createAudio } from "audiobits";
 import { impact } from "../../recipes/impact/recipe";
-import { attachPointerThruster } from "./pointer";
+import { attachPointerThruster } from "./host";
 
 const audio = createAudio({ maxVoices: 8, maxVoicesPerSound: 2 });
 const hit = audio.sound(impact);

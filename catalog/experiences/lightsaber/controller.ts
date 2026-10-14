@@ -6,16 +6,13 @@ import {
   bladeClash,
   bladeRetraction,
 } from "./recipe";
-import { motionLevel, smoothMotion } from "./motion";
 
 export type BladeState = "stopped" | "starting" | "running";
 export function createLightsaber(
   audio: AudioEngine,
   feedback: {
-    state(value: BladeState): void;
-    error(cause: unknown): void;
-    impact?(target: number, force: number): void;
-  },
+    state?(value: BladeState): void;
+  } = {},
 ) {
   const hum = audio.sound(lightsaber);
   const ignition = audio.sound(bladeIgnition);
@@ -34,10 +31,9 @@ export function createLightsaber(
     lastImpact = -Infinity;
   let armed = true;
   let lastDirection = 0;
-  const targets = new Map<number, number>();
   function publish(value: BladeState) {
     state = value;
-    feedback.state(value);
+    feedback.state?.(value);
   }
   function accent(play: () => Accent) {
     const current = play();
@@ -55,43 +51,36 @@ export function createLightsaber(
     armed = true;
     lastDirection = 0;
     lastSwing = lastImpact = -Infinity;
-    targets.clear();
     if (!disposed) publish("stopped");
   }
+  /** The application must await audio.start() before calling ignite. */
   function ignite() {
     if (disposed || state !== "stopped") return;
-    const token = ++generation;
-    publish("starting");
-    // Called synchronously from the host's user gesture, before any await.
-    void audio
-      .start()
-      .then(() => {
-        if (disposed || token !== generation) return;
-        accent(() => ignition.play({ seed: 42 }));
-        voice = hum.play({
-          seed: 42,
-          parameters: { motion: 0, drift: 0.5, sweep: 0 },
-        });
-        const current = voice;
-        publish("running");
-        void current.ended.then(() => {
-          if (voice === current) stop();
-        });
-      })
-      .catch((cause: unknown) => {
-        if (disposed || token !== generation) return;
-        stop();
-        feedback.error(cause);
+    generation++;
+    try {
+      accent(() => ignition.play({ seed: 42 }));
+      voice = hum.play({
+        seed: 42,
+        parameters: { motion: 0, drift: 0.5, sweep: 0 },
       });
+      const current = voice;
+      publish("running");
+      void current.ended.then(() => {
+        if (voice === current) stop();
+      });
+    } catch (cause) {
+      stop();
+      throw cause;
+    }
   }
-  function update(speed: number, elapsed: number, direction = 0) {
+  function update(movement: number, elapsed: number, direction = 0) {
     if (disposed || state !== "running") return 0;
     const dt = Math.min(
       64,
       Math.max(0, Number.isFinite(elapsed) ? elapsed : 0),
     );
     clock += dt;
-    motion = smoothMotion(motion, motionLevel(speed), dt);
+    motion = smoothMotion(motion, bounded(movement), dt);
     const signed = Number.isFinite(direction)
       ? Math.max(-1, Math.min(1, direction))
       : 0;
@@ -123,32 +112,19 @@ export function createLightsaber(
     }
     return motion;
   }
-  function impact(target: number, force: number) {
-    if (
-      disposed ||
-      state !== "running" ||
-      !Number.isInteger(target) ||
-      target < 0 ||
-      target > 2 ||
-      !Number.isFinite(force)
-    )
+  /** Generic contact intensity [0, 1] and stereo placement [-1, 1]. */
+  function clashAt(force: number, pan = 0) {
+    if (disposed || state !== "running" || !Number.isFinite(force))
       return false;
-    if (
-      clock - lastImpact < 100 ||
-      clock - (targets.get(target) ?? -Infinity) < 850
-    )
-      return false;
-    const bounded = Math.max(0, Math.min(1, force));
-    targets.set(target, clock);
-    lastImpact = clock;
+    if (clock - lastImpact < 100) return false;
     accent(() =>
       clash.play({
-        parameters: { force: bounded },
-        seed: generation + target,
-        pan: (target - 1) * 0.35,
+        parameters: { force: bounded(force) },
+        seed: generation,
+        pan: Number.isFinite(pan) ? Math.max(-1, Math.min(1, pan)) : 0,
       }),
     );
-    feedback.impact?.(target, bounded);
+    lastImpact = clock;
     return true;
   }
   function retract() {
@@ -174,7 +150,7 @@ export function createLightsaber(
     ignite,
     retract,
     update,
-    impact,
+    clash: clashAt,
     stop,
     dispose,
     get state() {
@@ -184,4 +160,17 @@ export function createLightsaber(
       return motion;
     },
   };
+}
+
+const bounded = (value: number) =>
+  Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : 0;
+
+export function smoothMotion(
+  previous: number,
+  target: number,
+  elapsed: number,
+) {
+  const dt = Math.min(64, Math.max(0, Number.isFinite(elapsed) ? elapsed : 0));
+  const tau = target > previous ? 22 : 100;
+  return previous + (target - previous) * (1 - Math.exp(-dt / tau));
 }

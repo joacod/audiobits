@@ -3,11 +3,12 @@ import type { AudioEngine, AudioState, Voice } from "../src/index";
 import { validateRecipe, defineSound } from "../src/index";
 import { compile } from "../src/compiler/plan";
 import { noiseData } from "../src/compiler/values";
+import { createThruster } from "../../../catalog/experiences/reactive-thruster/pointer";
 import { reactiveThruster } from "../../../catalog/experiences/reactive-thruster/recipe";
 import {
   attachPointerThruster,
   velocityThrottle,
-} from "../../../catalog/experiences/reactive-thruster/pointer";
+} from "../../../catalog/experiences/reactive-thruster/host";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -300,3 +301,35 @@ for (const action of ["pointercancel", "lostpointercapture"] as const) {
     s.interaction.dispose();
   });
 }
+
+it("accepts application throttle without a surface, browser globals, or activation", async () => {
+  const s = setup();
+  s.interaction.dispose();
+  vi.unstubAllGlobals();
+  const control = createThruster(s.audio);
+  control.setThrottle(0.6);
+  control.start();
+  control.start(1);
+  expect(s.audio.start).not.toHaveBeenCalled();
+  expect(s.play).toHaveBeenCalledTimes(1);
+  expect(s.play).toHaveBeenLastCalledWith(
+    expect.objectContaining({ parameters: { throttle: 0.6 } }),
+  );
+  for (const value of [0.8, 0.2, 0.2, 1, 9, -1, NaN, Infinity])
+    control.setThrottle(value);
+  expect(s.voices[0].set).toHaveBeenLastCalledWith({ throttle: 0 });
+  expect(s.play).toHaveBeenCalledTimes(1);
+  control.stop();
+  control.start(0.4);
+  (s.voices[0] as Voice & { finish(): void }).finish();
+  await settle();
+  expect(s.voices[1].stop).not.toHaveBeenCalled();
+  s.stateListener("interrupted");
+  expect(s.voices[1].stop).toHaveBeenCalledTimes(1);
+  control.dispose();
+  control.dispose();
+  control.start();
+  expect(s.play).toHaveBeenCalledTimes(2);
+  expect(s.soundDispose).toHaveBeenCalledTimes(2);
+  expect(s.unsubscribe).toHaveBeenCalledTimes(2);
+});
