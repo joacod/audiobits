@@ -22,26 +22,54 @@ test("held pointer ignition, swept target hits, release retraction and teardown"
   await expect(pad).toHaveAttribute("data-renderer", "three");
   await pad.scrollIntoViewIfNeeded();
   const box = (await pad.boundingBox())!;
-  await page.mouse.move(box.x + box.width * 0.5, box.y + box.height * 0.8);
-  await page.mouse.down();
+  const mouse = await page.context().newCDPSession(page);
+  let position = { x: box.x + box.width * 0.5, y: box.y + box.height * 0.8 };
+  let pressed = false;
+  // Native pointer input avoids HTML drag detection during every interpolated
+  // move. Queue each stroke before awaiting it so native input can arrive
+  // faster than rendering, as it does during a real fast pointer sweep.
+  async function move(x: number, y: number, steps = 1) {
+    const from = position;
+    const moves = [];
+    for (let i = 1; i <= steps; i++)
+      moves.push(
+        mouse.send("Input.dispatchMouseEvent", {
+          type: "mouseMoved",
+          x: from.x + ((x - from.x) * i) / steps,
+          y: from.y + ((y - from.y) * i) / steps,
+          button: pressed ? "left" : "none",
+          buttons: pressed ? 1 : 0,
+        }),
+      );
+    await Promise.all(moves);
+    position = { x, y };
+  }
+  async function press(value: boolean) {
+    pressed = value;
+    await mouse.send("Input.dispatchMouseEvent", {
+      type: value ? "mousePressed" : "mouseReleased",
+      ...position,
+      button: "left",
+      buttons: value ? 1 : 0,
+      clickCount: 1,
+    });
+  }
+  await move(position.x, position.y);
+  await press(true);
   await expect(pad).toHaveAttribute("data-state", "running");
   await expect(pad).toHaveAttribute("data-extension", "1.000");
   await expect
     .poll(async () => Number(await pad.getAttribute("data-peak")))
     .toBeGreaterThan(0);
-  await page.mouse.move(box.x + box.width * 0.2, box.y + box.height * 0.7, {
-    steps: 8,
-  });
+  await move(box.x + box.width * 0.2, box.y + box.height * 0.7, 8);
   await expect
     .poll(async () => Number(await pad.getAttribute("data-motion")))
     .toBeGreaterThan(0.1);
-  await page.mouse.move(box.x + box.width * 0.8, box.y + box.height * 0.7, {
-    steps: 8,
-  });
+  await move(box.x + box.width * 0.8, box.y + box.height * 0.7, 8);
   await expect
     .poll(async () => Number(await pad.getAttribute("data-hits")))
     .toBeGreaterThan(0);
-  await page.mouse.up();
+  await press(false);
   await expect(pad).toHaveAttribute("data-state", "stopped");
   await expect(pad).toHaveAttribute("data-extension", "0.000");
   await expect
@@ -50,7 +78,7 @@ test("held pointer ignition, swept target hits, release retraction and teardown"
       return p.sources === p.ended;
     })
     .toBe(true);
-  await page.mouse.move(box.x + box.width * 0.4, box.y + box.height * 0.6);
+  await move(box.x + box.width * 0.4, box.y + box.height * 0.6);
   await expect(pad).toHaveAttribute("data-state", "stopped");
   await expect(pad).toHaveAttribute("data-extension", "0.000");
   await page
