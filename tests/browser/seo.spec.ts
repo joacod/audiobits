@@ -256,7 +256,7 @@ test("crawl files cover exactly the public pages and invalid routes stay 404", a
   }
 });
 
-test("home page JSON-LD includes the current package version", async ({
+test("home page JSON-LD uses context-bearing objects and the current package version", async ({
   page,
 }) => {
   const { version } = JSON.parse(
@@ -266,7 +266,13 @@ test("home page JSON-LD includes the current package version", async ({
   const scripts = await page
     .locator('script[type="application/ld+json"]')
     .allTextContents();
-  const data = scripts.flatMap((text) => JSON.parse(text));
+  expect(scripts).toHaveLength(2);
+  const data = scripts.map((text) => JSON.parse(text));
+  // Safari's metadata reader can throw on top-level arrays (WebKit bug 255764).
+  for (const item of data) {
+    expect(Array.isArray(item)).toBe(false);
+    expect(item["@context"]).toBe("https://schema.org");
+  }
   const source = data.find((item) => item["@type"] === "SoftwareSourceCode");
   expect(source.version).toBe(version);
   expect(source.url).toBe(siteUrl);
