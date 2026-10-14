@@ -1,5 +1,12 @@
-import { readFileSync, readdirSync } from "node:fs";
-import { dirname, posix, resolve } from "node:path";
+import {
+  copyFileSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join, posix, resolve } from "node:path";
 import { execFileSync, spawnSync } from "node:child_process";
 import { expect, test } from "vitest";
 import ts from "typescript";
@@ -17,24 +24,37 @@ test("canonical gallery imports resolve in native Node tooling", () => {
   ]);
 });
 
-test("GitHub installer verification rejects missing, floating and mismatched revisions before installation", () => {
-  for (const [args, message] of [
-    [["--github"], "requires --revision=<full commit SHA>"],
-    [["--github", "--revision=main"], "requires --revision=<full commit SHA>"],
-    [
-      ["--github", `--revision=${"0".repeat(40)}`],
-      "revision must match the checkout",
-    ],
-    [[`--revision=${"0".repeat(40)}`], "--revision is only used with --github"],
-  ] as const) {
-    const result = spawnSync(
-      process.execPath,
-      ["scripts/test-package.mjs", ...args],
-      { encoding: "utf8" },
-    );
-    expect(result.error).toBeUndefined();
-    expect(result.status).toBe(1);
-    expect(result.stderr).toContain(message);
+test("GitHub installer verification rejects invalid revisions without loading consumer dependencies", () => {
+  const directory = mkdtempSync(join(tmpdir(), "audiobits-arguments-"));
+  const script = join(directory, "test-package.mjs");
+  // No node_modules or catalog beside the copy: argument rejection must not
+  // depend on TypeScript, Playwright, the packed runtime or website setup.
+  copyFileSync("scripts/test-package.mjs", script);
+  try {
+    for (const [args, message] of [
+      [["--github"], "requires --revision=<full commit SHA>"],
+      [
+        ["--github", "--revision=main"],
+        "requires --revision=<full commit SHA>",
+      ],
+      [
+        ["--github", `--revision=${"0".repeat(40)}`],
+        "revision must match the checkout",
+      ],
+      [
+        [`--revision=${"0".repeat(40)}`],
+        "--revision is only used with --github",
+      ],
+    ] as const) {
+      const result = spawnSync(process.execPath, [script, ...args], {
+        encoding: "utf8",
+      });
+      expect(result.error).toBeUndefined();
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain(message);
+    }
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
   }
 });
 

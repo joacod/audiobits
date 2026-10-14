@@ -1,9 +1,7 @@
 import assert from "node:assert/strict";
-import ts from "typescript";
 import { createHash } from "node:crypto";
 import { createServer } from "node:http";
 import { createRequire } from "node:module";
-import { chromium, expect } from "@playwright/test";
 import { execFileSync } from "node:child_process";
 import {
   mkdtemp,
@@ -18,15 +16,6 @@ import {
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, relative, resolve } from "node:path";
-import {
-  libraryExample,
-  parametersFor,
-  quickExample,
-  sounds,
-} from "../apps/www/lib/gallery.ts";
-
-import { experienceExample } from "../apps/www/lib/experience-example.ts";
-
 const root = process.cwd();
 const args = process.argv.slice(2);
 const github = args.includes("--github");
@@ -70,6 +59,13 @@ if (github) {
     "--revision is only used with --github",
   );
 }
+// Reject invalid invocations before loading consumer/build dependencies.
+const { default: ts } = await import("typescript");
+const { chromium, expect } = await import("@playwright/test");
+const { libraryExample, parametersFor, quickExample, sounds } =
+  await import("../apps/www/lib/gallery.ts");
+const { experienceExample } =
+  await import("../apps/www/lib/experience-example.ts");
 const require = createRequire(
   new URL("../packages/audiobits/package.json", import.meta.url),
 );
