@@ -34,8 +34,11 @@ because their human purposes differ.
 
 ## Boundaries
 
-- Do not modify `packages/audiobits` from a website task unless the requested
-  feature strictly requires a runtime change.
+- Ordinary website work must not modify the audio runtime or recipe contracts
+  merely for presentation or UI conveniences.
+- Explicit sound-first catalog initiatives may evaluate and implement justified
+  runtime or recipe improvements under the [root architecture rules](../../AGENTS.md#architecture-boundaries)
+  and [package rules](../../packages/audiobits/AGENTS.md).
 - Presentation metadata stays outside `SoundRecipe`. Use the root catalog
   distribution rules for showcase/source boundaries and copy fidelity.
 - Website-only dependencies stay inside `apps/www`.

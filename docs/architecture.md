@@ -93,10 +93,13 @@ eligibility rules. No transparent optimizer is implemented.
 ## Public surface
 
 The listed operations are implemented. Buses provide gain, mute, and routing;
-a shared effect API awaits multiple real requirements. Add primitives only when
-a concrete sound or application requirement cannot be met by composition. An
-effect-specific bus setter would expand the API without a demonstrated shared
-effects requirement; native taps retain caller ownership.
+a shared effect API awaits multiple real requirements. Evaluate focused primitives
+under the [root architecture rules](../AGENTS.md#architecture-boundaries).
+Evidence may demonstrate an unmet concrete sound or application requirement,
+substantially better acoustic behavior, or simpler consumer authoring compared
+with existing composition. An effect-specific bus setter would expand the API
+without a demonstrated shared effects requirement; native taps retain caller
+ownership.
 
 | Concept                    | Responsibility                                                     |
 | -------------------------- | ------------------------------------------------------------------ |
