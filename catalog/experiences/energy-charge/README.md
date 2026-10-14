@@ -1,8 +1,8 @@
 # Energy charge
 
 Install with `npx shadcn@latest add joacod/audiobits/energy-charge`.
-You own and may modify the installed source. Retain the included MIT license.
-The item installs `recipe.ts`, `progress.ts`, this guide, and `LICENSE` under
+You own and may modify the installed source.
+The item installs `recipe.ts`, `progress.ts`, and this guide under
 `src/sounds/experiences/energy-charge/`. `audiobits` is the only runtime dependency.
 
 ## Application integration

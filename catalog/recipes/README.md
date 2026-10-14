@@ -2,8 +2,8 @@
 
 The eight sound definitions in this directory are canonical creative source.
 Each `recipe.ts` imports only public `audiobits` functions and types. Install
-individual items through the [source registry](../README.md), or copy a file
-and retain the repository's MIT license. No catalog package is required.
+individual items through the [source registry](../README.md), or copy a file.
+No catalog package is required.
 
 The source preserves the existing sound data, controls, timing and variation.
 Create a sound with `audio.sound(recipe)`, activate the engine from a user
@@ -18,7 +18,7 @@ recipe language; it does not generate or export creative recipe definitions.
 at control minima, defaults and maxima.
 
 `registry.json` at the repository root records stable item IDs, export names,
-discovery metadata, required capabilities and complete file/license manifests.
+discovery metadata, required capabilities and complete file manifests.
 Keep metadata and manifests accurate when editing source. `pnpm test:package`
 copies all eleven registry items into separate installed source trees, typechecks
 every TypeScript file and documented integration against the packed public

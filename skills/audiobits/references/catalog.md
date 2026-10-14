@@ -16,7 +16,7 @@ capability requirements and file manifests. Append `#<reviewed-full-commit-SHA>`
 to registry addresses for reproducible installs. Compare item requirements with
 the installed runtime metadata before adding source; do not upgrade the runtime
 as a side effect. If needed, inspect source at that ref and copy only the
-relevant files with their licenses, preserving relative imports.
+relevant files, preserving relative imports.
 
 The pinned CLI's normal `add` supports these universal entries without React,
 Tailwind or `components.json`. Its `add --dry-run`, `--diff` and `--view` modes
@@ -30,14 +30,12 @@ Recipes install at `src/sounds/recipes/<id>/`; experiences at
 tree, never from `../../catalog/` or unpublished package internals. The registry
 may evolve independently of an older installed runtime.
 
-Reactive Thruster includes `recipe.ts`, `pointer.ts`, `host.ts`, a demo HTML,
-guide and license, plus the Impact recipe/license required by its complete host.
-For an existing application that only needs live thrust, use `recipe.ts` and
-`pointer.ts` with the experience license. Adapt feedback and lifecycle locally;
-do not replace the application's entrypoint with the demo. Keep Impact's
-installed relative path if using the complete host.
+Reactive Thruster installs `recipe.ts`, `pointer.ts`, and its integration guide.
+Its complete host, demo HTML, and Impact dependency remain in the repository.
+Adapt feedback and lifecycle locally; do not replace the application's
+entrypoint with the demo.
 
-You own installed source. Review later catalog updates as source changes, retain
-MIT attribution on redistribution, and validate adapted recipes/controllers
-against the consumer's runtime. After installation, typechecking, builds and
+You own installed source. Catalog source uses 0BSD with no required license
+notices or credit. Review later catalog updates as source changes and validate
+adapted recipes/controllers against the consumer's runtime. After installation, typechecking, builds and
 playback need only local source and `audiobits`, with no registry access.

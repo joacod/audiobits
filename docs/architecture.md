@@ -40,8 +40,8 @@ descriptions and source manifests from it and keeps presentation details locally
 
 `catalog/experiences/` owns complete examples: recipe definitions, interaction
 logic, browser host integration, and standalone demo entrypoints. Reactive
-Thruster's host imports canonical Impact with a relative path. Its registry
-manifest includes that source and license at matching installed paths. Both
+Thruster's host imports canonical Impact with a relative path. Its sound-only registry
+manifest includes the recipe, controller, and guide without the host or Impact. The
 experiences use public `audiobits` APIs without runtime internals or website imports.
 
 The npm package ships only the runtime entrypoint, its declarations, schema,

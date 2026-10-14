@@ -15,8 +15,8 @@ variation, and parameter mappings. It contains no UI or application state.
 Use a recipe for a button sound, notification, impact, or a sustained sound
 controlled by your own host. See the [recipe reference](/docs/recipes).
 
-An **experience** installs sound recipes, a reusable sound controller, an
-integration guide, and a license. Try [Energy Charge](/catalog/energy-charge) for
+An **experience** installs sound recipes, a reusable sound controller, and an
+integration guide. Try [Energy Charge](/catalog/energy-charge) for
 application-supplied progress or [Reactive Thruster](/catalog/reactive-thruster)
 for application-supplied throttle, or [Lightsaber](/catalog/lightsaber) for
 motion and collision events. Connect the controller to your application;
@@ -90,7 +90,7 @@ public AudioBits exports and bundler module resolution, not precompiled JavaScri
 
 This tree shows the registry targets for Confirmation and all three experiences.
 Only the selected item's files are installed. All eight recipe items install
-just their recipe and license. Experience installs exclude demo hosts and UI.
+just their recipe. Experience installs exclude demo hosts and UI.
 
 <Files>
   <Folder name="src" defaultOpen>
@@ -98,7 +98,6 @@ just their recipe and license. Experience installs exclude demo hosts and UI.
       <Folder name="recipes" defaultOpen>
         <Folder name="confirmation" defaultOpen>
           <File name="recipe.ts" />
-          <File name="LICENSE" />
         </Folder>
       </Folder>
       <Folder name="experiences" defaultOpen>
@@ -106,19 +105,16 @@ just their recipe and license. Experience installs exclude demo hosts and UI.
           <File name="recipe.ts" />
           <File name="progress.ts" />
           <File name="README.md" />
-          <File name="LICENSE" />
         </Folder>
         <Folder name="reactive-thruster">
           <File name="recipe.ts" />
           <File name="pointer.ts" />
           <File name="README.md" />
-          <File name="LICENSE" />
         </Folder>
         <Folder name="lightsaber">
           <File name="recipe.ts" />
           <File name="controller.ts" />
           <File name="README.md" />
-          <File name="LICENSE" />
         </Folder>
       </Folder>
     </Folder>
@@ -128,7 +124,8 @@ just their recipe and license. Experience installs exclude demo hosts and UI.
 <Callout title="Application-owned source, npm runtime">
 
 Recipes and experiences become source you own and edit in your application.
-Retain the included MIT license when redistributing it. `audiobits` remains the
+[Catalog source is 0BSD-licensed](https://github.com/joacod/audiobits/blob/main/catalog/README.md),
+with no required license notices or credit. `audiobits` remains the MIT-licensed
 runtime dependency; builds and playback use local files and the runtime without
 registry access.
 

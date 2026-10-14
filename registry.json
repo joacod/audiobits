@@ -39,14 +39,9 @@
           "path": "catalog/recipes/confirmation/recipe.ts",
           "type": "registry:file",
           "target": "~/src/sounds/recipes/confirmation/recipe.ts"
-        },
-        {
-          "path": "LICENSE",
-          "type": "registry:file",
-          "target": "~/src/sounds/recipes/confirmation/LICENSE"
         }
       ],
-      "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/main/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/main/catalog/README.md for integration and update guidance."
     },
     {
       "name": "impact",
@@ -84,14 +79,9 @@
           "path": "catalog/recipes/impact/recipe.ts",
           "type": "registry:file",
           "target": "~/src/sounds/recipes/impact/recipe.ts"
-        },
-        {
-          "path": "LICENSE",
-          "type": "registry:file",
-          "target": "~/src/sounds/recipes/impact/LICENSE"
         }
       ],
-      "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/main/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/main/catalog/README.md for integration and update guidance."
     },
     {
       "name": "thruster",
@@ -134,14 +124,9 @@
           "path": "catalog/recipes/thruster/recipe.ts",
           "type": "registry:file",
           "target": "~/src/sounds/recipes/thruster/recipe.ts"
-        },
-        {
-          "path": "LICENSE",
-          "type": "registry:file",
-          "target": "~/src/sounds/recipes/thruster/LICENSE"
         }
       ],
-      "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/main/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/main/catalog/README.md for integration and update guidance."
     },
     {
       "name": "tactile-click",
@@ -179,14 +164,9 @@
           "path": "catalog/recipes/tactile-click/recipe.ts",
           "type": "registry:file",
           "target": "~/src/sounds/recipes/tactile-click/recipe.ts"
-        },
-        {
-          "path": "LICENSE",
-          "type": "registry:file",
-          "target": "~/src/sounds/recipes/tactile-click/LICENSE"
         }
       ],
-      "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/main/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/main/catalog/README.md for integration and update guidance."
     },
     {
       "name": "gentle-rejection",
@@ -224,14 +204,9 @@
           "path": "catalog/recipes/gentle-rejection/recipe.ts",
           "type": "registry:file",
           "target": "~/src/sounds/recipes/gentle-rejection/recipe.ts"
-        },
-        {
-          "path": "LICENSE",
-          "type": "registry:file",
-          "target": "~/src/sounds/recipes/gentle-rejection/LICENSE"
         }
       ],
-      "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/main/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/main/catalog/README.md for integration and update guidance."
     },
     {
       "name": "glass-notification",
@@ -269,14 +244,9 @@
           "path": "catalog/recipes/glass-notification/recipe.ts",
           "type": "registry:file",
           "target": "~/src/sounds/recipes/glass-notification/recipe.ts"
-        },
-        {
-          "path": "LICENSE",
-          "type": "registry:file",
-          "target": "~/src/sounds/recipes/glass-notification/LICENSE"
         }
       ],
-      "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/main/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/main/catalog/README.md for integration and update guidance."
     },
     {
       "name": "whoosh",
@@ -314,14 +284,9 @@
           "path": "catalog/recipes/whoosh/recipe.ts",
           "type": "registry:file",
           "target": "~/src/sounds/recipes/whoosh/recipe.ts"
-        },
-        {
-          "path": "LICENSE",
-          "type": "registry:file",
-          "target": "~/src/sounds/recipes/whoosh/LICENSE"
         }
       ],
-      "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/main/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/main/catalog/README.md for integration and update guidance."
     },
     {
       "name": "power-up",
@@ -359,14 +324,9 @@
           "path": "catalog/recipes/power-up/recipe.ts",
           "type": "registry:file",
           "target": "~/src/sounds/recipes/power-up/recipe.ts"
-        },
-        {
-          "path": "LICENSE",
-          "type": "registry:file",
-          "target": "~/src/sounds/recipes/power-up/LICENSE"
         }
       ],
-      "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/main/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/main/catalog/README.md for integration and update guidance."
     },
     {
       "name": "energy-charge",
@@ -421,14 +381,9 @@
           "path": "catalog/experiences/energy-charge/README.md",
           "type": "registry:file",
           "target": "~/src/sounds/experiences/energy-charge/README.md"
-        },
-        {
-          "path": "LICENSE",
-          "type": "registry:file",
-          "target": "~/src/sounds/experiences/energy-charge/LICENSE"
         }
       ],
-      "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/main/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/main/catalog/README.md for integration and update guidance."
     },
     {
       "name": "reactive-thruster",
@@ -483,14 +438,9 @@
           "path": "catalog/experiences/reactive-thruster/README.md",
           "type": "registry:file",
           "target": "~/src/sounds/experiences/reactive-thruster/README.md"
-        },
-        {
-          "path": "LICENSE",
-          "type": "registry:file",
-          "target": "~/src/sounds/experiences/reactive-thruster/LICENSE"
         }
       ],
-      "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/main/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/main/catalog/README.md for integration and update guidance."
     },
     {
       "name": "lightsaber",
@@ -545,14 +495,9 @@
           "path": "catalog/experiences/lightsaber/README.md",
           "type": "registry:file",
           "target": "~/src/sounds/experiences/lightsaber/README.md"
-        },
-        {
-          "path": "LICENSE",
-          "type": "registry:file",
-          "target": "~/src/sounds/experiences/lightsaber/LICENSE"
         }
       ],
-      "docs": "You own the installed source. Customize it locally and retain the MIT license. See https://github.com/joacod/audiobits/blob/main/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/main/catalog/README.md for integration and update guidance."
     }
   ]
 }
