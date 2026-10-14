@@ -1,7 +1,7 @@
 export function ExperienceMark({
   kind,
 }: {
-  kind: "charge" | "thruster" | "blade";
+  kind: "charge" | "thruster" | "blade" | "pulse";
 }) {
   if (kind === "blade")
     return (
@@ -19,7 +19,7 @@ export function ExperienceMark({
         />
       </svg>
     );
-  if (kind === "charge") {
+  if (kind === "charge" || kind === "pulse") {
     return (
       <svg className="experience-mark" viewBox="0 0 64 64" aria-hidden="true">
         <circle cx="32" cy="32" r="5" fill="currentColor" />

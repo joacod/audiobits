@@ -52,6 +52,16 @@ const LightsaberDetail = dynamic(
   },
 );
 
+const EchoProbeDetail = dynamic(
+  () =>
+    import("../../echo-probe-detail").then((module) => module.EchoProbeDetail),
+  {
+    loading: () => (
+      <div className="catalog-stage" aria-label="Loading Echo Probe" />
+    ),
+  },
+);
+
 export function generateStaticParams() {
   return catalogEntries.map((entry) => ({ slug: entry.slug }));
 }
@@ -97,7 +107,9 @@ export default async function CatalogEntryPage({
   if (!experience) notFound();
   return (
     <CatalogDetail entry={experience}>
-      {experience.slug === "lightsaber" ? (
+      {experience.slug === "echo-probe" ? (
+        <EchoProbeDetail />
+      ) : experience.slug === "lightsaber" ? (
         <LightsaberDetail />
       ) : experience.slug === "energy-charge" ? (
         <EnergyChargeDetail />

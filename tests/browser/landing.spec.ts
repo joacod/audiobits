@@ -1,5 +1,9 @@
 import { expect, test } from "@playwright/test";
 import { instrument, probe, dragThruster } from "./experience-probe";
+import {
+  catalogEntries,
+  catalogEntriesByCategory,
+} from "../../apps/www/lib/catalog";
 
 const home = "http://127.0.0.1:3100";
 
@@ -67,7 +71,16 @@ for (const [width, height] of [
     await expect(
       page.locator(".landing-experience").filter({ hasText: "Energy Charge" }),
     ).toHaveAttribute("href", "/catalog/energy-charge");
-    await expect(page.locator(".landing-experience")).toHaveCount(2);
+    const experiences = catalogEntriesByCategory("experience").filter(
+      (entry) => entry.slug !== "reactive-thruster",
+    );
+    await expect(page.locator(".landing-experience")).toHaveCount(
+      experiences.length,
+    );
+    for (const entry of experiences)
+      await expect(
+        page.locator(".landing-experience").filter({ hasText: entry.title }),
+      ).toHaveAttribute("href", entry.href);
     await expect(page.locator(".landing h2")).toHaveText([
       "Hear it. Own it.",
       "Let your AI agent build the sound.",
@@ -118,7 +131,9 @@ for (const [width, height] of [
       .getByRole("link", { name: "Explore the full catalog", exact: true })
       .click();
     await expect(page).toHaveURL(`${home}/catalog`);
-    await expect(page.locator("[data-catalog-entry]")).toHaveCount(11);
+    await expect(page.locator("[data-catalog-entry]")).toHaveCount(
+      catalogEntries.length,
+    );
     await expect(page.locator("article.sound-card")).toHaveCount(0);
   });
 }

@@ -1,3 +1,4 @@
+import "./echo-probe-harness";
 import {
   sounds,
   parametersFor,

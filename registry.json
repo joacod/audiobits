@@ -498,6 +498,62 @@
         }
       ],
       "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/main/catalog/README.md for integration and update guidance."
+    },
+    {
+      "name": "echo-probe",
+      "type": "registry:item",
+      "title": "Echo Probe",
+      "description": "Send a sculpted pulse into the field. Hear distance, direction, and surface in every return.",
+      "dependencies": ["audiobits"],
+      "categories": ["experience"],
+      "meta": {
+        "classification": "experience",
+        "tags": ["echo", "pulse", "reflections", "spatial", "acoustic"],
+        "schemaVersion": 1,
+        "compatibility": {
+          "runtime": "audiobits public API with recipe schema 1",
+          "language": "TypeScript",
+          "moduleResolution": "Bundler",
+          "browser": "Web Audio; automated verification in Chromium",
+          "framework": "none"
+        },
+        "exportName": "echoProbe",
+        "requiredCapabilities": {
+          "sources": ["noise", "oscillator"],
+          "filters": ["bandpass", "lowpass"],
+          "parameterModes": ["play"],
+          "kinds": ["one-shot"],
+          "waveforms": ["sine", "triangle"],
+          "noiseColors": ["white"],
+          "mappingScales": ["exponential", "linear"],
+          "automationCurves": ["exponential"],
+          "runtime": [
+            "gesture-start",
+            "seeded-replay",
+            "bounded-voices",
+            "suspend",
+            "dispose"
+          ]
+        }
+      },
+      "files": [
+        {
+          "path": "catalog/experiences/echo-probe/recipe.ts",
+          "type": "registry:file",
+          "target": "~/src/sounds/experiences/echo-probe/recipe.ts"
+        },
+        {
+          "path": "catalog/experiences/echo-probe/controller.ts",
+          "type": "registry:file",
+          "target": "~/src/sounds/experiences/echo-probe/controller.ts"
+        },
+        {
+          "path": "catalog/experiences/echo-probe/README.md",
+          "type": "registry:file",
+          "target": "~/src/sounds/experiences/echo-probe/README.md"
+        }
+      ],
+      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/main/catalog/README.md for integration and update guidance."
     }
   ]
 }

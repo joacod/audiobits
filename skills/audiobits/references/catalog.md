@@ -33,6 +33,12 @@ Recipe items install only `recipe.ts`; sustained Thruster can use `voice.set()`
 directly. Experience items install acoustic definitions, a sound controller and
 a README with a tested `src/integration.ts` example.
 
+Echo Probe's `createEchoProbe(audio)` takes bounded reflection data through
+`emit(reflections, { seed, strength })`. Each reflection supplies relative distance,
+stereo pan, intensity, and surface character. The controller schedules emission,
+returns, and finite diffuse energy on the audio clock. Its installed guide covers
+voice budgets, cancellation, and scheduled times for application feedback.
+
 The installed guide defines each controller's bounded inputs and lifecycle.
 Activate the application-owned engine before starting a controller, then own
 input mapping, suspension and engine disposal. Controllers dispose only their
