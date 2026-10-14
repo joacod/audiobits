@@ -23,7 +23,16 @@ test("offline metadata and intent search derive from registry fields", () => {
   expect(searchCatalog("living move release", "experience")[0].name).toBe(
     "reactive-thruster",
   );
-  expect(searchCatalog("", "recipe")).toHaveLength(8);
+  expect(
+    searchCatalog("", "recipe", catalog.items.length)
+      .map((item) => item.name)
+      .sort(),
+  ).toEqual(
+    registry.items
+      .filter((item) => item.meta.classification === "recipe")
+      .map((item) => item.name)
+      .sort(),
+  );
   expect(searchCatalog("nothing-matches-this")).toEqual([]);
   expect(() => itemByName("unknown")).toThrow();
   expect(JSON.stringify(catalog)).not.toContain("import { defineSound");
@@ -199,7 +208,7 @@ test("every agent manifest matches registry sound source and verifies local byte
       installation: undefined,
     }).toEqual({ ...item, source: undefined, installation: undefined });
     expect(metadata.installation.install).toBe(
-      `npx shadcn@4.21.4 add joacod/audiobits/${item.name}#${catalog.revision}`,
+      `npx shadcn@latest add joacod/audiobits/${item.name}#${catalog.revision}`,
     );
     const paths = metadata.files.map((file) => file.path);
     const retrieved = await retrieveSources(

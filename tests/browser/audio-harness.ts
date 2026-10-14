@@ -1,3 +1,8 @@
+import {
+  sounds,
+  parametersFor,
+  type SoundKind,
+} from "../../apps/www/lib/gallery";
 import * as bladeRecipes from "../../catalog/experiences/lightsaber/recipe";
 import { energyCharge } from "../../catalog/experiences/energy-charge/recipe";
 import { reactiveThruster } from "../../catalog/experiences/reactive-thruster/recipe";
@@ -560,35 +565,26 @@ async function mixingLifecycle() {
 }
 Object.assign(globalThis, { mixingSignal, mixingLifecycle });
 
-// Comparison source is the exact standalone module displayed by the gallery.
-async function comparisonSignal(
+// Catalog signals retain replay, release, cancellation and live-control checks.
+async function catalogSignal(
   rate: number,
-  kind: "confirmation" | "impact" | "thruster",
+  kind: SoundKind,
   control: number,
   seed: number,
   action: "natural" | "early" | "live" | "cancel" = "natural",
 ) {
-  const { playRaw } = await import("../../apps/www/lib/raw-example");
-  async function render(raw: boolean) {
+  async function render() {
     const context = new OfflineAudioContext(1, rate * 2, rate);
-    const recipe = { confirmation, impact, thruster }[kind];
-    const graph = raw
-      ? playRaw(context, kind, control, seed, 0.05)
-      : createGraph(
-          context,
-          context.destination,
-          compile(
-            recipe,
-            kind === "confirmation"
-              ? {}
-              : { [kind === "impact" ? "intensity" : "throttle"]: control },
-            seed,
-          ),
-          0.05,
-          -12,
-          0,
-          () => {},
-        );
+    const recipe = sounds[kind];
+    const graph = createGraph(
+      context,
+      context.destination,
+      compile(recipe, parametersFor(recipe, control), seed),
+      0.05,
+      -12,
+      0,
+      () => {},
+    );
     if (action === "cancel") graph.stop();
     const pauses: Promise<void>[] = [];
     if (action === "early")
@@ -598,7 +594,7 @@ async function comparisonSignal(
           return context.resume();
         }),
       );
-    else if (kind === "thruster" && action !== "cancel") {
+    else if (recipe.kind === "sustained" && action !== "cancel") {
       if (action === "live")
         for (const [time, value] of [
           [0.3, 1],
@@ -608,8 +604,7 @@ async function comparisonSignal(
         ])
           pauses.push(
             context.suspend(time).then(() => {
-              if ("setThrottle" in graph) graph.setThrottle(value);
-              else graph.set({ throttle: value });
+              graph.set(parametersFor(recipe, value));
               return context.resume();
             }),
           );
@@ -626,21 +621,21 @@ async function comparisonSignal(
     if ("ended" in graph) await graph.ended;
     return data;
   }
-  const managed = await render(false),
-    raw = await render(true);
+  const managed = await render(),
+    replay = await render();
   let difference = 0,
     energy = 0,
     latePeak = 0;
   for (let i = 0; i < managed.length; i++) {
-    require(Number.isFinite(raw[i]) &&
-      Number.isFinite(managed[i]), "Nonfinite comparison");
-    difference = Math.max(difference, Math.abs(managed[i] - raw[i]));
-    energy += raw[i] ** 2;
-    if (i > rate * 1.6) latePeak = Math.max(latePeak, Math.abs(raw[i]));
+    require(Number.isFinite(replay[i]) &&
+      Number.isFinite(managed[i]), "Nonfinite catalog signal");
+    difference = Math.max(difference, Math.abs(managed[i] - replay[i]));
+    energy += replay[i] ** 2;
+    if (i > rate * 1.6) latePeak = Math.max(latePeak, Math.abs(replay[i]));
   }
-  return { difference, energy, latePeak };
+  return { difference, energy, latePeak, action };
 }
-Object.assign(globalThis, { comparisonSignal });
+Object.assign(globalThis, { catalogSignal });
 
 async function capabilitySignal(recipe: unknown) {
   const { defineSound } =

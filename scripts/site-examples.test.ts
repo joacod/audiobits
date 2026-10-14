@@ -2,14 +2,9 @@ import { readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import ts from "typescript";
 import { expect, test } from "vitest";
-import {
-  libraryExample,
-  rawHost,
-  sounds,
-  hasRawComparison,
-} from "../apps/www/lib/gallery";
+import { libraryExample, sounds } from "../apps/www/lib/gallery";
 
-test("all documentation fences and current gallery/raw examples typecheck through public exports", () => {
+test("all documentation fences and current gallery examples typecheck through public exports", () => {
   const snippets: string[] = [];
   for (const name of readdirSync("apps/www/content/docs", {
     recursive: true,
@@ -22,15 +17,12 @@ test("all documentation fences and current gallery/raw examples typecheck throug
     /```ts\n([\s\S]*?)```/g,
   ))
     snippets.push(match[1]);
-  const raw = readFileSync("apps/www/lib/raw-example.ts", "utf8");
   for (const kind of Object.keys(sounds) as (keyof typeof sounds)[]) {
     for (const control of [0, 0.5, 1]) {
       for (const seed of [0, 42, 0xffffffff]) {
         snippets.push(libraryExample(sounds[kind], control, seed));
         // Installed-path quickExample coverage belongs to test:package, where
         // imports resolve unchanged against actual shadcn-installed files.
-        if (hasRawComparison(kind))
-          snippets.push(raw + rawHost(kind, control, seed));
       }
     }
   }

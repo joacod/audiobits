@@ -6,70 +6,58 @@ import {
   reactiveThrusterExperience,
 } from "./experiences";
 import { demos, soundKinds } from "./gallery";
-import { catalogEntries, catalogGroups } from "./catalog";
+import { catalogEntries, catalogGroups, createCatalogEntries } from "./catalog";
 import { experienceSourceFiles } from "./registry";
 import { readFileSync } from "node:fs";
 
-const bundledOrder = [
-  "confirmation",
-  "tactile-click",
-  "gentle-rejection",
-  "glass-notification",
-  "impact",
-  "whoosh",
-  "power-up",
-  "thruster",
-] as const;
-
 test("sound-only installation keeps complete showcase sources available", () => {
-  for (const experience of [
-    energyChargeExperience,
-    reactiveThrusterExperience,
-    lightsaberExperience,
-  ]) {
-    const id = experience.href.split("/").at(-1)!;
-    expect(experienceSourceFiles(id).map((file) => file.name)).toEqual([
-      "recipe.ts",
-      id === "energy-charge"
-        ? "progress.ts"
-        : id === "reactive-thruster"
-          ? "pointer.ts"
-          : "controller.ts",
-    ]);
-    expect(experience.sourceFiles).toContain("host.ts");
-    expect(experience.sourceFiles).toContain("index.html");
-    for (const file of experience.sourceFiles)
+  for (const entry of catalogEntries.filter(
+    (item) => item.category === "experience",
+  )) {
+    const item = registry.items.find((item) => item.name === entry.slug)!;
+    expect(experienceSourceFiles(entry.slug).map((file) => file.path)).toEqual(
+      item.files
+        .filter((file) => file.path.endsWith(".ts"))
+        .map((file) => file.path),
+    );
+    expect(entry.source.files).toContain("host.ts");
+    expect(entry.source.files).toContain("index.html");
+    for (const file of entry.source.files)
       expect(
-        readFileSync(`catalog/experiences/${id}/${file}`, "utf8").length,
+        readFileSync(`catalog/experiences/${entry.slug}/${file}`, "utf8")
+          .length,
       ).toBeGreaterThan(0);
   }
 });
 
-test("catalog index covers every current entry once, in collection order", () => {
+test("catalog index discovers every registry entry once and groups collections", () => {
   expect(catalogGroups.map((group) => [group.category, group.title])).toEqual([
     ["experience", "Interactive experiences"],
     ["bundled", "Catalog sounds"],
   ]);
-  expect(catalogEntries.map((entry) => entry.category)).toEqual([
-    "experience",
-    "experience",
-    "experience",
-    ...bundledOrder.map(() => "bundled" as const),
-  ]);
-  expect(catalogEntries.map((entry) => entry.slug)).toEqual([
-    "energy-charge",
-    "reactive-thruster",
-    "lightsaber",
-    ...bundledOrder,
-  ]);
+  expect(catalogEntries.map((entry) => entry.category)).toEqual(
+    catalogGroups.flatMap((group) =>
+      registry.items
+        .filter(
+          (item) =>
+            item.meta.classification ===
+            (group.category === "bundled" ? "recipe" : "experience"),
+        )
+        .map(() => group.category),
+    ),
+  );
   expect(new Set(catalogEntries.map((entry) => entry.slug)).size).toBe(
     catalogEntries.length,
   );
   expect(new Set(catalogEntries.map((entry) => entry.href)).size).toBe(
     catalogEntries.length,
   );
-  expect([...soundKinds].sort()).toEqual([...bundledOrder].sort());
-  expect(catalogEntries).toHaveLength(soundKinds.length + 3);
+  expect([...soundKinds].sort()).toEqual(
+    registry.items
+      .filter((item) => item.meta.classification === "recipe")
+      .map((item) => item.name)
+      .sort(),
+  );
   expect(catalogEntries.map((item) => item.slug).sort()).toEqual(
     registry.items.map((item) => item.name).sort(),
   );
@@ -105,7 +93,7 @@ test("catalog entries derive links and playback from website metadata", () => {
   expect("playback" in charge).toBe(false);
   expect("playback" in reactive).toBe(false);
 
-  for (const slug of bundledOrder) {
+  for (const slug of soundKinds) {
     const entry = catalogEntries.find((item) => item.slug === slug);
     const demo = demos[slug];
     expect(entry).toMatchObject({
@@ -137,4 +125,54 @@ test("catalog entries derive links and playback from website metadata", () => {
     category: "experience",
     href: "/catalog/reactive-thruster",
   });
+});
+
+test.each(["recipe", "experience"])(
+  "a future %s is discovered and reports missing presentation setup",
+  (classification) => {
+    const template = registry.items.find(
+      (item) => item.meta.classification === classification,
+    )!;
+    const future = { ...template, name: "future-sound", title: "Future sound" };
+    expect(() => createCatalogEntries([...registry.items, future])).toThrow(
+      `future-sound: missing website ${classification} presentation`,
+    );
+  },
+);
+
+test("a future recipe with presentation setup uses registry metadata without inventory edits", () => {
+  const template = registry.items.find((item) => item.name === "confirmation")!;
+  const future = {
+    ...template,
+    name: "future-sound",
+    title: "Future sound",
+    description: "Registry-owned description.",
+    meta: { ...template.meta, exportName: "futureSound" },
+    files: [
+      { ...template.files[0], path: "catalog/recipes/future-sound/recipe.ts" },
+    ],
+  };
+  const presentation = demos as Record<
+    string,
+    (typeof demos)[keyof typeof demos]
+  >;
+  presentation[future.name] = demos.confirmation;
+  try {
+    expect(
+      createCatalogEntries([...registry.items, future]).find(
+        (item) => item.slug === future.name,
+      ),
+    ).toMatchObject({
+      title: future.title,
+      description: future.description,
+      category: "bundled",
+      href: `/catalog/${future.name}`,
+      source: {
+        exportName: future.meta.exportName,
+        file: future.files[0].path,
+      },
+    });
+  } finally {
+    delete presentation[future.name];
+  }
 });

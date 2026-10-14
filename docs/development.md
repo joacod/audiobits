@@ -205,15 +205,12 @@ version from the manifest.
 
 ## Catalog examples
 
-Copy-owned interactive sources live in `catalog/experiences/`:
-[Energy Charge](../catalog/experiences/energy-charge/README.md),
-[Reactive Thruster](../catalog/experiences/reactive-thruster/README.md), and
-[Lightsaber](../catalog/experiences/lightsaber/README.md). Edit their
+Copy-owned interactive sources live in `catalog/experiences/`. Edit their
 recipe or sound controller there; keep host, input adapters and demo files
 separate. `apps/www` imports these sounds while owning website presentation. The
 [GitHub source registry](../catalog/README.md) installs minimal recipes and
 sound controllers with integration guidance as owned source. Repository demos
-remain separate from installation. It covers the items declared in `registry.json`.
+remain separate from installation.
 `registry.json` owns discovery metadata and installation file manifests; website
 metadata is derived from it. No creative recipes are generated into the runtime.
 
@@ -224,10 +221,9 @@ consumers. It checks installed paths and bytes, requires only the packed
 `audiobits` dependency, and rejects framework or component configuration added
 by installation. No GitHub registry request is needed for PR coverage.
 
-The check compiles website usage, edited-recipe examples, internal comparison
-fixtures at control and seed extrema, and all catalog README integrations,
-public documentation and Skill snippets
-against the packed public package and actual installed source. It also executes
+The check compiles every registry item's canonical integration, usage and
+edited-recipe examples at control and seed extrema, and public documentation
+and Skill snippets against the packed public package and actual installed source. It also executes
 three official Skill examples: Confirmation, sustained Thruster and Lightsaber.
 It retains recipe validation, silent load, gesture activation, signal, update,
 Stop, and disposal checks for all installed integrations in Chromium, along with
@@ -241,6 +237,10 @@ at that published commit. This uses `owner/repo/item#<SHA>` for every registry
 item and runs the same consumer checks. It rejects missing refs, a revision
 different from the checkout, and dirty source; it never substitutes `main`.
 The installer output reports the CLI version, source commit, and items tested.
+Run `pnpm test:package:latest` separately to exercise the same consumer checks
+with actual `npx shadcn@latest`, keeping the CI lock internal. Add
+`--github --revision=<reviewed-full-SHA>` from that clean, published checkout
+to verify the documented GitHub journey. This requires network access.
 GitHub resolution remains an external integration check, separate from required
 PR coverage. The site browser tests verify displayed catalog source and UI
 interaction/lifecycle behavior.
@@ -258,5 +258,5 @@ text is evaluated.
 `pnpm test` typechecks every TypeScript docs fence and generated examples across
 control/seed extrema through public exports. `pnpm test:browser` bundles the
 exact displayed host examples, then exercises activation, Stop, and disposal
-alongside signal equivalence and the catalog UI. Generated inputs/bundles and
+alongside catalog signal checks and the catalog UI. Generated inputs/bundles and
 browser artifacts stay under ignored directories.

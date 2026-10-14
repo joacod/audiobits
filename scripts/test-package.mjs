@@ -19,11 +19,9 @@ import {
 import { tmpdir } from "node:os";
 import { join, relative, resolve } from "node:path";
 import {
-  hasRawComparison,
   libraryExample,
   parametersFor,
   quickExample,
-  rawHost,
   sounds,
 } from "../apps/www/lib/gallery.ts";
 
@@ -32,6 +30,7 @@ import { experienceExample } from "../apps/www/lib/experience-example.ts";
 const root = process.cwd();
 const args = process.argv.slice(2);
 const github = args.includes("--github");
+const latest = args.includes("--latest");
 const revision = execFileSync("git", ["rev-parse", "HEAD"], {
   encoding: "utf8",
 }).trim();
@@ -39,7 +38,10 @@ const requestedRevision = args
   .find((arg) => arg.startsWith("--revision="))
   ?.slice(11);
 assert.ok(
-  args.every((arg) => arg === "--github" || arg.startsWith("--revision=")),
+  args.every(
+    (arg) =>
+      arg === "--github" || arg === "--latest" || arg.startsWith("--revision="),
+  ),
   "Unknown package verification argument",
 );
 const dirtySource = Boolean(
@@ -76,18 +78,31 @@ const evidence = { examples: [], browser: [], treeShaking: false };
 const workspace = JSON.parse(
   await readFile(join(root, "package.json"), "utf8"),
 );
-const cliVersion = workspace.devDependencies.shadcn;
-assert.match(cliVersion, /^\d+\.\d+\.\d+$/, "Pin the installer CLI exactly");
-assert.equal(
-  JSON.parse(
-    await readFile(join(root, "node_modules/shadcn/package.json"), "utf8"),
-  ).version,
+const npx = process.platform === "win32" ? "npx.cmd" : "npx";
+const shadcnCommand = latest ? npx : process.execPath;
+const shadcnArgs = latest
+  ? ["--yes", "shadcn@latest"]
+  : [resolve("node_modules/shadcn/dist/index.js")];
+const cliVersion = latest
+  ? execFileSync(npx, [...shadcnArgs, "--version"], { encoding: "utf8" }).trim()
+  : workspace.devDependencies.shadcn;
+assert.match(
   cliVersion,
+  /^\d+\.\d+\.\d+$/,
+  "Installer must report a CLI version",
 );
-const shadcn = resolve("node_modules/shadcn/dist/index.js");
+if (!latest) {
+  assert.equal(
+    JSON.parse(
+      await readFile(join(root, "node_modules/shadcn/package.json"), "utf8"),
+    ).version,
+    cliVersion,
+  );
+}
 evidence.installation = {
   mode: github ? "github" : "local checkout",
   cliVersion,
+  channel: latest ? "latest" : "locked",
   revision,
   dirtySource,
   items: [],
@@ -164,13 +179,11 @@ try {
     'import { createAudio, defineSound, validateRecipe } from "audiobits"; import { confirmation } from "./items/confirmation/src/sounds/recipes/confirmation/recipe.js"; import { impact } from "./items/impact/src/sounds/recipes/impact/recipe.js"; import { thruster } from "./items/thruster/src/sounds/recipes/thruster/recipe.js"; const audio = createAudio(); const recipe = defineSound(confirmation); audio.sound(recipe); const dynamic = () => { const voice = audio.sound(thruster).play({ seed: 42, parameters: { throttle: 0.2 } }); voice.set({ throttle: 1 }); const bus = audio.bus("effects"); bus.setGainDb(-6, 0.1); bus.setMuted(true); bus.setParent(audio.master); audio.sound(impact).play({ bus }); const analyser = audio.native.context.createAnalyser(); const detach = audio.native.connect(analyser); detach(); analyser.disconnect(); audio.stopAll({ tails: "cut" }); bus.dispose(); const seed: number = voice.seed; audio.sound(impact).play({ parameters: { intensity: 1 }, seed }); voice.stop(); }; void dynamic; console.log(validateRecipe(recipe)); void audio.dispose();\n',
   );
   const registry = JSON.parse(await readFile("registry.json", "utf8"));
-  const catalogGuide = await readFile("catalog/README.md", "utf8");
-  const rawSource = await readFile("apps/www/lib/raw-example.ts", "utf8");
   const registryOutput = join(consumer, "registry");
   if (!github) {
     // Use the CLI's own build format, with bytes from this checkout, never main.
-    run(process.execPath, [
-      shadcn,
+    run(shadcnCommand, [
+      ...shadcnArgs,
       "build",
       "registry.json",
       "--output",
@@ -178,7 +191,7 @@ try {
     ]);
   }
   console.log(
-    `[Actual shadcn installation] CLI ${cliVersion}; ${github ? "GitHub" : "local checkout"}; commit ${revision}; dirty=${dirtySource}; items: ${registry.items.map((item) => item.name).join(", ")}`,
+    `[Actual shadcn installation] CLI ${cliVersion} (${latest ? "latest" : "locked"}); ${github ? "GitHub" : "local checkout"}; commit ${revision}; dirty=${dirtySource}; items: ${registry.items.map((item) => item.name).join(", ")}`,
   );
   const catalogExamples = [];
   const manifestTypes = [];
@@ -196,7 +209,7 @@ try {
     }
     const guide =
       item.meta.classification === "recipe"
-        ? catalogGuide
+        ? ""
         : await readFile(
             join(
               directory,
@@ -212,19 +225,30 @@ try {
           `from "./sounds/${item.meta.classification === "recipe" ? "recipes" : "experiences"}/${item.name}/`,
         ),
     );
-    assert.equal(
-      matches.length,
-      1,
-      `${item.name}: one working installed-path example`,
-    );
+    if (item.meta.classification === "experience") {
+      assert.equal(
+        matches.length,
+        1,
+        `${item.name}: one working installed-path example`,
+      );
+    } else {
+      assert.ok(
+        item.name in sounds,
+        `${item.name}: missing website presentation and usage setup`,
+      );
+    }
+    const integration =
+      item.meta.classification === "recipe"
+        ? quickExample(item.name, parametersFor(sounds[item.name]), 42)
+        : experienceExample(item.name, guide);
     const exampleSource = join(directory, "src/integration.ts");
-    await writeFile(exampleSource, matches[0][1]);
+    await writeFile(exampleSource, integration);
     types.push(exampleSource);
     catalogExamples.push({
       name: `catalog-${item.name}`,
       file: item.name,
       index: 0,
-      code: matches[0][1],
+      code: integration,
       source: exampleSource,
       sustained: item.meta.requiredCapabilities.kinds.includes("sustained"),
     });
@@ -263,8 +287,8 @@ try {
       ? `${new URL(registry.homepage).pathname.slice(1)}/${item.name}#${requestedRevision}`
       : join(registryOutput, `${item.name}.json`);
     run(
-      process.execPath,
-      [shadcn, "add", address, "--yes", "--cwd", installedDirectory],
+      shadcnCommand,
+      [...shadcnArgs, "add", address, "--yes", "--cwd", installedDirectory],
       installedDirectory,
     );
     assert.equal(
@@ -326,18 +350,10 @@ try {
     const snippets = [
       {
         source: "website usage",
-        code:
-          item.meta.classification === "recipe"
-            ? quickExample(item.name, parametersFor(sounds[item.name]), 42)
-            : experienceExample(item.name, guide),
+        code: integration,
       },
-      { source: "catalog integration guide", code: matches[0][1] },
     ];
     if (item.meta.classification === "recipe") {
-      assert.ok(
-        item.name in sounds,
-        `${item.name}: missing website snippet generator`,
-      );
       for (const control of [0, 0.5, 1]) {
         for (const seed of [0, 42, 0xffffffff]) {
           snippets.push({
@@ -352,12 +368,6 @@ try {
             source: "libraryExample",
             code: libraryExample(sounds[item.name], control, seed),
           });
-          if (hasRawComparison(item.name)) {
-            snippets.push({
-              source: "rawHost",
-              code: `${rawSource}\n${rawHost(item.name, control, seed)}`,
-            });
-          }
         }
       }
     }
@@ -441,6 +451,12 @@ try {
     });
   }
   const documentation = [
+    "catalog/README.md",
+    ...registry.items.flatMap((item) =>
+      item.files
+        .filter((file) => file.path.endsWith(".md"))
+        .map((file) => file.path),
+    ),
     ...(await readdir("skills/audiobits", { recursive: true }).then((files) =>
       files
         .filter((file) => file.endsWith(".md"))
@@ -562,7 +578,7 @@ try {
     );
   }
   console.log(
-    `[Manifest/source validation] ${evidence.catalog.length} items: declared files, installed-path README types and runtime recipe validation passed (manifest copies).`,
+    `[Manifest/source validation] ${evidence.catalog.length} items: declared files, installed-path integration types and runtime recipe validation passed (manifest copies).`,
   );
   console.log(
     `[Actual shadcn installation] ${evidence.installation.items.length} items, ${evidence.installation.items.reduce((count, item) => count + item.files, 0)} files: paths, bytes and only audiobits dependency passed.`,
