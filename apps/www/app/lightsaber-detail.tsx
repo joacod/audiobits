@@ -15,7 +15,6 @@ const subscribeHydration = () => () => {};
 
 export function LightsaberDetail() {
   const surface = useRef<HTMLDivElement>(null);
-  const host = useRef<ReturnType<typeof mountLightsaber> | null>(null);
   const stage = useRef<ReturnType<typeof mountBladeStage3D> | null>(null);
   const [state, setState] = useState("stopped");
   const ready = useSyncExternalStore(
@@ -23,18 +22,19 @@ export function LightsaberDetail() {
     () => true,
     () => false,
   );
-  const [muted, setMuted] = useState(false);
-  const [hits, setHits] = useState(0);
   const [error, setError] = useState("");
   const [displayError, setDisplayError] = useState("");
   const reportError = useCallback((cause: unknown) => {
+    const message = cause instanceof Error ? cause.message : String(cause);
     setError(
-      `${cause instanceof Error ? cause.message : String(cause)}. Tap Ignite to retry.`,
+      message.includes("Retry Play")
+        ? "Audio did not start. Hold the stage again to retry."
+        : `${message}. Hold the stage again to retry.`,
     );
   }, []);
   const reportDisplayError = useCallback(() => {
     setDisplayError(
-      "The 3D display is unavailable. You can still use Ignite, Retract, Mute and Stop below. Reload the page to retry the display.",
+      "The 3D display is unavailable. Hold and move here to hear the blade. Release to retract. Reload to retry the display.",
     );
   }, []);
   useEffect(() => {
@@ -44,30 +44,15 @@ export function LightsaberDetail() {
         if (value === "starting") setError("");
         stage.current?.stateChanged();
       },
-      impact() {
-        setHits((value) => value + 1);
-      },
       error: reportError,
     });
-    host.current = current;
-    let display: ReturnType<typeof mountBladeStage3D> | undefined;
-    try {
-      if (surface.current)
-        display = mountBladeStage3D(
-          surface.current,
-          current,
-          reportDisplayError,
-        );
-      stage.current = display ?? null;
-    } catch {
-      if (surface.current) surface.current.dataset.renderer = "unavailable";
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      reportDisplayError();
-    }
+    const display = surface.current
+      ? mountBladeStage3D(surface.current, current, reportDisplayError)
+      : undefined;
+    stage.current = display ?? null;
     return () => {
       display?.dispose();
       stage.current = null;
-      host.current = null;
       void current.dispose().catch(console.error);
     };
   }, [reportError, reportDisplayError]);
@@ -80,7 +65,7 @@ export function LightsaberDetail() {
           role="group"
           aria-label="Lightsaber stage"
           aria-describedby="lightsaber-help"
-          tabIndex={ready && !displayError ? 0 : -1}
+          tabIndex={ready ? 0 : -1}
         />
         {displayError ? (
           <p className="lightsaber-display-error" role="alert">
@@ -93,65 +78,20 @@ export function LightsaberDetail() {
               ? "Hold to ignite"
               : state === "starting"
                 ? "Drawing the arc…"
-                : "Move. Cut through the field."}
+                : displayError
+                  ? "Move to swing. Release to retract."
+                  : "Move. Cut through the field."}
           </span>
           <span>Procedural audio · No samples</span>
         </div>
       </div>
-      <div className="lightsaber-controls catalog-experience-feedback">
-        <div className="lightsaber-actions">
-          <button
-            type="button"
-            disabled={!ready || state === "starting"}
-            onClick={() => {
-              if (state === "running") {
-                if (stage.current) stage.current.retract();
-                else host.current?.retract();
-              } else host.current?.ignite();
-            }}
-          >
-            {state === "running" ? "Retract" : "Ignite"}
-          </button>
-          <button
-            type="button"
-            disabled={state !== "running" || !!displayError}
-            onClick={() => stage.current?.strike()}
-          >
-            Strike target
-          </button>
-          <button
-            type="button"
-            disabled={!ready}
-            aria-pressed={muted}
-            onClick={() => {
-              host.current?.mute(!muted);
-              setMuted(!muted);
-            }}
-          >
-            {muted ? "Unmute" : "Mute"}
-          </button>
-          <button
-            type="button"
-            disabled={!ready}
-            onClick={() => {
-              stage.current?.reset();
-              host.current?.stop();
-            }}
-          >
-            Stop all
-          </button>
-        </div>
-        <div className="lightsaber-readout">
-          <p role="status">{`Blade: ${state}`}</p>
-          <p>
-            <span>Targets struck</span>{" "}
-            <output aria-label="Targets struck">{hits}</output>
-          </p>
-        </div>
+      <div className="lightsaber-help">
         <p id="lightsaber-help">
-          Hold the stage and drag to swing through the amber targets. Release to
-          retract. The Ignite button keeps the blade on until Retract. Keyboard:
-          Enter ignites, arrows move, Space strikes, Escape retracts.
+          {displayError
+            ? "Hold to ignite. Move to swing. Release to retract."
+            : "Hold to ignite. Drag through the amber targets. Release to retract. Targets return after a few seconds."}{" "}
+          Keyboard: Enter ignites, arrows move,{" "}
+          {displayError ? "" : "Space strikes, "}Escape retracts.
         </p>
         {error ? <p role="alert">{error}</p> : null}
       </div>

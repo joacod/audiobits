@@ -30,6 +30,7 @@
   color: var(--ink, #f2f2f2);
   background: var(--void, #050507);
   line-height: 1.65;
+  pointer-events: none;
 }
 .foundation .lightsaber-stage-caption {
   position: absolute;
@@ -44,44 +45,18 @@
 .foundation .lightsaber-stage-caption span:last-child {
   color: #a5a2b1;
 }
-.foundation .lightsaber-controls {
-  padding-block: 20px;
-}
-.foundation .lightsaber-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-.foundation .lightsaber-actions button {
-  min-height: 44px;
-}
-.foundation .lightsaber-actions button:first-child {
-  background: var(--ink, #f2f2f2);
-  color: var(--void, #050507);
-}
-.foundation .lightsaber-actions button:first-child:hover {
-  background: #d7c2fa;
-}
-.foundation .lightsaber-readout {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 8px 24px;
-  margin-top: 16px;
-}
-.foundation .lightsaber-readout p {
-  margin: 0;
-}
-.foundation .lightsaber-readout output {
-  color: var(--ink, #f2f2f2);
-  font-variant-numeric: tabular-nums;
-}
-.foundation .lightsaber-controls #lightsaber-help {
+.foundation .lightsaber-help {
+  padding-block: 16px;
   max-width: 72ch;
-  margin-top: 16px;
   color: #b9b6c7;
   font-size: 0.8125rem;
   line-height: 1.65;
+}
+.foundation .lightsaber-help p {
+  margin: 0;
+}
+.foundation .lightsaber-help [role="alert"] {
+  margin-top: 12px;
 }
 .foundation .catalog-experience-blade {
   min-height: 240px;

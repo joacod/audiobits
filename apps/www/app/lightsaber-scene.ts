@@ -17,6 +17,7 @@ interface BladeFrame {
   elapsed: number;
   reduced: boolean;
   targets: Point[];
+  destroyed: boolean[];
   flashes: number[];
   trails: { base: Point; tip: Point; life: number }[];
   particles: {
@@ -232,8 +233,7 @@ export function createBladeScene(
     platformRing.rotation.x = -Math.PI / 2;
     scene.add(platformRing);
     const targetGeometry = geometry(new THREE.IcosahedronGeometry(15, 1));
-    const ringGeometry = geometry(new THREE.TorusGeometry(21, 1.4, 8, 6));
-    const targets = Array.from({ length: 3 }, () => {
+    const targets = Array.from({ length: 2 }, () => {
       const group = new THREE.Group();
       const surface = material(
         new THREE.MeshStandardMaterial({
@@ -246,11 +246,9 @@ export function createBladeScene(
         }),
       );
       const body = new THREE.Mesh(targetGeometry, surface);
-      const ring = new THREE.Mesh(ringGeometry, brass);
-      ring.rotation.x = 0.35;
-      group.add(body, ring);
+      group.add(body);
       scene.add(group);
-      return { group, body, ring, surface };
+      return { group, body, surface };
     });
 
     // Fixed buffers bound allocations; only the coordinates change while swinging.
@@ -368,6 +366,7 @@ export function createBladeScene(
           .multiplyScalar(2.8);
         for (let i = 0; i < targets.length; i++) {
           const target = targets[i];
+          target.group.visible = !value.destroyed[i];
           place(target.group, value.targets[i]);
           target.surface.emissiveIntensity = 0.12 + value.flashes[i] * 3;
           target.group.scale.setScalar(
@@ -376,13 +375,14 @@ export function createBladeScene(
           if (!value.reduced) {
             target.body.rotation.set(
               value.elapsed / 4000,
-              value.elapsed / 3000 + i,
+              value.elapsed / 3000 + i * 2,
               0.2,
             );
-            target.ring.rotation.z =
-              (value.elapsed / 5000) * (i === 1 ? -1 : 1);
           }
         }
+        surface.dataset.targetsRemaining = String(
+          targets.filter((target) => target.group.visible).length,
+        );
         let count = 0;
         if (!value.reduced)
           for (let i = 1; i < value.trails.length; i++) {

@@ -59,8 +59,18 @@ because their human purposes differ.
 - Do not turn the site into a React Bits sampler or generic shadcn layout.
 - Use React Bits, audiocn, shadcn-style primitives, or other website-only tools
   selectively where they materially improve the experience.
-- Respect keyboard accessibility, visible focus, reduced motion, responsive
-  behavior, and audio controls.
+- Interactive AudioBits showcases prioritize direct mouse/touch interaction,
+  strong sound design, and immersive visuals. Do not introduce visible Play,
+  Start, Mute, Stop, or alternative-action panels by default when those actions
+  already work naturally through the stage. Only add visible controls that
+  materially improve the intended experience.
+- Existing unobtrusive keyboard shortcuts, meaningful error recovery, and proper
+  audio cleanup may remain. Do not create a second UI solely to duplicate every
+  pointer gesture or expand accessibility implementation and test scope beyond
+  the requested task.
+- Respect reduced motion and responsive behavior. Keep ordinary documentation,
+  forms, navigation, and installation controls functional and understandable,
+  including keyboard access and visible focus.
 - Use the [installed Impeccable skill](.agents/skills/impeccable/SKILL.md)
   for substantial visual/UX redesign work.
 - Do not load or invoke Impeccable for small bug fixes, copy changes, or
@@ -74,6 +84,12 @@ because their human purposes differ.
   landing composition tests in `landing.spec.ts`.
 - Visual-only changes: lint/typecheck/build plus focused visual inspection.
 - Changed website interaction: run the affected Chromium Playwright test(s).
+- Before pushing interactive showcase changes, search all browser tests for
+  references to removed controls or gestures and run the full Chromium suite
+  locally. Reproduce timing-sensitive graphics checks with software rendering
+  at the viewport used by the committed test. Keep renderer, native audio, and
+  lifecycle assertions intact; bound rendering work rather than increasing
+  timeouts or adding retries.
 - Do not run package release gates or compatibility suites for ordinary website
   work.
 

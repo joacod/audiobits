@@ -19,15 +19,17 @@ export function mountBladeStage3D(
   canvas.className = "lightsaber-renderer";
   canvas.setAttribute("aria-hidden", "true");
   surface.append(canvas);
-  let display: ReturnType<typeof createBladeScene>;
+  let display: ReturnType<typeof createBladeScene> | undefined;
+  let initialFailure: unknown;
   try {
     display = createBladeScene(canvas, surface);
   } catch (cause) {
     canvas.remove();
-    throw cause;
+    initialFailure = cause;
   }
   const events = new AbortController();
   const reduced = matchMedia("(prefers-reduced-motion: reduce)");
+  // A failed display retains input and audio motion, but has no visible targets.
   let failed = false;
   let width = 1,
     height = 1,
@@ -47,9 +49,9 @@ export function mountBladeStage3D(
   let analyser: AnalyserNode | undefined, detach: (() => void) | undefined;
   const samples = new Float32Array(256);
   let assistedTarget: number | null = null;
-  const flashes = [0, 0, 0];
-  const contacts = new Map<number, number>();
-  let contactClock = 0;
+  const flashes = [0, 0];
+  const destroyed = [false, false];
+  const respawnTimers = [0, 0];
   const trails: { base: Point; tip: Point; life: number }[] = [];
   const particles: {
     x: number;
@@ -74,11 +76,11 @@ export function mountBladeStage3D(
     };
   }
   function targets() {
-    return [0.24, 0.5, 0.76].map((x, index) => ({
+    return [0.24, 0.76].map((x, index) => ({
       x: x * width,
       y:
-        (index === 1 ? 0.27 : 0.37) * height +
-        (reduced.matches ? 0 : Math.sin(elapsed / 1400 + index * 2) * 7),
+        0.37 * height +
+        (reduced.matches ? 0 : Math.sin(elapsed / 1400 + index * 4) * 7),
     }));
   }
   function disconnect() {
@@ -99,8 +101,6 @@ export function mountBladeStage3D(
     collapsing = false;
     previous = 0;
     flashes.fill(0);
-    contacts.clear();
-    contactClock = 0;
     lastTip = lastBase = undefined;
     lastMotionTip = undefined;
     assistedTarget = null;
@@ -110,10 +110,10 @@ export function mountBladeStage3D(
   }
   function stateChanged() {
     surface.dataset.state = host.control.state;
-    if (failed || disposed) return;
-    if (host.control.state === "stopped") {
-      contacts.clear();
-      contactClock = 0;
+    if (disposed) return;
+    if (host.control.state === "starting") {
+      keyboardTarget = 0;
+      flashes.fill(0);
     }
     if (host.control.state === "stopped" && !collapsing) reset();
     if (host.control.state === "running" && !analyser) {
@@ -137,6 +137,13 @@ export function mountBladeStage3D(
   function burst(index: number, force: number) {
     hits++;
     surface.dataset.hits = String(hits);
+    destroyed[index] = true;
+    respawnTimers[index] = window.setTimeout(() => {
+      respawnTimers[index] = 0;
+      destroyed[index] = false;
+      flashes[index] = 0;
+      wake();
+    }, 3000);
     flashes[index] = 1;
     if (reduced.matches) return;
     const target = targets()[index];
@@ -155,10 +162,14 @@ export function mountBladeStage3D(
     }
     if (particles.length > 140) particles.splice(0, particles.length - 140);
   }
-  // Keyboard alternative strikes an actual visible target, with the same cooldown.
+  // Keyboard alternative strikes a remaining visible target.
   function strike() {
+    if (failed) return;
     if (host.control.state !== "running") return;
-    const index = keyboardTarget++ % 3;
+    let index = keyboardTarget % destroyed.length;
+    if (destroyed[index]) index = (index + 1) % destroyed.length;
+    if (destroyed[index]) return;
+    keyboardTarget = (index + 1) % destroyed.length;
     const target = targets()[index];
     const baseY = Math.min(
       height * 0.86,
@@ -180,7 +191,7 @@ export function mountBladeStage3D(
   }
   function draw(time: number) {
     frame = 0;
-    if (disposed || failed || document.hidden) return;
+    if (disposed || document.hidden) return;
     const dt = previous ? Math.max(0, Math.min(64, time - previous)) : 16;
     previous = time;
     elapsed += dt;
@@ -232,7 +243,6 @@ export function mountBladeStage3D(
       ? (Math.abs(dx) >= Math.abs(dy) ? dx : -dy) / travel
       : 0;
     const motion = host.control.update(motionLevel(speed), dt, direction);
-    if (active) contactClock += dt;
     surface.dataset.motion = motion.toFixed(3);
     lastMotionTip = motionTip;
     const length = fullLength * extension;
@@ -242,6 +252,7 @@ export function mountBladeStage3D(
     };
     const points = targets();
     if (
+      !failed &&
       active &&
       extension > 0.75 &&
       (motion > 0.12 || assistedTarget !== null) &&
@@ -262,6 +273,7 @@ export function mountBladeStage3D(
         ),
       );
       for (let index = 0; index < points.length; index++) {
+        if (destroyed[index]) continue;
         for (let step = 0; step <= steps; step++) {
           const t = step / steps;
           const a = {
@@ -277,11 +289,7 @@ export function mountBladeStage3D(
               assistedTarget === index
                 ? Math.max(0.85, motion)
                 : Math.max(0.3, motion);
-            if (
-              contactClock - (contacts.get(index) ?? -Infinity) >= 850 &&
-              host.clash(force, (index - 1) * 0.35)
-            ) {
-              contacts.set(index, contactClock);
+            if (host.clash(force, (index * 2 - 1) * 0.35)) {
               burst(index, force);
               if (assistedTarget === index) assistedTarget = null;
             }
@@ -313,7 +321,7 @@ export function mountBladeStage3D(
       p.y += (p.vy * dt) / 1000;
     }
     try {
-      display.render({
+      display?.render({
         base,
         tip,
         angle,
@@ -323,6 +331,7 @@ export function mountBladeStage3D(
         elapsed,
         reduced: reduced.matches,
         targets: points,
+        destroyed,
         flashes,
         trails,
         particles,
@@ -342,11 +351,10 @@ export function mountBladeStage3D(
   function fail(cause: unknown) {
     if (failed || disposed) return;
     failed = true;
+    respawnTimers.forEach(clearTimeout);
     reset();
-    events.abort();
-    observer.disconnect();
-    cancelAnimationFrame(frame);
-    display.dispose();
+    display?.dispose();
+    display = undefined;
     canvas.remove();
     surface.dataset.renderer = "unavailable";
     host.stop();
@@ -363,7 +371,7 @@ export function mountBladeStage3D(
     signal: events.signal,
   });
   function wake() {
-    if (!disposed && !failed && !document.hidden && !frame)
+    if (!disposed && !document.hidden && !frame)
       frame = requestAnimationFrame(draw);
   }
   function resize() {
@@ -375,7 +383,7 @@ export function mountBladeStage3D(
     position.x = bounded.x;
     position.y = bounded.y;
     try {
-      display.resize(width, height);
+      display?.resize(width, height);
     } catch (cause) {
       fail(cause);
     }
@@ -495,18 +503,20 @@ export function mountBladeStage3D(
   observer.observe(surface);
   surface.dataset.state = host.control.state;
   surface.dataset.hits = "0";
+  if (!display) fail(initialFailure);
   resize();
   function dispose() {
     if (disposed) return;
     releasePointer();
     disposed = true;
+    respawnTimers.forEach(clearTimeout);
     events.abort();
     observer.disconnect();
     cancelAnimationFrame(frame);
     disconnect();
     trails.length = particles.length = 0;
-    display.dispose();
+    display?.dispose();
     canvas.remove();
   }
-  return { wake, stateChanged, strike, retract, reset, dispose };
+  return { stateChanged, dispose };
 }

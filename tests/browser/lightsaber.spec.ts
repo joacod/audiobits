@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { resolve } from "node:path";
 import { build } from "esbuild";
 import { instrument, probe } from "./experience-probe";
@@ -7,15 +7,35 @@ import { requireOfflineCheckpoints } from "./offline-capabilities";
 const stage = (page: import("@playwright/test").Page) =>
   page.getByRole("group", { name: "Lightsaber stage", exact: true });
 
+async function holdStage(page: Page) {
+  const pad = stage(page);
+  await expect(pad).toHaveAttribute("data-state", "stopped");
+  await pad.scrollIntoViewIfNeeded();
+  const box = (await pad.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height * 0.8);
+  await page.mouse.down();
+  return box;
+}
+
 test("held pointer ignition, swept target hits, release retraction and teardown", async ({
   page,
 }) => {
+  // Bound software WebGL's pixel cost while retaining the full gesture and
+  // timed collision contract. Desktop graphics coverage remains below.
+  await page.setViewportSize({ width: 390, height: 844 });
   const errors: string[] = [];
   page.on("pageerror", (cause) => errors.push(cause.message));
+  await page.clock.install({ time: new Date("2026-01-01T00:00:00Z") });
   await instrument(page, "normal", "lightsaber");
+  await expect(stage(page)).toHaveAttribute("data-state", "stopped");
   await expect(
-    page.getByRole("button", { name: "Ignite", exact: true }),
-  ).toBeEnabled();
+    page.locator(".lightsaber-stage, .lightsaber-help").getByRole("button"),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("button", {
+      name: /^(Ignite|Retract|Strike target|Mute|Unmute|Stop all)$/,
+    }),
+  ).toHaveCount(0);
   expect((await probe(page)).contexts).toEqual([]);
   const pad = stage(page);
   await expect(pad).toHaveAttribute("data-renderer", "three");
@@ -60,14 +80,43 @@ test("held pointer ignition, swept target hits, release retraction and teardown"
   await expect
     .poll(async () => Number(await pad.getAttribute("data-peak")))
     .toBeGreaterThan(0);
+  // Keep rendering/input latency from spending the balls' respawn interval.
+  // Native activation and signal above use a running clock; only these timed
+  // collision phases advance deliberately, with actual pointer input intact.
+  await page.clock.pauseAt(new Date("2026-01-01T00:01:00Z"));
   await move(box.x + box.width * 0.2, box.y + box.height * 0.7, 8);
+  await page.clock.runFor(160);
   await expect
     .poll(async () => Number(await pad.getAttribute("data-motion")))
     .toBeGreaterThan(0.1);
+  await expect(pad).toHaveAttribute("data-hits", "1");
+  await expect(pad).toHaveAttribute("data-targets-remaining", "1");
   await move(box.x + box.width * 0.8, box.y + box.height * 0.7, 8);
+  await page.clock.runFor(160);
+  await expect(pad).toHaveAttribute("data-hits", "2");
+  await expect(pad).toHaveAttribute("data-targets-remaining", "0");
+  // Sweeping back over destroyed targets creates no further impacts.
+  await move(box.x + box.width * 0.2, box.y + box.height * 0.7, 8);
+  await page.clock.runFor(160);
+  await expect
+    .poll(async () => Number(await pad.getAttribute("data-motion")))
+    .toBeGreaterThan(0.1);
+  await expect(pad).toHaveAttribute("data-hits", "2");
+  // Let the smoothing settle while both balls are still destroyed.
+  await page.clock.runFor(800);
+  await expect(pad).toHaveAttribute("data-motion", "0.000");
+  await expect(pad).toHaveAttribute("data-targets-remaining", "0");
+  // Advance beyond the respawn deadline while the pointer remains held.
+  await page.clock.fastForward(3000);
+  await page.clock.runFor(16);
+  await expect(pad).toHaveAttribute("data-targets-remaining", "2");
+  await expect(pad).toHaveAttribute("data-hits", "2");
+  await move(box.x + box.width * 0.8, box.y + box.height * 0.7, 8);
+  await page.clock.runFor(160);
   await expect
     .poll(async () => Number(await pad.getAttribute("data-hits")))
-    .toBeGreaterThan(0);
+    .toBeGreaterThan(2);
+  await page.clock.resume();
   await press(false);
   await expect(pad).toHaveAttribute("data-state", "stopped");
   await expect(pad).toHaveAttribute("data-extension", "0.000");
@@ -80,10 +129,13 @@ test("held pointer ignition, swept target hits, release retraction and teardown"
   await move(box.x + box.width * 0.4, box.y + box.height * 0.6);
   await expect(pad).toHaveAttribute("data-state", "stopped");
   await expect(pad).toHaveAttribute("data-extension", "0.000");
+  await holdStage(page);
+  await expect(pad).toHaveAttribute("data-state", "running");
   await page
     .getByRole("navigation", { name: "Main navigation" })
     .getByRole("link", { name: "Catalog", exact: true })
-    .click();
+    .evaluate((link: HTMLAnchorElement) => link.click());
+  await page.mouse.up();
   await expect
     .poll(async () => (await probe(page)).contexts)
     .toEqual(["closed"]);
@@ -91,39 +143,54 @@ test("held pointer ignition, swept target hits, release retraction and teardown"
   expect(errors).toEqual([]);
 });
 
-test("button ignition, mute, unmute and retraction", async ({ page }) => {
-  await instrument(page, "normal", "lightsaber");
-  const pad = stage(page);
-  await page.getByRole("button", { name: "Ignite", exact: true }).click();
-  await expect(pad).toHaveAttribute("data-state", "running");
-  await expect
-    .poll(async () => Number(await pad.getAttribute("data-peak")))
-    .toBeGreaterThan(0);
-  await page.getByRole("button", { name: "Mute", exact: true }).click();
-  await expect
-    .poll(async () => Number(await pad.getAttribute("data-peak")))
-    .toBe(0);
-  await page.getByRole("button", { name: "Unmute", exact: true }).click();
-  await expect
-    .poll(async () => Number(await pad.getAttribute("data-peak")))
-    .toBeGreaterThan(0);
-  await page.getByRole("button", { name: "Retract", exact: true }).click();
-  await expect(pad).toHaveAttribute("data-state", "stopped");
-  await expect(pad).toHaveAttribute("data-extension", "0.000");
-  await expect
-    .poll(async () => {
-      const p = await probe(page);
-      return p.sources === p.ended;
-    })
-    .toBe(true);
-  await page.evaluate(() => window.dispatchEvent(new Event("pagehide")));
-  await expect
-    .poll(async () => (await probe(page)).contexts)
-    .toEqual(["closed"]);
-  expect((await probe(page)).connected).toBe(0);
-});
+for (const cancellation of ["capture", "blur"] as const)
+  test(`${cancellation} cancellation stops a held blade and permits another gesture`, async ({
+    page,
+  }) => {
+    await instrument(page, "normal", "lightsaber");
+    const pad = stage(page);
+    await holdStage(page);
+    await expect(pad).toHaveAttribute("data-state", "running");
+    await expect
+      .poll(async () => Number(await pad.getAttribute("data-peak")))
+      .toBeGreaterThan(0);
+    if (cancellation === "capture") {
+      await pad.evaluate((surface) => {
+        surface.addEventListener(
+          "pointermove",
+          (event) => {
+            surface.releasePointerCapture(event.pointerId);
+          },
+          { once: true },
+        );
+      });
+      const box = (await pad.boundingBox())!;
+      await page.mouse.move(box.x + box.width * 0.4, box.y + box.height * 0.8);
+      // Native capture changes are applied before the next pointer event.
+      await page.mouse.move(box.x + box.width * 0.3, box.y + box.height * 0.8);
+    } else {
+      await page.evaluate(() => window.dispatchEvent(new Event("blur")));
+    }
+    await expect(pad).toHaveAttribute("data-state", "stopped");
+    await expect(pad).toHaveAttribute("data-extension", "0.000");
+    await page.mouse.up();
+    await expect
+      .poll(async () => {
+        const p = await probe(page);
+        return p.sources === p.ended;
+      })
+      .toBe(true);
+    await holdStage(page);
+    await expect(pad).toHaveAttribute("data-state", "running");
+    await page.evaluate(() => window.dispatchEvent(new Event("pagehide")));
+    await page.mouse.up();
+    await expect
+      .poll(async () => (await probe(page)).contexts)
+      .toEqual(["closed"]);
+    expect((await probe(page)).connected).toBe(0);
+  });
 
-test("repeated ignition and Stop bound voices and dispose on navigation", async ({
+test("repeated holds and releases bound voices and dispose on navigation", async ({
   page,
 }) => {
   // Bound software WebGL's pixel cost in this voice stress test.
@@ -134,12 +201,19 @@ test("repeated ignition and Stop bound voices and dispose on navigation", async 
   const pad = stage(page);
   await expect(pad).toHaveAttribute("data-renderer", "three");
   for (let i = 0; i < 5; i++) {
-    await page.getByRole("button", { name: "Ignite", exact: true }).click();
+    await holdStage(page);
     await expect(pad).toHaveAttribute("data-state", "running");
     const current = await probe(page);
     expect(current.sources - current.ended).toBeLessThanOrEqual(26);
-    await page.getByRole("button", { name: "Stop all", exact: true }).click();
+    await page.mouse.up();
     await expect(pad).toHaveAttribute("data-state", "stopped");
+    // Release plays a retraction tail; measure the next ignition after it ends.
+    await expect
+      .poll(async () => {
+        const p = await probe(page);
+        return p.sources === p.ended;
+      })
+      .toBe(true);
   }
   await expect
     .poll(async () => {
@@ -165,9 +239,7 @@ for (const mode of ["held", "failed"] as const)
     if (mode === "held") await trackBladeGraphics(page);
     await instrument(page, mode, "lightsaber");
     const pad = stage(page);
-    await expect(
-      page.getByRole("button", { name: "Ignite", exact: true }),
-    ).toBeEnabled();
+    await expect(stage(page)).toHaveAttribute("data-state", "stopped");
     if (mode === "held") {
       await pad.scrollIntoViewIfNeeded();
       const box = (await pad.boundingBox())!;
@@ -207,17 +279,16 @@ for (const mode of ["held", "failed"] as const)
       await expect(pad).toHaveAttribute("data-state", "stopped");
       await expect(pad).toHaveAttribute("data-extension", "0.000");
     } else {
-      await page.getByRole("button", { name: "Ignite", exact: true }).click();
-      await expect(
-        page.locator(".lightsaber-controls [role=alert]"),
-      ).toContainText("Tap Ignite to retry");
+      await holdStage(page);
+      await expect(page.locator(".lightsaber-help [role=alert]")).toContainText(
+        "Hold the stage again to retry",
+      );
+      await page.mouse.up();
     }
     expect((await probe(page)).sources).toBe(0);
-    await page.getByRole("button", { name: "Ignite", exact: true }).click();
+    await holdStage(page);
     await expect(pad).toHaveAttribute("data-state", "running");
-    await expect(page.locator(".lightsaber-controls [role=alert]")).toHaveCount(
-      0,
-    );
+    await expect(page.locator(".lightsaber-help [role=alert]")).toHaveCount(0);
     await page.evaluate(() => {
       Object.defineProperty(document, "hidden", {
         value: true,
@@ -229,6 +300,7 @@ for (const mode of ["held", "failed"] as const)
     await expect
       .poll(async () => (await probe(page)).contexts)
       .toEqual(["suspended"]);
+    await page.mouse.up();
     await page.evaluate(() => {
       Object.defineProperty(document, "hidden", {
         value: false,
@@ -250,9 +322,7 @@ test("keyboard alternatives, touch release and cancellation, reduced motion, sou
   await page.setViewportSize({ width: 390, height: 844 });
   await page.emulateMedia({ reducedMotion: "reduce" });
   await instrument(page, "normal", "lightsaber");
-  await expect(
-    page.getByRole("button", { name: "Ignite", exact: true }),
-  ).toBeEnabled();
+  await expect(stage(page)).toHaveAttribute("data-state", "stopped");
   const pad = stage(page);
   await pad.focus();
   await page.keyboard.press("Enter");
@@ -295,6 +365,8 @@ test("keyboard alternatives, touch release and cancellation, reduced motion, sou
     touchPoints: [{ x: box.x + box.width / 2, y: box.y + box.height * 0.8 }],
   });
   await expect(pad).toHaveAttribute("data-state", "running");
+  await expect(pad).toHaveAttribute("data-extension", "1.000");
+  const priorHits = Number(await pad.getAttribute("data-hits"));
   await touch.send("Input.dispatchTouchEvent", {
     type: "touchMove",
     touchPoints: [{ x: box.x + box.width * 0.2, y: box.y + box.height * 0.7 }],
@@ -302,6 +374,13 @@ test("keyboard alternatives, touch release and cancellation, reduced motion, sou
   await expect
     .poll(async () => Number(await pad.getAttribute("data-motion")))
     .toBeGreaterThan(0);
+  await touch.send("Input.dispatchTouchEvent", {
+    type: "touchMove",
+    touchPoints: [{ x: box.x + box.width * 0.8, y: box.y + box.height * 0.7 }],
+  });
+  await expect
+    .poll(async () => Number(await pad.getAttribute("data-hits")))
+    .toBeGreaterThan(priorHits);
   await touch.send("Input.dispatchTouchEvent", {
     type: "touchEnd",
     touchPoints: [],
@@ -575,10 +654,10 @@ test("development Strict Mode replays effects with a fresh graphics canvas", asy
       ].map((canvas) => canvas.getContext("webgl2")!.isContextLost()),
     ),
   ).toEqual([true, false]);
-  await page.getByRole("button", { name: "Ignite", exact: true }).click();
+  await holdStage(page);
   await expect(pad).toHaveAttribute("data-state", "running");
   await expect(pad).toHaveAttribute("data-extension", "1.000");
-  await page.getByRole("button", { name: "Stop all", exact: true }).click();
+  await page.mouse.up();
   await page.evaluate(() =>
     (globalThis as unknown as { unmountBlade(): void }).unmountBlade(),
   );
@@ -591,9 +670,7 @@ test("3D blade graphics release on navigation and remain static at rest", async 
 }) => {
   await trackBladeGraphics(page);
   await instrument(page, "normal", "lightsaber");
-  await expect(
-    page.getByRole("button", { name: "Ignite", exact: true }),
-  ).toBeEnabled();
+  await expect(stage(page)).toHaveAttribute("data-state", "stopped");
   const pad = stage(page);
   await expect(pad).toHaveAttribute("data-renderer", "three");
   expect(await bladeResourceCount(page)).toBeGreaterThan(0);
@@ -606,6 +683,8 @@ test("3D blade graphics release on navigation and remain static at rest", async 
     .toBeGreaterThan(0);
   await page.keyboard.press("Escape");
   await expect(pad).toHaveAttribute("data-extension", "0.000");
+  // Respawning at rest wakes one render, then the stage becomes static again.
+  await expect(pad).toHaveAttribute("data-targets-remaining", "2");
   const restingDraws = await page.evaluate(async () => {
     await new Promise<void>((resolve) =>
       requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
@@ -631,18 +710,16 @@ test("3D blade graphics release on navigation and remain static at rest", async 
 });
 
 for (const failure of ["context", "shader", "lost"] as const)
-  test(`3D blade ${failure} failure preserves audio controls and frees graphics`, async ({
+  test(`3D blade ${failure} failure preserves stage audio gestures and frees graphics`, async ({
     page,
   }) => {
     await trackBladeGraphics(page, failure === "lost" ? undefined : failure);
     await instrument(page, "normal", "lightsaber");
-    await expect(
-      page.getByRole("button", { name: "Ignite", exact: true }),
-    ).toBeEnabled();
+    await expect(stage(page)).toHaveAttribute("data-state", "stopped");
     const pad = stage(page);
     if (failure === "lost") {
       await expect(pad).toHaveAttribute("data-renderer", "three");
-      await page.getByRole("button", { name: "Ignite", exact: true }).click();
+      await holdStage(page);
       await expect(pad).toHaveAttribute("data-state", "running");
       await pad.evaluate((canvas) => {
         canvas
@@ -652,30 +729,35 @@ for (const failure of ["context", "shader", "lost"] as const)
           .loseContext();
       });
       await expect(pad).toHaveAttribute("data-state", "stopped");
+      await page.mouse.up();
     }
     await expect(pad).toHaveAttribute("data-renderer", "unavailable");
     await expect(page.locator(".lightsaber-display-error")).toContainText(
       "3D display is unavailable",
     );
     await expect.poll(() => bladeResourceCount(page)).toBe(0);
-    await page.getByRole("button", { name: "Ignite", exact: true }).click();
-    await expect(
-      page
-        .getByRole("status", { name: "", exact: true })
-        .filter({ hasText: "Blade:" }),
-    ).toHaveText("Blade: running");
-    await expect(
-      page.getByRole("button", { name: "Strike target", exact: true }),
-    ).toBeDisabled();
-    await page.getByRole("button", { name: "Mute", exact: true }).click();
-    await expect(
-      page.getByRole("button", { name: "Unmute", exact: true }),
-    ).toHaveAttribute("aria-pressed", "true");
-    await page.getByRole("button", { name: "Stop all", exact: true }).click();
+    const box = await holdStage(page);
+    await expect(pad).toHaveAttribute("data-state", "running");
+    await expect
+      .poll(async () => Number(await pad.getAttribute("data-peak")))
+      .toBeGreaterThan(0);
+    await page.mouse.move(box.x + box.width * 0.2, box.y + box.height * 0.7);
+    await expect
+      .poll(async () => Number(await pad.getAttribute("data-motion")))
+      .toBeGreaterThan(0.1);
+    await expect(pad).toHaveAttribute("data-hits", "0");
+    await page.mouse.up();
+    await expect(pad).toHaveAttribute("data-state", "stopped");
     await expect
       .poll(async () => {
         const p = await probe(page);
         return p.sources === p.ended;
       })
       .toBe(true);
+    await page.evaluate(() => window.dispatchEvent(new Event("pagehide")));
+    await expect
+      .poll(async () => (await probe(page)).contexts)
+      .toEqual(["closed"]);
+    expect((await probe(page)).connected).toBe(0);
+    expect(await bladeResourceCount(page)).toBe(0);
   });
