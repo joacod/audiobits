@@ -49,7 +49,7 @@ export function mountBladeStage3D(
   let analyser: AnalyserNode | undefined, detach: (() => void) | undefined;
   const samples = new Float32Array(256);
   let assistedTarget: number | null = null;
-  const flashes = [0, 0, 0];
+  const flashes = [0, 0];
   const contacts = new Map<number, number>();
   let contactClock = 0;
   const trails: { base: Point; tip: Point; life: number }[] = [];
@@ -76,11 +76,11 @@ export function mountBladeStage3D(
     };
   }
   function targets() {
-    return [0.24, 0.5, 0.76].map((x, index) => ({
+    return [0.24, 0.76].map((x, index) => ({
       x: x * width,
       y:
-        (index === 1 ? 0.27 : 0.37) * height +
-        (reduced.matches ? 0 : Math.sin(elapsed / 1400 + index * 2) * 7),
+        0.37 * height +
+        (reduced.matches ? 0 : Math.sin(elapsed / 1400 + index * 4) * 7),
     }));
   }
   function disconnect() {
@@ -161,7 +161,7 @@ export function mountBladeStage3D(
   function strike() {
     if (failed) return;
     if (host.control.state !== "running") return;
-    const index = keyboardTarget++ % 3;
+    const index = keyboardTarget++ % flashes.length;
     const target = targets()[index];
     const baseY = Math.min(
       height * 0.86,
@@ -283,7 +283,7 @@ export function mountBladeStage3D(
                 : Math.max(0.3, motion);
             if (
               contactClock - (contacts.get(index) ?? -Infinity) >= 850 &&
-              host.clash(force, (index - 1) * 0.35)
+              host.clash(force, (index * 2 - 1) * 0.35)
             ) {
               contacts.set(index, contactClock);
               burst(index, force);
