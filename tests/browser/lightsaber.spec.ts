@@ -22,6 +22,7 @@ test("held pointer ignition, swept target hits, release retraction and teardown"
 }) => {
   const errors: string[] = [];
   page.on("pageerror", (cause) => errors.push(cause.message));
+  await page.clock.install({ time: new Date("2026-01-01T00:00:00Z") });
   await instrument(page, "normal", "lightsaber");
   await expect(stage(page)).toHaveAttribute("data-state", "stopped");
   await expect(
@@ -76,29 +77,43 @@ test("held pointer ignition, swept target hits, release retraction and teardown"
   await expect
     .poll(async () => Number(await pad.getAttribute("data-peak")))
     .toBeGreaterThan(0);
+  // Keep rendering/input latency from spending the balls' respawn interval.
+  // Native activation and signal above use a running clock; only these timed
+  // collision phases advance deliberately, with actual pointer input intact.
+  await page.clock.pauseAt(new Date("2026-01-01T00:01:00Z"));
   await move(box.x + box.width * 0.2, box.y + box.height * 0.7, 8);
+  await page.clock.runFor(160);
   await expect
     .poll(async () => Number(await pad.getAttribute("data-motion")))
     .toBeGreaterThan(0.1);
   await expect(pad).toHaveAttribute("data-hits", "1");
   await expect(pad).toHaveAttribute("data-targets-remaining", "1");
   await move(box.x + box.width * 0.8, box.y + box.height * 0.7, 8);
+  await page.clock.runFor(160);
   await expect(pad).toHaveAttribute("data-hits", "2");
   await expect(pad).toHaveAttribute("data-targets-remaining", "0");
   // Sweeping back over destroyed targets creates no further impacts.
   await move(box.x + box.width * 0.2, box.y + box.height * 0.7, 8);
+  await page.clock.runFor(160);
   await expect
     .poll(async () => Number(await pad.getAttribute("data-motion")))
     .toBeGreaterThan(0.1);
   await expect(pad).toHaveAttribute("data-hits", "2");
-  // Remaining held at rest lets both balls return without a new gesture.
+  // Let the smoothing settle while both balls are still destroyed.
+  await page.clock.runFor(800);
   await expect(pad).toHaveAttribute("data-motion", "0.000");
+  await expect(pad).toHaveAttribute("data-targets-remaining", "0");
+  // Advance beyond the respawn deadline while the pointer remains held.
+  await page.clock.fastForward(3000);
+  await page.clock.runFor(16);
   await expect(pad).toHaveAttribute("data-targets-remaining", "2");
   await expect(pad).toHaveAttribute("data-hits", "2");
   await move(box.x + box.width * 0.8, box.y + box.height * 0.7, 8);
+  await page.clock.runFor(160);
   await expect
     .poll(async () => Number(await pad.getAttribute("data-hits")))
     .toBeGreaterThan(2);
+  await page.clock.resume();
   await press(false);
   await expect(pad).toHaveAttribute("data-state", "stopped");
   await expect(pad).toHaveAttribute("data-extension", "0.000");
