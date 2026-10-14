@@ -1,6 +1,7 @@
 import registry from "../../../registry.json" with { type: "json" };
 import {
   energyChargeExperience,
+  echoProbeExperience,
   lightsaberExperience,
   reactiveThrusterExperience,
 } from "./experiences";
@@ -20,7 +21,7 @@ type CatalogEntryBase = {
 export type ExperienceCatalogEntry = CatalogEntryBase & {
   category: "experience";
   controls: readonly string[];
-  preview: { family: "charge" | "thruster" | "blade" };
+  preview: { family: "charge" | "thruster" | "blade" | "pulse" };
   source: { files: readonly string[] };
 };
 
@@ -48,6 +49,7 @@ const experienceEntries = [
     preview: "charge",
     experience: energyChargeExperience,
   },
+  { slug: "echo-probe", preview: "pulse", experience: echoProbeExperience },
 ] as const;
 
 export const catalogGroups = [

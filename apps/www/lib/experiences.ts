@@ -1,6 +1,16 @@
 import { registryItem } from "./registry";
 
 export const experienceSourcePurpose = {
+  "echo-probe": {
+    "recipe.ts":
+      "Emission, surface-colored reflection, and finite diffuse energy as schema-1 data.",
+    "controller.ts":
+      "Audio-clock scheduling, bounded application reflections, seeded emissions, and owned cancellation.",
+    "host.ts":
+      "Gesture activation, retry, interruption, hide, blur, Stop, and disposal.",
+    "index.html":
+      "Minimal acoustic bench for emission, distance, surface, intensity, and stereo comparisons.",
+  },
   lightsaber: {
     "recipe.ts":
       "Five original schema-1 recipes: hum, ignition, swing, clash, and retraction.",
@@ -77,3 +87,11 @@ export function experienceDemoSourceFiles(
     path: `catalog/experiences/${id}/${name}`,
   }));
 }
+
+export const echoProbeExperience = {
+  title: registryItem("echo-probe").title,
+  href: "/catalog/echo-probe",
+  description: registryItem("echo-probe").description,
+  controls: ["Emit", "Distance", "Direction", "Surface"],
+  sourceFiles: experienceDemoSourceFiles("echo-probe").map((file) => file.name),
+} as const;
