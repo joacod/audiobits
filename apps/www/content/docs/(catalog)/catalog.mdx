@@ -1,19 +1,21 @@
 ---
 title: Catalog and editable source
-description: Install recipes and interactive experiences through shadcn, then customize source you own.
+description: Install portable recipes and sound controllers through shadcn, then connect your application inputs.
 ---
 
 The [catalog](/catalog) lets you hear sounds, adjust their controls, and inspect
 their source. The [GitHub source registry](https://github.com/joacod/audiobits/blob/main/registry.json)
 distributes that source into your application. `audiobits` supplies the runtime;
-the installed files supply the sound and, for an experience, its interaction.
+the installed files supply sound behavior. Your application supplies events,
+state and presentation.
 
 ## Recipes and experiences
 
 A **recipe** is serializable, versioned sound data: sources, envelopes, filters,
 variation, and parameter mappings. It contains no UI or application state.
 Use a recipe for a button sound, notification, impact, or a sustained sound
-controlled by your own host. See the [recipe reference](/docs/recipes).
+controlled by your own host. Simple sounds need no controller, including a
+sustained recipe driven directly by `voice.set()`. See the [recipe reference](/docs/recipes).
 
 An **experience** installs sound recipes, a reusable sound controller, and an
 integration guide. Try [Energy Charge](/catalog/energy-charge) for
@@ -48,7 +50,7 @@ Install the recipe you inspected:
 npx shadcn@latest add joacod/audiobits/confirmation
 ```
 
-For a complete experience, choose one of these items instead:
+For coordinated interactive sound, choose one of these controllers instead:
 
 ```sh
 npx shadcn@latest add joacod/audiobits/energy-charge
@@ -88,8 +90,8 @@ The items use explicit project-relative file targets. Normal installation needs
 no React, Tailwind, Next.js, or `components.json`. The source is TypeScript using
 public AudioBits exports and bundler module resolution, not precompiled JavaScript.
 
-This tree shows the registry targets for Confirmation and all three experiences.
-Only the selected item's files are installed. All eight recipe items install
+This tree shows the registry targets for Confirmation and the interactive sounds.
+Only the selected item's files are installed. Recipe items install
 just their recipe. Experience installs exclude demo hosts and UI.
 
 <Files>
@@ -154,27 +156,39 @@ For an experience, use the included README's example from `src/integration.ts`.
 Keep installed relative imports intact. Controllers accept an application-owned
 engine and dispose only their own sounds and subscriptions. The application
 owns gesture activation, input/state mapping, suspension, and engine disposal.
+Supply finite normalized inputs: progress, throttle, movement and strike strength
+in `[0, 1]`, with Lightsaber direction in `[-1, 1]` and elapsed time in milliseconds.
 Reactive Thruster takes throttle directly and does not require Impact;
 Lightsaber takes movement and collision events without a visual stage.
+Pointer handling, frame scheduling, canvas and 3D belong to your application.
 
-[Working examples for all eleven items](https://github.com/joacod/audiobits/blob/main/catalog/README.md#application-integration)
+[Working consumer examples](https://github.com/joacod/audiobits/blob/main/catalog/README.md#application-integration)
 use the actual installed paths. Complete demonstrations and their visual/input
 adapters remain in the repository and on the public showcases. For a repository
 demo, see the
 [standalone setup](https://github.com/joacod/audiobits/blob/main/catalog/README.md#optional-standalone-demo).
 
-## Workbench editor
+## Adopt the sound you heard
 
-Each catalog workbench (`/catalog/[slug]`) accepts at most 32 KiB of JSON and shows the first ten validation
-issues. Apply explicitly; invalid input preserves the last valid playable
-sound. Applying a valid definition stops current playback and disposes the old
-sound. Play again to hear the new definition.
+Use the showcase's install action to add the selected item, then Copy usage to
+connect installed source to your existing controls. Recipe usage includes the
+current accepted definition, parameter values and seed; an edited recipe is
+embedded inline so the copied code plays that edit. Experience usage follows
+the installed controller guide. The installation command always installs the
+catalog source, so local edits must be copied or applied separately.
 
-Keep the sound's playback kind and its primary parameter's range, default, and
-mode. Additional parameters use their declared defaults. Restore and Reset return to the
-catalog recipe, seed 42, and primary control defaults.
-Raw comparisons apply only to catalog definitions. Edited recipes still have a
-copyable AudioBits example containing the entire accepted JSON.
+### Workbench editor
+
+Recipe workbenches expose JSON editing in the collapsed Recipe section. They
+accept at most 32 KiB of JSON and show the first ten validation issues. Apply explicitly;
+invalid input preserves the last valid playable sound. Applying valid data stops
+playback and disposes the old sound. Play again to hear the accepted definition.
+
+Keep the playback kind and primary parameter's range, default and mode.
+Additional parameters use their declared defaults. Restore returns the recipe,
+controls and seed to catalog defaults; Reset variation changes only the seed.
+Raw comparisons, where available under the usage example, apply to catalog
+definitions.
 
 ## Customize and verify
 

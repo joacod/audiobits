@@ -1,6 +1,6 @@
 # Recipe source you own
 
-The eight sound definitions in this directory are canonical creative source.
+The sound definitions in this directory are canonical creative source.
 Each `recipe.ts` imports only public `audiobits` functions and types. Install
 individual items through the [source registry](../README.md), or copy a file.
 No catalog package is required.
@@ -20,7 +20,7 @@ at control minima, defaults and maxima.
 `registry.json` at the repository root records stable item IDs, export names,
 discovery metadata, required capabilities and complete file manifests.
 Keep metadata and manifests accurate when editing source. `pnpm test:package`
-copies all eleven registry items into separate installed source trees, typechecks
-every TypeScript file and documented integration against the packed public
+installs every registry item with shadcn into separate consumer source trees,
+typechecks every TypeScript file and documented integration against the packed public
 runtime, validates the recipes, and exercises all installed examples plus the
 three repository demonstrations in Chromium.

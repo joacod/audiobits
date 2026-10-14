@@ -42,7 +42,7 @@ authoritative instructions and references live in
 
 Open your application project with the chosen agent and ask it to use the
 AudioBits Skill. [Choose the depth](#choose-the-depth) below for an example
-prompt, from a button sound to a complete interactive experience.
+prompt, from a button sound to a coordinated interactive sound.
 
 </Step>
 </Steps>
@@ -74,7 +74,7 @@ supported primitives, and validate serializable recipe data before playback.
 > my installed runtime's capabilities, validate the recipe and control extrema,
 > and integrate it with my existing sound host.
 
-**Interactive experience:** Describe how application input should shape sound,
+**Interactive sound:** Describe how application input should shape sound,
 then choose useful catalog source or an original recipe. Keep input and UI state
 outside the recipe and preserve the application's entrypoint and lifecycle.
 
@@ -83,9 +83,10 @@ outside the recipe and preserve the application's entrypoint and lifecycle.
 > my application supply progress in either direction, reuse my audio engine, and
 > handle release, cancellation, hide, and teardown. Keep my existing UI.
 
-Try [Energy Charge](/catalog/energy-charge) and
-[Reactive Thruster](/catalog/reactive-thruster) to explore the difference between
-sound data, input controllers, and complete hosts.
+Try [Energy Charge](/catalog/energy-charge),
+[Reactive Thruster](/catalog/reactive-thruster), and [Lightsaber](/catalog/lightsaber)
+to hear what sound controllers can do. Installed controllers accept application
+state and events; they contain no showcase rendering or pointer adapters.
 
 ## What to expect from the agent
 
@@ -93,6 +94,10 @@ The agent should inspect your installed `audiobits` exports, declarations,
 `audiobits/schema.json`, and `audiobits/capabilities.json`. These define your
 runtime's contract; the website and Skill may describe a newer version. An
 existing installation should not be upgraded incidentally.
+
+The agent should find a relevant recipe or sound controller, install or copy
+only the needed source, and connect your existing application events and state.
+It should preserve your controls and avoid importing a visual demo.
 
 Recipes stay JSON-only. The agent validates generated or external data with
 `validateRecipe`, connects only the controls you need, and keeps engine ownership

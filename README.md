@@ -82,12 +82,12 @@ recipe data.
 
 ### Interactive examples
 
-[Energy Charge](https://www.audiobits.dev/catalog/energy-charge) and
-[Reactive Thruster](https://www.audiobits.dev/catalog/reactive-thruster) show
-sound responding continuously to application state and user input. Copy their
-independent source code from the repository-root
-[`catalog/`](https://github.com/joacod/audiobits/tree/main/catalog) into your app
-and use AudioBits as the runtime.
+[Energy Charge](https://www.audiobits.dev/catalog/energy-charge),
+[Reactive Thruster](https://www.audiobits.dev/catalog/reactive-thruster), and
+[Lightsaber](https://www.audiobits.dev/catalog/lightsaber) demonstrate sound driven
+by application state and events. Install their reusable sound controllers through
+the [source registry](catalog/README.md) and connect your existing controls.
+The showcases' visuals and input adapters remain separate.
 
 The npm package owns the engine and recipe language. Recipes and interactive
 examples are copy-owned application source. Agent instructions live separately

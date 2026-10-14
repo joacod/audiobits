@@ -97,3 +97,6 @@ Keep guarded live engine objects in stable refs or accessors instead of ordinary
 React state/props that tooling might enumerate. Adapt to existing conventions
 without adding a framework adapter. Define a local recipe or install copy-owned
 catalog source separately; the npm package supplies the engine and recipe language.
+For an installed one-shot example, use [catalog](catalog.md#one-shot-consumer-example).
+Use a live recipe directly for simple sustained sound; load
+[interactions](interactions.md) only when live controls or coordinated voices are needed.

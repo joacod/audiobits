@@ -2,6 +2,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { dirname, posix, resolve } from "node:path";
 import { execFileSync, spawnSync } from "node:child_process";
 import { expect, test } from "vitest";
+import ts from "typescript";
 import { validateRecipe, type Recipe } from "audiobits";
 import capabilities from "audiobits/capabilities.json";
 import registry from "../registry.json" with { type: "json" };
@@ -37,9 +38,10 @@ test("GitHub installer verification rejects missing, floating and mismatched rev
   }
 });
 
-test("registry covers eight minimal recipes and three sound-only experiences", async () => {
-  expect(registry.items).toHaveLength(11);
-  expect(new Set(registry.items.map((item) => item.name)).size).toBe(11);
+test("registry covers every canonical recipe and sound-only experience", async () => {
+  expect(new Set(registry.items.map((item) => item.name)).size).toBe(
+    registry.items.length,
+  );
   expect(registry.items.map((item) => item.name).sort()).toEqual(
     [
       ...["catalog/recipes", "catalog/experiences"].flatMap((directory) =>
@@ -97,33 +99,38 @@ test("registry covers eight minimal recipes and three sound-only experiences", a
       item.files.some((file) => /LICENSE/i.test(file.path + file.target)),
     ).toBe(false);
     const base = `catalog/${item.meta.classification === "recipe" ? "recipes" : "experiences"}/${item.name}`;
-    const controller = {
-      "energy-charge": "progress.ts",
-      "reactive-thruster": "pointer.ts",
-      lightsaber: "controller.ts",
-    };
-    expect(item.files.map((file) => file.path)).toEqual([
-      `${base}/recipe.ts`,
-      ...(item.meta.classification === "experience"
-        ? [
-            `${base}/${controller[item.name as keyof typeof controller]}`,
-            `${base}/README.md`,
-          ]
-        : []),
-    ]);
+    const paths = item.files.map((file) => file.path);
+    expect(paths).toContain(`${base}/recipe.ts`);
+    expect(new Set(paths).size).toBe(paths.length);
+    if (item.meta.classification === "recipe") {
+      expect(paths).toEqual([`${base}/recipe.ts`]);
+    } else {
+      expect(paths).toContain(`${base}/README.md`);
+      expect(
+        paths.some(
+          (path) => path.endsWith(".ts") && path !== `${base}/recipe.ts`,
+        ),
+      ).toBe(true);
+    }
     for (const file of item.files) {
       const source = readFileSync(file.path, "utf8");
-      expect(file.target.startsWith("~/src/sounds/")).toBe(true);
+      // HTML/CSS/assets and browser demo entrypoints never belong to an install.
+      expect(posix.dirname(file.path)).toBe(base);
+      expect(
+        file.path.endsWith(".ts") || file.path === `${base}/README.md`,
+      ).toBe(true);
+      expect(file.path).not.toMatch(/\/(?:host|stage|motion)\.ts$/);
+      expect(file.target).toBe(
+        `~/src/sounds/${file.path.slice("catalog/".length)}`,
+      );
       if (file.path.endsWith(".ts"))
         expect(source).not.toMatch(
           /\b(?:document|window|HTMLElement|HTMLCanvasElement|requestAnimationFrame)\b/,
         );
-      for (const match of source.matchAll(
-        /(?:from\s+|import\s*\(|src=)["']([^"']+)["']/g,
-      )) {
-        const specifier = match[1];
-        if (!file.path.endsWith(".ts") && !file.path.endsWith(".html"))
-          continue;
+      if (!file.path.endsWith(".ts")) continue;
+      for (const importedFile of ts.preProcessFile(source, true, true)
+        .importedFiles) {
+        const specifier = importedFile.fileName;
         if (!specifier.startsWith(".")) {
           expect(specifier).toBe("audiobits");
           continue;
@@ -145,6 +152,50 @@ test("registry covers eight minimal recipes and three sound-only experiences", a
     const module = (await import(resolve(path))) as Record<string, Recipe>;
     expect(validateRecipe(module[item.meta.exportName]).ok).toBe(true);
   }
+});
+
+test("installed sound source typechecks without browser presentation globals", () => {
+  const virtual = new Map(
+    registry.items.flatMap((item) =>
+      item.files
+        .filter((file) => file.path.endsWith(".ts"))
+        .map(
+          (file) =>
+            [
+              resolve("__catalog_consumer__", file.target.slice(2)),
+              readFileSync(file.path, "utf8"),
+            ] as const,
+        ),
+    ),
+  );
+  const options: ts.CompilerOptions = {
+    strict: true,
+    noEmit: true,
+    skipLibCheck: true,
+    noUncheckedSideEffectImports: true,
+    target: ts.ScriptTarget.ES2022,
+    module: ts.ModuleKind.ESNext,
+    moduleResolution: ts.ModuleResolutionKind.Bundler,
+    lib: ["lib.es2022.d.ts"],
+    types: [],
+  };
+  const host = ts.createCompilerHost(options);
+  const read = host.readFile,
+    exists = host.fileExists,
+    directoryExists = host.directoryExists!;
+  host.readFile = (path) => virtual.get(path) ?? read(path);
+  host.fileExists = (path) => virtual.has(path) || exists(path);
+  host.directoryExists = (path) =>
+    [...virtual.keys()].some((file) => file.startsWith(`${path}/`)) ||
+    directoryExists(path);
+  const program = ts.createProgram([...virtual.keys()], options, host);
+  expect(
+    ts
+      .getPreEmitDiagnostics(program)
+      .map((diagnostic) =>
+        ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n"),
+      ),
+  ).toEqual([]);
 });
 
 test("canonical recipes round-trip and compile deterministically at control and seed extrema", async () => {

@@ -5,15 +5,17 @@ import {
   catalog,
   compatibility,
   itemByName,
+  itemMetadata,
   retrieveSources,
   searchCatalog,
   sourceUrl,
   MAX_SOURCE_BYTES,
 } from "./catalog.js";
 import type { RuntimeInfo } from "./contracts.js";
+import registry from "../../registry.json" with { type: "json" };
 
 test("offline metadata and intent search derive from registry fields", () => {
-  expect(catalog.items).toHaveLength(11);
+  expect(catalog.items).toHaveLength(registry.items.length);
   expect(
     searchCatalog("lightsaber ignite spark retract", "experience")[0].name,
   ).toBe("lightsaber");
@@ -180,4 +182,32 @@ test("explicit network failures produce actionable source diagnostics", async ()
     code: "source-unavailable",
     action: expect.stringContaining("network access"),
   });
+});
+
+test("every agent manifest matches registry sound source and verifies local bytes", async () => {
+  for (const item of registry.items) {
+    const metadata = itemMetadata(itemByName(item.name));
+    expect({
+      ...metadata,
+      docs: metadata.docs.replace(`/blob/${catalog.revision}/`, "/blob/main/"),
+      files: metadata.files.map(({ bytes, sha256, ...file }) => {
+        expect(bytes).toBeGreaterThan(0);
+        expect(sha256).toMatch(/^[a-f0-9]{64}$/);
+        return file;
+      }),
+      source: undefined,
+      installation: undefined,
+    }).toEqual({ ...item, source: undefined, installation: undefined });
+    expect(metadata.installation.install).toBe(
+      `npx shadcn@4.21.4 add joacod/audiobits/${item.name}#${catalog.revision}`,
+    );
+    const paths = metadata.files.map((file) => file.path);
+    const retrieved = await retrieveSources(
+      itemByName(item.name),
+      paths,
+      process.cwd(),
+    );
+    expect(retrieved.map((file) => file.path)).toEqual(paths);
+    expect(retrieved.every((file) => file.origin === "local")).toBe(true);
+  }
 });

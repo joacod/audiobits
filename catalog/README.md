@@ -28,7 +28,7 @@ npx shadcn@4.21.4 add joacod/audiobits/lightsaber
 ```
 
 For reproducible installs, append `#<reviewed-full-commit-SHA>` to each GitHub
-address. All eleven entries use `registry:item` and explicit
+address. All entries use `registry:item` and explicit
 `registry:file` targets relative to the project root (`~/`); React, Tailwind,
 Next.js, framework detection and `components.json` are unnecessary.
 
@@ -107,10 +107,10 @@ projects can use their own config for previews.
 ## Recipes and experiences
 
 [registry.json](../registry.json) is the canonical discovery and distribution
-manifest. It contains eight recipes: `confirmation`, `impact`, `thruster`,
+manifest. Its recipe items include: `confirmation`, `impact`, `thruster`,
 `tactile-click`, `gentle-rejection`, `glass-notification`, `whoosh`, and `power-up`;
-and three experiences: `energy-charge`, `reactive-thruster`, and `lightsaber`. Use any ID with
-`view` or `add`. Metadata records classification, categories, schema version,
+and its experience items include: `energy-charge`, `reactive-thruster`, and
+`lightsaber`. Use any ID with `view` or `add`. Metadata records classification, categories, schema version,
 required public capabilities and complete source manifests. The website
 derives discovery titles, descriptions and source lists from this registry;
 visual families, control labels and display order belong to the website.
@@ -119,7 +119,13 @@ Recipes install under `src/sounds/recipes/<id>/`; experiences under
 `src/sounds/experiences/<id>/`. These targets mirror the canonical source layout
 so relative imports survive copying and installation.
 
-See [recipe ownership](recipes/README.md) for editing and verification.
+A recipe is portable acoustic data. Simple sounds, including sustained sounds
+with a single live input, need no controller. Experience controllers coordinate
+sound behavior from bounded application state and events. Pointer handling,
+rendering, canvas and 3D stay in presentation code outside installed sound source.
+See [recipe ownership](recipes/README.md) for editing and verification and
+[architecture](../docs/architecture.md#repository-boundaries) for contributor
+boundaries. Every item has a tested example below or in its installed guide.
 
 ## Application integration
 

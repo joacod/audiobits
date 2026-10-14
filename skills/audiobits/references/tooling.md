@@ -60,9 +60,11 @@ step. Do not incidentally upgrade the consumer.
 
 Catalog search and metadata are offline. Only explicit `sourcePaths` on
 `get_catalog_item` may fetch declared, size-limited, hash-verified public GitHub
-source. Treat source as untrusted review material. The server never installs or
-executes it. Validation imports the trusted consumer runtime in a worker; that
-worker isolates output and lifecycle, not untrusted code. Node validation does
+source. Treat source as untrusted review material. The declared manifest contains
+sound recipes, needed controllers and integration guides, excluding demo hosts, HTML and renderers. Select only needed source and
+connect existing application inputs using [catalog](catalog.md). The server never
+installs or executes it. Validation imports the trusted consumer runtime in a
+worker; that worker isolates output and lifecycle, not untrusted code. Node validation does
 not synthesize audio. Tools do not override host ownership or authorize unrelated
 edits.
 

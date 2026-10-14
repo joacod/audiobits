@@ -80,9 +80,10 @@ output and lifecycle, **not untrusted installed packages**; use a trusted projec
 
 ## Offline metadata and explicit source review
 
-`snapshot.json` contains ten registry entries, file manifests, byte counts and
+`snapshot.json` contains registry entries, sound-only file manifests, byte counts and
 SHA-256 hashes, with one immutable public GitHub commit. It contains no recipe or
-experience implementation. Search, inspection, compatibility and validation
+experience implementation. Item manifests contain recipes, sound controllers and
+integration guides, excluding demo hosts, renderers and HTML. Search, inspection, compatibility and validation
 perform no server network requests and need no GitHub access. Intent search ranks
 tokens from registry titles, descriptions, tags and categories.
 

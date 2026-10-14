@@ -30,10 +30,61 @@ Recipes install at `src/sounds/recipes/<id>/`; experiences at
 tree, never from `../../catalog/` or unpublished package internals. The registry
 may evolve independently of an older installed runtime.
 
-Reactive Thruster installs `recipe.ts`, `pointer.ts`, and its integration guide.
-Its complete host, demo HTML, and Impact dependency remain in the repository.
-Adapt feedback and lifecycle locally; do not replace the application's
-entrypoint with the demo.
+Recipe items install only `recipe.ts`; sustained Thruster can use `voice.set()`
+directly. Experience items install acoustic definitions, a sound controller and
+a README with a tested `src/integration.ts` example:
+
+| Item              | Controller                                 | Existing application input                                                                |
+| ----------------- | ------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| Energy Charge     | `progress.ts`: `createEnergyCharge(audio)` | `start(progress)`, `setCharge(progress)`, `release()`                                     |
+| Reactive Thruster | `pointer.ts`: `createThruster(audio)`      | `start(throttle)`, `setThrottle(throttle)`                                                |
+| Lightsaber        | `controller.ts`: `createLightsaber(audio)` | `ignite()`, `update(movement, elapsedMs, direction)`, `clash(strength, pan)`, `retract()` |
+
+Progress, throttle, movement and strike strength use finite `[0, 1]` inputs;
+direction uses `[-1, 1]`. Despite its filename, `pointer.ts` contains no pointer
+handlers. The application activates its engine before starting a controller,
+then owns input mapping, suspension and engine disposal. Controllers dispose
+only their own sound resources. Demo hosts, HTML, renderers, motion geometry and
+Reactive Thruster's separate Impact action remain in the repository.
+
+Use [integration](integration.md) for a one-shot host and
+[interactions](interactions.md) for sustained and Lightsaber integrations.
+Keep the application's entrypoint, events and lifecycle.
+
+## One-shot consumer example
+
+Install `confirmation` and use this code in `src/integration.ts`. Bind `play()`
+directly to the existing Save or Confirm click and report rejected activation
+promises. Bind Stop to cancellation; the engine owner handles hiding and teardown
+as described in [integration](integration.md).
+
+```ts
+import { createAudio } from "audiobits";
+import { confirmation } from "./sounds/recipes/confirmation/recipe";
+
+const audio = createAudio();
+const sound = audio.sound(confirmation);
+let request = 0;
+
+// Bind directly to a button click; surface a failed start and allow retry.
+export async function play() {
+  const token = ++request;
+  await audio.start();
+  if (token !== request) return;
+  sound.play({ parameters: {}, seed: 42 });
+}
+
+export function stop() {
+  request++;
+  audio.stopAll({ tails: "cut" });
+}
+
+// Call when removing this integration.
+export async function dispose() {
+  stop();
+  await audio.dispose();
+}
+```
 
 You own installed source. Catalog source uses 0BSD with no required license
 notices or credit. Review later catalog updates as source changes and validate
