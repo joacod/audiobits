@@ -56,7 +56,7 @@ described in [MCP development](../tools/mcp/README.md#offline-metadata-and-expli
 
 Edit canonical definitions in `catalog/recipes/<id>/recipe.ts`. Catalog files
 are application-owned source outside the npm package; the website imports them
-directly. Reload `/catalog`, open that sound's workbench and Recipe tab, and
+directly. Reload `/catalog`, open that sound's workbench and expand Recipe, and
 inspect updated JSON before Play. The site uses `transpilePackages` and imports
 `audiobits` through public exports pointing to `dist`; it never aliases library
 source. A refresh is the supported verification path; state-preserving hot
@@ -225,9 +225,9 @@ consumers. It checks installed paths and bytes, requires only the packed
 `audiobits` dependency, and rejects framework or component configuration added
 by installation. No GitHub registry request is needed for PR coverage.
 
-The check compiles unchanged website-generated quick, full-library, and raw
-comparison snippets at control and seed extrema, plus all eleven README
-integrations, against the packed public package and actual installed source.
+The check compiles website usage, edited-recipe examples, internal comparison
+fixtures at control and seed extrema, and all eleven README integrations against
+the packed public package and actual installed source.
 It retains recipe validation, silent load, gesture activation, signal, update,
 Stop, and disposal checks for all eleven integrations in Chromium, along with
 the three repository demonstration entrypoints. Output and retained evidence
@@ -247,7 +247,7 @@ interaction/lifecycle behavior.
 `/catalog` keeps one engine for the catalog sound rows. The output strip is a
 desktop row and a compact mobile dock. `/catalog/[slug]` uses that same session
 contract for one catalog sound. Each mounted workbench owns one engine and
-disposes it when the visitor leaves the entry. Restore in the Recipe tab
+disposes it when the visitor leaves the entry. Restore in the Recipe section
 restores the catalog recipe, primary controls and seed 42; Reset variation
 changes only the seed. JSON Apply reports validation issues and preserves
 last-valid playback; applying valid data stops current voices. No JavaScript

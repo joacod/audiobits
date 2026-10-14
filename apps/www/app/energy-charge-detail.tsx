@@ -10,9 +10,6 @@ import {
 import type { CSSProperties } from "react";
 import { mountEnergyCharge } from "../../../catalog/experiences/energy-charge/host";
 import { ChargeRings } from "./charge-rings";
-import { ExperienceSource } from "./experience-source";
-import { CatalogInstall } from "./catalog-install";
-import type { ExperienceSourceFile } from "./experience-source";
 
 const subscribeHydration = () => () => {};
 
@@ -24,11 +21,7 @@ function recovery(cause: unknown) {
 }
 
 /** Detail-page host for the catalog Energy Charge controller. One engine. */
-export function EnergyChargeDetail({
-  sources,
-}: {
-  sources: readonly ExperienceSourceFile[];
-}) {
+export function EnergyChargeDetail() {
   const host = useRef<ReturnType<typeof mountEnergyCharge> | null>(null);
   const frame = useRef(0);
   const holding = useRef(false);
@@ -166,14 +159,6 @@ export function EnergyChargeDetail({
         <p id="charge-help">Hold to build. Release to let it ring.</p>
         <p className="energy-state" role="status">{`Charge: ${state}`}</p>
         {error ? <p role="alert">{error}</p> : null}
-      </div>
-      <CatalogInstall slug="energy-charge" />
-      <div className="catalog-inspector">
-        <h2>Inspect source</h2>
-        <ExperienceSource
-          presentation="The rings on this page follow charge and measured output. They are website presentation and are not part of these files."
-          sources={sources}
-        />
       </div>
     </>
   );

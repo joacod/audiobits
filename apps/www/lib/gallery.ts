@@ -228,44 +228,86 @@ export async function dispose() {
 `;
 }
 
+// Seeded noise and nonconstant random values affect the audible variation.
+export function hasAudibleVariation(recipe: Recipe): boolean {
+  function varies(value: unknown): boolean {
+    if (!value || typeof value !== "object") return false;
+    if (Array.isArray(value)) return value.some(varies);
+    const node = value as Record<string, unknown>;
+    if (node.type === "noise") return true;
+    if (Array.isArray(node.random) && node.random[0] !== node.random[1])
+      return true;
+    return Object.values(node).some(varies);
+  }
+  return varies(recipe);
+}
+
 export function quickExample(
   kind: SoundKind,
   controls: Readonly<Record<string, number>>,
   seed: number,
+  recipe: Recipe = sounds[kind],
 ) {
-  return `import { createAudio } from "audiobits";
-import { ${demos[kind].exportName} } from "./sounds/recipes/${kind}/recipe";
+  const original = JSON.stringify(recipe) === JSON.stringify(sounds[kind]);
+  const sustained = recipe.kind === "sustained";
+  const live = Object.entries(recipe.parameters ?? {}).filter(
+    ([, p]) => p.mode === "live",
+  );
+  const options = [
+    ...(Object.keys(controls).length
+      ? [`parameters: ${JSON.stringify(controls)}`]
+      : []),
+    ...(hasAudibleVariation(recipe) ? [`seed: ${seed}`] : []),
+  ].join(", ");
+  return `import { createAudio${original ? "" : ", defineSound"} } from "audiobits";
+${
+  original
+    ? `import { ${demos[kind].exportName} } from "./sounds/recipes/${kind}/recipe";`
+    : `
+const recipe = defineSound(${JSON.stringify(recipe, null, 2)});`
+}
 
 const audio = createAudio();
-const sound = audio.sound(${demos[kind].exportName});
+const sound = audio.sound(${original ? demos[kind].exportName : "recipe"});
 let request = 0;
-${sounds[kind].kind === "sustained" ? "let voice: ReturnType<typeof sound.play> | undefined;\n" : ""}
-
-// Bind directly to a button click; surface a failed start and allow retry.
+${sustained ? "let voice: ReturnType<typeof sound.play> | undefined;\n" : ""}
+// Use in src/integration.ts. Call play() from a user gesture; handle errors.
 export async function play() {
   const token = ++request;
   await audio.start();
   if (token !== request) return;
-  ${sounds[kind].kind === "sustained" ? "voice?.stop();\n  voice = " : ""}sound.play({ parameters: ${JSON.stringify(controls)}, seed: ${seed} });
+  ${sustained ? "voice?.stop();\n  voice = " : ""}sound.play(${options ? `{ ${options} }` : ""});
 }
 ${
-  sounds[kind].kind === "sustained"
+  sustained && live.length
     ? `
-// Connect your application's live throttle to this function.
-export function update(throttle: number) {
-  voice?.set({ throttle });
+// Connect application state to these live parameters.
+export function update(${live.length === 1 ? "value: number" : `values: { ${live.map(([name]) => `${JSON.stringify(name)}: number`).join("; ")} }`}) {
+  voice?.set(${live.length === 1 ? `{ ${JSON.stringify(live[0][0])}: value }` : "values"});
 }
 `
     : ""
+}${
+    sustained
+      ? `
+// Release with the recipe's natural tail.
+export function release() {
+  request++;
+  voice?.stop();
+  voice = undefined;
 }
+`
+      : ""
+  }
 export function stop() {
   request++;
   audio.stopAll({ tails: "cut" });
-${sounds[kind].kind === "sustained" ? "  voice = undefined;\n" : ""}}
+${sustained ? "  voice = undefined;\n" : ""}}
 
-// Call when removing this integration.
+// Call on navigation/unmount.
 export async function dispose() {
   stop();
+  sound.dispose();
   await audio.dispose();
 }
 `;

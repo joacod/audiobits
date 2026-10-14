@@ -1,5 +1,4 @@
 import { expect, test } from "@playwright/test";
-import { readFileSync } from "node:fs";
 
 import { instrument, probe, dragThruster } from "./experience-probe";
 
@@ -151,55 +150,37 @@ test("cancelled activation and visibility cleanup require a fresh gesture", asyn
     .toEqual(["closed"]);
 });
 
-test("copy actions return every complete canonical source file and report clipboard denial", async ({
+test("copied usage connects application throttle and release and reports clipboard denial", async ({
   page,
 }) => {
   await instrument(page);
-  const interaction = page.getByRole("tabpanel", {
-    name: "Complete interaction",
-  });
-  const soundPanel = page.getByRole("tabpanel", {
-    name: "Sound only",
-    exact: true,
-  });
-  const copyBox = (await soundPanel
-    .getByRole("button", { name: "Copy recipe.ts", exact: true })
-    .boundingBox())!;
-  const codeBox = (await soundPanel.locator("pre").boundingBox())!;
-  expect(codeBox.y - copyBox.y - copyBox.height).toBeGreaterThanOrEqual(12);
-  await page.getByRole("tab", { name: "Complete interaction" }).click();
-  await expect(interaction).toBeVisible();
-  const files = [
-    "recipe.ts",
-    "pointer.ts",
-    "host.ts",
-    "index.html",
-    "../../recipes/impact/recipe.ts",
-  ];
-  await expect(interaction.getByRole("button", { name: /^Copy / })).toHaveCount(
-    files.length,
-  );
-  for (const name of files) {
-    await interaction
-      .getByRole("button", { name: `Copy ${name}`, exact: true })
-      .click();
-    const copied = await page.evaluate(
+  const interaction = page.locator(".catalog-usage");
+  await interaction
+    .getByRole("button", { name: "Copy reactive-thruster code", exact: true })
+    .click();
+  expect(
+    await page.evaluate(
       () => (globalThis as unknown as { copiedSource: string }).copiedSource,
-    );
-    expect(copied).toBe(
-      readFileSync(`catalog/experiences/reactive-thruster/${name}`, "utf8"),
-    );
-  }
+    ),
+  ).toBe(await interaction.locator("pre").innerText());
+  await expect(interaction).toContainText("thruster.setThrottle(value)");
+  await expect(interaction).toContainText("thruster.stop()");
+  await expect(
+    page.getByRole("link", { name: "View complete public source" }),
+  ).toHaveAttribute(
+    "href",
+    "https://github.com/joacod/audiobits/tree/main/catalog/experiences/reactive-thruster",
+  );
   await page.evaluate(() => {
     navigator.clipboard.writeText = async () => {
       throw new Error("denied");
     };
   });
   await interaction
-    .getByRole("button", { name: "Copy host.ts", exact: true })
+    .getByRole("button", { name: "Copy reactive-thruster code", exact: true })
     .click();
   await expect(
-    page.getByRole("status").filter({ hasText: "Copy unavailable" }),
+    page.getByRole("status").filter({ hasText: "Clipboard unavailable" }),
   ).toBeVisible();
 });
 

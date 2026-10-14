@@ -42,7 +42,7 @@ function contexts(page: import("@playwright/test").Page) {
   );
 }
 
-test("confirmation copies the current seed and has no parameter controls", async ({
+test("confirmation has no inaudible controls and copies playable usage", async ({
   page,
 }) => {
   await instrument(page);
@@ -61,10 +61,9 @@ test("confirmation copies the current seed and has no parameter controls", async
   await expect(
     page.getByRole("img", { name: "Measured harmonic output", exact: true }),
   ).toHaveAttribute("data-peak", "0");
-  await expect(
-    page.getByRole("tab", { name: "Raw Web Audio", exact: true }),
-  ).toBeVisible();
-  await page.getByRole("spinbutton", { name: "confirmation seed" }).fill("9");
+  await expect(page.getByRole("tab")).toHaveCount(0);
+  await expect(page.getByRole("spinbutton")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /Randomize/ })).toHaveCount(0);
   await page
     .getByRole("button", { name: "Copy confirmation code", exact: true })
     .click();
@@ -72,8 +71,8 @@ test("confirmation copies the current seed and has no parameter controls", async
   expect(example).toContain(
     'import { confirmation } from "./sounds/recipes/confirmation/recipe"',
   );
-  expect(example).toContain("seed: 9");
-  expect(example).not.toContain("seed: 42");
+  expect(example).toContain("sound.play()");
+  expect(example).not.toContain("seed:");
   await page
     .getByRole("button", { name: "Play confirmation", exact: true })
     .click();
@@ -92,13 +91,12 @@ test("gentle rejection omits parameters and raw comparison", async ({
     0,
   );
   await expect(page.getByRole("tab", { name: "Raw Web Audio" })).toHaveCount(0);
-  await expect(
-    page.getByRole("tab", { name: "Code", exact: true }),
-  ).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByRole("tab")).toHaveCount(0);
+  await expect(page.getByRole("spinbutton")).toHaveCount(0);
   await expect(
     page.getByRole("button", { name: "Play gentle rejection", exact: true }),
   ).toBeVisible();
-  await page.getByRole("tab", { name: "Recipe", exact: true }).click();
+  await page.locator(".recipe-tools summary").click();
   await expect(
     page.getByRole("button", {
       name: "Copy gentle-rejection recipe",
@@ -107,7 +105,7 @@ test("gentle rejection omits parameters and raw comparison", async ({
   ).toBeVisible();
 });
 
-test("impact keeps recipe editing, seeds, current code, and raw comparison", async ({
+test("impact copies current parameters and applied edits, validates JSON, and restores defaults", async ({
   page,
 }) => {
   await instrument(page);
@@ -133,11 +131,9 @@ test("impact keeps recipe editing, seeds, current code, and raw comparison", asy
     page.getByRole("link", { name: "Production lifecycle", exact: true }),
   ).toBeVisible();
 
-  await page.getByRole("tab", { name: "Recipe", exact: true }).click();
+  await page.locator(".recipe-tools summary").click();
   await expect(page.getByRole("textbox")).toHaveCount(0);
-  const recipeCode = page
-    .getByRole("tabpanel", { name: "Recipe", exact: true })
-    .locator("pre");
+  const recipeCode = page.locator(".recipe-tools pre");
   await expect(recipeCode).toBeVisible();
   expect(
     await recipeCode.evaluate((node) => node.scrollHeight > node.clientHeight),
@@ -152,9 +148,9 @@ test("impact keeps recipe editing, seeds, current code, and raw comparison", asy
   await expect(page.locator(".recipe-tools [role=alert]")).toContainText(
     "Not applied",
   );
-  await page.getByRole("tab", { name: "Code", exact: true }).click();
-  await expect(page.getByRole("textbox")).toHaveCount(0);
-  await page.getByRole("tab", { name: "Recipe", exact: true }).click();
+  await page.locator(".recipe-tools summary").click();
+  await expect(page.getByRole("textbox")).not.toBeVisible();
+  await page.locator(".recipe-tools summary").click();
   await expect(editor).toHaveValue("{");
   await page.getByRole("button", { name: "View recipe", exact: true }).click();
   await page.getByRole("button", { name: "Edit recipe", exact: true }).click();
@@ -181,11 +177,12 @@ test("impact keeps recipe editing, seeds, current code, and raw comparison", asy
     .getByRole("button", { name: "Apply impact recipe", exact: true })
     .click();
   await expect(page.locator(".recipe-tools [role=alert]")).toHaveCount(0);
-  await page.getByRole("tab", { name: "Raw Web Audio", exact: true }).click();
-  await expect(page.locator("#impact")).toContainText(
-    "Restore the catalog recipe to view its raw comparison",
-  );
-  await page.getByRole("tab", { name: "Code", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Copy impact recipe", exact: true })
+    .click();
+  expect(JSON.parse(await copied(page)).layers[0].gainDb.range).toEqual([
+    -30, -20,
+  ]);
   await page
     .getByRole("button", { name: "Copy impact code", exact: true })
     .click();
@@ -195,7 +192,6 @@ test("impact keeps recipe editing, seeds, current code, and raw comparison", asy
     'import { impact } from "./sounds/recipes/impact/recipe"',
   );
 
-  await page.getByRole("tab", { name: "Recipe", exact: true }).click();
   await editor.fill(" ".repeat(32769));
   await page
     .getByRole("button", { name: "Apply impact recipe", exact: true })
@@ -212,13 +208,9 @@ test("impact keeps recipe editing, seeds, current code, and raw comparison", asy
   await expect(
     page.getByRole("slider", { name: "Intensity", exact: true }),
   ).toHaveValue("0.5");
-  await page.getByRole("tab", { name: "Raw Web Audio", exact: true }).click();
-  await expect(
-    page.getByRole("button", { name: "Copy raw impact example", exact: true }),
-  ).toBeVisible();
+  await expect(page.getByRole("tab")).toHaveCount(0);
 
   await page.getByRole("spinbutton", { name: "impact seed" }).fill("-1");
-  await page.getByRole("tab", { name: "Code", exact: true }).click();
   await expect(
     page.getByRole("button", { name: "Copy impact code", exact: true }),
   ).toBeDisabled();
@@ -256,7 +248,7 @@ test("whoosh shows only the controls in the applied recipe", async ({
   );
   expect(example).toContain('"size":0.9');
   expect(example).toContain(`seed: ${seed}`);
-  await page.getByRole("tab", { name: "Recipe", exact: true }).click();
+  await page.locator(".recipe-tools summary").click();
   await page
     .getByRole("button", { name: "Copy whoosh recipe", exact: true })
     .click();
@@ -268,7 +260,6 @@ test("whoosh shows only the controls in the applied recipe", async ({
     page.getByRole("spinbutton", { name: "whoosh seed" }),
   ).toHaveValue("42");
 
-  await page.getByRole("tab", { name: "Recipe", exact: true }).click();
   await page.getByRole("button", { name: "Edit recipe", exact: true }).click();
   const editor = page.getByRole("textbox", { name: "whoosh recipe JSON" });
   const recipe = JSON.parse(await editor.inputValue());
@@ -284,7 +275,32 @@ test("whoosh shows only the controls in the applied recipe", async ({
   await expect(
     page.getByRole("slider", { name: "Detail", exact: true }),
   ).toHaveValue("15");
-  await page.getByRole("tab", { name: "Recipe", exact: true }).click();
+
+  // Removing audible variation must remove its UI and clear an invalid seed.
+  await page.getByRole("spinbutton", { name: "whoosh seed" }).fill("-1");
+  recipe.layers = [
+    {
+      id: "tone",
+      source: { type: "oscillator", waveform: "sine", frequency: 220 },
+      gainDb: -24,
+      envelope: { attack: 0.004, decay: 0.08, sustain: 0, release: 0.02 },
+    },
+  ];
+  await editor.fill(JSON.stringify(recipe));
+  await page.getByRole("button", { name: "Apply whoosh recipe" }).click();
+  await expect(page.locator(".recipe-tools [role=alert]")).toHaveCount(0);
+  await expect(page.getByRole("spinbutton")).toHaveCount(0);
+  await page
+    .getByRole("button", { name: "Copy whoosh code", exact: true })
+    .click();
+  expect(await copied(page)).not.toContain("seed:");
+  expect(await copied(page)).toContain('"detail":15');
+  await page
+    .getByRole("button", { name: "Copy whoosh recipe", exact: true })
+    .click();
+  expect(JSON.parse(await copied(page))).toEqual(recipe);
+  await page.getByRole("button", { name: "Play whoosh", exact: true }).click();
+  await expect(page.locator(".catalog-transport [role=alert]")).toHaveCount(0);
   await page
     .getByRole("button", { name: "Restore whoosh recipe", exact: true })
     .click();
@@ -325,11 +341,13 @@ test("thruster stays sustained, follows live throttle, and navigation disposes a
   await slider.fill("1");
   await expect(state).toHaveText("Thruster: running");
   await expect(page.getByText("Throttle: 1.00")).toBeVisible();
-  await page.getByRole("tab", { name: "Code", exact: true }).click();
   await page
     .getByRole("button", { name: "Copy thruster code", exact: true })
     .click();
   expect(await copied(page)).toContain('"throttle":1');
+  expect(await copied(page)).toContain('voice?.set({ "throttle": value })');
+  expect(await copied(page)).toContain("export function release()");
+  expect(await copied(page)).toContain("voice?.stop()");
   await scope.evaluate((canvas) => {
     const top = canvas.getBoundingClientRect().top + window.scrollY;
     window.scrollTo(0, top + window.innerHeight);
@@ -383,7 +401,7 @@ test("clipboard failure stays visible and does not claim success", async ({
   await page
     .getByRole("button", { name: "Copy confirmation code", exact: true })
     .click();
-  await expect(page.locator(".recipe-tools")).toContainText(
+  await expect(page.locator(".catalog-usage")).toContainText(
     "Clipboard unavailable",
   );
 });
@@ -395,7 +413,10 @@ test("desktop and mobile workbenches put interaction before adoption and source"
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(`${home}/catalog/impact`);
   const play = page.getByRole("button", { name: "Play impact", exact: true });
-  const code = page.getByRole("tab", { name: "Code", exact: true });
+  const code = page.getByRole("button", {
+    name: "Copy impact code",
+    exact: true,
+  });
   await expect(play).toBeVisible();
   await expect(code).toBeVisible();
   const playBox = await play.boundingBox();
@@ -411,7 +432,8 @@ test("desktop and mobile workbenches put interaction before adoption and source"
     customizeBox.y + customizeBox.height,
   );
   expect(installBox.y).toBeGreaterThanOrEqual(stageBox.y + stageBox.height);
-  expect(codeBox!.y).toBeGreaterThan(installBox.y + installBox.height);
+  expect(codeBox!.y).toBeGreaterThan(installBox.y);
+  expect(codeBox!.y).toBeLessThan(installBox.y + installBox.height);
   await page
     .getByRole("button", { name: "Copy Impact command", exact: true })
     .focus();
@@ -463,12 +485,11 @@ test("desktop and mobile workbenches put interaction before adoption and source"
   await expect(page.getByTestId("thruster-state")).toHaveText(
     "Thruster: stopped",
   );
-  await page.getByRole("tab", { name: "Code", exact: true }).focus();
-  await page.keyboard.press("ArrowRight");
+  await page.locator(".recipe-tools summary").focus();
   await page.keyboard.press("Enter");
   await expect(
-    page.getByRole("tab", { name: "Recipe", exact: true }),
-  ).toHaveAttribute("aria-selected", "true");
+    page.getByRole("button", { name: "Edit recipe", exact: true }),
+  ).toBeVisible();
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= window.innerWidth,
@@ -485,7 +506,7 @@ test("desktop and mobile workbenches put interaction before adoption and source"
   await expect(
     page.getByRole("button", { name: "Mute", exact: true }),
   ).toHaveCount(0);
-  await page.getByRole("tab", { name: "Recipe", exact: true }).click();
+
   await page.getByRole("button", { name: "Edit recipe", exact: true }).click();
   const apply = page.getByRole("button", {
     name: "Apply thruster recipe",
@@ -543,7 +564,7 @@ test("every catalog item copies its registry command and links to installation d
     await page.goto(`${home}${entry.href}`);
     const adoption = page.getByRole("region", { name: "Add to project" });
     const command = `npx shadcn@latest add joacod/audiobits/${entry.slug}`;
-    await expect(adoption.locator("pre")).toHaveText(command);
+    await expect(adoption.locator(".landing-command pre")).toHaveText(command);
     await expect(adoption).toContainText("audiobits runtime dependency");
     await expect(adoption).toContainText("Installs the catalog defaults");
     const copy = adoption.getByRole("button", {
@@ -553,8 +574,43 @@ test("every catalog item copies its registry command and links to installation d
     await expect(copy).toBeEnabled();
     await copy.focus();
     await page.keyboard.press("Enter");
-    await expect(adoption.getByRole("status")).toHaveText("Copied.");
+    await expect(
+      adoption.locator(".landing-command").getByRole("status"),
+    ).toHaveText("Copied.");
     expect(await copied(page)).toBe(command);
+    const usage = adoption.locator(".catalog-usage");
+    await expect(
+      usage.getByRole("heading", { name: "Use this sound" }),
+    ).toBeVisible();
+    await usage
+      .getByRole("button", { name: `Copy ${entry.slug} code`, exact: true })
+      .click();
+    await expect(usage.getByRole("status")).toHaveText("Copied.");
+    expect(await copied(page)).toBe(await usage.locator("pre").innerText());
+    expect(await copied(page)).toContain('from "audiobits"');
+    expect(await copied(page)).toContain(
+      `./sounds/${entry.category === "bundled" ? "recipes" : "experiences"}/${entry.slug}/`,
+    );
+    expect(await copied(page)).toContain("await audio.start()");
+    expect(await copied(page)).toContain("await audio.dispose()");
+    await expect(page.getByRole("tab")).toHaveCount(0);
+    await expect(page.getByRole("spinbutton")).toHaveCount(
+      entry.category === "bundled" &&
+        !["confirmation", "gentle-rejection"].includes(entry.slug)
+        ? 1
+        : 0,
+    );
+    if (entry.category === "experience") {
+      await expect(
+        page.getByRole("button", { name: /Copy .*recipe/ }),
+      ).toHaveCount(0);
+      await expect(
+        page.getByRole("link", { name: "View complete public source" }),
+      ).toHaveAttribute(
+        "href",
+        `https://github.com/joacod/audiobits/tree/main/catalog/experiences/${entry.slug}`,
+      );
+    }
     expect(await contexts(page)).toEqual([]);
     await expect(
       page
@@ -594,10 +650,10 @@ test("install command clipboard denial preserves a selectable command", async ({
       exact: true,
     })
     .click();
-  await expect(adoption.getByRole("status")).toHaveText(
-    "Copy unavailable. Select and copy the command above.",
-  );
-  await expect(adoption.locator("pre")).toHaveText(
+  await expect(
+    adoption.locator(".landing-command").getByRole("status"),
+  ).toHaveText("Copy unavailable. Select and copy the command above.");
+  await expect(adoption.locator(".landing-command pre")).toHaveText(
     "npx shadcn@latest add joacod/audiobits/reactive-thruster",
   );
   expect(
@@ -640,7 +696,7 @@ for (const [width, height] of [
       expect(
         (await source.boundingBox())!.y - adoptionBox.y - adoptionBox.height,
       ).toBeGreaterThanOrEqual(16);
-      const copy = source.getByRole("button", { name: /^Copy / }).first();
+      const copy = adoption.getByRole("button", { name: /^Copy .* code$/ });
       await copy.scrollIntoViewIfNeeded();
       expect(
         await copy.evaluate((button) => {
@@ -666,3 +722,29 @@ for (const [width, height] of [
     ).toBe(true);
   });
 }
+
+test("usage is selectable and Copy waits for hydration", async ({ page }) => {
+  await instrument(page);
+  let releaseScripts!: () => void;
+  const scriptsHeld = new Promise<void>((resolve) => {
+    releaseScripts = resolve;
+  });
+  await page.route("**/_next/static/**/*.js", async (route) => {
+    await scriptsHeld;
+    await route.continue();
+  });
+  await page.goto(`${home}/catalog/confirmation`, { waitUntil: "commit" });
+  const usage = page.locator(".catalog-usage");
+  const copy = usage.getByRole("button", {
+    name: "Copy confirmation code",
+    exact: true,
+  });
+  await expect(usage.locator("pre")).toContainText("sound.play()");
+  await expect(copy).toBeDisabled();
+  releaseScripts();
+  await expect(copy).toBeEnabled();
+  await copy.click();
+  await expect(usage.getByRole("status")).toHaveText("Copied.");
+  expect(await copied(page)).toBe(await usage.locator("pre").innerText());
+  expect(await contexts(page)).toEqual([]);
+});

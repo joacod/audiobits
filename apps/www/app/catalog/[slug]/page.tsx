@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
 import { notFound } from "next/navigation";
 import { CatalogDetail } from "../../catalog-detail";
 import { CatalogInstall } from "../../catalog-install";
-import { ExperienceSource } from "../../experience-source";
+import { UsageCode } from "../../usage-code";
 import { CatalogSoundBench } from "../../catalog-sound-bench";
 import {
   bundledCatalogEntry,
@@ -15,11 +13,7 @@ import {
   experienceCatalogEntry,
   experienceDetailDescription,
 } from "../../../lib/catalog";
-import {
-  experienceDemoSourceFiles,
-  experienceSourcePurpose,
-} from "../../../lib/experiences";
-import { rawExampleSource } from "../../../lib/site-build";
+import { experienceUsage } from "../../../lib/site-build";
 
 function ChargeStageFallback() {
   return (
@@ -58,15 +52,6 @@ const LightsaberDetail = dynamic(
     ),
   },
 );
-
-function readExperienceSources(slug: keyof typeof experienceSourcePurpose) {
-  const purposes = experienceSourcePurpose[slug];
-  return experienceDemoSourceFiles(slug).map(({ name, path }) => ({
-    name,
-    purpose: (purposes as Readonly<Record<string, string>>)[name],
-    code: readFileSync(join(process.cwd(), "../..", path), "utf8"),
-  }));
-}
 
 export function generateStaticParams() {
   return catalogEntries.map((entry) => ({ slug: entry.slug }));
@@ -108,44 +93,42 @@ export default async function CatalogEntryPage({
     );
     return (
       <CatalogDetail entry={bundled}>
-        <CatalogSoundBench
-          slug={bundled.slug}
-          markIndex={markIndex}
-          rawSource={rawExampleSource()}
-        />
+        <CatalogSoundBench slug={bundled.slug} markIndex={markIndex} />
       </CatalogDetail>
     );
   }
   const experience = experienceCatalogEntry(slug);
   if (!experience) notFound();
-  if (experience.slug === "lightsaber") {
-    return (
-      <CatalogDetail entry={experience}>
+  return (
+    <CatalogDetail entry={experience}>
+      {experience.slug === "lightsaber" ? (
         <LightsaberDetail />
-        <CatalogInstall slug={experience.slug} />
-        <div className="catalog-inspector">
-          <h2>Inspect source</h2>
-          <ExperienceSource
-            presentation="Five original recipes, motion mapping, voice ownership, browser lifecycle, and the canvas stage. The same source powers this page and the standalone demo."
-            sources={readExperienceSources(experience.slug)}
-          />
-        </div>
-      </CatalogDetail>
-    );
-  }
-  if (experience.slug === "energy-charge") {
-    return (
-      <CatalogDetail entry={experience}>
-        <EnergyChargeDetail sources={readExperienceSources(experience.slug)} />
-      </CatalogDetail>
-    );
-  }
-  if (experience.slug === "reactive-thruster") {
-    return (
-      <CatalogDetail entry={experience}>
-        <ThrusterDetail sources={readExperienceSources(experience.slug)} />
-      </CatalogDetail>
-    );
-  }
-  notFound();
+      ) : experience.slug === "energy-charge" ? (
+        <EnergyChargeDetail />
+      ) : (
+        <ThrusterDetail />
+      )}
+      <CatalogInstall slug={experience.slug}>
+        <UsageCode
+          slug={experience.slug}
+          code={experienceUsage(experience.slug)}
+        />
+      </CatalogInstall>
+      <section className="catalog-inspector">
+        <h2>Customize or inspect</h2>
+        <p>
+          Connect your application&apos;s state and events to the sound
+          controller. The full showcase source includes the browser host, input,
+          and visuals.
+        </p>
+        <a
+          href={`https://github.com/joacod/audiobits/tree/main/catalog/experiences/${experience.slug}`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          View complete public source
+        </a>
+      </section>
+    </CatalogDetail>
+  );
 }

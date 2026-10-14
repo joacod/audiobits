@@ -1,5 +1,4 @@
 import { expect, test } from "@playwright/test";
-import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { build } from "esbuild";
 import { instrument, probe } from "./experience-probe";
@@ -266,27 +265,23 @@ test("keyboard alternatives, touch release and cancellation, reduced motion, sou
   await expect(pad).toHaveAttribute("data-reduced-motion", "true");
   await page.keyboard.press("Escape");
   await expect(pad).toHaveAttribute("data-state", "stopped");
-  await page.getByRole("tab", { name: "Complete interaction" }).click();
-  const interaction = page.getByRole("tabpanel", {
-    name: "Complete interaction",
-  });
-  for (const name of [
-    "recipe.ts",
-    "motion.ts",
-    "controller.ts",
-    "host.ts",
-    "stage.ts",
-    "index.html",
-  ]) {
-    await interaction
-      .getByRole("button", { name: `Copy ${name}`, exact: true })
-      .click();
-    expect(
-      await page.evaluate(
-        () => (globalThis as unknown as { copiedSource: string }).copiedSource,
-      ),
-    ).toBe(readFileSync(`catalog/experiences/lightsaber/${name}`, "utf8"));
-  }
+  const interaction = page.locator(".catalog-usage");
+  await interaction
+    .getByRole("button", { name: "Copy lightsaber code", exact: true })
+    .click();
+  expect(
+    await page.evaluate(
+      () => (globalThis as unknown as { copiedSource: string }).copiedSource,
+    ),
+  ).toBe(await interaction.locator("pre").innerText());
+  for (const method of [
+    "blade.ignite()",
+    "blade.update(value, elapsed, direction)",
+    "blade.clash(force, pan)",
+    "blade.retract()",
+    "blade.dispose()",
+  ])
+    await expect(interaction).toContainText(method);
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,

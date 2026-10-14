@@ -461,10 +461,6 @@ test("external links use new tabs and internal navigation stays in this tab", as
     "/docs/mcp",
   ]) {
     await page.goto(`${home}${route}`);
-    if (route.includes("reactive-thruster") || route.includes("energy-charge"))
-      await page
-        .getByRole("tab", { name: "Complete interaction", exact: true })
-        .click();
     for (const link of await page.locator('a[href^="https://"]').all()) {
       await expect(link).toHaveAttribute("target", "_blank");
       await expect(link).toHaveAttribute("rel", /noopener/);

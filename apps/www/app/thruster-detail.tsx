@@ -9,9 +9,6 @@ import {
 } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import { mountThruster } from "../../../catalog/experiences/reactive-thruster/host";
-import { ExperienceSource } from "./experience-source";
-import { CatalogInstall } from "./catalog-install";
-import type { ExperienceSourceFile } from "./experience-source";
 import { OutputScope } from "./output-scope";
 import { ThrusterRibbons } from "./thruster-ribbons";
 import type { ThrusterTarget } from "./thruster-ribbons";
@@ -28,11 +25,7 @@ function clamp(value: number, min: number, max: number) {
 }
 
 /** Detail-page host for the catalog thruster controller. One engine. */
-export function ThrusterDetail({
-  sources,
-}: {
-  sources: readonly ExperienceSourceFile[];
-}) {
+export function ThrusterDetail() {
   const pad = useRef<HTMLDivElement>(null);
   const craft = useRef<HTMLDivElement>(null);
   const meter = useRef<HTMLOutputElement>(null);
@@ -195,14 +188,6 @@ export function ThrusterDetail({
           Drag to fly. Release to coast.
         </p>
         {error ? <p role="alert">{error}</p> : null}
-      </div>
-      <CatalogInstall slug="reactive-thruster" />
-      <div className="catalog-inspector">
-        <h2>Inspect source</h2>
-        <ExperienceSource
-          presentation="The ribbons on this page follow the same pointer and throttle as the sound. They are website presentation and are not part of these files."
-          sources={sources}
-        />
       </div>
     </>
   );

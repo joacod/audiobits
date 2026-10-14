@@ -556,25 +556,6 @@
   .foundation .portrait-flow canvas {
     color: var(--ink);
   }
-  .foundation .inspector-tabs {
-    display: flex;
-    gap: 0.5rem;
-    border-bottom: 1px solid var(--graphite-edge);
-    margin-bottom: 1.5rem;
-  }
-  .foundation .inspector-tabs button {
-    border: 0;
-    border-radius: 0;
-    min-height: 48px;
-  }
-  .foundation .inspector-tabs [aria-selected="true"] {
-    background: var(--ink);
-    color: var(--void);
-  }
-  .foundation .recipe-tools [role="tabpanel"] h3 {
-    font-size: 1.7rem;
-    margin-block: 1rem;
-  }
   .foundation .recipe-tools pre {
     max-height: 32rem;
   }
@@ -587,12 +568,6 @@
     }
     .foundation .sound-portrait canvas {
       height: 13rem;
-    }
-    .foundation .inspector-tabs {
-      gap: 0;
-    }
-    .foundation .inspector-tabs button {
-      padding-inline: 0.65rem;
     }
   }
 }

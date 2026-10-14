@@ -121,7 +121,7 @@ test("public pages expose unique metadata and content without JavaScript", async
           (entry) => entry.href === route.path,
         )!;
         const adoption = page.getByRole("region", { name: "Add to project" });
-        await expect(adoption.locator("pre")).toHaveText(
+        await expect(adoption.locator(".landing-command pre")).toHaveText(
           `npx shadcn@latest add joacod/audiobits/${entry.slug}`,
         );
         await expect(
@@ -137,13 +137,16 @@ test("public pages expose unique metadata and content without JavaScript", async
             exact: true,
           }),
         ).toHaveAttribute("href", "/docs/catalog#install-source");
-        if (entry.slug === "lightsaber") {
+        await expect(
+          page.getByRole("heading", { name: "Use this sound", exact: true }),
+        ).toBeVisible();
+        if (entry.category === "experience") {
           await expect(
-            page.getByRole("heading", { name: "Inspect source", exact: true }),
+            page.getByRole("link", { name: "View complete public source" }),
           ).toBeVisible();
-          const recipe = page.locator(".catalog-inspector pre");
-          await expect(recipe).toBeVisible();
-          await expect(recipe).toContainText("magnetic-core");
+          await expect(adoption.locator(".catalog-usage pre")).toContainText(
+            "await audio.start()",
+          );
         }
       }
       await expect(page.locator('a[href="/docs"]').first()).toBeAttached();

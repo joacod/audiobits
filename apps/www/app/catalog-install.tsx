@@ -1,8 +1,15 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { registryInstallCommand, registryItem } from "../lib/registry";
 import { LandingCommand } from "./landing-command";
 
-export function CatalogInstall({ slug }: { slug: string }) {
+export function CatalogInstall({
+  slug,
+  children,
+}: {
+  slug: string;
+  children: ReactNode;
+}) {
   const item = registryItem(slug);
   return (
     <section className="catalog-adoption" aria-labelledby="catalog-add-heading">
@@ -17,9 +24,10 @@ export function CatalogInstall({ slug }: { slug: string }) {
       </p>
       <p className="catalog-install-note">
         {item.meta.classification === "recipe"
-          ? "Installs the catalog defaults. Copy your current settings or edits from the source below."
-          : "Installs the catalog defaults, controller, and browser example. Inspect individual files below."}
+          ? "Installs the catalog defaults. The usage below reflects your current settings and applied edits."
+          : "Installs the catalog defaults and sound controller. The website visuals and input system stay in the showcase."}
       </p>
+      {children}
     </section>
   );
 }

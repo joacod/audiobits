@@ -147,5 +147,5 @@ export function bundledDetailDescription(entry: BundledCatalogEntry) {
 }
 
 export function experienceDetailDescription(entry: ExperienceCatalogEntry) {
-  return `${entry.description} Copy the independent source or the complete interaction.`;
+  return `${entry.description} Hear and interact, then add the sound controller to your project.`;
 }

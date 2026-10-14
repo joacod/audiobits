@@ -1,6 +1,6 @@
 "use client";
 
-import dynamic from "next/dynamic";
+import { RecipeTools } from "./recipe-tools";
 import { useState } from "react";
 import type { CSSProperties } from "react";
 import { Button } from "@base-ui/react/button";
@@ -8,43 +8,32 @@ import { OutputScope } from "./output-scope";
 import { PlaySpark } from "./play-spark";
 import { SoundMark } from "../icons/catalog-marks";
 import { PlayIcon } from "../icons/play-icon";
-import { CatalogInstall } from "./catalog-install";
 import { useCollectionSession } from "./collection-session";
-import { parameterEndpoints, parameterLabel, soundInfo } from "../lib/gallery";
+import {
+  hasAudibleVariation,
+  parameterEndpoints,
+  parameterLabel,
+  soundInfo,
+} from "../lib/gallery";
 import type { SoundKind } from "../lib/gallery";
-
-const RecipeTools = dynamic(() =>
-  import("./recipe-tools").then((module) => module.RecipeTools),
-);
 
 // One collection session per mounted entry. A new slug remounts and disposes it.
 export function CatalogSoundBench({
   slug,
   markIndex,
-  rawSource,
 }: {
   slug: SoundKind;
   markIndex: number;
-  rawSource: string;
 }) {
-  return (
-    <SoundSession
-      key={slug}
-      slug={slug}
-      markIndex={markIndex}
-      rawSource={rawSource}
-    />
-  );
+  return <SoundSession key={slug} slug={slug} markIndex={markIndex} />;
 }
 
 function SoundSession({
   slug,
   markIndex,
-  rawSource,
 }: {
   slug: SoundKind;
   markIndex: number;
-  rawSource: string;
 }) {
   const {
     ready,
@@ -74,6 +63,7 @@ function SoundSession({
     Number.isInteger(seedValue) &&
     seedValue >= 0 &&
     seedValue <= 0xffffffff;
+  const variation = hasAudibleVariation(recipe);
   const parameters = Object.entries(recipe.parameters ?? {});
   const primary = parameters[0];
   const drive = primary
@@ -153,94 +143,98 @@ function SoundSession({
           </p>
           {error && <p role="alert">{error}</p>}
         </div>
-        <div className="catalog-parameters">
-          <h2>Customize</h2>
-          {parameters.length > 0 && (
-            <div role="group" aria-label="Sound controls">
-              {parameters.map(([name, parameter]) => (
-                <label key={name}>
-                  {parameterLabel(slug, name)}: {values[name]?.toFixed(2)}
-                  <input
-                    aria-label={parameterLabel(slug, name)}
-                    disabled={!ready}
-                    type="range"
-                    min={parameter.min}
-                    max={parameter.max}
-                    step={(parameter.max - parameter.min) / 100}
-                    value={values[name] ?? parameter.default}
-                    onChange={(event) =>
-                      updateControl(slug, name, Number(event.target.value))
-                    }
-                  />
-                  {parameterEndpoints(slug, name) && (
-                    <span className="morph-endpoints" aria-hidden="true">
-                      {parameterEndpoints(slug, name)?.map((endpoint) => (
-                        <span key={endpoint}>{endpoint}</span>
-                      ))}
+        {(parameters.length > 0 || variation) && (
+          <div className="catalog-parameters">
+            <h2>Sound controls</h2>
+            {parameters.length > 0 && (
+              <div role="group" aria-label="Sound controls">
+                {parameters.map(([name, parameter]) => (
+                  <label key={name}>
+                    {parameterLabel(slug, name)}: {values[name]?.toFixed(2)}
+                    <input
+                      aria-label={parameterLabel(slug, name)}
+                      disabled={!ready}
+                      type="range"
+                      min={parameter.min}
+                      max={parameter.max}
+                      step={(parameter.max - parameter.min) / 100}
+                      value={values[name] ?? parameter.default}
+                      onChange={(event) =>
+                        updateControl(slug, name, Number(event.target.value))
+                      }
+                    />
+                    {parameterEndpoints(slug, name) && (
+                      <span className="morph-endpoints" aria-hidden="true">
+                        {parameterEndpoints(slug, name)?.map((endpoint) => (
+                          <span key={endpoint}>{endpoint}</span>
+                        ))}
+                      </span>
+                    )}
+                    <span className="control-mode">
+                      {parameter.mode === "live"
+                        ? "Changes this voice while it plays"
+                        : "Applies on the next Play"}
                     </span>
-                  )}
-                  <span className="control-mode">
-                    {parameter.mode === "live"
-                      ? "Changes this voice while it plays"
-                      : "Applies on the next Play"}
-                  </span>
-                </label>
-              ))}
-            </div>
-          )}
-          <div
-            className="variation-controls"
-            role="group"
-            aria-label="Variation"
-          >
-            <label>
-              Seed (next Play)
-              <input
-                aria-label={`${slug} seed`}
-                disabled={!ready}
-                type="number"
-                min="0"
-                max="4294967295"
-                step="1"
-                value={seed}
-                onChange={(event) => changeSeed(event.target.value)}
-              />
-            </label>
-            <div className="audio-controls">
-              <Button
-                disabled={!ready}
-                onClick={() =>
-                  changeSeed(String(Math.floor(Math.random() * 0x100000000)))
-                }
+                  </label>
+                ))}
+              </div>
+            )}
+            {variation && (
+              <div
+                className="variation-controls"
+                role="group"
+                aria-label="Variation"
               >
-                Randomize {info.title.toLowerCase()}
-              </Button>
-              <Button disabled={!ready} onClick={() => changeSeed("42")}>
-                Reset variation
-              </Button>
-            </div>
-            {!validSeed && (
-              <p role="alert">Seed must be an unsigned 32-bit integer.</p>
+                <label>
+                  Seed (next Play)
+                  <input
+                    aria-label={`${slug} seed`}
+                    disabled={!ready}
+                    type="number"
+                    min="0"
+                    max="4294967295"
+                    step="1"
+                    value={seed}
+                    onChange={(event) => changeSeed(event.target.value)}
+                  />
+                </label>
+                <div className="audio-controls">
+                  <Button
+                    disabled={!ready}
+                    onClick={() =>
+                      changeSeed(
+                        String(Math.floor(Math.random() * 0x100000000)),
+                      )
+                    }
+                  >
+                    Randomize {info.title.toLowerCase()}
+                  </Button>
+                  <Button disabled={!ready} onClick={() => changeSeed("42")}>
+                    Reset variation
+                  </Button>
+                </div>
+                {!validSeed && (
+                  <p role="alert">Seed must be an unsigned 32-bit integer.</p>
+                )}
+              </div>
             )}
           </div>
-        </div>
+        )}
       </div>
-      <CatalogInstall slug={slug} />
-      <div className="catalog-inspector">
-        <h2>Inspect source</h2>
-        <RecipeTools
-          kind={slug}
-          recipe={recipe}
-          seed={validSeed ? seedValue : null}
-          controls={values}
-          rawSource={rawSource}
-          onReset={() => {
-            resetControl(slug);
-            changeSeed("42");
-          }}
-          onApply={applyRecipe}
-        />
-      </div>
+      <RecipeTools
+        kind={slug}
+        recipe={recipe}
+        seed={variation ? (validSeed ? seedValue : null) : 42}
+        controls={values}
+        onReset={() => {
+          resetControl(slug);
+          changeSeed("42");
+        }}
+        onApply={(kind, next) => {
+          applyRecipe(kind, next);
+          if (!hasAudibleVariation(next)) changeSeed("42");
+        }}
+      />
     </>
   );
 }

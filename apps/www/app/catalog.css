@@ -770,34 +770,13 @@
   .foundation.catalog-page .catalog-playback p {
     max-width: 62ch;
   }
-  .foundation.catalog-page .catalog-source-tools {
-    min-width: 0;
+  .foundation.catalog-page .catalog-usage pre {
+    margin-block: 0.75rem;
+    max-height: 32rem;
   }
-  .foundation.catalog-page .catalog-source-note,
-  .foundation.catalog-page .catalog-source-tools p {
-    max-width: 68ch;
-  }
-  .foundation.catalog-page .catalog-source-tools p code {
-    overflow-wrap: anywhere;
-  }
-  .foundation.catalog-page .catalog-source-files {
-    display: grid;
-    gap: 0.85rem;
-    margin: 0.5rem 0 1rem;
-  }
-  .foundation.catalog-page .catalog-source-files p {
-    margin: 0.2rem 0;
-  }
-  .foundation.catalog-page .catalog-source-tools pre {
-    max-height: 16rem;
-    margin-block: 0.75rem 1.5rem;
-  }
-  .foundation.catalog-page .catalog-detail .inspector-tabs {
-    margin-bottom: 0.75rem;
-  }
-  .foundation.catalog-page .catalog-detail .recipe-tools [role="tabpanel"] h3 {
+  .foundation.catalog-page .catalog-usage h3 {
     font-size: 1.35rem;
-    margin-block: 0.35rem 0.5rem;
+    margin-block: 1rem 0.5rem;
   }
   .foundation.catalog-page .catalog-detail .recipe-tools pre,
   .foundation.catalog-page .catalog-detail .recipe-tools textarea {
