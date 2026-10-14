@@ -106,10 +106,10 @@ test("repeated ignition and Stop bound voices and dispose on navigation", async 
   for (let i = 0; i < 5; i++) {
     await page.getByRole("button", { name: "Ignite", exact: true }).click();
     await expect(pad).toHaveAttribute("data-state", "running");
-    expect(
-      (await probe(page)).sources - (await probe(page)).ended,
-    ).toBeLessThanOrEqual(26);
+    const current = await probe(page);
+    expect(current.sources - current.ended).toBeLessThanOrEqual(26);
     await page.getByRole("button", { name: "Stop all", exact: true }).click();
+    await expect(pad).toHaveAttribute("data-state", "stopped");
   }
   await expect
     .poll(async () => {
