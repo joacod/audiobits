@@ -3,8 +3,15 @@
 The [GitHub source registry](https://ui.shadcn.com/docs/registry/github) installs
 individual recipes and experiences from this repository. You own the copied
 source and can edit it without a catalog package, registry server or monorepo
-checkout. `audiobits` is the only runtime dependency. Retain the included MIT
-license when redistributing source.
+checkout. `audiobits` is the only runtime dependency.
+
+Original source and documentation under `catalog/`, including recipes, sound
+controllers, helpers, and examples, use the [0BSD license](LICENSE). You can copy,
+modify, redistribute, and use them commercially without retaining license or
+copyright notices. No credit to AudioBits is required. This catalog license
+applies instead of the repository's root MIT license within `catalog/`.
+The `audiobits` runtime, website, tooling, and repository code outside `catalog/`
+remain [MIT-licensed](../LICENSE); dependencies keep their own licenses.
 
 ## Install and review
 
@@ -104,7 +111,7 @@ manifest. It contains eight recipes: `confirmation`, `impact`, `thruster`,
 `tactile-click`, `gentle-rejection`, `glass-notification`, `whoosh`, and `power-up`;
 and three experiences: `energy-charge`, `reactive-thruster`, and `lightsaber`. Use any ID with
 `view` or `add`. Metadata records classification, categories, schema version,
-required public capabilities and complete source/license manifests. The website
+required public capabilities and complete source manifests. The website
 derives discovery titles, descriptions and source lists from this registry;
 visual families, control labels and display order belong to the website.
 
@@ -116,7 +123,7 @@ See [recipe ownership](recipes/README.md) for editing and verification.
 
 ## Application integration
 
-Each recipe installs only `recipe.ts` and `LICENSE` under
+Each recipe installs only `recipe.ts` under
 `src/sounds/recipes/<id>/`. Use the examples below in `src/integration.ts`.
 Connect `play()` directly to a user gesture, handle activation errors, call
 `stop()` on cancellation, and `dispose()` when removing the integration.
@@ -390,12 +397,12 @@ export async function dispose() {
 
 ## Interactive experiences
 
-Each item installs its recipes, reusable controller, concise guide, and license.
+Each item installs its recipes, reusable controller, and concise guide.
 Connect your application state and events to the controller using its guide:
 
-- [Energy Charge](experiences/energy-charge/README.md): `recipe.ts`, `progress.ts`, `README.md`, `LICENSE`.
-- [Reactive Thruster](experiences/reactive-thruster/README.md): `recipe.ts`, `pointer.ts`, `README.md`, `LICENSE`.
-- [Lightsaber](experiences/lightsaber/README.md): `recipe.ts`, `controller.ts`, `README.md`, `LICENSE`.
+- [Energy Charge](experiences/energy-charge/README.md): `recipe.ts`, `progress.ts`, `README.md`.
+- [Reactive Thruster](experiences/reactive-thruster/README.md): `recipe.ts`, `pointer.ts`, `README.md`.
+- [Lightsaber](experiences/lightsaber/README.md): `recipe.ts`, `controller.ts`, `README.md`.
 
 Reactive Thruster accepts throttle without Impact. Lightsaber owns five acoustic
 recipes in one file; its motion helper is showcase geometry and is not installed.

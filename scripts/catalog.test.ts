@@ -93,7 +93,9 @@ test("registry covers eight minimal recipes and three sound-only experiences", a
     expect(new Set(item.files.map((file) => file.target)).size).toBe(
       item.files.length,
     );
-    expect(bySource.has("LICENSE")).toBe(true);
+    expect(
+      item.files.some((file) => /LICENSE/i.test(file.path + file.target)),
+    ).toBe(false);
     const base = `catalog/${item.meta.classification === "recipe" ? "recipes" : "experiences"}/${item.name}`;
     const controller = {
       "energy-charge": "progress.ts",
@@ -108,11 +110,7 @@ test("registry covers eight minimal recipes and three sound-only experiences", a
             `${base}/README.md`,
           ]
         : []),
-      "LICENSE",
     ]);
-    expect(item.files.find((file) => file.path === "LICENSE")?.target).toBe(
-      `~/src/sounds/${item.meta.classification === "recipe" ? "recipes" : "experiences"}/${item.name}/LICENSE`,
-    );
     for (const file of item.files) {
       const source = readFileSync(file.path, "utf8");
       expect(file.target.startsWith("~/src/sounds/")).toBe(true);

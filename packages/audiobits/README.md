@@ -62,7 +62,8 @@ host is removed. For pending activation, page hiding, and navigation, follow the
 The npm package contains the engine, recipe language, types, validation, schema
 and capability metadata. Ready-made recipes and interactive experiences live in
 the [copy-owned catalog](https://github.com/joacod/audiobits/tree/main/catalog).
-Copy or install the source you need, retain its MIT license, and import it locally.
+Copy or install the [0BSD source](https://github.com/joacod/audiobits/blob/main/catalog/README.md)
+you need and import it locally. No license notices or credit are required for catalog use.
 The copied files belong to your application and can be edited independently.
 
 ## Controls and composition

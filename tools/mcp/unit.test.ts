@@ -46,6 +46,7 @@ test("compatibility reports schema and every missing capability without inferenc
 });
 
 for (const path of [
+  "LICENSE",
   "../LICENSE",
   "catalog/recipes/confirmation/../recipe.ts",
   "/LICENSE",
@@ -98,12 +99,12 @@ test("retrieval uses immutable public origin, no credentials and declared SHA-25
 test("rejects changed content and incorrect origin", async () => {
   const item = itemByName("confirmation");
   await expect(
-    retrieveSources(item, ["LICENSE"], undefined, async (url) =>
+    retrieveSources(item, [item.files[0].path], undefined, async (url) =>
       response("changed", String(url)),
     ),
   ).rejects.toMatchObject({ code: "integrity-mismatch" });
   await expect(
-    retrieveSources(item, ["LICENSE"], undefined, async () =>
+    retrieveSources(item, [item.files[0].path], undefined, async () =>
       response("license", "https://evil.example/LICENSE"),
     ),
   ).rejects.toMatchObject({ code: "source-unavailable" });
@@ -112,14 +113,14 @@ test("rejects changed content and incorrect origin", async () => {
 test("rejects oversized declared and streamed source content", async () => {
   const item = itemByName("confirmation");
   await expect(
-    retrieveSources(item, ["LICENSE"], undefined, async (url) =>
+    retrieveSources(item, [item.files[0].path], undefined, async (url) =>
       response("", String(url), {
         "content-length": String(MAX_SOURCE_BYTES + 1),
       }),
     ),
   ).rejects.toMatchObject({ code: "source-unavailable" });
   await expect(
-    retrieveSources(item, ["LICENSE"], undefined, async (url) =>
+    retrieveSources(item, [item.files[0].path], undefined, async (url) =>
       response("x".repeat(MAX_SOURCE_BYTES + 1), String(url)),
     ),
   ).rejects.toMatchObject({ code: "source-too-large" });
@@ -129,13 +130,17 @@ test("monorepo verifies installed sound source and excludes demo dependencies wi
   const network = vi.fn();
   const output = await retrieveSources(
     itemByName("reactive-thruster"),
-    ["catalog/experiences/reactive-thruster/pointer.ts", "LICENSE"],
+    [
+      "catalog/experiences/reactive-thruster/pointer.ts",
+      "catalog/experiences/reactive-thruster/recipe.ts",
+    ],
     resolve("."),
     network,
   );
   expect(output).toHaveLength(2);
   expect(output.every((file) => file.origin === "local")).toBe(true);
   for (const path of [
+    "LICENSE",
     "catalog/recipes/impact/recipe.ts",
     "catalog/experiences/reactive-thruster/host.ts",
   ]) {
@@ -165,7 +170,7 @@ test("explicit network failures produce actionable source diagnostics", async ()
   await expect(
     retrieveSources(
       itemByName("confirmation"),
-      ["LICENSE"],
+      [itemByName("confirmation").files[0].path],
       undefined,
       async () => {
         throw new Error("offline");

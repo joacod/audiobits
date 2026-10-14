@@ -94,7 +94,7 @@ export function itemMetadata(item: CatalogItem) {
       inspect: `npx shadcn@4.21.4 view ${address}`,
       install: `npx shadcn@4.21.4 add ${address}`,
       guidance:
-        "Run the established shadcn registry command yourself from the consumer project. Review conflicts and retain the MIT license. This MCP returns source for review and never installs it.",
+        "Run the established shadcn registry command yourself from the consumer project. Review conflicts. This MCP returns source for review and never installs it.",
     },
   };
 }

@@ -1,8 +1,8 @@
 # Reactive thruster
 
 Install with `npx shadcn@latest add joacod/audiobits/reactive-thruster`.
-You own and may modify the installed source. Retain the included MIT license.
-The item installs `recipe.ts`, `pointer.ts`, this guide, and `LICENSE` under
+You own and may modify the installed source.
+The item installs `recipe.ts`, `pointer.ts`, and this guide under
 `src/sounds/experiences/reactive-thruster/`. `audiobits` is the only runtime dependency.
 
 ## Application integration

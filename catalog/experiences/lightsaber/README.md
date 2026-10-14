@@ -1,8 +1,8 @@
 # Lightsaber
 
 Install with `npx shadcn@latest add joacod/audiobits/lightsaber`.
-You own and may modify the installed source. Retain the included MIT license.
-The item installs `recipe.ts`, `controller.ts`, this guide, and `LICENSE` under
+You own and may modify the installed source.
+The item installs `recipe.ts`, `controller.ts`, and this guide under
 `src/sounds/experiences/lightsaber/`. `audiobits` is the only runtime dependency.
 
 ## Application integration

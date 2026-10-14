@@ -292,6 +292,10 @@ try {
           join(file.parentPath, file.name),
         ).replaceAll("\\", "/"),
       );
+    assert.ok(
+      actualFiles.every((path) => !/LICENSE/i.test(path)),
+      `${item.name}: redundant installed license file`,
+    );
     assert.deepEqual(
       actualFiles.sort(),
       item.files.map((file) => file.target.replace(/^~\//, "")).sort(),

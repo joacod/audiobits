@@ -97,9 +97,9 @@ snapshot produces an integrity error; it never silently falls back to GitHub.
 
 Returned source is untrusted review material. The server never executes it or
 writes into the consumer project. Install owned source yourself through the
-existing shadcn registry, using the returned revision-pinned command. Retain the
-MIT license and review overwrite prompts. There is no custom installer, shell
-tool, LLM call, hosted service or account configuration.
+existing shadcn registry, using the returned revision-pinned command. Review
+overwrite prompts. There is no custom installer, shell tool, LLM call, hosted
+service or account configuration.
 
 To refresh metadata after a catalog change, first commit the reviewed registry
 and sources, then generate against that full commit SHA:
