@@ -11,16 +11,16 @@ import { createEnergyCharge } from "./progress";
 const audio = createAudio({ maxVoices: 3, maxVoicesPerSound: 2 });
 const charge = createEnergyCharge(audio, {
   state: console.log,
-  error: console.error,
 });
-// In a direct user gesture:
+// In a direct user gesture, with cancellation owned by your host:
+await audio.start();
 charge.start(0);
 // Your application supplies finite normalized progress, in any direction:
 charge.setCharge(0.7);
 charge.setCharge(0.3);
 charge.setCharge(1); // Holds indefinitely. No implicit completion.
 charge.release(); // 300 ms release, plus 50 ms filter cleanup.
-charge.cancel(); // Invalidate pending activation and release. No completion accent.
+charge.stop(); // Release this controller's voice. No completion accent.
 // When removing your integration:
 charge.dispose(); // Cuts its owned sounds; does not dispose the shared engine.
 void audio.dispose(); // The host owns final engine cleanup.

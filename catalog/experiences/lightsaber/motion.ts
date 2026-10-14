@@ -2,15 +2,6 @@
 export function motionLevel(speed: number) {
   return Number.isFinite(speed) ? Math.min(1, Math.max(0, speed) / 1200) : 0;
 }
-export function smoothMotion(
-  previous: number,
-  target: number,
-  elapsed: number,
-) {
-  const dt = Math.min(64, Math.max(0, Number.isFinite(elapsed) ? elapsed : 0));
-  const tau = target > previous ? 22 : 100;
-  return previous + (target - previous) * (1 - Math.exp(-dt / tau));
-}
 export type Point = { x: number; y: number };
 export function segmentDistance(point: Point, a: Point, b: Point) {
   const dx = b.x - a.x,

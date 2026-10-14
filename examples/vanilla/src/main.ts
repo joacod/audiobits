@@ -1,7 +1,7 @@
 import { createAudio } from "audiobits";
 import { confirmation } from "../../../catalog/recipes/confirmation/recipe";
 import { impact } from "../../../catalog/recipes/impact/recipe";
-import { attachPointerThruster } from "../../../catalog/experiences/reactive-thruster/pointer";
+import { attachPointerThruster } from "../../../catalog/experiences/reactive-thruster/host";
 
 const status = document.querySelector<HTMLParagraphElement>("#status");
 if (!status) throw new Error("Missing consumer status element");

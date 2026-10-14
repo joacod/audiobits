@@ -1,5 +1,5 @@
 import type { mountLightsaber } from "./host";
-import { segmentDistance, type Point } from "./motion";
+import { motionLevel, segmentDistance, type Point } from "./motion";
 
 /** Canvas presentation and input. No audio scheduling outside the controller. */
 export function mountBladeStage(
@@ -36,6 +36,8 @@ export function mountBladeStage(
   const samples = new Float32Array(256);
   let assistedTarget: number | null = null;
   const flashes = [0, 0, 0];
+  const contacts = new Map<number, number>();
+  let contactClock = 0;
   const trails: { base: Point; tip: Point; life: number }[] = [];
   const particles: {
     x: number;
@@ -70,6 +72,8 @@ export function mountBladeStage(
     extension = 0;
     collapsing = false;
     previous = 0;
+    contacts.clear();
+    contactClock = 0;
     lastTip = lastBase = undefined;
     lastMotionTip = undefined;
     assistedTarget = null;
@@ -79,6 +83,10 @@ export function mountBladeStage(
   }
   function stateChanged() {
     canvas.dataset.state = host.control.state;
+    if (host.control.state === "stopped") {
+      contacts.clear();
+      contactClock = 0;
+    }
     if (host.control.state === "stopped" && !collapsing) reset();
     if (host.control.state === "running" && !analyser) {
       try {
@@ -205,7 +213,8 @@ export function mountBladeStage(
     const direction = travel
       ? (Math.abs(dx) >= Math.abs(dy) ? dx : -dy) / travel
       : 0;
-    const motion = host.control.update(speed, dt, direction);
+    const motion = host.control.update(motionLevel(speed), dt, direction);
+    if (active) contactClock += dt;
     canvas.dataset.motion = motion.toFixed(3);
     lastMotionTip = motionTip;
     const length = fullLength * extension;
@@ -250,7 +259,11 @@ export function mountBladeStage(
               assistedTarget === index
                 ? Math.max(0.85, motion)
                 : Math.max(0.3, motion);
-            if (host.control.impact(index, force)) {
+            if (
+              contactClock - (contacts.get(index) ?? -Infinity) >= 850 &&
+              host.clash(force, (index - 1) * 0.35)
+            ) {
+              contacts.set(index, contactClock);
               burst(index, force);
               if (assistedTarget === index) assistedTarget = null;
             }
