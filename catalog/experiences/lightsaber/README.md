@@ -1,44 +1,78 @@
 # Lightsaber
 
-A procedural electrical blade: ignition, a resonant electrical hum, motion-fed
-swells, rapid swing accents, electrical clashes, and retraction. No sampled audio.
+Install with `npx shadcn@latest add joacod/audiobits/lightsaber`.
+You own and may modify the installed source. Retain the included MIT license.
+The item installs `recipe.ts`, `controller.ts`, this guide, and `LICENSE` under
+`src/sounds/experiences/lightsaber/`. `audiobits` is the only runtime dependency.
 
-Install the complete registry item, or keep this folder and its MIT license
-together. Import `mountLightsaber` from `./host` and call `host.ignite()` directly
-in a user gesture. The host owns one engine (eight voices, three per sound,
-master gain -6 dB). It exposes `retract`, `stop`, `mute`, and asynchronous `dispose`.
-Call `dispose` on application removal and handle its rejection.
+## Application integration
 
-`createLightsaber(audio)` is the sound controller for an application-owned engine.
-After your host awaits `audio.start()`, call `ignite()`. Supply normalized movement
-in `[0, 1]` and elapsed milliseconds to `update(movement, elapsed, direction)`,
-with signed direction in `[-1, 1]` for continuous pitch bending. Attack/recovery
-smoothing and native parameter ramps keep the hum continuous. Swing accents
-rearm below 0.2 or on a direction reversal and trigger above 0.48, with a 220 ms
-cooldown. `clash(intensity, pan)` accepts intensity in `[0, 1]` and optional pan
-in `[-1, 1]`, with a 100 ms sound cooldown. It returns whether the clash played.
-`retract()` adds the retraction sound; `stop()` stops owned voices, and `dispose()`
-cuts owned sounds without disposing the shared engine.
+Use this example in `src/integration.ts`. Connect `play()` directly to a user
+gesture and handle activation errors. Connect `update()` to application state or
+events, `stop()` to cancellation, and `dispose()` to removal:
 
-The stages measure handle and tip travel, excluding blade extension, and convert
-1200 px/s to full normalized movement. They own swept collision detection and
-the 850 ms per-target cooldown. The browser host owns activation cancellation,
-visibility policy, and final engine disposal; its Stop also cuts engine tails.
+```ts
+import { createAudio } from "audiobits";
+import { createLightsaber } from "./sounds/experiences/lightsaber/controller";
 
-`mountBladeStage(canvas, host)` supplies mouse, touch, and keyboard input, swept
-blade collisions, bounded trails/particles, and a measured audio seam. Call its
-`stateChanged` from the host's state callback, and dispose the stage before the
-host. Enter ignites, arrows move, Space strikes a visible target, Escape retracts.
-Hold the stage to ignite and drag to swing; pointer release retracts the blade,
-including during pending activation. Hovering does not move the blade. The Ignite
-button and Enter keep it active until Retract or Escape. Pointer cancellation,
-lost capture, window blur, hiding, Stop, and teardown end activity. Returning
-remains silent until a new gesture. Reduced motion removes trails, particles, target rotation, and audio
-ripples. Mute changes output while preserving interaction.
+const audio = createAudio();
+const blade = createLightsaber(audio);
+let request = 0;
 
-The [standalone demo](./index.html) uses a TypeScript-capable development server;
-see [catalog setup](../../README.md#optional-standalone-demo). The website uses
-these same sources and owns its controls and source inspector.
+export async function play() {
+  const token = ++request;
+  await audio.start();
+  if (token !== request) return;
+  blade.ignite();
+}
 
-Automated verification targets Chromium. Signal bounds and lifecycle tests do
-not establish listening quality or physical-device compatibility.
+export function update(value: number, elapsed = 16, direction = 0) {
+  blade.update(value, elapsed, direction);
+}
+
+// Connect your application collision event; force [0, 1], pan [-1, 1].
+export function strike(force = 0.8, pan = 0) {
+  return blade.clash(force, pan);
+}
+export function retract() {
+  request++;
+  blade.retract();
+}
+
+export function stop() {
+  request++;
+  blade.stop();
+}
+
+export async function dispose() {
+  stop();
+  blade.dispose();
+  await audio.dispose();
+}
+```
+
+The controller owns the sustained hum plus ignition, swing, clash, and retraction
+recipes in `recipe.ts`. Supply movement in `[0, 1]`, elapsed milliseconds, and
+direction in `[-1, 1]`. `clash(force, pan)` accepts application collision events;
+`retract()` adds a retraction accent. `stop()` releases owned voices, while
+`dispose()` cuts owned sounds. It contains no stage or collision geometry.
+
+The controller uses an application-owned engine. When sharing an engine, dispose
+only this controller on removal; the application owns engine suspension and final
+disposal. Stop on cancellation, blur, or hiding, and invalidate pending activation
+before suspension or teardown. Returning requires a fresh user gesture.
+See the [lifecycle guide](https://www.audiobits.dev/docs/lifecycle).
+
+## Repository showcase
+
+The complete [public showcase](https://www.audiobits.dev/catalog/lightsaber) and
+[repository demo](https://github.com/joacod/audiobits/tree/main/catalog/experiences/lightsaber)
+remain available. Their browser host, input adapters, visuals, and HTML are
+repository examples and are excluded from installation. Run the demo from a
+repository checkout using the
+[catalog setup](https://github.com/joacod/audiobits/blob/main/catalog/README.md#optional-standalone-demo).
+
+Source contents and targets are defined by the root `registry.json`. Recipes use
+schema 1 and public AudioBits exports. Automated browser verification targets
+Chromium; signal and lifecycle checks do not establish listening quality or
+physical-device compatibility.

@@ -1,173 +1,68 @@
 # Reactive thruster
 
-Developer-owned source for a sustained motor, turbine, and exhaust sound. Copy
-[recipe.ts](recipe.ts) and [pointer.ts](pointer.ts) together into your TypeScript
-browser project and install the runtime:
+Install with `npx shadcn@latest add joacod/audiobits/reactive-thruster`.
+You own and may modify the installed source. Retain the included MIT license.
+The item installs `recipe.ts`, `pointer.ts`, this guide, and `LICENSE` under
+`src/sounds/experiences/reactive-thruster/`. `audiobits` is the only runtime dependency.
 
-```sh
-npm install audiobits
-```
+## Application integration
 
-The recipe is the single acoustic definition: serializable schema-1 data with
-one live `throttle` control in `[0, 1]`, 60 ms smoothing, and up to 280 ms release.
-It has no assets, UI state, or website imports. `audio.sound()` validates it.
-The simpler Thruster recipe is available separately in `catalog/recipes/thruster/`.
-
-`createThruster(audio)` in `pointer.ts` accepts application throttle directly.
-After your host awaits `audio.start()`, call `start(value)`, update with
-`setThrottle(value)`, and call `stop()` or `dispose()` on removal. Throttle is
-bounded to `[0, 1]`; the controller owns no DOM, input handlers, or frames.
-
-The showcase adapter in `host.ts` translates CSS-pixel velocity into throttle, reaching full thrust
-at 1200 px/s. It bounds input, averages event velocity over 40 ms, sends at most
-one update per animation frame, and decays toward idle over 120 ms when motion
-stops. The runtime applies native parameter ramps. Captured pointer release,
-cancellation, lost capture, blur, and hiding stop the voice. Generation checks
-prevent a cancelled activation from playing later. Start/Stop plus a standard
-range input offer the same sound without precise pointer movement.
-
-## Complete interactive example
-
-The [interactive showcase](https://www.audiobits.dev/catalog/reactive-thruster)
-uses [host.ts](host.ts) with the same recipe and sound controller. Copy
-`recipe.ts`, `pointer.ts`, `host.ts`, and [index.html](index.html) with their
-relative paths. Also copy [canonical Impact](../../recipes/impact/recipe.ts) at
-`../../recipes/impact/recipe.ts` relative to the host. The registry installs this
-complete manifest, including both licenses. Use your application's existing
-toolchain, or follow the
-[optional standalone demo setup](https://github.com/joacod/audiobits/blob/main/catalog/README.md#optional-standalone-demo).
-AudioBits does not require Vite.
-
-Open the demo's local URL. The HTML binds pointer and keyboard controls, one-shot
-impact, Mute, Stop, and recoverable activation errors. The host owns a shared
-engine, suspends on hide, and closes on page teardown. In an SPA, call
-`await host.dispose()` when removing the view.
-
-Discovery metadata and source manifests live in root `registry.json`. Website
-presentation in `apps/www/lib/experiences.ts` derives titles, descriptions and
-source filenames from that registry while keeping controls and related sounds.
-Future experiences can use the same source-file pattern without changing `SoundRecipe`
-or forcing an interaction into a standalone sound workbench.
-
-## Minimal host
-
-Use a surface with `touch-action: none`, a Start button, a Stop button, a range
-input with `min="0" max="1" step="0.01" value="0.2"`, and status/error text.
-The host owns DOM presentation, engine limits, shared mixing, and final cleanup:
+Use this example in `src/integration.ts`. Connect `play()` directly to a user
+gesture and handle activation errors. Connect `update()` to application state or
+events, `stop()` to cancellation, and `dispose()` to removal:
 
 ```ts
 import { createAudio } from "audiobits";
-import { impact } from "../../recipes/impact/recipe";
-import { attachPointerThruster } from "./host";
+import { createThruster } from "./sounds/experiences/reactive-thruster/pointer";
 
-const audio = createAudio({ maxVoices: 8, maxVoicesPerSound: 2 });
-const hit = audio.sound(impact);
-const pad = document.querySelector<HTMLElement>("#pad")!;
-const status = document.querySelector<HTMLElement>("#status")!;
-const error = document.querySelector<HTMLElement>("#error")!;
-const throttle = document.querySelector<HTMLInputElement>("#throttle")!;
-const interaction = attachPointerThruster(pad, audio, {
-  state: (value) => {
-    status.textContent = value;
-  },
-  error: (cause) => {
-    error.textContent = String(cause);
-  },
-  throttle: (value) => {
-    pad.dataset.throttle = String(value);
-  },
-});
-const listeners = new AbortController();
-const options = { signal: listeners.signal };
-let generation = 0;
-document.querySelector("#start")!.addEventListener(
-  "click",
-  () => {
-    interaction.start(Number(throttle.value));
-  },
-  options,
-);
-document.querySelector("#stop")!.addEventListener(
-  "click",
-  () => {
-    generation++;
-    interaction.stop();
-  },
-  options,
-);
-throttle.addEventListener(
-  "input",
-  () => {
-    interaction.setThrottle(Number(throttle.value));
-  },
-  options,
-);
-document.querySelector("#impact")!.addEventListener(
-  "click",
-  () => {
-    const token = generation;
-    void audio
-      .start()
-      .then(() => {
-        if (token === generation && !document.hidden)
-          hit.play({ seed: 42, bus: audio.bus("impacts") });
-      })
-      .catch((cause: unknown) => {
-        error.textContent = String(cause);
-      });
-  },
-  options,
-);
-document.addEventListener(
-  "visibilitychange",
-  () => {
-    if (document.hidden) {
-      generation++;
-      audio.stopAll({ tails: "cut" });
-      void audio.suspend().catch((cause: unknown) => {
-        error.textContent = String(cause);
-      });
-    }
-  },
-  options,
-);
-window.addEventListener(
-  "pagehide",
-  () => {
-    generation++;
-    listeners.abort();
-    interaction.dispose();
-    void audio.dispose().catch(console.error);
-  },
-  { once: true, ...options },
-);
+const audio = createAudio();
+const thruster = createThruster(audio);
+let request = 0;
+
+export async function play() {
+  const token = ++request;
+  await audio.start();
+  if (token !== request) return;
+  thruster.start(0.2);
+}
+
+export function update(value: number) {
+  thruster.setThrottle(value);
+}
+
+export function stop() {
+  request++;
+  thruster.stop();
+}
+
+export async function dispose() {
+  stop();
+  thruster.dispose();
+  await audio.dispose();
+}
 ```
 
-Call `start()` only from a direct user action. `stop()` preserves the recipe
-release; `dispose()` cuts owned voices and removes integration listeners and
-frames. The integration never disposes or suspends the shared engine. The host
-must suspend on hide and dispose on teardown; returning requires a new gesture.
-Per-sound limits also bound release overlap during rapid restarts.
+Supply normalized throttle in `[0, 1]`. The controller bounds input and owns
+no DOM, pointer handlers, or animation frames. Its recipe provides motor, turbine,
+and exhaust layers with 60 ms native smoothing and up to 280 ms release.
+Impact is a separate showcase action, not a dependency of this controller.
 
-For recipe-only usage, import `reactiveThruster`, call
-`audio.sound(reactiveThruster)`, play after `await audio.start()` in a gesture,
-then use `voice.set({ throttle })` and `voice.stop()`.
+The controller uses an application-owned engine. When sharing an engine, dispose
+only this controller on removal; the application owns engine suspension and final
+disposal. Stop on cancellation, blur, or hiding, and invalidate pending activation
+before suspension or teardown. Returning requires a fresh user gesture.
+See the [lifecycle guide](https://www.audiobits.dev/docs/lifecycle).
 
-## Run the independent consumer
+## Repository showcase
 
-From the repository root:
+The complete [public showcase](https://www.audiobits.dev/catalog/reactive-thruster) and
+[repository demo](https://github.com/joacod/audiobits/tree/main/catalog/experiences/reactive-thruster)
+remain available. Their browser host, input adapters, visuals, and HTML are
+repository examples and are excluded from installation. Run the demo from a
+repository checkout using the
+[catalog setup](https://github.com/joacod/audiobits/blob/main/catalog/README.md#optional-standalone-demo).
 
-```sh
-pnpm build:lib
-pnpm --filter @audiobits/vanilla dev
-```
-
-[Vanilla host source](../../../examples/vanilla/src/main.ts) imports only public
-AudioBits exports and these canonical files. The consumer's TypeScript path
-entry resolves the installed public package for source outside its workspace;
-a copied recipe next to your host needs no such entry.
-
-Automated checks cover recipe validation, control mapping, activation races,
-release, signal bounds, and Chromium lifecycle behavior. Output is tuned
-for the example's default master gain and bounded voices; arbitrary mixes are
-not guaranteed to avoid clipping.
+Source contents and targets are defined by the root `registry.json`. Recipes use
+schema 1 and public AudioBits exports. Automated browser verification targets
+Chromium; signal and lifecycle checks do not establish listening quality or
+physical-device compatibility.

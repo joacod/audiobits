@@ -1,41 +1,11 @@
-import { experienceSourceFiles, registryItem } from "./registry";
-
-// Website metadata is separate from acoustic recipe data and catalog recipes.
-export const reactiveThrusterExperience = {
-  title: registryItem("reactive-thruster").title,
-  href: "/catalog/reactive-thruster",
-  description: registryItem("reactive-thruster").description,
-  controls: ["Pointer velocity", "Throttle", "Impact"],
-  relatedSounds: ["thruster", "impact"],
-  sourceFiles: experienceSourceFiles("reactive-thruster").map(
-    (file) => file.name,
-  ),
-} as const;
-
-export const energyChargeExperience = {
-  title: registryItem("energy-charge").title,
-  href: "/catalog/energy-charge",
-  description: registryItem("energy-charge").description,
-  controls: ["Hold to charge", "Progress"],
-  relatedSounds: [],
-  sourceFiles: experienceSourceFiles("energy-charge").map((file) => file.name),
-} as const;
-
-export const lightsaberExperience = {
-  title: registryItem("lightsaber").title,
-  href: "/catalog/lightsaber",
-  description: registryItem("lightsaber").description,
-  controls: ["Ignite", "Motion", "Strike", "Retract"],
-  relatedSounds: [],
-  sourceFiles: experienceSourceFiles("lightsaber").map((file) => file.name),
-} as const;
+import { registryItem } from "./registry";
 
 export const experienceSourcePurpose = {
   lightsaber: {
     "recipe.ts":
       "Five original schema-1 recipes: hum, ignition, swing, clash, and retraction.",
     "motion.ts":
-      "CSS-pixel speed mapping, asymmetric motion smoothing, and segment collision geometry.",
+      "Showcase CSS-pixel speed mapping and segment collision geometry.",
     "controller.ts":
       "DOM-free voice ownership, live modulation, swing hysteresis, and impact cooldowns.",
     "host.ts":
@@ -56,15 +26,57 @@ export const experienceSourcePurpose = {
       "Standalone page that wires the host to Start, Release, Stop all, Mute, and a range input.",
   },
   "reactive-thruster": {
-    "../../recipes/impact/recipe.ts":
-      "Canonical Impact recipe used by the host. Keep this relative path when copying the complete experience.",
     "recipe.ts":
       "Motor, turbine, and exhaust. Schema-1 data with a live throttle parameter. Separate from the simpler catalog Thruster recipe.",
     "pointer.ts":
-      "Turns pointer velocity into throttle. Full thrust is 1200 px/s. Owns capture, release, and cancellation on the play surface.",
+      "Sound controller accepting application throttle, with no DOM, input handlers, or frames.",
     "host.ts":
       "Shared engine for the thruster and canonical impact, plus hide, blur, pagehide, and dispose.",
     "index.html":
       "Standalone page with the pad, throttle, impact, Mute, and Stop all. Pointer capture stays on the pad.",
+    "../../recipes/impact/recipe.ts":
+      "Canonical Impact recipe used by the host. Keep this relative path when copying the complete experience.",
   },
 } as const;
+
+// Website metadata is separate from acoustic recipe data and catalog recipes.
+export const reactiveThrusterExperience = {
+  title: registryItem("reactive-thruster").title,
+  href: "/catalog/reactive-thruster",
+  description: registryItem("reactive-thruster").description,
+  controls: ["Pointer velocity", "Throttle", "Impact"],
+  relatedSounds: ["thruster", "impact"],
+  sourceFiles: experienceDemoSourceFiles("reactive-thruster").map(
+    (file) => file.name,
+  ),
+} as const;
+
+export const energyChargeExperience = {
+  title: registryItem("energy-charge").title,
+  href: "/catalog/energy-charge",
+  description: registryItem("energy-charge").description,
+  controls: ["Hold to charge", "Progress"],
+  relatedSounds: [],
+  sourceFiles: experienceDemoSourceFiles("energy-charge").map(
+    (file) => file.name,
+  ),
+} as const;
+
+export const lightsaberExperience = {
+  title: registryItem("lightsaber").title,
+  href: "/catalog/lightsaber",
+  description: registryItem("lightsaber").description,
+  controls: ["Ignite", "Motion", "Strike", "Retract"],
+  relatedSounds: [],
+  sourceFiles: experienceDemoSourceFiles("lightsaber").map((file) => file.name),
+} as const;
+
+// Presentation source stays browsable without becoming an installation manifest.
+export function experienceDemoSourceFiles(
+  id: keyof typeof experienceSourcePurpose,
+) {
+  return Object.keys(experienceSourcePurpose[id]).map((name) => ({
+    name,
+    path: `catalog/experiences/${id}/${name}`,
+  }));
+}

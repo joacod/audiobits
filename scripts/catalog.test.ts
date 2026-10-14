@@ -16,7 +16,7 @@ test("canonical gallery imports resolve in native Node tooling", () => {
   ]);
 });
 
-test("registry covers eight recipes and three complete, independent experiences", async () => {
+test("registry covers eight minimal recipes and three sound-only experiences", async () => {
   expect(registry.items).toHaveLength(11);
   expect(new Set(registry.items.map((item) => item.name)).size).toBe(11);
   expect(registry.items.map((item) => item.name).sort()).toEqual(
@@ -74,11 +74,31 @@ test("registry covers eight recipes and three complete, independent experiences"
     );
     expect(bySource.has("LICENSE")).toBe(true);
     const base = `catalog/${item.meta.classification === "recipe" ? "recipes" : "experiences"}/${item.name}`;
-    for (const file of readdirSync(base))
-      expect(bySource.has(`${base}/${file}`)).toBe(true);
+    const controller = {
+      "energy-charge": "progress.ts",
+      "reactive-thruster": "pointer.ts",
+      lightsaber: "controller.ts",
+    };
+    expect(item.files.map((file) => file.path)).toEqual([
+      `${base}/recipe.ts`,
+      ...(item.meta.classification === "experience"
+        ? [
+            `${base}/${controller[item.name as keyof typeof controller]}`,
+            `${base}/README.md`,
+          ]
+        : []),
+      "LICENSE",
+    ]);
+    expect(item.files.find((file) => file.path === "LICENSE")?.target).toBe(
+      `~/src/sounds/${item.meta.classification === "recipe" ? "recipes" : "experiences"}/${item.name}/LICENSE`,
+    );
     for (const file of item.files) {
       const source = readFileSync(file.path, "utf8");
       expect(file.target.startsWith("~/src/sounds/")).toBe(true);
+      if (file.path.endsWith(".ts"))
+        expect(source).not.toMatch(
+          /\b(?:document|window|HTMLElement|HTMLCanvasElement|requestAnimationFrame)\b/,
+        );
       for (const match of source.matchAll(
         /(?:from\s+|import\s*\(|src=)["']([^"']+)["']/g,
       )) {

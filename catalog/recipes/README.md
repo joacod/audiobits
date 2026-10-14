@@ -20,6 +20,7 @@ at control minima, defaults and maxima.
 `registry.json` at the repository root records stable item IDs, export names,
 discovery metadata, required capabilities and complete file/license manifests.
 Keep metadata and manifests accurate when editing source. `pnpm test:package`
-copies all ten registry items into separate installed source trees, typechecks
-every TypeScript file against the packed public runtime, validates the recipes,
-and exercises both complete experiences in Chromium.
+copies all eleven registry items into separate installed source trees, typechecks
+every TypeScript file and documented integration against the packed public
+runtime, validates the recipes, and exercises all installed examples plus the
+three repository demonstrations in Chromium.

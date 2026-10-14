@@ -13,6 +13,7 @@ import {
   stat,
   mkdir,
   copyFile,
+  cp,
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -94,6 +95,8 @@ try {
     'import { createAudio, defineSound, validateRecipe } from "audiobits"; import { confirmation } from "./items/confirmation/src/sounds/recipes/confirmation/recipe.js"; import { impact } from "./items/impact/src/sounds/recipes/impact/recipe.js"; import { thruster } from "./items/thruster/src/sounds/recipes/thruster/recipe.js"; const audio = createAudio(); const recipe = defineSound(confirmation); audio.sound(recipe); const dynamic = () => { const voice = audio.sound(thruster).play({ seed: 42, parameters: { throttle: 0.2 } }); voice.set({ throttle: 1 }); const bus = audio.bus("effects"); bus.setGainDb(-6, 0.1); bus.setMuted(true); bus.setParent(audio.master); audio.sound(impact).play({ bus }); const analyser = audio.native.context.createAnalyser(); const detach = audio.native.connect(analyser); detach(); analyser.disconnect(); audio.stopAll({ tails: "cut" }); bus.dispose(); const seed: number = voice.seed; audio.sound(impact).play({ parameters: { intensity: 1 }, seed }); voice.stop(); }; void dynamic; console.log(validateRecipe(recipe)); void audio.dispose();\n',
   );
   const registry = JSON.parse(await readFile("registry.json", "utf8"));
+  const catalogGuide = await readFile("catalog/README.md", "utf8");
+  const catalogExamples = [];
   evidence.catalog = [];
   for (const item of registry.items) {
     // Each item has its own source tree. Sibling items cannot satisfy imports.
@@ -105,6 +108,40 @@ try {
       await copyFile(join(root, file.path), target);
       if (target.endsWith(".ts")) types.push(target);
     }
+    const guide =
+      item.meta.classification === "recipe"
+        ? catalogGuide
+        : await readFile(
+            join(
+              directory,
+              item.files
+                .find((file) => file.path.endsWith("/README.md"))
+                .target.replace(/^~\//, ""),
+            ),
+            "utf8",
+          );
+    const matches = [...guide.matchAll(/```ts\n([\s\S]*?)```/g)].filter(
+      (match) =>
+        match[1].includes(
+          `from "./sounds/${item.meta.classification === "recipe" ? "recipes" : "experiences"}/${item.name}/`,
+        ),
+    );
+    assert.equal(
+      matches.length,
+      1,
+      `${item.name}: one working installed-path example`,
+    );
+    const exampleSource = join(directory, "src/integration.ts");
+    await writeFile(exampleSource, matches[0][1]);
+    types.push(exampleSource);
+    catalogExamples.push({
+      name: `catalog-${item.name}`,
+      file: item.name,
+      index: 0,
+      code: matches[0][1],
+      source: exampleSource,
+      sustained: item.meta.requiredCapabilities.kinds.includes("sustained"),
+    });
     run(
       process.execPath,
       [
@@ -156,19 +193,24 @@ try {
       files: item.files.length,
       typecheck: "passed",
       validation: "passed",
+      example: "typechecked",
     });
   }
+  // Repository demonstrations are verified separately from installed source.
+  await cp(join(root, "catalog"), join(consumer, "showcases/catalog"), {
+    recursive: true,
+  });
   const bladeDirectory = join(
     consumer,
-    "items/lightsaber/src/sounds/experiences/lightsaber",
+    "showcases/catalog/experiences/lightsaber",
   );
   const thrusterDirectory = join(
     consumer,
-    "items/reactive-thruster/src/sounds/experiences/reactive-thruster",
+    "showcases/catalog/experiences/reactive-thruster",
   );
   const energyDirectory = join(
     consumer,
-    "items/energy-charge/src/sounds/experiences/energy-charge",
+    "showcases/catalog/experiences/energy-charge",
   );
   await writeFile(
     join(consumer, "authoring.types.ts"),
@@ -346,6 +388,7 @@ try {
     index,
     typecheck: "passed",
   }));
+  examples.push(...catalogExamples);
   const browserOutput = join(consumer, "browser");
   await mkdir(browserOutput);
   for (const name of ["baseline", "unused"]) {
@@ -372,8 +415,11 @@ try {
   evidence.treeShaking = true;
   // Execute exact packaged host examples, adding only caller-owned signal probes.
   for (const example of examples) {
+    const browserSource =
+      example.source?.replace(/\.ts$/, "-browser.ts") ??
+      join(consumer, `${example.name}-browser.ts`);
     await writeFile(
-      join(consumer, `${example.name}-browser.ts`),
+      browserSource,
       `${example.code}
 let context: AudioContext | undefined;
 let analyser: AnalyserNode | undefined;
@@ -402,6 +448,8 @@ const unsubscribe = audio.subscribe((state) => {
 const probe = {
   play,
   stop,
+  ${example.sustained ? "update," : ""}
+  ${example.file === "lightsaber" ? "strike, retract," : ""}
   async dispose() { unsubscribe(); detach?.(); analyser?.disconnect(); await dispose(); },
   get signal() { return signal; },
   get contextTime() { return context?.currentTime; },
@@ -420,7 +468,7 @@ const probe = {
 Object.assign(globalThis, { probe });`,
     );
     await build({
-      entry: [join(consumer, `${example.name}-browser.ts`)],
+      entry: { [`${example.name}-browser`]: browserSource },
       format: "iife",
       globalName: "candidateExample",
       platform: "browser",
@@ -569,8 +617,11 @@ Object.assign(globalThis, { probe });`,
         globalThis.bladeContexts.every((context) => context.state === "closed"),
       );
       assert.deepEqual(errors, []);
-      evidence.catalog.find((item) => item.id === "lightsaber").chromium =
-        "passed";
+      evidence.browser.push({
+        file: "catalog/experiences/lightsaber/index.html",
+        independentHost: true,
+        closed: true,
+      });
       await page.close();
     }
     {
@@ -702,7 +753,7 @@ Object.assign(globalThis, { probe });`,
       await page.click("#play");
       await page.evaluate(() => globalThis.playing);
       assert.equal(await page.evaluate(() => globalThis.contextCount), 1);
-      {
+      if (!example.sustained) {
         // Retrieve after finite voices finish: later automation reads must still
         // see the captured playback signal, rather than just current silence.
         await expect
@@ -745,6 +796,20 @@ Object.assign(globalThis, { probe });`,
         `Native signal must be nonzero and finite: ${diagnostic}`,
       );
       const peak = signal.peak;
+      if (example.sustained) {
+        assert.ok(
+          (await page.evaluate(() => globalThis.probe.counts)).active > 0,
+        );
+        await page.evaluate(() => globalThis.probe.update(0.8));
+        await page.evaluate(() => globalThis.probe.update(0.3));
+        if (example.file === "lightsaber") {
+          assert.equal(
+            await page.evaluate(() => globalThis.probe.strike()),
+            true,
+          );
+          await page.evaluate(() => globalThis.probe.retract());
+        }
+      }
       await page.click("#stop");
       await expect
         .poll(
@@ -774,6 +839,11 @@ Object.assign(globalThis, { probe });`,
         "closed",
       );
       assert.deepEqual(errors, []);
+      const catalogItem = evidence.catalog.find(
+        (item) => item.id === example.file,
+      );
+      if (catalogItem)
+        catalogItem.example = "Chromium playback, update/stop, disposal passed";
       evidence.browser.push({
         file: example.file,
         index: example.index,

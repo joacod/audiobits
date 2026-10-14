@@ -125,16 +125,29 @@ test("rejects oversized declared and streamed source content", async () => {
   ).rejects.toMatchObject({ code: "source-too-large" });
 });
 
-test("monorepo uses the same manifest and verified local files without network", async () => {
+test("monorepo verifies installed sound source and excludes demo dependencies without network", async () => {
   const network = vi.fn();
   const output = await retrieveSources(
     itemByName("reactive-thruster"),
-    ["catalog/recipes/impact/recipe.ts", "LICENSE"],
+    ["catalog/experiences/reactive-thruster/pointer.ts", "LICENSE"],
     resolve("."),
     network,
   );
   expect(output).toHaveLength(2);
   expect(output.every((file) => file.origin === "local")).toBe(true);
+  for (const path of [
+    "catalog/recipes/impact/recipe.ts",
+    "catalog/experiences/reactive-thruster/host.ts",
+  ]) {
+    await expect(
+      retrieveSources(
+        itemByName("reactive-thruster"),
+        [path],
+        resolve("."),
+        network,
+      ),
+    ).rejects.toMatchObject({ code: "undeclared-source" });
+  }
   expect(network).not.toHaveBeenCalled();
 });
 

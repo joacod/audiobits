@@ -1,66 +1,67 @@
 # Energy charge
 
-A developer-owned sustained energy field, outside the npm runtime. Copy
-[recipe.ts](recipe.ts) alone for the sound, or add [progress.ts](progress.ts) for
-application-controlled progress. Install `audiobits` in your browser project.
+Install with `npx shadcn@latest add joacod/audiobits/energy-charge`.
+You own and may modify the installed source. Retain the included MIT license.
+The item installs `recipe.ts`, `progress.ts`, this guide, and `LICENSE` under
+`src/sounds/experiences/energy-charge/`. `audiobits` is the only runtime dependency.
+
+## Application integration
+
+Use this example in `src/integration.ts`. Connect `play()` directly to a user
+gesture and handle activation errors. Connect `update()` to application state or
+events, `stop()` to cancellation, and `dispose()` to removal:
 
 ```ts
 import { createAudio } from "audiobits";
-import { createEnergyCharge } from "./progress";
+import { createEnergyCharge } from "./sounds/experiences/energy-charge/progress";
 
-const audio = createAudio({ maxVoices: 3, maxVoicesPerSound: 2 });
-const charge = createEnergyCharge(audio, {
-  state: console.log,
-});
-// In a direct user gesture, with cancellation owned by your host:
-await audio.start();
-charge.start(0);
-// Your application supplies finite normalized progress, in any direction:
-charge.setCharge(0.7);
-charge.setCharge(0.3);
-charge.setCharge(1); // Holds indefinitely. No implicit completion.
-charge.release(); // 300 ms release, plus 50 ms filter cleanup.
-charge.stop(); // Release this controller's voice. No completion accent.
-// When removing your integration:
-charge.dispose(); // Cuts its owned sounds; does not dispose the shared engine.
-void audio.dispose(); // The host owns final engine cleanup.
+const audio = createAudio();
+const charge = createEnergyCharge(audio);
+let request = 0;
+
+export async function play() {
+  const token = ++request;
+  await audio.start();
+  if (token !== request) return;
+  charge.start(0);
+}
+
+export function update(value: number) {
+  charge.setCharge(value);
+}
+
+export function stop() {
+  request++;
+  charge.stop();
+}
+
+export async function dispose() {
+  stop();
+  charge.dispose();
+  await audio.dispose();
+}
 ```
 
-For direct recipe usage, create `audio.sound(energyCharge)`, await `audio.start()`
-in a gesture, call `sound.play({ parameters: { charge: 0 } })`, then use
-`voice.set({ charge })`, `voice.stop()` and finally `audio.dispose()`.
+Supply finite progress in `[0, 1]`, in either direction. Full charge holds until
+`release()` or `stop()`. Release preserves the 300 ms fade and 50 ms filter cleanup;
+there is no completion accent.
 
-The schema-1 recipe contains no UI, timer or assets. A sine fundamental rises
-from 80 to 320 Hz. Triangle and slightly detuned sawtooth layers form a beating
-field, opening lowpass filters as progress rises. A quiet bandpass noise layer
-adds air. All pitch, filter and gain mappings retarget over 80 ms. Full charge
-sustains until released; decreasing progress reduces intensity on the same voice.
-Signal bounds are verified for the default master level and bounded voices,
-not arbitrary application mixes.
+The controller uses an application-owned engine. When sharing an engine, dispose
+only this controller on removal; the application owns engine suspension and final
+disposal. Stop on cancellation, blur, or hiding, and invalidate pending activation
+before suspension or teardown. Returning requires a fresh user gesture.
+See the [lifecycle guide](https://www.audiobits.dev/docs/lifecycle).
 
-## Complete browser example
+## Repository showcase
 
-Copy `recipe.ts`, `progress.ts`, [host.ts](host.ts) and [index.html](index.html)
-into one folder. Use your application's existing toolchain, or follow the
-[optional standalone demo setup](https://github.com/joacod/audiobits/blob/main/catalog/README.md#optional-standalone-demo).
-AudioBits does not require Vite.
+The complete [public showcase](https://www.audiobits.dev/catalog/energy-charge) and
+[repository demo](https://github.com/joacod/audiobits/tree/main/catalog/experiences/energy-charge)
+remain available. Their browser host, input adapters, visuals, and HTML are
+repository examples and are excluded from installation. Run the demo from a
+repository checkout using the
+[catalog setup](https://github.com/joacod/audiobits/blob/main/catalog/README.md#optional-standalone-demo).
 
-Start charge activates audio explicitly. The slider supplies arbitrary progress,
-Release preserves the tail (300 ms fade plus 50 ms filter cleanup), Stop all
-cuts voices and cancels pending playback,
-and Mute preserves progress silently. Activation errors allow a fresh Start.
-The host suspends on hide, stops on blur, closes on pagehide and exposes
-`host.dispose()` for SPA navigation teardown. Returning never resumes old input.
-The host owns its engine; `progress.ts` can instead share an application engine.
-Per-sound limits bound overlapping tails during rapid release/restart.
-
-The [website showcase](https://www.audiobits.dev/catalog/energy-charge)
-uses these exact sources, adding a three-second hold interaction at the UI layer.
-No completion accent is included: releasing is the recipe's clean tail, while
-cancellation never produces a success sound. A game or task may supply its own
-progress and choose its own completion policy without copying the showcase.
-
-The root `registry.json` records discovery metadata and the complete source and
-license manifest. Installation keeps these files together under
-`src/sounds/experiences/energy-charge/`; the website derives source lists from
-that manifest.
+Source contents and targets are defined by the root `registry.json`. Recipes use
+schema 1 and public AudioBits exports. Automated browser verification targets
+Chromium; signal and lifecycle checks do not establish listening quality or
+physical-device compatibility.
