@@ -2,6 +2,7 @@ import Link from "next/link";
 import { BrandMark } from "../icons/brand-mark";
 import { GithubIcon } from "../icons/github-icon";
 import { NpmIcon } from "../icons/npm-icon";
+import { BrowserNotice } from "./browser-notice";
 
 const github = "https://github.com/joacod/audiobits";
 
@@ -43,6 +44,7 @@ export function SiteHeader({ current }: { current?: "home" | "catalog" }) {
           </a>
         </div>
       </nav>
+      <BrowserNotice />
     </header>
   );
 }

@@ -55,12 +55,15 @@ const thrusterInstall = `npx shadcn@latest add joacod/audiobits/${registryItem("
 export default function Home() {
   return (
     <main className="foundation landing">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
-        }}
-      />
+      {jsonLd.map((item) => (
+        <script
+          key={item["@type"]}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(item).replace(/</g, "\\u003c"),
+          }}
+        />
+      ))}
       <SiteHeader current="home" />
       <ThrusterHero />
       <section
