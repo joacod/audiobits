@@ -288,3 +288,95 @@ Object.assign(globalThis, {
   probeRapid,
   renderProbeComparison,
 });
+
+/** Observe this stage's actual canvas draws and native pending-source cancellation. */
+function installProbeVisualProbe() {
+  const surface = document.querySelector<HTMLElement>(".echo-probe-stage")!;
+  const canvas = surface.querySelector("canvas")!;
+  const paint = canvas.getContext("2d")!;
+  const clock = () =>
+    (globalThis as unknown as { thrusterProbe: { contexts: AudioContext[] } })
+      .thrusterProbe.contexts[0]?.currentTime ?? 0;
+  type Point = readonly [number, number];
+  const frames: {
+    at: number;
+    paths: { from: Point; to: Point }[];
+    lights: Record<string, boolean>;
+  }[] = [];
+  const sources: { at: number; cancelledAt: number | null }[] = [];
+  const records = new WeakMap<
+    AudioScheduledSourceNode,
+    (typeof sources)[number]
+  >();
+  const oscillatorStart = OscillatorNode.prototype.start;
+  const bufferStart = AudioBufferSourceNode.prototype.start;
+  const sourceStop = AudioScheduledSourceNode.prototype.stop;
+  function record(source: AudioScheduledSourceNode, at: number) {
+    const entry = { at, cancelledAt: null };
+    records.set(source, entry);
+    sources.push(entry);
+  }
+  OscillatorNode.prototype.start = function (at = 0) {
+    record(this, at);
+    oscillatorStart.call(this, at);
+  };
+  AudioBufferSourceNode.prototype.start = function (
+    at = 0,
+    offset = 0,
+    duration?: number,
+  ) {
+    record(this, at);
+    if (duration === undefined) bufferStart.call(this, at, offset);
+    else bufferStart.call(this, at, offset, duration);
+  };
+  AudioScheduledSourceNode.prototype.stop = function (at = clock()) {
+    const entry = records.get(this);
+    if (entry && at < entry.at && entry.cancelledAt === null)
+      entry.cancelledAt = clock();
+    sourceStop.call(this, at);
+  };
+  let frame: (typeof frames)[number] | undefined;
+  let from: Point | undefined,
+    to: Point | undefined,
+    lines = 0;
+  const clear = paint.clearRect.bind(paint),
+    begin = paint.beginPath.bind(paint),
+    move = paint.moveTo.bind(paint),
+    line = paint.lineTo.bind(paint),
+    stroke = paint.stroke.bind(paint),
+    text = paint.fillText.bind(paint);
+  const previous = paint.fillStyle;
+  paint.fillStyle = getComputedStyle(surface).getPropertyValue("--mute").trim();
+  const muted = paint.fillStyle;
+  paint.fillStyle = previous;
+  paint.clearRect = (...args) => {
+    frame = { at: clock(), paths: [], lights: {} };
+    frames.push(frame);
+    clear(...args);
+  };
+  paint.beginPath = () => {
+    from = to = undefined;
+    lines = 0;
+    begin();
+  };
+  paint.moveTo = (x, y) => {
+    from = [x, y];
+    move(x, y);
+  };
+  paint.lineTo = (x, y) => {
+    to = [x, y];
+    lines++;
+    line(x, y);
+  };
+  paint.stroke = () => {
+    if (frame && lines === 1 && from && to) frame.paths.push({ from, to });
+    stroke();
+  };
+  paint.fillText = (label, x, y, maxWidth?) => {
+    if (frame) frame.lights[label] = paint.fillStyle !== muted;
+    if (maxWidth === undefined) text(label, x, y);
+    else text(label, x, y, maxWidth);
+  };
+  return { frames, sources };
+}
+Object.assign(globalThis, { installProbeVisualProbe });

@@ -14,6 +14,8 @@ export interface ProbeReflection {
 export interface ProbeEmission {
   readonly at: number;
   readonly reflections: readonly (ProbeReflection & { readonly at: number })[];
+  /** Audio-clock retirement/Stop time, or null while not cancelled. */
+  readonly cancelledAt: number | null;
   readonly ended: Promise<void>;
   stop(): void;
 }
@@ -160,6 +162,9 @@ export function createEchoProbe(audio: AudioEngine) {
     return Object.freeze({
       at,
       reflections: Object.freeze(returns),
+      get cancelledAt() {
+        return group.retiringAt === Infinity ? null : group.retiringAt;
+      },
       ended,
       stop() {
         if (groups.has(group)) retire(group, clock?.currentTime ?? 0);

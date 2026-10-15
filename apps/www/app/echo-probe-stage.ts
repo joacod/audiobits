@@ -79,7 +79,11 @@ export function mountProbeStage(
       let light = 0;
       for (const event of events) {
         const response = event.emission.reflections[index];
-        if (response && now >= response.at)
+        if (
+          response &&
+          response.at <= (event.emission.cancelledAt ?? Infinity) &&
+          now >= response.at
+        )
           light = Math.max(light, 1 - (now - response.at) / 0.3);
       }
       paint.strokeStyle = light > 0 ? signal[index] : mute;
@@ -124,6 +128,7 @@ export function mountProbeStage(
           circle(event.x * width, event.y * height, Math.max(1, radius));
         }
         event.emission.reflections.forEach((response, index) => {
+          if (response.at > (event.emission.cancelledAt ?? Infinity)) return;
           const duration = response.at - event.emission.at;
           const progress = age / duration;
           if (progress < 0 || progress > 1.25) return;

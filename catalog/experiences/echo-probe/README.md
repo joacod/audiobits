@@ -74,7 +74,12 @@ seeded timing, alternating stereo spread, spectral damping, and falling gain.
 They share the reflectors' material character and remain silent between emissions.
 There is no atmospheric loop. Omit reflections to hear the pulse alone.
 Use scheduled times for application feedback, while accounting for cancellation
-when a newer emission takes priority. No JavaScript timer schedules sound.
+when a newer emission takes priority. Read-only `cancelledAt` is `null` until
+retirement, Stop, interruption, or disposal; it then retains the first cancellation
+time on the audio clock, before `ended` settles. Suppress paths and highlights for
+reflections whose `at > cancelledAt`. Returns at or before that time have started
+and may finish their existing visual decay. Scheduled `reflections` stay immutable.
+No JavaScript timer schedules sound.
 
 There are at most two foreground emissions and one releasing group, six early
 returns and three late grains per emission: ten voices and 34 source nodes per

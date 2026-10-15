@@ -347,3 +347,199 @@ test("sustained rapid interaction admits 40 pulses with bounded native sources a
     .toBe(0);
   expect((await probe(page)).connected).toBe(0);
 });
+
+test("retirement removes cancelled paths and highlights while sounded returns finish fading", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await instrument(page, "normal", "echo-probe");
+  const stage = page.getByRole("group", stageName);
+  await expect(stage).toHaveAttribute("data-ready", "true");
+  await page.addScriptTag({ path: harness });
+  await page.evaluate(() => {
+    const h = globalThis as unknown as {
+      installProbeVisualProbe(): unknown;
+      probeVisuals: unknown;
+    };
+    h.probeVisuals = h.installProbeVisualProbe();
+  });
+  const box = (await stage.boundingBox())!;
+  // Close to Felt: that return sounds before retirement; Glass and Stone are pending.
+  await stage.click({
+    position: { x: box.width * 0.38, y: box.height * 0.27 },
+  });
+  const result = await page.evaluate(async () => {
+    type Point = readonly [number, number];
+    type Frame = {
+      at: number;
+      paths: { from: Point; to: Point }[];
+      lights: Record<string, boolean>;
+    };
+    type Source = { at: number; cancelledAt: number | null };
+    const h = globalThis as unknown as {
+      thrusterProbe: { contexts: AudioContext[] };
+      probeVisuals: { frames: Frame[]; sources: Source[] };
+    };
+    const surface = document.querySelector<HTMLElement>(".echo-probe-stage")!;
+    const { frames, sources } = h.probeVisuals;
+    const context = h.thrusterProbe.contexts[0];
+    const wait = (ready: () => boolean) =>
+      new Promise<void>((done) => {
+        const check = () => {
+          if (ready()) done();
+          else requestAnimationFrame(check);
+        };
+        check();
+      });
+    const tap = (x: number, y: number) => {
+      const bounds = surface.getBoundingClientRect();
+      surface.dispatchEvent(
+        new PointerEvent("pointerdown", {
+          button: 0,
+          isPrimary: true,
+          clientX: bounds.left + x * bounds.width,
+          clientY: bounds.top + y * bounds.height,
+        }),
+      );
+    };
+    await wait(() => sources.length > 4);
+    const first = sources.slice();
+    await wait(() => context.currentTime >= first[0].at + 0.12);
+    let offset = sources.length;
+    tap(0.79, 0.3);
+    await wait(() => sources.length > offset);
+    const second = sources.slice(offset);
+    await wait(
+      () =>
+        context.currentTime >=
+        Math.max(second[0].at + 0.12, first[4].at + 0.015),
+    );
+    offset = sources.length;
+    tap(0.62, 0.72);
+    await wait(() => sources.length > offset);
+    const third = sources.slice(offset);
+    const retiredAt = first[8].cancelledAt!;
+    const firstFeltAt = first[4].at;
+    // Observe the old pending return times and the new valid returns through their full decay.
+    const end = Math.max(first[12].at, third[12].at, second[4].at) + 0.32;
+    await wait(() => frames.some((frame) => frame.at >= end));
+    const width = surface.clientWidth,
+      height = surface.clientHeight;
+    const origin: Point = [0.38 * width, 0.27 * height];
+    const matches = (a: Point, b: Point) =>
+      Math.hypot(a[0] - b[0], a[1] - b[1]) < 2;
+    const oldPaths = (frame: Frame) =>
+      frame.paths.filter((path) => matches(path.from, origin));
+    const felt = "01 / FELT",
+      glass = "02 / GLASS",
+      stone = "03 / STONE";
+    const highlights = (label: string, times: number[]) =>
+      frames.filter(
+        (frame) =>
+          !times.some((at) => frame.at >= at && frame.at < at + 0.3) &&
+          frame.lights[label],
+      );
+    return {
+      retiredAt,
+      firstFeltAt,
+      pendingAudioCancelled: first
+        .filter((source) => source.at > retiredAt)
+        .every(
+          (source) =>
+            source.cancelledAt !== null && source.cancelledAt < source.at,
+        ),
+      soundedAudioNotCancelledEarly: first
+        .filter((source) => source.at === firstFeltAt)
+        .every((source) => source.cancelledAt === null),
+      oldPathsBeforeRetirement: frames.some(
+        (frame) => frame.at < retiredAt && oldPaths(frame).length > 0,
+      ),
+      oldPendingPathsAfterRetirement: frames
+        .filter((frame) => frame.at >= retiredAt)
+        .flatMap(oldPaths)
+        .filter((path) => !matches(path.to, [0.18 * width, 0.27 * height]))
+        .length,
+      soundedFeltPath: frames.some(
+        (frame) =>
+          frame.at >= retiredAt &&
+          oldPaths(frame).some((path) =>
+            matches(path.to, [0.18 * width, 0.27 * height]),
+          ),
+      ),
+      soundedFeltDecay: frames.some(
+        (frame) =>
+          frame.at >= retiredAt &&
+          frame.at < firstFeltAt + 0.3 &&
+          frame.lights[felt],
+      ),
+      unexpectedFelt: highlights(felt, [firstFeltAt, second[4].at, third[4].at])
+        .length,
+      unexpectedGlass: highlights(glass, [second[8].at, third[8].at]).length,
+      unexpectedStone: highlights(stone, [second[12].at, third[12].at]).length,
+      newerGlass: frames.some(
+        (frame) =>
+          frame.at >= second[8].at &&
+          frame.at < second[8].at + 0.3 &&
+          frame.lights[glass],
+      ),
+      newerStone: frames.some(
+        (frame) =>
+          frame.at >= third[12].at &&
+          frame.at < third[12].at + 0.3 &&
+          frame.lights[stone],
+      ),
+      newerAudioNotCancelled: [...second, ...third]
+        .filter((source) => [second[8].at, third[12].at].includes(source.at))
+        .every((source) => source.cancelledAt === null),
+    };
+  });
+  expect(result.retiredAt).toBeGreaterThan(result.firstFeltAt);
+  expect(result.pendingAudioCancelled).toBe(true);
+  expect(result.soundedAudioNotCancelledEarly).toBe(true);
+  expect(result.oldPathsBeforeRetirement).toBe(true);
+  expect(result.oldPendingPathsAfterRetirement).toBe(0);
+  expect(result.soundedFeltPath).toBe(true);
+  expect(result.soundedFeltDecay).toBe(true);
+  expect(result.unexpectedFelt).toBe(0);
+  expect(result.unexpectedGlass).toBe(0);
+  expect(result.unexpectedStone).toBe(0);
+  expect(result.newerGlass).toBe(true);
+  expect(result.newerStone).toBe(true);
+  expect(result.newerAudioNotCancelled).toBe(true);
+  await stage.press("Escape");
+  await expect(stage).toHaveAttribute("data-state", "stopped");
+  expect(
+    await page.evaluate(() => {
+      const h = globalThis as unknown as {
+        probeVisuals: { frames: { lights: Record<string, boolean> }[] };
+      };
+      return Object.values(h.probeVisuals.frames.at(-1)!.lights).some(Boolean);
+    }),
+  ).toBe(false);
+  // Native ended delivery requires a running audio clock. Disposal is checked
+  // below through context closure, disconnected nodes, and absent stage frames.
+  await expect
+    .poll(async () => {
+      const p = await probe(page);
+      return p.sources - p.ended;
+    })
+    .toBe(0);
+  await stage.press("Enter");
+  await expect(stage).toHaveAttribute("data-state", "running");
+  await page
+    .getByRole("navigation", { name: "Breadcrumb" })
+    .getByRole("link")
+    .click();
+  await expect
+    .poll(async () => (await probe(page)).contexts)
+    .toEqual(["closed"]);
+  expect((await probe(page)).connected).toBe(0);
+  await expect(stage).toHaveCount(0);
+  const framesAfterDisposal = await page.evaluate(async () => {
+    const h = globalThis as unknown as { probeVisuals: { frames: unknown[] } };
+    const before = h.probeVisuals.frames.length;
+    await new Promise<void>((done) => requestAnimationFrame(() => done()));
+    return { before, after: h.probeVisuals.frames.length };
+  });
+  expect(framesAfterDisposal.after).toBe(framesAfterDisposal.before);
+});

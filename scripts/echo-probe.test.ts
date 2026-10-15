@@ -281,3 +281,55 @@ test("cleanup remains safe when the application disposes the engine first", asyn
   await event.ended;
   expect(s.control.active).toBe(0);
 });
+
+test("cancellation time is immediate, immutable, and distinguishes sounded from pending returns", async () => {
+  const s = setup();
+  const first = s.control.emit([{ ...wall, distance: 0 }, wall])!;
+  const scheduled = first.reflections;
+  expect(first.cancelledAt).toBeNull();
+  expect(Object.isFrozen(first)).toBe(true);
+  s.advance();
+  const second = s.control.emit([wall])!;
+  expect(first.cancelledAt).toBeNull(); // Cancelling only late energy leaves early returns valid.
+  s.advance();
+  const third = s.control.emit([wall])!;
+  expect(first.cancelledAt).toBeCloseTo(10.24, 10);
+  expect(first.reflections).toBe(scheduled);
+  expect(first.reflections[0].at).toBeLessThan(first.cancelledAt!);
+  expect(first.reflections[1].at).toBeGreaterThan(first.cancelledAt!);
+  for (const call of s.calls.slice(0, 3))
+    expect(call.stop).toHaveBeenCalledOnce();
+  expect(second.cancelledAt).toBeNull();
+  expect(third.cancelledAt).toBeNull();
+  s.advance();
+  first.stop();
+  s.control.stop();
+  expect(first.cancelledAt).toBeCloseTo(10.24, 10);
+  expect(second.cancelledAt).toBeCloseTo(10.36, 10);
+  expect(third.cancelledAt).toBeCloseTo(10.36, 10);
+  s.control.dispose();
+  await first.ended;
+  expect(first.cancelledAt).toBeCloseTo(10.24, 10);
+});
+
+test("natural completion does not mark cancellation; interruption and disposal do immediately", async () => {
+  const natural = setup();
+  const completed = natural.control.emit([wall])!;
+  natural.finish();
+  await completed.ended;
+  completed.stop();
+  expect(completed.cancelledAt).toBeNull();
+  natural.control.dispose();
+  const interrupted = setup();
+  const pending = interrupted.control.emit([wall])!;
+  interrupted.advance(0.04);
+  interrupted.interrupt();
+  expect(pending.cancelledAt).toBeCloseTo(10.04, 10);
+  interrupted.control.dispose();
+  const disposed = setup();
+  const emission = disposed.control.emit([wall])!;
+  disposed.advance(0.03);
+  disposed.control.dispose();
+  expect(emission.cancelledAt).toBeCloseTo(10.03, 10);
+  await emission.ended;
+});
