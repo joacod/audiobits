@@ -5,6 +5,8 @@ export type {
   Layer,
   Frequency,
   Filter,
+  Delay,
+  Effect,
   Envelope,
   Source,
   Value,

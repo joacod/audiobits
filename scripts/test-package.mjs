@@ -772,6 +772,33 @@ try {
       );
     }
   }
+  const delayCode = await readFile(
+    join(root, "examples/vanilla/src/delay.ts"),
+    "utf8",
+  );
+  await writeFile(join(consumer, "delay-example.ts"), delayCode);
+  run(
+    process.execPath,
+    [
+      resolve("node_modules/typescript/bin/tsc"),
+      "--noEmit",
+      "--strict",
+      "--module",
+      "NodeNext",
+      "--moduleResolution",
+      "NodeNext",
+      "--target",
+      "ES2022",
+      "delay-example.ts",
+    ],
+    consumer,
+  );
+  examples.push({
+    name: "delay-example",
+    file: "Native delay consumer",
+    index: 0,
+    code: delayCode,
+  });
   evidence.examples = examples.map(({ file, index }) => ({
     file,
     index,

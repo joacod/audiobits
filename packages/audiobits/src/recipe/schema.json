@@ -134,6 +134,41 @@
       "required": ["type", "filter", "frequency", "q"],
       "additionalProperties": false
     },
+    "DelayTime": {
+      "anyOf": [
+        { "type": "number", "minimum": 0.01, "maximum": 2 },
+        { "$ref": "#/$defs/Mapping" },
+        { "$ref": "#/$defs/Variation" }
+      ]
+    },
+    "DelayFeedback": {
+      "anyOf": [
+        { "type": "number", "minimum": 0, "maximum": 0.8 },
+        { "$ref": "#/$defs/Mapping" },
+        { "$ref": "#/$defs/Variation" }
+      ]
+    },
+    "DelayMix": {
+      "anyOf": [
+        { "type": "number", "minimum": 0, "maximum": 1 },
+        { "$ref": "#/$defs/Mapping" },
+        { "$ref": "#/$defs/Variation" }
+      ]
+    },
+    "Delay": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "delay" },
+        "time": { "$ref": "#/$defs/DelayTime" },
+        "feedback": { "$ref": "#/$defs/DelayFeedback" },
+        "mix": { "$ref": "#/$defs/DelayMix" }
+      },
+      "required": ["type", "time"],
+      "additionalProperties": false
+    },
+    "Effect": {
+      "anyOf": [{ "$ref": "#/$defs/Filter" }, { "$ref": "#/$defs/Delay" }]
+    },
     "Source": {
       "anyOf": [
         {
@@ -166,7 +201,7 @@
         "envelope": { "$ref": "#/$defs/Envelope" },
         "effects": {
           "type": "array",
-          "items": { "$ref": "#/$defs/Filter" },
+          "items": { "$ref": "#/$defs/Effect" },
           "minItems": 0,
           "maxItems": 8
         }
@@ -194,7 +229,7 @@
         },
         "effects": {
           "type": "array",
-          "items": { "$ref": "#/$defs/Filter" },
+          "items": { "$ref": "#/$defs/Effect" },
           "minItems": 0,
           "maxItems": 8
         }
@@ -216,7 +251,7 @@
         },
         "effects": {
           "type": "array",
-          "items": { "$ref": "#/$defs/Filter" },
+          "items": { "$ref": "#/$defs/Effect" },
           "minItems": 0,
           "maxItems": 8
         }

@@ -41,6 +41,30 @@ const capabilities = {
     waveforms: definitions.Source.anyOf[0].properties.waveform.enum,
     noiseColors: [definitions.Source.anyOf[1].properties.color.const],
     filters: definitions.Filter.properties.filter.enum,
+    effects: definitions.Effect.anyOf.map(
+      (node) => definitions[node.$ref.split("/").at(-1)].properties.type.const,
+    ),
+    delay: {
+      time: {
+        unit: "seconds",
+        min: definitions.DelayTime.anyOf[0].minimum,
+        max: definitions.DelayTime.anyOf[0].maximum,
+      },
+      feedback: {
+        min: definitions.DelayFeedback.anyOf[0].minimum,
+        max: definitions.DelayFeedback.anyOf[0].maximum,
+        default: 0,
+      },
+      mix: {
+        min: definitions.DelayMix.anyOf[0].minimum,
+        max: definitions.DelayMix.anyOf[0].maximum,
+        default: 0.5,
+      },
+      values: ["number", "play-mapping", "seeded-variation"],
+      maxTailSeconds: 30,
+      tailFadeSeconds: 0.05,
+      feedbackMinRenderQuanta: 2,
+    },
     parameterModes: definitions.Parameter.anyOf.map(
       (node) => node.properties.mode.const,
     ),

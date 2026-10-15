@@ -40,6 +40,16 @@ export type Filter = {
   readonly frequency: Frequency;
   readonly q: number;
 };
+export type DelayTime = number | Mapping | Variation;
+export type DelayFeedback = number | Mapping | Variation;
+export type DelayMix = number | Mapping | Variation;
+export type Delay = {
+  readonly type: "delay";
+  readonly time: DelayTime;
+  readonly feedback?: DelayFeedback;
+  readonly mix?: DelayMix;
+};
+export type Effect = Filter | Delay;
 export type Source =
   | {
       readonly type: "oscillator";
@@ -52,7 +62,7 @@ export type Layer = {
   readonly source: Source;
   readonly gainDb: PointValue;
   readonly envelope: Envelope;
-  readonly effects?: ReadonlyArray<Filter>;
+  readonly effects?: ReadonlyArray<Effect>;
 };
 export type OneShotRecipe = {
   readonly schemaVersion: 1;
@@ -60,14 +70,14 @@ export type OneShotRecipe = {
   readonly duration: number;
   readonly parameters?: Parameters;
   readonly layers: ReadonlyArray<Layer>;
-  readonly effects?: ReadonlyArray<Filter>;
+  readonly effects?: ReadonlyArray<Effect>;
 };
 export type SustainedRecipe = {
   readonly schemaVersion: 1;
   readonly kind: "sustained";
   readonly parameters?: Parameters;
   readonly layers: ReadonlyArray<Layer>;
-  readonly effects?: ReadonlyArray<Filter>;
+  readonly effects?: ReadonlyArray<Effect>;
 };
 export type Recipe = OneShotRecipe | SustainedRecipe;
 function freeze(value: unknown): void {
@@ -204,6 +214,39 @@ export const recipeSchema: Readonly<Record<string, unknown>> = {
       required: ["type", "filter", "frequency", "q"],
       additionalProperties: false,
     },
+    DelayTime: {
+      anyOf: [
+        { type: "number", minimum: 0.01, maximum: 2 },
+        { $ref: "#/$defs/Mapping" },
+        { $ref: "#/$defs/Variation" },
+      ],
+    },
+    DelayFeedback: {
+      anyOf: [
+        { type: "number", minimum: 0, maximum: 0.8 },
+        { $ref: "#/$defs/Mapping" },
+        { $ref: "#/$defs/Variation" },
+      ],
+    },
+    DelayMix: {
+      anyOf: [
+        { type: "number", minimum: 0, maximum: 1 },
+        { $ref: "#/$defs/Mapping" },
+        { $ref: "#/$defs/Variation" },
+      ],
+    },
+    Delay: {
+      type: "object",
+      properties: {
+        type: { const: "delay" },
+        time: { $ref: "#/$defs/DelayTime" },
+        feedback: { $ref: "#/$defs/DelayFeedback" },
+        mix: { $ref: "#/$defs/DelayMix" },
+      },
+      required: ["type", "time"],
+      additionalProperties: false,
+    },
+    Effect: { anyOf: [{ $ref: "#/$defs/Filter" }, { $ref: "#/$defs/Delay" }] },
     Source: {
       anyOf: [
         {
@@ -233,7 +276,7 @@ export const recipeSchema: Readonly<Record<string, unknown>> = {
         envelope: { $ref: "#/$defs/Envelope" },
         effects: {
           type: "array",
-          items: { $ref: "#/$defs/Filter" },
+          items: { $ref: "#/$defs/Effect" },
           minItems: 0,
           maxItems: 8,
         },
@@ -261,7 +304,7 @@ export const recipeSchema: Readonly<Record<string, unknown>> = {
         },
         effects: {
           type: "array",
-          items: { $ref: "#/$defs/Filter" },
+          items: { $ref: "#/$defs/Effect" },
           minItems: 0,
           maxItems: 8,
         },
@@ -283,7 +326,7 @@ export const recipeSchema: Readonly<Record<string, unknown>> = {
         },
         effects: {
           type: "array",
-          items: { $ref: "#/$defs/Filter" },
+          items: { $ref: "#/$defs/Effect" },
           minItems: 0,
           maxItems: 8,
         },

@@ -260,7 +260,7 @@ export function validateRecipe(input: unknown): ValidationResult {
       if (!parameter)
         add("reference", path, "Mapping references an undeclared control.");
       else if (automated && parameter.mode === "live")
-        add("mode", path, "Automation points require play-only controls.");
+        add("mode", path, "This value requires play-only controls.");
       if (value.scale === "exponential" && value.range.some((v) => v <= 0))
         add("range", path, "Exponential mapping endpoints must be positive.");
     }
@@ -293,9 +293,16 @@ export function validateRecipe(input: unknown): ValidationResult {
     });
   }
   function filters(list: Recipe["effects"], path: string) {
-    list?.forEach((filter, index) =>
-      value(filter.frequency, 20, 20000, `${path}[${index}]["frequency"]`),
-    );
+    list?.forEach((effect, index) => {
+      const at = `${path}[${index}]`;
+      if (effect.type === "filter")
+        value(effect.frequency, 20, 20000, `${at}["frequency"]`);
+      else {
+        point(effect.time, 0.01, 2, `${at}["time"]`, true);
+        point(effect.feedback ?? 0, 0, 0.8, `${at}["feedback"]`, true);
+        point(effect.mix ?? 0.5, 0, 1, `${at}["mix"]`, true);
+      }
+    });
   }
   filters(recipe.effects, '$["effects"]');
   recipe.layers.forEach((layer, i) => {
@@ -328,7 +335,7 @@ export function validateRecipe(input: unknown): ValidationResult {
     add(
       "resource-limit",
       '$["effects"]',
-      "At most eight filters across the recipe.",
+      "At most eight effects across the recipe.",
     );
   if (points > 128)
     add(

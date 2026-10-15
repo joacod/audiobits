@@ -93,6 +93,21 @@ export const descriptor = {
       frequency: ref("Frequency"),
       q: number(0.1, 20),
     }),
+    DelayTime: { anyOf: [number(0.01, 2), ref("Mapping"), ref("Variation")] },
+    DelayFeedback: {
+      anyOf: [number(0, 0.8), ref("Mapping"), ref("Variation")],
+    },
+    DelayMix: { anyOf: [number(0, 1), ref("Mapping"), ref("Variation")] },
+    Delay: object(
+      {
+        type: { const: "delay" },
+        time: ref("DelayTime"),
+        feedback: ref("DelayFeedback"),
+        mix: ref("DelayMix"),
+      },
+      ["type", "time"],
+    ),
+    Effect: { anyOf: [ref("Filter"), ref("Delay")] },
     Source: {
       anyOf: [
         object({
@@ -109,7 +124,7 @@ export const descriptor = {
         source: ref("Source"),
         gainDb: ref("PointValue"),
         envelope: ref("Envelope"),
-        effects: array(ref("Filter"), 0, 8),
+        effects: array(ref("Effect"), 0, 8),
       },
       ["id", "source", "gainDb", "envelope"],
     ),
@@ -120,7 +135,7 @@ export const descriptor = {
         duration: { ...number(0, 60), exclusiveMinimum: 0 },
         parameters: ref("Parameters"),
         layers: array(ref("Layer"), 1, 16),
-        effects: array(ref("Filter"), 0, 8),
+        effects: array(ref("Effect"), 0, 8),
       },
       ["schemaVersion", "kind", "duration", "layers"],
     ),
@@ -130,7 +145,7 @@ export const descriptor = {
         kind: { const: "sustained" },
         parameters: ref("Parameters"),
         layers: array(ref("Layer"), 1, 16),
-        effects: array(ref("Filter"), 0, 8),
+        effects: array(ref("Effect"), 0, 8),
       },
       ["schemaVersion", "kind", "layers"],
     ),
