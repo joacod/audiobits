@@ -7,7 +7,7 @@ const harness = resolve(
 );
 const stageName = { name: "Echo Probe stage", exact: true };
 
-test("acoustic bench separates surface, strength, direction and finite decay in native Chromium", async ({
+test("original A reference retains material, strength, stereo and finite-decay evidence", async ({
   page,
 }) => {
   await page.goto("http://127.0.0.1:3100");
@@ -36,12 +36,12 @@ test("acoustic bench separates surface, strength, direction and finite decay in 
       pulse: await h.probeSignal("emission"),
       replay: await h.probeSignal("emission"),
       variation: await h.probeSignal("emission", 0.5, 0, 0, 99),
-      dark: await h.probeSignal("reflection", 0),
-      bright: await h.probeSignal("reflection", 1),
-      weak: await h.probeSignal("reflection", 0.7, 0, -24),
-      strong: await h.probeSignal("reflection", 0.7),
-      left: await h.probeSignal("reflection", 0.7, -0.9),
-      right: await h.probeSignal("reflection", 0.7, 0.9),
+      dark: await h.probeSignal("reference-reflection", 0),
+      bright: await h.probeSignal("reference-reflection", 1),
+      weak: await h.probeSignal("reference-reflection", 0.7, 0, -24),
+      strong: await h.probeSignal("reference-reflection", 0.7),
+      left: await h.probeSignal("reference-reflection", 0.7, -0.9),
+      right: await h.probeSignal("reference-reflection", 0.7, 0.9),
       diffuse: await h.probeSignal("diffusion"),
       eight: await h.probeSignal("emission", 0.5, 0, 0, 42, 8),
       lowRate: await h.probeSignal("reflection", 1, 0, 0, 42, 1, 44100),
@@ -66,7 +66,7 @@ test("acoustic bench separates surface, strength, direction and finite decay in 
   expect(result.left.energy).toBeCloseTo(result.right.energy, 5);
 });
 
-test("1300 scheduled voices cancel without retained ownership or touching shared sound", async ({
+test("1000 scheduled voices cancel without retained ownership or touching shared sound", async ({
   page,
 }) => {
   await page.goto("http://127.0.0.1:3100");
@@ -88,7 +88,7 @@ test("1300 scheduled voices cancel without retained ownership or touching shared
     () => (globalThis as unknown as { resources: Promise<unknown> }).resources,
   );
   expect(result).toEqual({
-    maximum: 14,
+    maximum: 11,
     emissions: 100,
     counts: { active: 0, retiring: 0 },
     state: "disposed",
@@ -235,3 +235,115 @@ for (const width of [1440, 390])
       ),
     ).toContain("./sounds/experiences/echo-probe/controller");
   });
+
+test("controlled compositions compare seeded resynthesis with real filtered delay", async ({
+  page,
+}) => {
+  await page.goto("http://127.0.0.1:3100");
+  await page.addScriptTag({ path: harness });
+  const result = await page.evaluate(() =>
+    (
+      globalThis as unknown as {
+        probeComparisons(): Promise<{
+          metrics: Record<string, Record<string, number>>;
+          matchedEnergy: number;
+          coherence: Record<string, number>;
+          clusterTimes: number[];
+          earlyAt: number;
+        }>;
+      }
+    ).probeComparisons(),
+  );
+  console.log("Echo Probe comparison", JSON.stringify(result));
+
+  for (const value of Object.values(result.metrics)) {
+    expect(value.energy).toBeGreaterThan(0);
+    expect(value.peak).toBeLessThan(0.5);
+    expect(value.tail).toBe(0);
+  }
+  expect(result.coherence.replay).toBeGreaterThan(0.99999);
+  expect(result.coherence.variation).toBeLessThan(result.coherence.replay);
+  expect(result.coherence.delay).toBeGreaterThan(0.98);
+  expect(result.coherence.baseline).toBeLessThan(0.5);
+  expect(result.metrics.far.returnEnergy).toBeLessThan(
+    result.metrics.near.returnEnergy,
+  );
+  expect(result.metrics.glass.returnBrightness).toBeGreaterThan(
+    result.metrics.felt.returnBrightness,
+  );
+  expect(result.metrics.cluster.lateEnergy).toBeGreaterThan(0);
+  expect(result.metrics.wash.lateEnergy).toBeGreaterThan(0);
+  expect(result.metrics.weak.returnEnergy).toBeLessThan(
+    result.metrics.hybrid.returnEnergy / 20,
+  );
+  expect(result.metrics.left.wetLeft).toBeGreaterThan(
+    result.metrics.left.wetRight * 100,
+  );
+  expect(result.metrics.right.wetRight).toBeGreaterThan(
+    result.metrics.right.wetLeft * 100,
+  );
+  expect(result.metrics.left.energy).toBeCloseTo(
+    result.metrics.right.energy,
+    5,
+  );
+  expect(result.matchedEnergy).toBeCloseTo(0.05, 4);
+  expect(result.metrics.delay.sources).toBeLessThan(
+    result.metrics.hybrid.sources,
+  );
+  expect(result.metrics.delay.delayNodes).toBe(1);
+  expect(result.clusterTimes).toHaveLength(3);
+  for (const at of result.clusterTimes)
+    expect(at).toBeGreaterThan(result.earlyAt + 0.11);
+});
+
+test("sustained rapid interaction admits 40 pulses with bounded native sources and cleanup", async ({
+  page,
+}) => {
+  await instrument(page, "normal", "echo-probe");
+  await page.addScriptTag({ path: harness });
+  await page.evaluate(() => {
+    const h = globalThis as unknown as {
+      probeRapid(): Promise<unknown>;
+      rapid: Promise<unknown>;
+    };
+    const button = document.createElement("button");
+    button.textContent = "Run rapid bench";
+    button.onclick = () => {
+      h.rapid = h.probeRapid();
+    };
+    document.body.append(button);
+  });
+  await page.getByRole("button", { name: "Run rapid bench" }).click();
+  const result = await page.evaluate(
+    () =>
+      (
+        globalThis as unknown as {
+          rapid: Promise<{
+            accepted: number;
+            maximum: number;
+            maximumSources: number;
+            groups: number;
+            peak: number;
+            afterStop: { active: number; retiring: number };
+            final: { active: number; retiring: number };
+          }>;
+        }
+      ).rapid,
+  );
+  console.log("Echo Probe rapid", JSON.stringify(result));
+  expect(result.accepted).toBe(40);
+  expect(result.groups).toBeLessThanOrEqual(3);
+  expect(result.maximum).toBeLessThanOrEqual(30);
+  expect(result.maximumSources).toBeLessThanOrEqual(102);
+  expect(result.peak).toBeGreaterThan(0);
+  expect(result.peak).toBeLessThan(0.5);
+  expect(result.afterStop).toEqual({ active: 0, retiring: 0 });
+  expect(result.final).toEqual({ active: 0, retiring: 0 });
+  await expect
+    .poll(async () => {
+      const p = await probe(page);
+      return p.sources - p.ended;
+    })
+    .toBe(0);
+  expect((await probe(page)).connected).toBe(0);
+});

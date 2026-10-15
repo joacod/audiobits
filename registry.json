@@ -503,7 +503,7 @@
       "name": "echo-probe",
       "type": "registry:item",
       "title": "Echo Probe",
-      "description": "Send a sculpted pulse into the field. Hear distance, direction, and surface in every return.",
+      "description": "Send a sculpted pulse into the field. Hear it return through resonant surfaces and scattered late reflections.",
       "dependencies": ["audiobits"],
       "categories": ["experience"],
       "meta": {
@@ -525,7 +525,7 @@
           "kinds": ["one-shot"],
           "waveforms": ["sine", "triangle"],
           "noiseColors": ["white"],
-          "mappingScales": ["exponential", "linear"],
+          "mappingScales": ["exponential"],
           "automationCurves": ["exponential"],
           "runtime": [
             "gesture-start",
