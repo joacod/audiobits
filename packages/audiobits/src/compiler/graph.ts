@@ -318,12 +318,18 @@ export function createGraph(
           if (++ended === sources.length) finish();
         };
     }
-    // A disconnected native clock owns the tail deadline. Audible sources stop
-    // at release; their ended events must not discard delay storage early.
+    // Audible sources stop at release so their ended events cannot discard
+    // delay storage early. The silent clock owns the tail deadline. Chromium
+    // only advances a ConstantSource, and fires onended, when the graph pulls
+    // it, so it reaches the destination through a zero gain.
     if (plan.hasDelay) {
       clock = own(context.createConstantSource());
       sources.push(clock);
       clock.onended = finish;
+      const silent = own(context.createGain());
+      silent.gain.value = 0;
+      clock.connect(silent);
+      silent.connect(destination);
     }
     // Build the complete graph before scheduling any source.
     for (const source of sources) source.start(at);
