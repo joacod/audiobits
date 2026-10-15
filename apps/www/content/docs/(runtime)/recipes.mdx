@@ -60,13 +60,13 @@ layout, controller ownership, and adapting these experiences to your application
 
 Schema version 1 supports one-shot gates up to 60 seconds or sustained playback
 without `duration`, 1–16 layers with unique IDs, four oscillator waveforms, white
-noise, fixed ADSR envelopes, frequency automation, and lowpass/highpass/bandpass
-filters. Layer gains are -60–0 dB; frequencies are 20–20000 Hz and must be below
-the context's Nyquist frequency at play time. Filters are limited to eight across
+noise, fixed ADSR envelopes, frequency automation, lowpass/highpass/bandpass
+filters, and native delay. Layer gains are -60–0 dB; frequencies are 20–20000 Hz and must be below
+the context's Nyquist frequency at play time. Effects are limited to eight across
 the recipe; frequency automation to 128 points. Gain automation, expression
 strings, file fetches, and sequencing are unsupported.
 
-One-shot duration ends the gate, excluding release and bounded filter tails.
+One-shot duration ends the gate, excluding release and bounded effect tails.
 Attack and decay must fit within the gate, including the minimum effective
 attack; zero decay ramps directly to sustain. Frequency automation begins at
 zero, uses increasing times, and ends by gate close. Sustained automation is an
@@ -85,3 +85,88 @@ The Workbench editor is documented in [Catalog](/docs/catalog#workbench-editor).
 
 Typed authoring preserves recipe structure, parameter names and parameter modes.
 Runtime validation remains authoritative for exact schema validity.
+
+## Delay
+
+Add delay to a recipe's `effects` to process its summed layers, or to a layer's
+`effects` to echo only that layer. Effects run in array order.
+
+```ts
+import { createAudio, defineSound } from "audiobits";
+
+const audio = createAudio();
+const ping = audio.sound(
+  defineSound({
+    schemaVersion: 1,
+    kind: "one-shot",
+    duration: 0.08,
+    layers: [
+      {
+        id: "ping",
+        source: { type: "oscillator", waveform: "sine", frequency: 660 },
+        gainDb: -18,
+        envelope: { attack: 0.004, decay: 0.06, sustain: 0.1, release: 0.04 },
+      },
+    ],
+    effects: [{ type: "delay", time: 0.24, feedback: 0.3, mix: 0.25 }],
+  }),
+);
+
+let request = 0;
+export async function play() {
+  // Call from a user gesture.
+  const token = ++request;
+  await audio.start();
+  if (token === request) ping.play();
+}
+export function stop() {
+  request++;
+  audio.stopAll({ tails: "cut" });
+}
+export async function dispose() {
+  // Call on host teardown.
+  request++;
+  await audio.dispose();
+}
+```
+
+| Parameter  | Range          | Default  | Meaning                                             |
+| ---------- | -------------- | -------- | --------------------------------------------------- |
+| `time`     | 0.01–2 seconds | Required | Spacing between echoes                              |
+| `feedback` | 0–0.8          | 0        | Fraction of each echo fed back; 0 produces one echo |
+| `mix`      | 0–1            | 0.5      | Linear blend: dry gain `1 - mix`, wet gain `mix`    |
+
+All three accept a number, seeded variation, or a mapping to a `mode: "play"`
+parameter. They resolve once at play time. Delay does not accept automation
+points or live mappings. Existing live source, gain and filter controls still
+work alongside delay. At unusually low sample rates, feedback delay must also
+be at least `256 / sampleRate` seconds; playback rejects shorter values with
+`delay-time` instead of silently changing the echo spacing.
+
+The first echo has gain `mix`; each later echo multiplies that gain by
+`feedback`. There is no automatic normalization or limiter. Overlapping echoes
+can reinforce a sustained tone: wet gain can approach `mix / (1 - feedback)`.
+Leave headroom for feedback, serial effects, filters and overlapping voices.
+`mix: 0` bypasses the delay without allocating a delay line or extending lifetime.
+
+Layer filters before the first audible delay keep their existing placement
+before the envelope. That delay and all following layer effects process the
+released signal. Recipe effects process the sum after layer envelopes and effects.
+This preserves filter-only recipes and lets layer echoes survive release.
+
+A natural one-shot or `voice.stop()` allows the release and echo tail to finish.
+Tail budgeting includes repeats down to 0.001 of the first echo's amplitude
+(−60 dB), adds serial effect allowances, and caps each layer-to-output path at
+30 seconds after release, followed by a 50 ms fade. The cap can truncate long or
+cascaded feedback tails; it is a resource deadline, not a silence detector.
+`voice.ended` settles after the entire owned graph is disconnected, and tails
+continue to occupy voice capacity. `audio.stopAll({ tails: "cut" })` and voice
+stealing fade the complete output in 5 ms. Suspension, sound/bus disposal and
+engine disposal immediately finalize owned tails, even when the audio clock stops.
+Repeated Stop cannot extend a deadline; stopping before a scheduled onset cancels it.
+
+Delay is additive within schema version 1. Older runtimes reject this effect;
+check `recipe.effects` in `audiobits/capabilities.json` for `"delay"` when exchanging
+recipes across runtime versions. Damping, live delay modulation and shared bus
+effects are not supported. Place an ordinary filter before or after delay for
+input or output tone shaping; it does not filter each feedback circulation.

@@ -1,10 +1,16 @@
 import { z } from "zod";
 
 export const stringList = z.array(z.string());
+// Capability groups stay string lists. Structured entries, such as delay
+// bounds, are metadata and are not membership-tested.
+export const recipeCapability = z.union([
+  stringList,
+  z.record(z.string(), z.unknown()),
+]);
 export const capabilitiesContract = z.looseObject({
   packageVersion: z.string().min(1),
   schemaVersion: z.number().int().positive(),
-  recipe: z.record(z.string(), stringList),
+  recipe: z.record(z.string(), recipeCapability),
   runtime: stringList,
   browserGate: z.string(),
   schemaNote: z.string(),

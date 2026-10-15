@@ -1,9 +1,10 @@
 import { holdLinear } from "../runtime/automation";
 import { AudioBitsError } from "../recipe/validate";
-import type { Value, Mapping } from "../recipe/generated";
+import type { Value, Mapping, Effect } from "../recipe/generated";
 import { mapControl, noiseData, checkNoiseRate } from "./values";
 import type { Controls } from "./values";
-import type { ResolvedFilter } from "./plan";
+import type { ResolvedEffect } from "./plan";
+import { effectTail, MAX_DELAY_TAIL } from "./plan";
 import { envelopeAt } from "./plan";
 import type { Plan, PlannedLayer } from "./plan";
 
@@ -13,6 +14,23 @@ export interface Graph {
   set(controls: Controls): void;
 }
 export function checkNyquist(plan: Plan, sampleRate: number): void {
+  // The loop needs one quantum and its feedforward compensation needs another.
+  // Reject values that would be silently lengthened by the native feedback graph.
+  for (const effect of [
+    ...plan.effectChain,
+    ...plan.layers.flatMap(({ layer }) => layer.effects ?? []),
+  ]) {
+    if (
+      effect.type === "delay" &&
+      effect.mix > 0 &&
+      effect.feedback > 0 &&
+      effect.time < 256 / sampleRate
+    )
+      throw new AudioBitsError(
+        "delay-time",
+        "Feedback delay time must be at least two render quanta (256 / sampleRate seconds).",
+      );
+  }
   const frequencies: number[] = [];
   function extrema(value: Value) {
     if (typeof value === "number") frequencies.push(value);
@@ -24,9 +42,13 @@ export function checkNyquist(plan: Plan, sampleRate: number): void {
     if (definition.source.type === "oscillator")
       extrema(definition.source.frequency);
     else checkNoiseRate(sampleRate);
-    definition.effects?.forEach((effect) => extrema(effect.frequency));
+    definition.effects?.forEach(
+      (effect) => effect.type === "filter" && extrema(effect.frequency),
+    );
   }
-  plan.recipe.effects?.forEach((effect) => extrema(effect.frequency));
+  plan.recipe.effects?.forEach(
+    (effect) => effect.type === "filter" && extrema(effect.frequency),
+  );
   if (frequencies.some((frequency) => frequency >= sampleRate / 2))
     throw new AudioBitsError(
       "nyquist",
@@ -44,8 +66,15 @@ export function createGraph(
 ): Graph {
   checkNyquist(plan, context.sampleRate);
   const owned: AudioNode[] = [];
-  const sources: (OscillatorNode | AudioBufferSourceNode)[] = [];
-  const envelopes: { param: AudioParam; layer: PlannedLayer }[] = [];
+  const sources: (
+    OscillatorNode | AudioBufferSourceNode | ConstantSourceNode
+  )[] = [];
+  const envelopes: {
+    param: AudioParam;
+    layer: PlannedLayer;
+    source: AudioScheduledSourceNode;
+  }[] = [];
+  let clock: ConstantSourceNode | undefined;
   let finished = false;
   let stopped = false;
   let stopEnd = at + plan.lifetime;
@@ -127,17 +156,53 @@ export function createGraph(
   }
   function filters(
     input: AudioNode,
-    effects: readonly ResolvedFilter[] = [],
-    definitions = plan.recipe.effects ?? [],
+    effects: readonly ResolvedEffect[] = [],
+    definitions: readonly Effect[] = plan.recipe.effects ?? [],
   ): AudioNode {
     let output = input;
     for (const [index, effect] of effects.entries()) {
+      if (effect.type === "delay") {
+        if (effect.mix === 0) continue;
+        // Native feedback circulation adds a render quantum. Split the requested
+        // time between the loop and a feedforward quantum so the first echo AND
+        // every repetition land at exact multiples of time (Chromium gate).
+        const quantum = effect.feedback > 0 ? 128 / context.sampleRate : 0;
+        const loopTime = effect.time - quantum;
+        const delay = own(context.createDelay(loopTime));
+        delay.delayTime.setValueAtTime(loopTime, at);
+        delay.channelCount = 1;
+        delay.channelCountMode = "explicit";
+        const dry = own(context.createGain());
+        const wet = own(context.createGain());
+        const sum = own(context.createGain());
+        dry.gain.value = 1 - effect.mix;
+        wet.gain.value = effect.mix;
+        output.connect(dry).connect(sum);
+        output.connect(delay);
+        let delayed: AudioNode = delay;
+        if (quantum > 0) {
+          const offset = own(context.createDelay(quantum));
+          offset.delayTime.setValueAtTime(quantum, at);
+          offset.channelCount = 1;
+          offset.channelCountMode = "explicit";
+          delay.connect(offset);
+          delayed = offset;
+        }
+        delayed.connect(wet).connect(sum);
+        if (effect.feedback > 0) {
+          const feedback = own(context.createGain());
+          feedback.gain.value = effect.feedback;
+          delay.connect(feedback).connect(delay);
+        }
+        output = sum;
+        continue;
+      }
       const filter = own(context.createBiquadFilter());
       filter.type = effect.filter;
       schedule(
         filter.frequency,
         effect.frequency,
-        definitions[index].frequency,
+        (definitions[index] as Extract<Effect, { type: "filter" }>).frequency,
       );
       filter.Q.value = effect.q;
       output.connect(filter);
@@ -150,18 +215,19 @@ export function createGraph(
     const output = own(context.createGain());
     const panner = own(context.createStereoPanner());
     const level = 10 ** (gainDb / 20);
+    const tailFade = plan.hasDelay ? 0.05 : 0.005;
     let outputFade = {
-      at: at + plan.lifetime - 0.005,
+      at: at + plan.lifetime - tailFade,
       value: level,
-      duration: 0.005,
+      duration: tailFade,
     };
     output.gain.setValueAtTime(level, at);
     if (Number.isFinite(plan.lifetime)) {
-      output.gain.setValueAtTime(level, at + plan.lifetime - 0.005);
+      output.gain.setValueAtTime(level, at + plan.lifetime - tailFade);
       output.gain.linearRampToValueAtTime(0, at + plan.lifetime);
     }
     panner.pan.value = pan;
-    filters(sum, plan.effects).connect(output);
+    filters(sum, plan.effectChain).connect(output);
     output.connect(panner);
     panner.connect(destination);
     for (const planned of plan.layers) {
@@ -225,25 +291,54 @@ export function createGraph(
           at + plan.duration + layer.envelope.release,
         );
       }
-      envelopes.push({ param, layer: envelopePlan });
-      // Layer filters precede the envelope so release also gates resonant output.
-      filters(source, layer.effects, planned.definition.effects ?? []).connect(
-        envelope,
+      envelopes.push({ param, layer: envelopePlan, source });
+      // Preserve existing filter/envelope semantics. The first delay and every
+      // following effect process the gated signal so tails survive release.
+      const chain = layer.effects ?? [];
+      const definitions = planned.definition.effects ?? [];
+      const firstDelay = chain.findIndex(
+        (effect) => effect.type === "delay" && effect.mix > 0,
       );
+      const split = firstDelay < 0 ? chain.length : firstDelay;
+      filters(
+        source,
+        chain.slice(0, split),
+        definitions.slice(0, split),
+      ).connect(envelope);
+      let gated: AudioNode = envelope;
       if (dynamic) {
         const levelNode = own(context.createGain());
         schedule(levelNode.gain, layer.gainDb, planned.definition.gainDb, true);
         envelope.connect(levelNode);
-        levelNode.connect(sum);
-      } else envelope.connect(sum);
-      source.onended = () => {
-        if (++ended === sources.length) finish();
-      };
+        gated = levelNode;
+      }
+      filters(gated, chain.slice(split), definitions.slice(split)).connect(sum);
+      if (!plan.hasDelay)
+        source.onended = () => {
+          if (++ended === sources.length) finish();
+        };
+    }
+    // Audible sources stop at release so their ended events cannot discard
+    // delay storage early. The silent clock owns the tail deadline. Chromium
+    // only advances a ConstantSource, and fires onended, when the graph pulls
+    // it, so it reaches the destination through a zero gain.
+    if (plan.hasDelay) {
+      clock = own(context.createConstantSource());
+      sources.push(clock);
+      clock.onended = finish;
+      const silent = own(context.createGain());
+      silent.gain.value = 0;
+      clock.connect(silent);
+      silent.connect(destination);
     }
     // Build the complete graph before scheduling any source.
-    for (const source of sources) {
-      source.start(at);
-      if (Number.isFinite(plan.lifetime)) source.stop(at + plan.lifetime);
+    for (const source of sources) source.start(at);
+    if (Number.isFinite(plan.lifetime)) {
+      if (clock) {
+        for (const { source, layer } of envelopes)
+          source.stop(at + plan.duration + layer.layer.envelope.release);
+        clock.stop(at + plan.lifetime);
+      } else for (const source of sources) source.stop(at + plan.lifetime);
     }
     return {
       finish,
@@ -288,7 +383,7 @@ export function createGraph(
           return;
         }
         let end = now;
-        for (const { param, layer } of envelopes) {
+        for (const { param, layer, source } of envelopes) {
           const remaining =
             Math.min(
               stopEnd,
@@ -311,9 +406,19 @@ export function createGraph(
           releases.set(param, { at: now, value, duration: release });
           holdLinear(param, now, value);
           param.linearRampToValueAtTime(0, now + release);
-          end = Math.max(end, now + release);
+          if (clock) source.stop(now + release);
+          const tail = plan.hasDelay
+            ? Math.min(
+                MAX_DELAY_TAIL,
+                layer.tail + effectTail(plan.effectChain),
+              ) + tailFade
+            : 0;
+          end = Math.max(end, now + release + tail);
         }
-        end = Math.max(now, Math.min(stopEnd, end + plan.filterTail));
+        end = Math.max(
+          now,
+          Math.min(stopEnd, end + (plan.hasDelay ? 0 : plan.filterTail)),
+        );
         // Stealing is an output fade, including any ringing filters.
         if (fade !== undefined) end = Math.min(end, now + fade);
         stopEnd = end;
@@ -327,10 +432,16 @@ export function createGraph(
                   (now - outputFade.at) /
                     Math.max(outputFade.duration, Number.EPSILON),
               );
-        outputFade = { at: now, value: outputValue, duration: end - now };
+        const fadeAt =
+          plan.hasDelay && fade === undefined
+            ? Math.max(now, end - tailFade)
+            : now;
+        outputFade = { at: fadeAt, value: outputValue, duration: end - fadeAt };
         holdLinear(output.gain, now, outputValue);
+        if (fadeAt > now) output.gain.setValueAtTime(outputValue, fadeAt);
         output.gain.linearRampToValueAtTime(0, end);
-        for (const source of sources) source.stop(end);
+        if (clock) clock.stop(end);
+        else for (const source of sources) source.stop(end);
       },
     };
   } catch (error) {

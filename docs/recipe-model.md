@@ -25,7 +25,7 @@ Do not create an empty migration framework before a real migration exists.
 Use the exported `recipeSchema`, `audiobits/schema.json`, and generated TypeScript
 declarations for fields and structural limits. The
 [recipe guide](https://www.audiobits.dev/docs/recipes) explains supported sources,
-filters, envelopes and controls. Layer effects process their
+filters, delay, envelopes and controls. Layer effects process their
 layer before all layer outputs sum into recipe effects. Resource limits constrain
 allocation; they are not quality recommendations.
 
@@ -102,8 +102,36 @@ modulation, which is deferred.
 
 ## Effects
 
-The model supports a lowpass/highpass/bandpass filter with frequency and Q.
-Q obeys the generated bounds. Saturation is unsupported.
+The model supports a lowpass/highpass/bandpass filter with frequency and Q,
+and native delay with seconds, feedback and linear wet/dry mix.
+Q obeys the generated bounds. Delay parameters accept PointValue with play-only
+mappings; time is 0.01–2 seconds, feedback 0–0.8 (default 0), mix 0–1 (default 0.5).
+The new effect is additive under schema 1; older runtimes reject it. Capabilities
+advertise delay support separately from schema version. Saturation is unsupported.
+
+Layer filters before the first wet delay remain before the envelope. The first
+wet delay and subsequent effects run after envelope and dynamic gain; root effects
+run after the layer sum. Filter-only recipes retain their execution and seeded
+traversal. Delay resolves time, feedback, then mix at each effect position.
+
+Feedback repeats retain the input waveform, with first-echo gain equal to mix and
+later repeats multiplied by feedback. No normalization or limiting is applied.
+Each delay requests only its resolved delay storage. A dry bypass allocates nothing.
+Feedback below two native render quanta is rejected before graph allocation.
+Feedback uses a loop delay shortened by one quantum and a feedforward quantum
+delay, compensating native circulation latency so echoes repeat at the requested
+spacing. Both lines are mono and their requested capacities sum to the resolved time.
+
+Delay tail allowances include the first repeat below −60 dB relative to the first
+echo. Serial allowances add, parallel layers take their latest deadline, and each
+path is capped at 30 seconds after release plus a 50 ms final output fade. This
+finite cutoff is not a claim that cascaded feedback is inaudible at the deadline.
+Source nodes stop after release; a disconnected native ConstantSourceNode schedules
+tail cleanup against audio time. A voice owns all effects and that clock until
+cleanup. Normal Stop retains echoes; explicit cuts and stealing fade the complete
+output in 5 ms. Suspension and disposal finalize immediately without waiting for
+native ended callbacks. The internal filter-only plan view remains available to
+the development audition bench; graph execution uses the complete ordered chain.
 Do not ship placeholder descriptors for unsupported effects.
 
 Shared effects are deferred; bus gain, mute and routing remain runtime

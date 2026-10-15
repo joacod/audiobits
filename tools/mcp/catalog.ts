@@ -67,7 +67,7 @@ export function compatibility(item: CatalogItem, runtime: RuntimeInfo) {
         ? runtime.capabilities.runtime
         : runtime.capabilities.recipe[group];
     for (const value of values)
-      if (!supported?.includes(value))
+      if (!Array.isArray(supported) || !supported.includes(value))
         issues.push({
           code: "unsupported-capability",
           requirement: `${group}:${value}`,

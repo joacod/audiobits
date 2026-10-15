@@ -24,7 +24,7 @@ Import them from local application files after copying or installing their sourc
 Public types include `Recipe`, its layer/source/envelope/filter/value and
 parameter types, `ValidationResult`, `RecipeIssue`, `AudioEngine`, `AudioOptions`,
 `AudioState`, `Sound`, `Voice`, `PlayOptions`, `RecipeControls`, `LiveControls`,
-and `Bus`.
+`Effect`, `Delay`, and `Bus`.
 
 ## Playback options
 
@@ -39,6 +39,21 @@ active/stopping reservations from retirees. Stopping voices retain capacity unti
 cleanup; further steals finalize the previous retiree before creating another.
 `masterGainDb` accepts -60–0 dB; playback gain and pan default to 0.
 At most 32 buses, including master, may be live.
+
+## Recipe effects
+
+`Effect` is `Filter | Delay`. Both are recipe data supported at layer and recipe
+scope, with at most eight effects total. [Delay](/docs/recipes#delay) uses
+`{ type: "delay", time, feedback?, mix? }`: time is 0.01–2 seconds, feedback is
+0–0.8 (default 0), and mix is 0–1 (default 0.5). Each accepts numeric values,
+seeded variation and play-only mappings. No effect-instance API is needed.
+
+Delay tails count toward the existing voice limit until `voice.ended`. A wet
+delay allocates four nodes, or six with feedback, plus one shared native clock
+node per voice with delay. Each effect requests mono delay storage totaling its resolved
+time, never more than two seconds. Feedback uses a loop delay and a one-quantum
+feedforward delay to compensate native circulation latency. `mix: 0` allocates no delay nodes. Serial
+path tails are capped at 30 seconds after release plus a 50 ms final fade.
 
 ## Errors
 

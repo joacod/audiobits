@@ -38,7 +38,7 @@ class Node {
   start = vi.fn();
   stop = vi.fn();
   disconnect = vi.fn();
-  connect = vi.fn();
+  connect = vi.fn(() => this);
 }
 function setup(options = {}) {
   const nodes: Node[] = [];
@@ -67,6 +67,11 @@ function setup(options = {}) {
       };
     }),
     createBufferSource: vi.fn(() => {
+      const node = make();
+      sources.push(node);
+      return node;
+    }),
+    createConstantSource: vi.fn(() => {
       const node = make();
       sources.push(node);
       return node;
@@ -586,4 +591,131 @@ it("route replacement removes the old output exactly once", async () => {
   child.setParent(first);
   expect(nodes[7].disconnect).toHaveBeenCalledWith(nodes[2]);
   await audio.dispose();
+});
+
+it("owns delay tails separately from sources, cuts repeated stops and releases every node", async () => {
+  const { audio, context, sources, nodes } = setup();
+  await audio.start();
+  const sound = audio.sound({
+    ...confirmation,
+    effects: [{ type: "delay", time: 0.2, feedback: 0.5, mix: 0.25 }],
+  });
+  const voice = sound.play();
+  const clock = sources.at(-1)!;
+  expect(context.createDelay).toHaveBeenCalledWith(
+    0.2 - 128 / context.sampleRate,
+  );
+  expect(context.createDelay).toHaveBeenCalledWith(128 / context.sampleRate);
+  expect(context.createConstantSource).toHaveBeenCalledTimes(1);
+  expect(sources[0].stop.mock.calls[0][0]).toBeLessThan(
+    clock.stop.mock.calls[0][0],
+  );
+  sources.slice(0, -1).forEach((source) => source.onended?.());
+  expect(voice.state).toBe("active");
+  context.currentTime = 1.02;
+  voice.stop();
+  const deadline = clock.stop.mock.calls.at(-1)![0];
+  expect(deadline).toBeGreaterThan(3);
+  voice.stop();
+  expect(clock.stop.mock.calls.at(-1)![0]).toBe(deadline);
+  context.currentTime = 1.04;
+  audio.stopAll({ tails: "cut" });
+  expect(clock.stop.mock.calls.at(-1)![0]).toBeCloseTo(1.045);
+  context.currentTime = 1.042;
+  audio.stopAll({ tails: "cut" });
+  expect(clock.stop.mock.calls.at(-1)![0]).toBeCloseTo(1.045);
+  clock.onended?.();
+  await voice.ended;
+  expect(
+    nodes.slice(2).every((node) => node.disconnect.mock.calls.length === 1),
+  ).toBe(true);
+  expect(audio.counts).toEqual({ active: 0, retiring: 0 });
+  await audio.dispose();
+});
+
+it("cleans partial delay graphs, cancellation and suspended tails without audio clock progress", async () => {
+  const { audio, context, nodes } = setup();
+  await audio.start();
+  const sound = audio.sound({
+    ...confirmation,
+    effects: [{ type: "delay", time: 2, feedback: 0.8 }],
+  });
+  context.createConstantSource.mockImplementationOnce(() => {
+    throw new Error("clock allocation");
+  });
+  expect(() => sound.play()).toThrow(/clock allocation/);
+  expect(
+    nodes.slice(2).every((node) => node.disconnect.mock.calls.length === 1),
+  ).toBe(true);
+  expect(audio.counts.active).toBe(0);
+  const future = sound.play({ at: 10 });
+  future.stop();
+  await future.ended;
+  const voice = sound.play();
+  voice.stop();
+  await audio.suspend();
+  await voice.ended;
+  expect(audio.counts).toEqual({ active: 0, retiring: 0 });
+  await audio.dispose();
+  expect(nodes.every((node) => node.disconnect.mock.calls.length > 0)).toBe(
+    true,
+  );
+});
+
+it("keeps live source, gain and ordered filter controls working alongside static delay", async () => {
+  const { audio, context, sources, nodes } = setup();
+  await audio.start();
+  const voice = audio
+    .sound({
+      schemaVersion: 1,
+      kind: "sustained",
+      parameters: {
+        tone: { min: 0, max: 1, default: 0, mode: "live", smoothing: 0.05 },
+      },
+      layers: [
+        {
+          id: "tone",
+          source: {
+            type: "oscillator",
+            waveform: "sine",
+            frequency: { control: "tone", range: [100, 400], scale: "linear" },
+          },
+          gainDb: { control: "tone", range: [-30, -12], scale: "linear" },
+          envelope: { attack: 0.002, decay: 0, sustain: 1, release: 0.05 },
+          effects: [
+            { type: "delay", time: 0.1, feedback: 0.4 },
+            {
+              type: "filter",
+              filter: "lowpass",
+              frequency: {
+                control: "tone",
+                range: [300, 2000],
+                scale: "linear",
+              },
+              q: 0.7,
+            },
+          ],
+        },
+      ],
+      effects: [{ type: "filter", filter: "highpass", frequency: 80, q: 0.7 }],
+    })
+    .play();
+  const count = nodes.length;
+  voice.set({ tone: 1 });
+  expect(nodes).toHaveLength(count);
+  expect(sources[0].frequency.calls.at(-1)).toEqual(["linear", 400, 1.05]);
+  const filter = context.createBiquadFilter.mock.results[1].value;
+  expect(filter.frequency.calls.at(-1)).toEqual(["linear", 2000, 1.05]);
+  expect(
+    nodes.some((node) =>
+      node.gain.calls.some(
+        ([kind, value, time]) =>
+          kind === "linear" && value === 10 ** (-12 / 20) && time === 1.05,
+      ),
+    ),
+  ).toBe(true);
+  voice.stop();
+  expect(() => voice.set({ tone: 0 })).toThrow(/no longer active/);
+  await audio.dispose();
+  await voice.ended;
 });

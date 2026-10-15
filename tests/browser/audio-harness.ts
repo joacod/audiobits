@@ -1,4 +1,5 @@
 import "./echo-probe-harness";
+import "./delay-harness";
 import {
   sounds,
   parametersFor,

@@ -772,6 +772,35 @@ try {
       );
     }
   }
+  const delayCode = await readFile(
+    join(root, "examples/vanilla/src/delay.ts"),
+    "utf8",
+  );
+  await writeFile(join(consumer, "delay-example.ts"), delayCode);
+  run(
+    process.execPath,
+    [
+      resolve("node_modules/typescript/bin/tsc"),
+      "--noEmit",
+      "--strict",
+      "--module",
+      "NodeNext",
+      "--moduleResolution",
+      "NodeNext",
+      "--target",
+      "ES2022",
+      "delay-example.ts",
+    ],
+    consumer,
+  );
+  examples.push({
+    name: "delay-example",
+    file: "Native delay consumer",
+    index: 0,
+    code: delayCode,
+    // Feedback repeats keep this one-shot audible for about 1.85s.
+    finishTimeout: 4000,
+  });
   evidence.examples = examples.map(({ file, index }) => ({
     file,
     index,
@@ -1151,7 +1180,7 @@ Object.assign(globalThis, { probe });`,
         // see the captured playback signal, rather than just current silence.
         await expect
           .poll(() => page.evaluate(() => globalThis.probe.counts), {
-            timeout: 2000,
+            timeout: example.finishTimeout ?? 2000,
             message: `Finite host did not finish: ${example.name}`,
           })
           .toEqual({ active: 0, retiring: 0 })
