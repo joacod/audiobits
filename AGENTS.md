@@ -65,8 +65,13 @@ accurate. Briefly justify substantial README additions in the relevant PR.
   dependencies unless explicitly reconsidered.
 - Recipes remain portable, serializable, versioned data and contain no UI or
   application state.
-- Prove missing audio primitives with a concrete sound/use case before adding
-  them; prefer composition first.
+- Motivate new core or recipe capabilities with concrete sound-design or
+  application requirements. Prefer composition with existing primitives when
+  it produces comparably good results. A focused general-purpose capability
+  may also be introduced when a concrete experiment demonstrates a meaningful
+  improvement in acoustic quality, expressiveness, performance, or downstream
+  developer experience. Avoid speculative features and abstractions for
+  hypothetical future uses.
 - Avoid speculative DAW, MIDI, recording, streaming, framework adapters, MCP,
   AudioWorklet, WASM, and other scope expansion.
 
