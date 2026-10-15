@@ -362,9 +362,8 @@ try {
     const expectedManifest = JSON.parse(beforeInstall);
     for (const dependency of item.dependencies) {
       if (dependency.startsWith("audiobits@"))
-        expectedManifest.dependencies.audiobits = dependency.slice(
-          "audiobits@".length,
-        );
+        // shadcn rewrites versioned deps to ^packed when resolving the candidate.
+        expectedManifest.dependencies.audiobits = `^${packedManifest.version}`;
     }
     assert.deepEqual(
       JSON.parse(
