@@ -7,21 +7,69 @@ import {
   type Recipe,
 } from "audiobits";
 import * as recipes from "../catalog/experiences/echo-probe/recipe";
+import * as baseline from "../catalog/experiences/echo-probe/baseline";
 import { createEchoProbe } from "../catalog/experiences/echo-probe/controller";
 import { compile } from "../packages/audiobits/src/compiler/plan";
 
-test("all acoustic definitions round-trip and compile deterministically at extrema", () => {
-  for (const recipe of Object.values(recipes)) {
+const wall = { distance: 0.5, pan: -0.8, intensity: 0.9, surface: 0.8 };
+
+test("definitions validate, round-trip, and preserve the emitted layers and seed traversal", () => {
+  for (const recipe of [
+    ...Object.values(recipes),
+    ...Object.values(baseline),
+  ]) {
     expect(validateRecipe(recipe).ok).toBe(true);
     expect(validateRecipe(JSON.parse(JSON.stringify(recipe))).ok).toBe(true);
     for (const surface of [0, 0.5, 1])
-      for (const seed of [0, 42, 0xffffffff]) {
-        const controls = "parameters" in recipe ? { surface } : {};
-        expect(compile(recipe, controls, seed)).toEqual(
-          compile(recipe, controls, seed),
-        );
-      }
+      for (const distance of [0, 1])
+        for (const seed of [0, 42, 0xffffffff]) {
+          const controls =
+            "parameters" in recipe
+              ? Object.fromEntries(
+                  Object.keys(recipe.parameters).map((k) => [
+                    k,
+                    k === "distance" ? distance : surface,
+                  ]),
+                )
+              : {};
+          const plan = compile(recipe, controls, seed);
+          expect(plan).toEqual(compile(recipe, controls, seed));
+          if (
+            recipe === recipes.probeReflection ||
+            recipe === recipes.probeReturn
+          )
+            expect(plan.layers).toEqual(
+              compile(recipes.echoProbe, {}, seed).layers,
+            );
+        }
   }
+});
+
+test("distance damps propagation without retuning material or seeded source", () => {
+  const near = compile(
+    recipes.probeReflection,
+    { surface: 0.8, distance: 0 },
+    7,
+  );
+  const far = compile(
+    recipes.probeReflection,
+    { surface: 0.8, distance: 1 },
+    7,
+  );
+  expect(near.layers).toEqual(far.layers);
+  expect(near.effects[0]).toEqual(far.effects[0]);
+  expect(near.effects[1].frequency).toBeGreaterThan(
+    far.effects[1].frequency as number,
+  );
+  const felt = compile(recipes.probeReflection, { surface: 0, distance: 0 }, 7);
+  expect(felt.effects[0].frequency).toBeLessThan(
+    near.effects[0].frequency as number,
+  );
+  expect(felt.effects[1]).toEqual(near.effects[1]);
+  for (const recipe of Object.values(recipes))
+    expect(
+      Math.max(...recipe.layers.map((l) => l.envelope.release)) + 0.05,
+    ).toBeLessThan(0.12);
 });
 
 function setup() {
@@ -41,15 +89,19 @@ function setup() {
     get state() {
       return state;
     },
-    native: {
-      context: {
-        get currentTime() {
-          return time;
+    get native() {
+      if (state === "disposed") throw new Error("Engine no longer available");
+      return {
+        context: {
+          get currentTime() {
+            return time;
+          },
         },
-      },
+      };
     },
     sound(recipe: Recipe) {
-      const dispose = vi.fn();
+      const own: typeof calls = [];
+      const dispose = vi.fn(() => own.forEach((call) => call.finish()));
       disposals.push(dispose);
       return {
         play(options: PlayOptions) {
@@ -58,9 +110,10 @@ function setup() {
           const ended = new Promise<void>((done) => {
             finish = done;
           });
-          const stop = vi.fn();
-          calls.push({ recipe, options, stop, finish });
-          return { stop, ended };
+          const call = { recipe, options, stop: vi.fn(), finish };
+          calls.push(call);
+          own.push(call);
+          return { stop: call.stop, ended };
         },
         dispose,
       };
@@ -75,11 +128,15 @@ function setup() {
     calls,
     disposals,
     unsubscribe,
-    advance() {
-      time += 0.2;
+    advance(seconds = 0.12) {
+      time += seconds;
     },
     interrupt() {
       state = "interrupted";
+      listener(state);
+    },
+    shutdown() {
+      state = "disposed";
       listener(state);
     },
     fail() {
@@ -90,9 +147,8 @@ function setup() {
     },
   };
 }
-const wall = { distance: 0.5, pan: -0.8, intensity: 0.9, surface: 0.8 };
 
-test("audio-clock scheduling, normalized values, zero returns, and repeatable seeds", async () => {
+test("audio-clock returns and sparse late cluster use independent bounded controls", async () => {
   const s = setup();
   const event = s.control.emit(
     [wall, { distance: 9, pan: Infinity, intensity: -2, surface: NaN }],
@@ -102,55 +158,90 @@ test("audio-clock scheduling, normalized values, zero returns, and repeatable se
   expect(event.reflections).toHaveLength(1);
   expect(event.reflections[0]).toMatchObject(wall);
   expect(event.reflections[0].at).toBeCloseTo(event.at + 0.54, 10);
-  expect(s.calls.map((call) => call.options.at)).toEqual([
-    event.at,
-    event.reflections[0].at,
-    event.reflections[0].at + 0.037 + 0.5 * 0.045,
-  ]);
-  expect(s.calls[1].options.parameters).toEqual({
-    surface: 0.8 * (1 - 0.55 * 0.5),
+  expect(s.calls).toHaveLength(5);
+  expect(s.calls[1].options).toMatchObject({
+    at: event.reflections[0].at,
+    seed: 7,
+    pan: wall.pan,
+    parameters: { surface: wall.surface, distance: wall.distance },
   });
+  for (const call of s.calls.slice(2)) {
+    expect(call.options.at).toBeGreaterThan(event.reflections[0].at + 0.11);
+    expect(call.options.gainDb).toBeLessThan(s.calls[1].options.gainDb!);
+  }
+  expect(new Set(s.calls.slice(2).map((c) => c.options.seed)).size).toBe(3);
+  expect(s.calls[2].options.pan).toBeLessThan(0);
+  expect(s.calls[3].options.pan).toBeGreaterThan(0);
   const options = s.calls.map((call) => call.options);
   s.finish();
   await event.ended;
   s.advance();
   s.control.emit([wall], { seed: 7 });
-  expect(s.calls.slice(3).map((call) => ({ ...call.options, at: 0 }))).toEqual(
+  expect(s.calls.slice(5).map((call) => ({ ...call.options, at: 0 }))).toEqual(
     options.map((value) => ({ ...value, at: 0 })),
   );
   s.control.dispose();
+  for (const dispose of s.disposals) expect(dispose).toHaveBeenCalledOnce();
 });
 
-test("overlap, cooldown, stop tails, and repeated bursts stay bounded", async () => {
+test("strength and direction affect only gain or pan, never timing or material", () => {
+  const capture = (changes: Partial<typeof wall>, strength = 0.8) => {
+    const s = setup();
+    s.control.emit([{ ...wall, ...changes }], { seed: 7, strength });
+    s.control.dispose();
+    return s.calls[1].options;
+  };
+  const first = capture({});
+  expect(capture({ pan: 1 })).toEqual({ ...first, pan: 1 });
+  const quiet = capture({ intensity: 0.2 });
+  expect(quiet.gainDb).toBeLessThan(first.gainDb!);
+  expect({ ...quiet, gainDb: 0 }).toEqual({ ...first, gainDb: 0 });
+  expect(capture({}, 0.3).gainDb).toBeLessThan(first.gainDb!);
+});
+
+test("120 ms bursts admit new pulses, cancel late energy first, and bound delayed cleanup", async () => {
   const s = setup();
   const first = s.control.emit(Array(100).fill(wall))!;
   expect(first.reflections).toHaveLength(6);
-  expect(s.calls).toHaveLength(13);
+  expect(s.calls).toHaveLength(10);
   expect(s.control.emit([wall])).toBeNull();
   s.advance();
-  s.control.emit(Array(100).fill(wall));
-  expect(s.calls).toHaveLength(26);
-  s.advance();
-  expect(s.control.emit([wall])).toBeNull();
+  expect(s.control.emit(Array(6).fill(wall))).not.toBeNull();
+  for (const call of s.calls.slice(0, 7))
+    expect(call.stop).not.toHaveBeenCalled();
+  for (const call of s.calls.slice(7, 10))
+    expect(call.stop).toHaveBeenCalledOnce();
+  // Deliberately withhold ended delivery. Audio-clock expiry must bound ownership.
+  for (let index = 0; index < 100; index++) {
+    s.advance();
+    expect(s.control.emit(Array(6).fill(wall))).not.toBeNull();
+    expect(s.control.active).toBeLessThanOrEqual(3);
+  }
+  expect(s.calls[0].stop).toHaveBeenCalledOnce();
   s.control.stop();
-  for (const call of s.calls) expect(call.stop).toHaveBeenCalled();
-  expect(s.control.active).toBe(2);
-  expect(s.control.emit([wall])).toBeNull();
   s.finish();
   await first.ended;
   await Promise.resolve();
   expect(s.control.active).toBe(0);
-  for (let index = 0; index < 100; index++) {
-    s.advance();
-    const event = s.control.emit([wall])!;
-    event.stop();
-    s.finish();
-    await event.ended;
-    expect(s.control.active).toBe(0);
-  }
+  s.control.dispose();
+  for (const dispose of s.disposals) expect(dispose).toHaveBeenCalledOnce();
 });
 
-test("invalid extrema, silence, interruption, rollback, and disposal own only this controller", async () => {
+test("Stop at the same audio time cannot allocate an unbounded number of retiring groups", () => {
+  const s = setup();
+  for (let i = 0; i < 3; i++) {
+    expect(s.control.emit([wall])).not.toBeNull();
+    s.control.stop();
+  }
+  expect(s.control.active).toBe(3);
+  expect(s.control.emit([wall])).toBeNull();
+  s.advance(0.091);
+  expect(s.control.emit([])).not.toBeNull();
+  expect(s.control.active).toBe(1);
+  s.control.dispose();
+});
+
+test("silence, normalization, interruption, rollback, and disposal own only this controller", async () => {
   const s = setup();
   expect(s.control.emit([wall], { strength: NaN })).toBeNull();
   const event = s.control.emit(
@@ -174,9 +265,71 @@ test("invalid extrema, silence, interruption, rollback, and disposal own only th
   const broken = setup();
   broken.fail();
   expect(() => broken.control.emit([wall])).toThrow("graph failed");
-  for (const call of broken.calls) expect(call.stop).toHaveBeenCalledOnce();
-  broken.finish();
-  await Promise.resolve();
-  await Promise.resolve();
   expect(broken.control.active).toBe(0);
+  for (const dispose of broken.disposals)
+    expect(dispose).toHaveBeenCalledOnce();
+  await event.ended;
+});
+
+test("cleanup remains safe when the application disposes the engine first", async () => {
+  const s = setup();
+  const event = s.control.emit([wall])!;
+  s.shutdown();
+  expect(() => s.control.stop()).not.toThrow();
+  expect(() => s.control.dispose()).not.toThrow();
+  expect(() => event.stop()).not.toThrow();
+  await event.ended;
+  expect(s.control.active).toBe(0);
+});
+
+test("cancellation time is immediate, immutable, and distinguishes sounded from pending returns", async () => {
+  const s = setup();
+  const first = s.control.emit([{ ...wall, distance: 0 }, wall])!;
+  const scheduled = first.reflections;
+  expect(first.cancelledAt).toBeNull();
+  expect(Object.isFrozen(first)).toBe(true);
+  s.advance();
+  const second = s.control.emit([wall])!;
+  expect(first.cancelledAt).toBeNull(); // Cancelling only late energy leaves early returns valid.
+  s.advance();
+  const third = s.control.emit([wall])!;
+  expect(first.cancelledAt).toBeCloseTo(10.24, 10);
+  expect(first.reflections).toBe(scheduled);
+  expect(first.reflections[0].at).toBeLessThan(first.cancelledAt!);
+  expect(first.reflections[1].at).toBeGreaterThan(first.cancelledAt!);
+  for (const call of s.calls.slice(0, 3))
+    expect(call.stop).toHaveBeenCalledOnce();
+  expect(second.cancelledAt).toBeNull();
+  expect(third.cancelledAt).toBeNull();
+  s.advance();
+  first.stop();
+  s.control.stop();
+  expect(first.cancelledAt).toBeCloseTo(10.24, 10);
+  expect(second.cancelledAt).toBeCloseTo(10.36, 10);
+  expect(third.cancelledAt).toBeCloseTo(10.36, 10);
+  s.control.dispose();
+  await first.ended;
+  expect(first.cancelledAt).toBeCloseTo(10.24, 10);
+});
+
+test("natural completion does not mark cancellation; interruption and disposal do immediately", async () => {
+  const natural = setup();
+  const completed = natural.control.emit([wall])!;
+  natural.finish();
+  await completed.ended;
+  completed.stop();
+  expect(completed.cancelledAt).toBeNull();
+  natural.control.dispose();
+  const interrupted = setup();
+  const pending = interrupted.control.emit([wall])!;
+  interrupted.advance(0.04);
+  interrupted.interrupt();
+  expect(pending.cancelledAt).toBeCloseTo(10.04, 10);
+  interrupted.control.dispose();
+  const disposed = setup();
+  const emission = disposed.control.emit([wall])!;
+  disposed.advance(0.03);
+  disposed.control.dispose();
+  expect(emission.cancelledAt).toBeCloseTo(10.03, 10);
+  await emission.ended;
 });

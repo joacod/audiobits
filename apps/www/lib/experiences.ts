@@ -3,13 +3,19 @@ import { registryItem } from "./registry";
 export const experienceSourcePurpose = {
   "echo-probe": {
     "recipe.ts":
-      "Emission, surface-colored reflection, and finite diffuse energy as schema-1 data.",
+      "Emission, preserved returns, independent material/propagation filters, and sparse late grains as schema-1 data.",
     "controller.ts":
       "Audio-clock scheduling, bounded application reflections, seeded emissions, and owned cancellation.",
     "host.ts":
       "Gesture activation, retry, interruption, hide, blur, Stop, and disposal.",
     "index.html":
-      "Minimal acoustic bench for emission, distance, surface, intensity, and stereo comparisons.",
+      "Controlled A/B/C/delay audition, remembered comparisons, and rapid live emission bench.",
+    "bench.ts":
+      "Development-only offline comparison, return-energy matching, and filtered native delay prototype.",
+    "baseline.ts":
+      "Original PR #100 acoustic definitions, preserved for listening review.",
+    "baseline-controller.ts":
+      "Original PR #100 scheduling and acoustic mapping for reference A.",
   },
   lightsaber: {
     "recipe.ts":

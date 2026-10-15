@@ -36,7 +36,11 @@ a README with a tested `src/integration.ts` example.
 Echo Probe's `createEchoProbe(audio)` takes bounded reflection data through
 `emit(reflections, { seed, strength })`. Each reflection supplies relative distance,
 stereo pan, intensity, and surface character. The controller schedules emission,
-returns, and finite diffuse energy on the audio clock. Its installed guide covers
+pulse-preserving returns, and a sparse late cluster on the audio clock. Material
+and propagation filters are independent; reflection intensity and stereo direction
+retain separate roles. At 120 ms intervals it favors new pulses and early energy
+over older late tails, with two foreground groups and one releasing group.
+Its installed guide covers
 voice budgets, cancellation, and scheduled times for application feedback.
 
 The installed guide defines each controller's bounded inputs and lifecycle.

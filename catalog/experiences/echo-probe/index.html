@@ -6,63 +6,224 @@
   <style>
     body {
       font: 16px/1.6 system-ui;
-      max-width: 48rem;
-      margin: 8vh auto;
+      max-width: 56rem;
+      margin: 4vh auto;
       padding: 1rem;
     }
-    button {
+    button,
+    select,
+    input {
       font: inherit;
       margin: 0.3rem;
-      padding: 0.6rem;
+    }
+    label {
+      display: block;
+    }
+    button {
+      padding: 0.5rem;
+    }
+    output {
+      font-variant-numeric: tabular-nums;
     }
   </style>
   <h1>Echo Probe acoustic bench</h1>
   <p>
-    Compare the pulse alone, then distance, surface, strength, and stereo
-    returns. Each gesture uses seed 42.
+    One reflector, seed 42. Change one control, then compare the same pulse. A
+    preserves PR #100, including its original material/distance coupling and
+    noise wash. B preserves the pulse. C adds material resonance. Delay sends
+    the emitted signal through the same filters as C.
   </p>
-  <div id="scenarios"></div>
+  <label
+    >Composition
+    <select id="composition">
+      <option value="baseline">A / original independent returns</option>
+      <option value="pulse">B / preserved pulse</option>
+      <option value="hybrid" selected>C / resonant preserved pulse</option>
+      <option value="delay">Experimental filtered delay</option>
+    </select></label
+  >
+  <label
+    >Late field
+    <select id="space">
+      <option value="cluster">Three scattered grains</option>
+      <option value="noise">Original noise wash</option>
+      <option value="none">Early return only</option>
+    </select></label
+  >
+  <label
+    >Distance
+    <input
+      id="distance"
+      type="range"
+      min="0"
+      max="1"
+      step="0.01"
+      value="0.35" /><output></output
+  ></label>
+  <label
+    >Material
+    <input
+      id="surface"
+      type="range"
+      min="0"
+      max="1"
+      step="0.01"
+      value="0.7" /><output></output
+  ></label>
+  <label
+    >Reflection strength
+    <input
+      id="intensity"
+      type="range"
+      min="0"
+      max="1"
+      step="0.01"
+      value="0.9" /><output></output
+  ></label>
+  <label
+    >Direction
+    <input
+      id="pan"
+      type="range"
+      min="-1"
+      max="1"
+      step="0.01"
+      value="-0.6" /><output></output
+  ></label>
+  <label
+    >Seed <input id="seed" type="number" min="0" max="4294967295" value="42"
+  /></label>
+  <label
+    ><input id="matchLevel" type="checkbox" checked /> Match returned energy for
+    composition comparisons</label
+  >
+  <p>
+    Disable energy matching to hear propagation loss or reflection strength.
+    Energy matching helps comparison; it does not establish equal perceived
+    loudness.
+  </p>
+  <button id="audition">Hear selected composition</button>
+  <button id="remember">Remember A</button>
+  <button id="compare" disabled>Hear remembered A</button>
+  <button id="rapid">Rapid live emissions (120 ms)</button>
   <button id="stop">Stop</button>
   <p id="state" role="status">Stopped</p>
   <p id="error" role="alert"></p>
+  <pre id="metrics"></pre>
   <script type="module">
     import { mountEchoProbe } from "./host.ts";
+    import { benchDefaults, renderProbeComparison } from "./bench.ts";
+    const get = (id) => document.getElementById(id);
     const host = mountEchoProbe({
       state(value) {
-        document.querySelector("#state").textContent = value;
+        get("state").textContent = value;
       },
       error(cause) {
-        document.querySelector("#error").textContent =
-          `${cause.message}. Try again.`;
+        get("error").textContent = `${cause.message}. Try again.`;
       },
     });
-    const r = (distance, pan, intensity, surface) => ({
-      distance,
-      pan,
-      intensity,
-      surface,
-    });
-    const scenarios = {
-      "Emission alone": [],
-      "Near / far": [r(0.1, -0.5, 0.9, 0.7), r(0.85, 0.5, 0.9, 0.7)],
-      "Dark / bright": [r(0.35, -0.65, 1, 0), r(0.7, 0.65, 1, 1)],
-      "Strong / weak": [r(0.2, -0.5, 1, 0.7), r(0.6, 0.5, 0.25, 0.7)],
-      "Left / right": [r(0.25, -0.9, 1, 0.7), r(0.65, 0.9, 1, 0.7)],
-      "Small chamber": [
-        r(0.15, -0.8, 0.8, 0.85),
-        r(0.35, 0.7, 0.7, 0.2),
-        r(0.6, 0.1, 0.9, 1),
-      ],
-    };
-    for (const [label, reflections] of Object.entries(scenarios)) {
-      const button = document.createElement("button");
-      button.textContent = label;
-      button.onclick = () => {
-        document.querySelector("#error").textContent = "";
-        void host.emit(reflections);
-      };
-      document.querySelector("#scenarios").append(button);
+    let generation = 0,
+      playing,
+      burst = 0,
+      remembered;
+    const settings = () =>
+      Object.fromEntries(
+        Object.entries(benchDefaults).map(([key, value]) => [
+          key,
+          typeof value === "number"
+            ? Number(get(key).value)
+            : typeof value === "boolean"
+              ? get(key).checked
+              : get(key).value,
+        ]),
+      );
+    for (const slider of document.querySelectorAll('input[type="range"]')) {
+      const update = () => (slider.nextElementSibling.value = slider.value);
+      slider.oninput = update;
+      update();
     }
-    document.querySelector("#stop").onclick = host.stop;
+    function stop() {
+      generation++;
+      clearTimeout(burst);
+      playing?.stop();
+      playing = undefined;
+      if (host.audio.state !== "disposed" && host.audio.state !== "closed")
+        host.stop();
+    }
+    async function audition(value) {
+      stop();
+      const token = generation;
+      get("error").textContent = "";
+      await host.audio.start();
+      if (token !== generation || document.hidden) return;
+      const result = await renderProbeComparison(value);
+      if (token !== generation || document.hidden) return;
+      playing = host.audio.native.context.createBufferSource();
+      const source = playing;
+      source.buffer = result.buffer;
+      source.connect(host.audio.native.context.destination);
+      source.onended = () => {
+        source.disconnect();
+        source.buffer = null;
+        if (playing === source) {
+          playing = undefined;
+          get("state").textContent = "Stopped";
+        }
+      };
+      source.start();
+      get("state").textContent = "Listening";
+      get("metrics").textContent = JSON.stringify(
+        { settings: value, ...result.metrics },
+        null,
+        2,
+      );
+    }
+    const fail = (cause) => {
+      stop();
+      get("error").textContent = `${cause.message}. Try again.`;
+    };
+    get("audition").onclick = () => audition(settings()).catch(fail);
+    get("remember").onclick = () => {
+      remembered = settings();
+      get("compare").disabled = false;
+      get("compare").textContent =
+        `Hear remembered A (${remembered.composition})`;
+    };
+    get("compare").onclick = () => audition(remembered).catch(fail);
+    get("rapid").onclick = async () => {
+      stop();
+      const token = generation,
+        value = settings();
+      try {
+        await host.audio.start();
+        let nextAt = host.audio.native.context.currentTime;
+        let count = 0,
+          accepted = 0;
+        // Timers generate application gestures only. The controller schedules sound on the audio clock.
+        const next = async () => {
+          if (token !== generation || document.hidden) return;
+          // Wait for the audio clock interval, avoiding timer rounding below 120 ms.
+          if (host.audio.native.context.currentTime < nextAt) {
+            burst = setTimeout(next, 4);
+            return;
+          }
+          nextAt = host.audio.native.context.currentTime + 0.12;
+          if (await host.emit([value], value.seed)) accepted++;
+          count++;
+          get("metrics").textContent =
+            `${accepted}/${count} admitted; active voices ${host.audio.counts.active}`;
+          if (count < 12 && token === generation) burst = setTimeout(next, 120);
+        };
+        await next();
+      } catch (cause) {
+        fail(cause);
+      }
+    };
+    get("stop").onclick = stop;
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) stop();
+    });
+    window.addEventListener("blur", stop);
+    window.addEventListener("pagehide", stop);
   </script>
 </html>

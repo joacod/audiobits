@@ -21,7 +21,7 @@ export const echoProbe = defineSound({
         },
       },
       gainDb: -15,
-      envelope: { attack: 0.003, decay: 0.12, sustain: 0.015, release: 0.09 },
+      envelope: { attack: 0.003, decay: 0.12, sustain: 0.015, release: 0.04 },
     },
     {
       id: "flexing-rim",
@@ -38,7 +38,7 @@ export const echoProbe = defineSound({
         },
       },
       gainDb: -25,
-      envelope: { attack: 0.002, decay: 0.075, sustain: 0, release: 0.06 },
+      envelope: { attack: 0.002, decay: 0.075, sustain: 0, release: 0.04 },
       effects: [{ type: "filter", filter: "lowpass", frequency: 3200, q: 0.7 }],
     },
     {
@@ -55,7 +55,7 @@ export const echoProbe = defineSound({
         },
       },
       gainDb: -24,
-      envelope: { attack: 0.004, decay: 0.095, sustain: 0, release: 0.05 },
+      envelope: { attack: 0.004, decay: 0.095, sustain: 0, release: 0.04 },
     },
     {
       id: "air-edge",
@@ -80,122 +80,53 @@ export const echoProbe = defineSound({
   ],
 });
 
-/** Surface is absorption to glass: a soft knock opens into a ringing, airy return. */
-export const probeReflection = defineSound({
-  schemaVersion: 1,
-  kind: "one-shot",
-  duration: 0.24,
-  parameters: { surface: { min: 0, max: 1, default: 0.5, mode: "play" } },
-  layers: [
+/** Same layers and seed traversal as the emission, with independent propagation. */
+export const probeReturn = defineSound({
+  ...echoProbe,
+  parameters: {
+    surface: { min: 0, max: 1, default: 0.5, mode: "play" },
+    distance: { min: 0, max: 1, default: 0, mode: "play" },
+  },
+  effects: [
     {
-      id: "return-body",
-      source: {
-        type: "oscillator",
-        waveform: "sine",
-        frequency: {
-          points: [
-            [
-              0,
-              { control: "surface", range: [310, 960], scale: "exponential" },
-            ],
-            [
-              0.12,
-              { control: "surface", range: [260, 840], scale: "exponential" },
-            ],
-          ],
-          curve: "exponential",
-        },
+      type: "filter",
+      filter: "lowpass",
+      frequency: {
+        control: "surface",
+        range: [190, 4800],
+        scale: "exponential",
       },
-      gainDb: -19,
-      envelope: { attack: 0.006, decay: 0.16, sustain: 0.025, release: 0.14 },
+      q: 0.7,
     },
     {
-      id: "surface-ring",
-      source: {
-        type: "oscillator",
-        waveform: "sine",
-        frequency: {
-          control: "surface",
-          range: [710, 2380],
-          scale: "exponential",
-        },
+      type: "filter",
+      filter: "lowpass",
+      frequency: {
+        control: "distance",
+        range: [12000, 2400],
+        scale: "exponential",
       },
-      gainDb: { control: "surface", range: [-42, -24], scale: "linear" },
-      envelope: { attack: 0.004, decay: 0.21, sustain: 0.07, release: 0.18 },
-    },
-    {
-      id: "scattered-air",
-      source: { type: "noise", color: "white" },
-      gainDb: { control: "surface", range: [-28, -23], scale: "linear" },
-      envelope: { attack: 0.012, decay: 0.18, sustain: 0.015, release: 0.15 },
-      effects: [
-        {
-          type: "filter",
-          filter: "bandpass",
-          frequency: {
-            points: [
-              [
-                0,
-                {
-                  control: "surface",
-                  range: [480, 4200],
-                  scale: "exponential",
-                },
-              ],
-              [
-                0.24,
-                {
-                  control: "surface",
-                  range: [280, 1500],
-                  scale: "exponential",
-                },
-              ],
-            ],
-            curve: "exponential",
-          },
-          q: 1.8,
-        },
-      ],
+      q: 0.7,
     },
   ],
 });
 
-/** Finite late energy. Silence between emissions is part of the instrument. */
+/** Hybrid: the returned pulse excites a modest material resonance, no added note. */
+export const probeReflection = defineSound({
+  ...probeReturn,
+  effects: probeReturn.effects.map((effect, index) => ({
+    ...effect,
+    q: index === 0 ? 1.65 : effect.q,
+  })),
+});
+
+/** Sparse late grains. Each has a body and decorrelated air, never an idle bed. */
 export const probeDiffusion = defineSound({
-  schemaVersion: 1,
-  kind: "one-shot",
-  duration: 0.38,
-  parameters: { surface: { min: 0, max: 1, default: 0.5, mode: "play" } },
-  layers: [
-    {
-      id: "diffuse-wash",
-      source: { type: "noise", color: "white" },
-      gainDb: -29,
-      envelope: { attack: 0.045, decay: 0.3, sustain: 0.03, release: 0.2 },
-      effects: [
-        {
-          type: "filter",
-          filter: "bandpass",
-          frequency: {
-            control: "surface",
-            range: [420, 2100],
-            scale: "exponential",
-          },
-          q: 0.7,
-        },
-        {
-          type: "filter",
-          filter: "lowpass",
-          frequency: {
-            points: [
-              [0, 3600],
-              [0.38, 450],
-            ],
-            curve: "exponential",
-          },
-          q: 0.7,
-        },
-      ],
-    },
-  ],
+  ...probeReturn,
+  duration: 0.18,
+  layers: [echoProbe.layers[0], echoProbe.layers[3]].map((layer, index) => ({
+    ...layer,
+    gainDb: index === 0 ? -24 : -32,
+    envelope: { attack: 0.012, decay: 0.105, sustain: 0, release: 0.035 },
+  })),
 });
