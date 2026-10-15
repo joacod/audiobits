@@ -8,7 +8,12 @@ voices, and connect supported live parameters to application state.
 
 [Live catalog](https://www.audiobits.dev/catalog) ·
 [Documentation](https://www.audiobits.dev/docs) ·
-[MCP server](https://www.audiobits.dev/docs/mcp)
+[Agents (Skill)](https://www.audiobits.dev/docs/agents) ·
+[MCP server (optional)](https://www.audiobits.dev/docs/mcp)
+
+For coding agents, install the official
+[AudioBits Skill](https://www.audiobits.dev/docs/agents) (includes an optional
+MCP server).
 
 ## Quick start
 
@@ -59,14 +64,8 @@ host is removed. For pending activation, page hiding, and navigation, follow the
 
 ## Recipes and interactions you own
 
-The npm package contains the engine, recipe language, types, validation, schema
-and capability metadata. Ready-made recipes and interactive experiences live in
-the [copy-owned catalog](https://github.com/joacod/audiobits/tree/main/catalog).
-Copy or install the [0BSD source](https://github.com/joacod/audiobits/blob/main/catalog/README.md)
-you need and import it locally. No license notices or credit are required for catalog use.
-The copied files belong to your application and can be edited independently.
-
-Install an item from the catalog with shadcn:
+Copy or install ready-made recipes from the
+[catalog](https://www.audiobits.dev/docs/catalog) and edit them in your app.
 
 ```sh
 npx shadcn@latest add joacod/audiobits/<item>
@@ -87,8 +86,6 @@ npx shadcn@latest add joacod/audiobits/<item>
   connect caller-owned Web Audio analysers and nodes.
 
 The [API reference](https://www.audiobits.dev/docs/api) explains options and limits.
-Agent guidance is distributed separately in the repository's
-[AudioBits Skill](https://github.com/joacod/audiobits/tree/main/skills/audiobits).
 
 Automated browser checks cover current Chromium; other browsers and operating
 systems and physical-device compatibility remain unverified.
