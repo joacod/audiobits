@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { createServer } from "node:http";
 import { createRequire } from "node:module";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import {
   mkdtemp,
   readFile,
@@ -107,12 +107,26 @@ evidence.consumerSnippets = [];
 
 const pnpm = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
 const npm = process.platform === "win32" ? "npm.cmd" : "npm";
-const run = (command, args, cwd = root) =>
-  execFileSync(command, args, { cwd, stdio: "inherit" });
+const run = (command, args, cwd = root, env = process.env) =>
+  new Promise((resolve, reject) => {
+    const child = spawn(command, args, { cwd, env, stdio: "inherit" });
+    child.once("error", reject);
+    child.once("exit", (code, signal) => {
+      if (code === 0) resolve();
+      else reject(new Error(`${command} exited with ${code ?? signal}`));
+    });
+  });
+let packedRegistry;
 const consumer = await mkdtemp(join(tmpdir(), "audiobits-package-"));
 try {
-  run(pnpm, ["exec", "publint", "packages/audiobits", "--strict"]);
-  run(pnpm, ["--filter", "audiobits", "pack", "--pack-destination", consumer]);
+  await run(pnpm, ["exec", "publint", "packages/audiobits", "--strict"]);
+  await run(pnpm, [
+    "--filter",
+    "audiobits",
+    "pack",
+    "--pack-destination",
+    consumer,
+  ]);
   const archive = join(
     consumer,
     (await readdir(consumer)).find((file) => file.endsWith(".tgz")),
@@ -156,7 +170,7 @@ try {
     }),
   );
   // npm in a system temporary directory cannot resolve workspace:* or root sources.
-  run(
+  await run(
     npm,
     [
       "install",
@@ -174,11 +188,63 @@ try {
     join(consumer, "index.ts"),
     'import { createAudio, defineSound, validateRecipe } from "audiobits"; import { confirmation } from "./items/confirmation/src/sounds/recipes/confirmation/recipe.js"; import { impact } from "./items/impact/src/sounds/recipes/impact/recipe.js"; import { thruster } from "./items/thruster/src/sounds/recipes/thruster/recipe.js"; const audio = createAudio(); const recipe = defineSound(confirmation); audio.sound(recipe); const dynamic = () => { const voice = audio.sound(thruster).play({ seed: 42, parameters: { throttle: 0.2 } }); voice.set({ throttle: 1 }); const bus = audio.bus("effects"); bus.setGainDb(-6, 0.1); bus.setMuted(true); bus.setParent(audio.master); audio.sound(impact).play({ bus }); const analyser = audio.native.context.createAnalyser(); const detach = audio.native.connect(analyser); detach(); analyser.disconnect(); audio.stopAll({ tails: "cut" }); bus.dispose(); const seed: number = voice.seed; audio.sound(impact).play({ parameters: { intensity: 1 }, seed }); voice.stop(); }; void dynamic; console.log(validateRecipe(recipe)); void audio.dispose();\n',
   );
+  // Versioned registry dependencies must resolve to this exact packed runtime,
+  // including when the installer insists on reinstalling an existing version.
+  // Serve only its npm metadata and archive on loopback; never substitute npm's
+  // latest release for the candidate being verified.
+  const packedManifest = JSON.parse(
+    await readFile(
+      join(consumer, "node_modules/audiobits/package.json"),
+      "utf8",
+    ),
+  );
+  const packedBytes = await readFile(archive);
+  // The optional latest-CLI journey still obtains its tool from the configured
+  // public registry. Only AudioBits resolution is confined to the candidate.
+  const toolRegistry = latest
+    ? execFileSync(npm, ["config", "get", "registry"], {
+        encoding: "utf8",
+      }).trim()
+    : undefined;
+  let packedRegistryUrl;
+  packedRegistry = createServer((request, response) => {
+    if (request.url === "/audiobits/-/runtime.tgz") {
+      response.end(packedBytes);
+    } else if (request.url === "/audiobits") {
+      response.setHeader("content-type", "application/json");
+      response.end(
+        JSON.stringify({
+          name: "audiobits",
+          "dist-tags": { latest: packedManifest.version },
+          versions: {
+            [packedManifest.version]: {
+              ...packedManifest,
+              dist: {
+                tarball: `${packedRegistryUrl}/audiobits/-/runtime.tgz`,
+                integrity: `sha512-${createHash("sha512").update(packedBytes).digest("base64")}`,
+              },
+            },
+          },
+        }),
+      );
+    } else if (toolRegistry) {
+      response
+        .writeHead(307, { location: new URL(request.url, toolRegistry).href })
+        .end();
+    } else {
+      response.writeHead(404).end();
+    }
+  });
+  await new Promise((resolve, reject) => {
+    packedRegistry.once("error", reject);
+    packedRegistry.listen(0, "127.0.0.1", resolve);
+  });
+  packedRegistryUrl = `http://127.0.0.1:${packedRegistry.address().port}`;
   const registry = JSON.parse(await readFile("registry.json", "utf8"));
   const registryOutput = join(consumer, "registry");
   if (!github) {
     // Use the CLI's own build format, with bytes from this checkout, never main.
-    run(shadcnCommand, [
+    await run(shadcnCommand, [
       ...shadcnArgs,
       "build",
       "registry.json",
@@ -261,7 +327,7 @@ try {
         type: "module",
       }),
     );
-    run(
+    await run(
       npm,
       [
         "install",
@@ -282,16 +348,41 @@ try {
     const address = github
       ? `${new URL(registry.homepage).pathname.slice(1)}/${item.name}#${requestedRevision}`
       : join(registryOutput, `${item.name}.json`);
-    run(
+    await run(
       shadcnCommand,
       [...shadcnArgs, "add", address, "--yes", "--cwd", installedDirectory],
       installedDirectory,
+      {
+        ...process.env,
+        npm_config_registry: packedRegistryUrl,
+        npm_config_cache: join(consumer, "cache"),
+        npm_config_ignore_scripts: "true",
+      },
     );
-    assert.equal(
-      await readFile(join(installedDirectory, "package.json"), "utf8"),
-      beforeInstall,
-      `${item.name}: installer changed dependencies`,
+    const expectedManifest = JSON.parse(beforeInstall);
+    for (const dependency of item.dependencies) {
+      if (dependency.startsWith("audiobits@"))
+        expectedManifest.dependencies.audiobits = dependency.slice(
+          "audiobits@".length,
+        );
+    }
+    assert.deepEqual(
+      JSON.parse(
+        await readFile(join(installedDirectory, "package.json"), "utf8"),
+      ),
+      expectedManifest,
+      `${item.name}: installer changed dependencies beyond registry requirements`,
     );
+    for (const file of allowed) {
+      const path = file.replace(/^package\//, "");
+      assert.deepEqual(
+        await readFile(
+          join(installedDirectory, "node_modules/audiobits", path),
+        ),
+        await readFile(join(consumer, "node_modules/audiobits", path)),
+        `${item.name}: installer substituted the packed runtime's ${path}`,
+      );
+    }
     assert.deepEqual(
       (await readdir(join(installedDirectory, "node_modules"))).sort(),
       [".package-lock.json", "audiobits"],
@@ -338,7 +429,7 @@ try {
       files: actualFiles.length,
       paths: "passed",
       bytes: "passed",
-      dependencies: ["audiobits"],
+      dependencies: item.dependencies,
     });
 
     // Compile the same generators the website calls. Presentation can change
@@ -424,7 +515,7 @@ try {
       clean: true,
       external: ["audiobits"],
     });
-    run(
+    await run(
       process.execPath,
       [
         "--input-type=module",
@@ -567,7 +658,7 @@ try {
         files: sources.map((file) => relative(consumer, file)),
       }),
     );
-    run(
+    await run(
       process.execPath,
       [resolve("node_modules/typescript/bin/tsc"), "--project", config],
       consumer,
@@ -610,7 +701,7 @@ try {
       )
       .replaceAll("../src/index", "audiobits"),
   );
-  run(
+  await run(
     process.execPath,
     [
       resolve("node_modules/typescript/bin/tsc"),
@@ -627,7 +718,7 @@ try {
     ],
     consumer,
   );
-  run(
+  await run(
     process.execPath,
     [
       "--input-type=module",
@@ -754,7 +845,7 @@ try {
       await writeFile(join(consumer, `${name}.ts`), match[1]);
       examples.push({ name, file, index, code: match[1] });
       const packaged = file === "README.md";
-      run(
+      await run(
         process.execPath,
         [
           resolve("node_modules/typescript/bin/tsc"),
@@ -777,7 +868,7 @@ try {
     "utf8",
   );
   await writeFile(join(consumer, "delay-example.ts"), delayCode);
-  run(
+  await run(
     process.execPath,
     [
       resolve("node_modules/typescript/bin/tsc"),
@@ -1327,5 +1418,7 @@ Object.assign(globalThis, { probe });`,
     "Package allowlist, zero runtime dependencies, declarations, and SSR import passed.",
   );
 } finally {
+  if (packedRegistry?.listening)
+    await new Promise((resolve) => packedRegistry.close(resolve));
   await rm(consumer, { recursive: true, force: true });
 }

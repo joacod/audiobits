@@ -117,6 +117,10 @@ async function probeComparisons() {
   const pulse = await render({ composition: "pulse" });
   const hybrid = await render({ composition: "hybrid" });
   const delay = await render({ composition: "delay" });
+  const resynthesis = await render({
+    composition: "resynthesis",
+    space: "cluster",
+  });
   const replay = await render({ composition: "hybrid" });
   const variation = await render({ composition: "hybrid", seed: 99 });
   const near = await render({ distance: 0.1 });
@@ -134,6 +138,7 @@ async function probeComparisons() {
       pulse,
       hybrid,
       delay,
+      resynthesis,
       replay,
       variation,
       near,
@@ -198,7 +203,25 @@ async function probeComparisons() {
   source.start(hybrid.plans.find((p) => p.role === "early")!.at - 0.012);
   const capturedReturn = await reference.startRendering();
   const matched = await render({ composition: "hybrid", matchLevel: true });
+  const matchedResynthesis = await render({
+    composition: "resynthesis",
+    space: "cluster",
+    matchLevel: true,
+  });
+  const matchedHybrid = await render({ space: "cluster", matchLevel: true });
+  let earlyDifference = 0;
+  const firstGrainAt = cluster.plans.find((plan) => plan.role === "late")!.at;
+  for (let channel = 0; channel < 2; channel++) {
+    const a = cluster.buffer.getChannelData(channel),
+      b = resynthesis.buffer.getChannelData(channel);
+    for (let i = 0; i < Math.floor(firstGrainAt * 48000); i++)
+      earlyDifference = Math.max(earlyDifference, Math.abs(a[i] - b[i]));
+  }
   return {
+    earlyDifference,
+    matchedClusterEnergies: [matchedResynthesis, matchedHybrid].map(
+      (result) => result.metrics.returnEnergy * result.metrics.scale ** 2,
+    ),
     metrics,
     matchedEnergy: matched.metrics.returnEnergy * matched.metrics.scale ** 2,
     coherence: {
@@ -380,3 +403,104 @@ function installProbeVisualProbe() {
   return { frames, sources };
 }
 Object.assign(globalThis, { installProbeVisualProbe });
+
+// Exercise cancellation while a grain is sounding, before its delayed copy.
+async function probeLateCancellation() {
+  const audio = createAudio({ maxVoices: 32, maxVoicesPerSound: 16 });
+  const control = createEchoProbe(audio);
+  await audio.start();
+  const context = audio.native.context;
+  const delays: { disconnected: boolean }[] = [];
+  const createDelay = context.createDelay.bind(context);
+  context.createDelay = (...args) => {
+    const delay = createDelay(...args);
+    const record = { disconnected: false };
+    delays.push(record);
+    const disconnect = delay.disconnect.bind(delay);
+    delay.disconnect = () => {
+      record.disconnected = true;
+      disconnect();
+    };
+    return delay;
+  };
+  const otherSound = audio.sound(thruster);
+  const other = otherSound.play({ gainDb: -60 });
+  const first = control.emit([
+    { distance: 0, pan: -0.7, intensity: 1, surface: 1 },
+  ])!;
+  await new Promise<void>((done) => {
+    const wait = () => {
+      // The first grain starts 110-137 ms after the surface response; its
+      // first copy starts at least 41 ms later. Observe the grain in between.
+      if (context.currentTime >= first.reflections[0].at + 0.14) done();
+      else requestAnimationFrame(wait);
+    };
+    wait();
+  });
+  const before = delays.filter((delay) => !delay.disconnected).length;
+  const second = control.emit([])!;
+  const cutOnNewEmission = delays.every((delay) => delay.disconnected);
+  const earlyNotRetired = first.cancelledAt === null;
+  control.stop();
+  await Promise.all([first.ended, second.ended]);
+  const remaining = audio.counts.active;
+  const otherUnaffected = other.state === "active";
+  control.dispose();
+  otherSound.dispose();
+  await audio.dispose();
+  return {
+    before,
+    cutOnNewEmission,
+    earlyNotRetired,
+    remaining,
+    otherUnaffected,
+    final: audio.counts,
+  };
+}
+Object.assign(globalThis, { probeLateCancellation });
+
+async function probeGrainCopies() {
+  const render = async (wet: boolean) => {
+    const context = new OfflineAudioContext(2, 48000, 48000);
+    const graph = createGraph(
+      context,
+      context.destination,
+      compile(
+        {
+          ...probeDiffusion,
+          effects: probeDiffusion.effects.filter(
+            (effect) => wet || effect.type !== "delay",
+          ),
+        },
+        { distance: 0, surface: 0.7 },
+        42,
+      ),
+      0.02,
+      -12,
+      -0.6,
+      () => {},
+    );
+    const buffer = await context.startRendering();
+    graph.finish();
+    return buffer;
+  };
+  const dry = await render(false),
+    wet = await render(true);
+  const lag = Math.round(0.041 * 48000);
+  let error = 0,
+    copyEnergy = 0,
+    tail = 0;
+  for (let channel = 0; channel < 2; channel++) {
+    const a = dry.getChannelData(channel),
+      b = wet.getChannelData(channel);
+    for (let i = 0; i < a.length; i++) {
+      if (!Number.isFinite(b[i])) throw new Error("Nonfinite late copy");
+      const copy = i >= lag ? a[i - lag] * 0.22 : 0;
+      error = Math.max(error, Math.abs(b[i] - (a[i] * 0.78 + copy)));
+      copyEnergy += copy ** 2;
+      if (i >= 48000 * 0.5) tail = Math.max(tail, Math.abs(b[i]));
+    }
+  }
+  return { error, copyEnergy, tail };
+}
+Object.assign(globalThis, { probeGrainCopies });

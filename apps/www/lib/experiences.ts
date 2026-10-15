@@ -3,15 +3,15 @@ import { registryItem } from "./registry";
 export const experienceSourcePurpose = {
   "echo-probe": {
     "recipe.ts":
-      "Emission, preserved returns, independent material/propagation filters, and sparse late grains as schema-1 data.",
+      "Emission, preserved returns, independent material/propagation filters, and native late repeats as schema-1 data.",
     "controller.ts":
       "Audio-clock scheduling, bounded application reflections, seeded emissions, and owned cancellation.",
     "host.ts":
       "Gesture activation, retry, interruption, hide, blur, Stop, and disposal.",
     "index.html":
-      "Controlled A/B/C/delay audition, remembered comparisons, and rapid live emission bench.",
+      "Resynthesis/native/hybrid audition, remembered comparisons, and rapid live emission bench.",
     "bench.ts":
-      "Development-only offline comparison, return-energy matching, and filtered native delay prototype.",
+      "Development-only public recipe comparison, return-energy matching, and native delay resource measurements.",
     "baseline.ts":
       "Original PR #100 acoustic definitions, preserved for listening review.",
     "baseline-controller.ts":

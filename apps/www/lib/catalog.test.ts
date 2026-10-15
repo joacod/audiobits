@@ -151,16 +151,14 @@ test.each(["recipe", "experience"])(
 
 test("a future recipe with presentation setup uses registry metadata without inventory edits", () => {
   const template = registry.items.find((item) => item.name === "confirmation")!;
-  const future = {
-    ...template,
-    name: "future-sound",
-    title: "Future sound",
-    description: "Registry-owned description.",
-    meta: { ...template.meta, exportName: "futureSound" },
-    files: [
-      { ...template.files[0], path: "catalog/recipes/future-sound/recipe.ts" },
-    ],
-  };
+  const future = structuredClone(template);
+  future.name = "future-sound";
+  future.title = "Future sound";
+  future.description = "Registry-owned description.";
+  future.meta.exportName = "futureSound";
+  future.files = [
+    { ...template.files[0], path: "catalog/recipes/future-sound/recipe.ts" },
+  ];
   const presentation = demos as Record<
     string,
     (typeof demos)[keyof typeof demos]

@@ -1,4 +1,4 @@
-// Development-only native comparison. Never included in the registry payload.
+// Development-only recipe comparison. Never included in the registry payload.
 import type { AudioEngine, PlayOptions, Recipe } from "audiobits";
 import { compile } from "../../../packages/audiobits/src/compiler/plan";
 import { createGraph } from "../../../packages/audiobits/src/compiler/graph";
@@ -13,7 +13,7 @@ import {
 import { probeDiffusion as noiseWash } from "./baseline";
 
 export interface BenchSettings {
-  composition: "baseline" | "pulse" | "hybrid" | "delay";
+  composition: "baseline" | "pulse" | "resynthesis" | "hybrid" | "delay";
   space: "cluster" | "noise" | "none";
   distance: number;
   surface: number;
@@ -59,8 +59,9 @@ export async function renderProbeComparison(
   let voices = 0,
     sources = 0,
     delayNodes = 0,
+    clockSources = 0,
+    delaySeconds = 0,
     filters = 0;
-  let emitted: GainNode | undefined;
   const graphs: ReturnType<typeof createGraph>[] = [];
   const owned: AudioNode[] = [
     master,
@@ -88,12 +89,31 @@ export async function renderProbeComparison(
         original === echoProbe ||
         (original.layers[0].id === "struck-body" && !original.parameters);
       const isLate = original === probeDiffusion || original === noiseWash;
-      const recipe =
+      let recipe: Recipe =
         original === probeReflection && settings.composition === "pulse"
           ? probeReturn
           : isLate && settings.space === "noise"
             ? noiseWash
             : original;
+      if (original === probeDiffusion && settings.composition !== "hybrid")
+        recipe = {
+          ...recipe,
+          effects: recipe.effects?.filter((e) => e.type !== "delay"),
+        };
+      // Public recipe delay, with matching seed AND source onset. Each return
+      // needs its own excitation: the public API has no shared multi-tap bus.
+      if (!isPulse && !isLate && settings.composition === "delay")
+        recipe = {
+          ...probeReflection,
+          effects: [
+            ...probeReflection.effects,
+            {
+              type: "delay",
+              time: 0.09 + settings.distance * 0.9,
+              mix: 1,
+            },
+          ],
+        };
       return {
         play(options: PlayOptions = {}) {
           const at = options.at ?? 0;
@@ -115,60 +135,33 @@ export async function renderProbeComparison(
               ? { surface: settings.surface }
               : options.parameters;
           const plan = compile(recipe, parameters, seed);
-          if (settings.composition === "delay" && role === "early") {
-            const delay = context.createDelay(1.2);
-            delay.delayTime.value = at - 0.012;
-            // Downmix the center-panned emission before independently placing
-            // its return. Compensate the original center-channel gain once.
-            delay.channelCount = 1;
-            delay.channelCountMode = "explicit";
-            const level = context.createGain();
-            level.gain.value =
-              Math.SQRT2 * 10 ** ((gainDb + 12 * (1 - 0.8)) / 20);
-            const panner = context.createStereoPanner();
-            panner.pan.value = pan;
-            let output: AudioNode = delay;
-            for (const effect of plan.effects) {
-              const filter = context.createBiquadFilter();
-              filter.type = effect.filter;
-              filter.frequency.value = effect.frequency as number;
-              filter.Q.value = effect.q;
-              output.connect(filter);
-              output = filter;
-              owned.push(filter);
-              filters++;
-            }
-            emitted!.connect(delay);
-            output.connect(level).connect(panner).connect(wet);
-            owned.push(delay, level, panner);
+          const startAt =
+            settings.composition === "delay" && role === "early" ? 0.012 : at;
+          graphs.push(
+            createGraph(
+              context,
+              isPulse ? dry : wet,
+              plan,
+              startAt,
+              gainDb,
+              pan,
+              () => {},
+            ),
+          );
+          voices++;
+          sources += plan.layers.length;
+          const effects = [
+            ...plan.effectChain,
+            ...plan.layers.flatMap(({ layer }) => layer.effects ?? []),
+          ];
+          filters += effects.filter(
+            (effect) => effect.type === "filter",
+          ).length;
+          clockSources += Number(plan.hasDelay);
+          for (const effect of effects) {
+            if (effect.type !== "delay" || effect.mix === 0) continue;
             delayNodes++;
-          } else {
-            let destination: AudioNode = isPulse ? dry : wet;
-            if (settings.composition === "delay" && isPulse) {
-              emitted = context.createGain();
-              emitted.connect(dry);
-              destination = emitted;
-              owned.push(emitted);
-            }
-            graphs.push(
-              createGraph(
-                context,
-                destination,
-                plan,
-                at,
-                gainDb,
-                pan,
-                () => {},
-              ),
-            );
-            voices++;
-            sources += plan.layers.length;
-            filters +=
-              plan.effects.length +
-              plan.layers.reduce(
-                (n, layer) => n + (layer.layer.effects?.length ?? 0),
-                0,
-              );
+            delaySeconds += effect.time;
           }
           return { ended: new Promise<void>(() => {}), stop() {} };
         },
@@ -268,6 +261,8 @@ export async function renderProbeComparison(
       sources,
       filters,
       delayNodes,
+      clockSources,
+      delaySeconds,
       buildMs,
       renderMs,
     },

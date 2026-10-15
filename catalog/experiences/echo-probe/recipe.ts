@@ -120,9 +120,21 @@ export const probeReflection = defineSound({
   })),
 });
 
-/** Sparse late grains. Each has a body and decorrelated air, never an idle bed. */
+/** Sparse late grains. Short, quiet copies thicken each grain without a feedback bed. */
 export const probeDiffusion = defineSound({
   ...probeReturn,
+  effects: [
+    ...probeReturn.effects,
+    {
+      type: "delay",
+      time: {
+        control: "distance",
+        range: [0.041, 0.067],
+        scale: "exponential",
+      },
+      mix: 0.22,
+    },
+  ],
   duration: 0.18,
   layers: [echoProbe.layers[0], echoProbe.layers[3]].map((layer, index) => ({
     ...layer,
