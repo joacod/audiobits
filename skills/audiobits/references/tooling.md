@@ -24,6 +24,21 @@ Use the project's existing browser harness where available. Current AudioBits
 automated evidence targets Chromium. Do not add compatibility infrastructure to
 a small integration request.
 
+## Controlled comparisons
+
+For nontrivial sound design, compare a small number of alternatives against the
+same input sequence, timing, seed and unrelated settings. Change one acoustic
+decision at a time. Match listening level when judging timbre or composition;
+keep gain differences when attenuation or strength is what you are testing.
+Check isolated controls as well as combinations and repeated events.
+
+Use existing signal and browser checks to measure finite output, timing,
+repeatability under fixed conditions, parameter response and resource bounds.
+Listen to assess identity, clarity, expressiveness and preference. Measurements
+cannot establish that a sound is convincing, cinematic or enjoyable. Report
+what was measured, what was heard and what remains unverified. A simple cue
+does not need a comparison harness or a formal sound-design report.
+
 ## Optional AudioBits MCP
 
 The single official Skill includes `scripts/mcp.mjs`, a self-contained local
@@ -57,6 +72,15 @@ which overrides the launch default. Select the root with `package.json` and
 server's own dependencies. Package-manager symlinks work; Yarn PnP without
 `node_modules` does not. Missing/incompatible runtime errors explain the next
 step. Do not incidentally upgrade the consumer.
+
+`inspect_project` includes the public schema and structured effect metadata, such
+as delay bounds and supported value forms, not just feature names. Catalog
+compatibility checks declared requirements; validate an adapted or original
+recipe separately. For `validate_recipe` failures, use each issue's `code`,
+`path` and `message` to fix the specific field or unsupported mapping, then
+revalidate. Do not infer support from schema version alone or discard effect
+settings to make validation pass. The same checks work through installed public
+exports without MCP.
 
 Catalog search and metadata are offline. Only explicit `sourcePaths` on
 `get_catalog_item` may fetch declared, size-limited, hash-verified public GitHub
