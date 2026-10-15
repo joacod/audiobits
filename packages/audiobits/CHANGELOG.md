@@ -1,5 +1,11 @@
 # audiobits
 
+## 0.3.1
+
+### Patch Changes
+
+- 0440094: Clarify the npm README for coding agents (Skill with optional MCP) and trim the catalog section to point at the catalog docs.
+
 ## 0.3.0
 
 ### Minor Changes
