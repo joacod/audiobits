@@ -26,9 +26,10 @@ const bound = (value: number, min = 0, max = 1) =>
 /** Two foreground emissions and one fading group; at most ten voices each. */
 export function createEchoProbe(audio: AudioEngine) {
   type Group = {
-    voices: { voice: Pick<Voice, "stop" | "ended">; late: boolean }[];
-    sounds: { dispose(): void }[];
+    voices: Pick<Voice, "stop" | "ended">[];
+    sounds: Set<{ dispose(): void }>;
     retiringAt: number;
+    cancelLate(): void;
   };
   const groups = new Set<Group>();
   let nextEmission = -Infinity;
@@ -38,7 +39,8 @@ export function createEchoProbe(audio: AudioEngine) {
   function retire(group: Group, now: number) {
     if (group.retiringAt !== Infinity) return;
     group.retiringAt = now;
-    for (const { voice } of group.voices) voice.stop();
+    group.cancelLate();
+    for (const voice of group.voices) voice.stop();
   }
   function release(group: Group) {
     if (!groups.delete(group)) return;
@@ -62,15 +64,15 @@ export function createEchoProbe(audio: AudioEngine) {
     if (now < nextEmission) return null;
     const strength = bound(options.strength ?? 0.8);
     if (strength === 0) return null;
-    // Recipes release in <= 40 ms with a 50 ms filter tail. Reclaim only
+    // Early recipes release in <= 40 ms with a 50 ms filter tail. Late
+    // delay graphs are cut separately. Reclaim only
     // after that audio-clock deadline, even if ended callbacks were delayed.
     for (const group of groups)
       if (now - group.retiringAt >= 0.09) release(group);
     if (groups.size >= 3) return null;
     const foreground = [...groups].filter((g) => g.retiringAt === Infinity);
     // Quiet late energy yields first. Preserve early returns for two emissions.
-    for (const group of foreground)
-      for (const { voice, late } of group.voices) if (late) voice.stop();
+    for (const group of foreground) group.cancelLate();
     if (foreground.length >= 2) retire(foreground[0], now);
 
     const seed = Number.isFinite(options.seed) ? options.seed! >>> 0 : 42;
@@ -88,10 +90,15 @@ export function createEchoProbe(audio: AudioEngine) {
         });
       })
       .filter((value) => value.intensity > 0);
-    const group: Group = { voices: [], sounds: [], retiringAt: Infinity };
+    const group: Group = {
+      voices: [],
+      sounds: new Set(),
+      retiringAt: Infinity,
+      cancelLate() {},
+    };
     groups.add(group);
-    const own = (voice: Pick<Voice, "stop" | "ended">, late = false) => {
-      group.voices.push({ voice, late });
+    const own = (voice: Pick<Voice, "stop" | "ended">) => {
+      group.voices.push(voice);
     };
     const gain = (value: ProbeReflection) =>
       Math.max(
@@ -103,11 +110,17 @@ export function createEchoProbe(audio: AudioEngine) {
       );
     try {
       const pulse = audio.sound(echoProbe);
-      group.sounds.push(pulse);
+      group.sounds.add(pulse);
       const reflection = audio.sound(probeReflection);
-      group.sounds.push(reflection);
+      group.sounds.add(reflection);
       const diffusion = audio.sound(probeDiffusion);
-      group.sounds.push(diffusion);
+      group.sounds.add(diffusion);
+      // voice.stop() preserves delay tails. This sound belongs only to this
+      // emission, so disposal cancels late repeats without touching early
+      // returns or unrelated users of the engine.
+      group.cancelLate = () => {
+        if (group.sounds.delete(diffusion)) diffusion.dispose();
+      };
       own(pulse.play({ at, seed, gainDb: -12 * (1 - strength) }));
       for (const value of returns)
         own(
@@ -146,7 +159,6 @@ export function createEchoProbe(audio: AudioEngine) {
                 distance: bound(value.distance + index * 0.12),
               },
             }),
-            true,
           );
         }
       }
@@ -156,9 +168,9 @@ export function createEchoProbe(audio: AudioEngine) {
       throw cause;
     }
     nextEmission = now + 0.12;
-    const ended = Promise.all(
-      group.voices.map(({ voice }) => voice.ended),
-    ).then(() => release(group));
+    const ended = Promise.all(group.voices.map((voice) => voice.ended)).then(
+      () => release(group),
+    );
     return Object.freeze({
       at,
       reflections: Object.freeze(returns),

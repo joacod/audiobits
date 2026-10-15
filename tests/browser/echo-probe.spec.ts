@@ -250,6 +250,8 @@ test("controlled compositions compare seeded resynthesis with real filtered dela
           coherence: Record<string, number>;
           clusterTimes: number[];
           earlyAt: number;
+          earlyDifference: number;
+          matchedClusterEnergies: number[];
         }>;
       }
     ).probeComparisons(),
@@ -287,8 +289,20 @@ test("controlled compositions compare seeded resynthesis with real filtered dela
     5,
   );
   expect(result.matchedEnergy).toBeCloseTo(0.05, 4);
-  expect(result.metrics.delay.sources).toBeLessThan(
-    result.metrics.hybrid.sources,
+  expect(result.metrics.delay.sources).toBe(result.metrics.hybrid.sources);
+  expect(result.metrics.hybrid.delayNodes).toBe(0); // Early-only hybrid stays unchanged.
+  expect(result.metrics.resynthesis.delayNodes).toBe(0);
+  expect(result.metrics.cluster.delayNodes).toBe(3);
+  expect(result.metrics.cluster.clockSources).toBe(3);
+  expect(result.metrics.cluster.delaySeconds).toBeLessThanOrEqual(3 * 0.067);
+  expect(result.earlyDifference).toBeLessThan(1e-6);
+  for (const energy of result.matchedClusterEnergies)
+    expect(energy).toBeCloseTo(0.05, 4);
+  expect(result.metrics.cluster.lateEnergy).not.toBe(
+    result.metrics.resynthesis.lateEnergy,
+  );
+  expect(result.metrics.cluster.sources).toBe(
+    result.metrics.resynthesis.sources,
   );
   expect(result.metrics.delay.delayNodes).toBe(1);
   expect(result.clusterTimes).toHaveLength(3);
@@ -542,4 +556,59 @@ test("retirement removes cancelled paths and highlights while sounded returns fi
     return { before, after: h.probeVisuals.frames.length };
   });
   expect(framesAfterDisposal.after).toBe(framesAfterDisposal.before);
+});
+
+test("a new emission cuts sounding native late repeats and preserves shared audio", async ({
+  page,
+}) => {
+  await page.goto("http://127.0.0.1:3100");
+  await page.addScriptTag({ path: harness });
+  await page.evaluate(() => {
+    const h = globalThis as unknown as {
+      probeLateCancellation(): Promise<unknown>;
+      lateCancellation: Promise<unknown>;
+    };
+    const button = document.createElement("button");
+    button.textContent = "Check late cancellation";
+    button.onclick = () => {
+      h.lateCancellation = h.probeLateCancellation();
+    };
+    document.body.append(button);
+  });
+  await page.getByRole("button", { name: "Check late cancellation" }).click();
+  expect(
+    await page.evaluate(
+      () =>
+        (globalThis as unknown as { lateCancellation: Promise<unknown> })
+          .lateCancellation,
+    ),
+  ).toEqual({
+    before: 3,
+    cutOnNewEmission: true,
+    earlyNotRetired: true,
+    remaining: 1,
+    otherUnaffected: true,
+    final: { active: 0, retiring: 0 },
+  });
+});
+
+test("native late echoes are quiet time-shifted copies of the filtered grain", async ({
+  page,
+}) => {
+  await page.goto("http://127.0.0.1:3100");
+  await page.addScriptTag({ path: harness });
+  const result = await page.evaluate(() =>
+    (
+      globalThis as unknown as {
+        probeGrainCopies(): Promise<{
+          error: number;
+          copyEnergy: number;
+          tail: number;
+        }>;
+      }
+    ).probeGrainCopies(),
+  );
+  expect(result.error).toBeLessThan(1e-6);
+  expect(result.copyEnergy).toBeGreaterThan(0);
+  expect(result.tail).toBe(0);
 });

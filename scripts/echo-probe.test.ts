@@ -209,8 +209,9 @@ test("120 ms bursts admit new pulses, cancel late energy first, and bound delaye
   expect(s.control.emit(Array(6).fill(wall))).not.toBeNull();
   for (const call of s.calls.slice(0, 7))
     expect(call.stop).not.toHaveBeenCalled();
-  for (const call of s.calls.slice(7, 10))
-    expect(call.stop).toHaveBeenCalledOnce();
+  expect(s.disposals[2]).toHaveBeenCalledOnce();
+  expect(s.disposals[0]).not.toHaveBeenCalled();
+  expect(s.disposals[1]).not.toHaveBeenCalled();
   // Deliberately withhold ended delivery. Audio-clock expiry must bound ownership.
   for (let index = 0; index < 100; index++) {
     s.advance();
@@ -332,4 +333,33 @@ test("natural completion does not mark cancellation; interruption and disposal d
   disposed.control.dispose();
   expect(emission.cancelledAt).toBeCloseTo(10.03, 10);
   await emission.ended;
+});
+
+test("native late repeats retain grain excitation and bound storage independently of material", () => {
+  const dry = {
+    ...recipes.probeDiffusion,
+    effects: recipes.probeDiffusion.effects.filter(
+      (effect) => effect.type !== "delay",
+    ),
+  };
+  for (const distance of [0, 1]) {
+    const wet = compile(recipes.probeDiffusion, { distance, surface: 0.8 }, 42);
+    const reference = compile(dry, { distance, surface: 0.8 }, 42);
+    expect(wet.layers).toEqual(reference.layers);
+    expect(wet.effectChain.slice(0, -1)).toEqual(reference.effectChain);
+    const effect = wet.effectChain.at(-1)!;
+    expect(effect).toMatchObject({ type: "delay", feedback: 0, mix: 0.22 });
+    if (effect.type !== "delay") throw new Error("Missing late delay");
+    expect(effect.time).toBeCloseTo(distance ? 0.067 : 0.041);
+    expect(wet.lifetime).toBeGreaterThan(reference.lifetime);
+    // Includes serial filter allowances and the managed output fade.
+    expect(wet.lifetime).toBeLessThan(0.5);
+    expect(
+      compile(
+        recipes.probeDiffusion,
+        { distance, surface: 0 },
+        42,
+      ).effectChain.at(-1),
+    ).toEqual(effect);
+  }
 });

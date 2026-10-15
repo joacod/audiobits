@@ -72,7 +72,9 @@ test("registry covers every canonical recipe and sound-only experience", async (
     ].sort(),
   );
   for (const item of registry.items) {
-    expect(item.dependencies).toEqual(["audiobits"]);
+    expect(item.dependencies).toEqual(
+      item.name === "echo-probe" ? ["audiobits@^0.3.0"] : ["audiobits"],
+    );
     expect(item.title.length).toBeGreaterThan(0);
     expect(item.description.length).toBeGreaterThan(0);
     expect(item.categories).toContain(item.meta.classification);
@@ -85,6 +87,12 @@ test("registry covers every canonical recipe and sound-only experience", async (
           ? capabilities.runtime
           : capabilities.recipe[key as keyof typeof capabilities.recipe];
       for (const value of values) expect(supported).toContain(value);
+    }
+    if (item.name === "echo-probe") {
+      expect(item.meta.requiredCapabilities).toHaveProperty("effects", [
+        "delay",
+        "filter",
+      ]);
     }
     const definitions = item.files
       .filter((file) => file.path.endsWith("/recipe.ts"))

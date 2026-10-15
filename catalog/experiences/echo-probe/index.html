@@ -30,16 +30,21 @@
   <p>
     One reflector, seed 42. Change one control, then compare the same pulse. A
     preserves PR #100, including its original material/distance coupling and
-    noise wash. B preserves the pulse. C adds material resonance. Delay sends
-    the emitted signal through the same filters as C.
+    noise wash. Resynthesis preserves PR #102. Hybrid keeps its early returns
+    and adds quiet native repeats to late grains. Native delay compares
+    same-onset excitation through independently filtered, fully wet recipe
+    delays.
   </p>
   <label
     >Composition
     <select id="composition">
       <option value="baseline">A / original independent returns</option>
       <option value="pulse">B / preserved pulse</option>
-      <option value="hybrid" selected>C / resonant preserved pulse</option>
-      <option value="delay">Experimental filtered delay</option>
+      <option value="resynthesis">
+        Existing resonant resynthesis (PR #102)
+      </option>
+      <option value="delay">Native delay early returns</option>
+      <option value="hybrid" selected>Hybrid / native late repeats</option>
     </select></label
   >
   <label

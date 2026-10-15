@@ -504,14 +504,14 @@
       "type": "registry:item",
       "title": "Echo Probe",
       "description": "Send a sculpted pulse into the field. Hear it return through resonant surfaces and scattered late reflections.",
-      "dependencies": ["audiobits"],
+      "dependencies": ["audiobits@^0.3.0"],
       "categories": ["experience"],
       "meta": {
         "classification": "experience",
         "tags": ["echo", "pulse", "reflections", "spatial", "acoustic"],
         "schemaVersion": 1,
         "compatibility": {
-          "runtime": "audiobits public API with recipe schema 1",
+          "runtime": "audiobits >=0.3.0 with native recipe delay",
           "language": "TypeScript",
           "moduleResolution": "Bundler",
           "browser": "Web Audio; automated verification in Chromium",
@@ -521,6 +521,7 @@
         "requiredCapabilities": {
           "sources": ["noise", "oscillator"],
           "filters": ["bandpass", "lowpass"],
+          "effects": ["delay", "filter"],
           "parameterModes": ["play"],
           "kinds": ["one-shot"],
           "waveforms": ["sine", "triangle"],

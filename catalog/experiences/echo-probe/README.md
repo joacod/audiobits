@@ -3,7 +3,9 @@
 Install with `npx shadcn@latest add joacod/audiobits/echo-probe`.
 The item installs `recipe.ts`, `controller.ts`, and this guide under
 `src/sounds/experiences/echo-probe/`. You own the source. `audiobits` is the only
-runtime dependency.
+runtime dependency. Native late repeats require the delay capability declared
+in `audiobits/capabilities.json`; the registry specifies the compatible runtime
+range, starting at the native delay release (0.3.0).
 
 ## Application integration
 
@@ -71,7 +73,13 @@ resynthesis, not a sample-identical delayed recording.
 
 Three quiet late grains follow the last early return by 110 to 283 ms, with
 seeded timing, alternating stereo spread, spectral damping, and falling gain.
-They share the reflectors' material character and remain silent between emissions.
+Each grain blends 78% of its filtered signal with one 22% native delayed copy,
+41 to 67 ms later according to propagation distance. No feedback is used. The
+copy preserves that grain's body and air instead of introducing another seed
+or pitched note. Material and propagation filters precede delay; there is no
+per-repeat damping. These micro echoes belong to the diffuse field, not to the
+scheduled early surface events. The grains share the reflectors' material
+character and remain silent between emissions.
 There is no atmospheric loop. Omit reflections to hear the pulse alone.
 Use scheduled times for application feedback, while accounting for cancellation
 when a newer emission takes priority. Read-only `cancelledAt` is `null` until
@@ -83,20 +91,26 @@ No JavaScript timer schedules sound.
 
 There are at most two foreground emissions and one releasing group, six early
 returns and three late grains per emission: ten voices and 34 source nodes per
-full group, at most 30 voices and 102 source nodes owned by this controller.
+full group. Three delay voices also own one silent lifetime clock each and
+four delay-processing nodes each, with at most 201 ms of mono delay storage
+per group. At most 30 voices, 102 synthesis sources and nine lifetime clocks
+are owned by this controller.
 The example's 32-voice engine leaves two voices for other users. Smaller engine
 limits or additional shared sounds can still cause engine voice stealing.
 
 At 120 ms intervals, new emissions cancel older pending late energy first.
-A third foreground emission releases the oldest group, cancelling its future
-returns and fading its audible voices. Releases are bounded to 40 ms plus a
+Late voices use an emission-owned sound whose disposal immediately cuts its
+pending grains and native repeats. A third foreground emission releases the
+oldest group, cancelling its future
+returns and fading its audible voices. Early releases are bounded to 40 ms plus a
 50 ms filter tail, shorter than the admission interval. Expired retiring groups
 can be reclaimed on the audio clock even if ended delivery is delayed.
 
 Calls before activation, during the 120 ms cooldown, at zero strength, or after
 disposal return `null`. Three still-releasing groups also return `null`, bounding
 repeated Stop/emit calls at the same audio time. Stop cancels pending returns
-and releases current voices; `active` includes releasing groups until cleanup.
+and releases current early voices, cutting the owned late sound and its repeats;
+`active` includes releasing groups until cleanup.
 Disposal cuts owned sounds and removes the subscription. Neither operation
 affects unrelated sounds in a shared engine. Engine interruption cancels pending
 returns. Final `ended` includes cancelled voices and all remaining finite tails.
@@ -111,33 +125,41 @@ gesture. See the [lifecycle guide](https://www.audiobits.dev/docs/lifecycle).
 `probeReturn` preserves those layers with independent material and propagation
 filters. `probeReflection`, the provisional default, adds resonance to that
 material filter without adding a separately pitched answering note.
-`probeDiffusion` supplies two-layer late grains. These portable schema-1 recipes
-use existing synthesis, filters, automation, and seeded variation. No new runtime
-capability is required by this composition.
+`probeDiffusion` supplies two-layer late grains with native delay after the
+material and propagation filters. The provisional hybrid leaves the recognizable
+early returns unchanged and thickens only the quiet late field. It does not
+replace per-surface orchestration with equally spaced echoes.
 
 Try the [showcase](https://www.audiobits.dev/catalog/echo-probe).
 The [repository acoustic bench](https://github.com/joacod/audiobits/tree/main/catalog/experiences/echo-probe)
-keeps the original independent synthesis (A), pulse-preserving returns (B),
-resonant returns (C), and an experimental filtered native delay available for
-listening review. Select a composition, remember it, then change one control
-and alternate the two audition buttons. Seed, distance, material, strength,
-and direction remain fixed unless you change them. Select early returns only
-to compare identity; compare the noise wash and grain cluster separately.
-Return-energy matching keeps the dry pulse unchanged and bounds output headroom.
-Disable it when evaluating propagation loss or strength. It helps comparison
-but does not prove equal perceived loudness.
+keeps the original PR #100 reference, plain pulse returns, the PR #102 resonant
+resynthesis, native early delay, and the production hybrid available for review.
+Select a composition, remember it, then change one control and alternate the
+audition buttons. Seed, distance, material, strength, and direction remain fixed
+unless you change them. Return-energy matching keeps the dry pulse unchanged
+and bounds output headroom. Disable it for propagation loss or strength checks;
+it helps comparison but does not prove equal perceived loudness.
 
-The original A reference intentionally retains its original distance/material
-coupling and noise wash. B, C, and delay use the separated controls. The rapid
-button exercises the production controller for twelve emissions at audio-clock
-intervals of at least 120 ms. Stop also invalidates pending auditions and cancels playback.
-Run it with the [catalog demo setup](https://github.com/joacod/audiobits/blob/main/catalog/README.md#optional-standalone-demo).
-The bench uses repository compiler internals for offline measurement; it and the
-original reference are development tools, excluded from registry installation.
-The native delay prototype is not a catalog effects engine or public API.
+Compare resynthesis and hybrid with the grain cluster enabled to hear the added
+short copies. Early-only playback is intentionally identical for those two modes.
+The native early option uses supported fully wet recipe delays, the same filters,
+and the same seeded layers starting at the emission time. Each surface needs a
+separate excitation voice: the public API does not route one voice to multiple
+independently filtered and panned delay taps. It therefore saves no synthesis
+sources, and its natural Stop would preserve pending echoes. This makes it a
+less suitable default for the current per-surface cancellation contract.
+
+The original reference retains its material/distance coupling and noise wash.
+The rapid button exercises the production hybrid for twelve emissions at
+audio-clock intervals of at least 120 ms. Stop invalidates pending auditions and
+cancels playback. Run it with the
+[catalog demo setup](https://github.com/joacod/audiobits/blob/main/catalog/README.md#optional-standalone-demo).
+The bench uses repository compiler internals for offline measurement of public
+recipes; it and the original reference are excluded from registry installation.
+No custom native delay graph is used by the installed sound or comparison.
 
 The [website stage source](https://github.com/joacod/audiobits/blob/main/apps/www/app/echo-probe-stage.ts)
 owns pointer mapping, reflectors, and timing feedback. Automated Chromium signal
 and lifecycle checks establish technical behavior, not listening quality or
 physical-device compatibility. Final resonance, material balance, diffuse texture,
-and delay-versus-resynthesis preference require the owner's listening review.
+and preference for the provisional hybrid require the owner's listening review.
