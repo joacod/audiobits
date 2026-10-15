@@ -76,20 +76,6 @@ export function createEchoProbe(audio: AudioEngine) {
     if (foreground.length >= 2) retire(foreground[0], now);
 
     const seed = Number.isFinite(options.seed) ? options.seed! >>> 0 : 42;
-    const at = now + 0.012;
-    const returns = input
-      .slice(0, 6)
-      .map((value) => {
-        const distance = bound(value.distance);
-        return Object.freeze({
-          distance,
-          pan: bound(value.pan, -1, 1),
-          intensity: bound(value.intensity),
-          surface: bound(value.surface),
-          at: at + 0.09 + distance * 0.9,
-        });
-      })
-      .filter((value) => value.intensity > 0);
     const group: Group = {
       voices: [],
       sounds: new Set(),
@@ -115,6 +101,22 @@ export function createEchoProbe(audio: AudioEngine) {
       group.sounds.add(reflection);
       const diffusion = audio.sound(probeDiffusion);
       group.sounds.add(diffusion);
+      // Recipe validation can advance the native clock. Take the shared onset
+      // only after preparing every sound in this emission.
+      const at = context.currentTime + 0.012;
+      const returns = input
+        .slice(0, 6)
+        .map((value) => {
+          const distance = bound(value.distance);
+          return Object.freeze({
+            distance,
+            pan: bound(value.pan, -1, 1),
+            intensity: bound(value.intensity),
+            surface: bound(value.surface),
+            at: at + 0.09 + distance * 0.9,
+          });
+        })
+        .filter((value) => value.intensity > 0);
       // voice.stop() preserves delay tails. This sound belongs only to this
       // emission, so disposal cancels late repeats without touching early
       // returns or unrelated users of the engine.
@@ -162,26 +164,26 @@ export function createEchoProbe(audio: AudioEngine) {
           );
         }
       }
+      nextEmission = now + 0.12;
+      const ended = Promise.all(group.voices.map((voice) => voice.ended)).then(
+        () => release(group),
+      );
+      return Object.freeze({
+        at,
+        reflections: Object.freeze(returns),
+        get cancelledAt() {
+          return group.retiringAt === Infinity ? null : group.retiringAt;
+        },
+        ended,
+        stop() {
+          if (groups.has(group)) retire(group, clock?.currentTime ?? 0);
+        },
+      });
     } catch (cause) {
       // A failed construction has no audible result to preserve.
       release(group);
       throw cause;
     }
-    nextEmission = now + 0.12;
-    const ended = Promise.all(group.voices.map((voice) => voice.ended)).then(
-      () => release(group),
-    );
-    return Object.freeze({
-      at,
-      reflections: Object.freeze(returns),
-      get cancelledAt() {
-        return group.retiringAt === Infinity ? null : group.retiringAt;
-      },
-      ended,
-      stop() {
-        if (groups.has(group)) retire(group, clock?.currentTime ?? 0);
-      },
-    });
   }
 
   const unsubscribe = audio.subscribe((state) => {

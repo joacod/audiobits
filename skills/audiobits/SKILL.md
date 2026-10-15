@@ -19,8 +19,8 @@ assume the website or this Skill matches that runtime version.
   disposal into the existing application. Avoid a catalog install or controller
   when a short local sound is sufficient.
 - **Original sound:** Also read [recipe design](references/recipe-design.md).
-  Inspect supported features, design JSON-only data, validate it, and connect
-  only the controls the request needs.
+  Establish the acoustic intent, choose supported layers and effects, design
+  meaningful controls, and validate JSON-only data before playback.
 - **Sustained controls or interactive sound:** Read
   [interactions](references/interactions.md) and check
   [catalog](references/catalog.md) for a useful starting point. Find a relevant

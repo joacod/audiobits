@@ -72,7 +72,7 @@ test("distance damps propagation without retuning material or seeded source", ()
     ).toBeLessThan(0.12);
 });
 
-function setup() {
+function setup(preparationSeconds = 0) {
   let time = 10;
   let state: AudioState = "running";
   const calls: {
@@ -100,11 +100,13 @@ function setup() {
       };
     },
     sound(recipe: Recipe) {
+      time += preparationSeconds;
       const own: typeof calls = [];
       const dispose = vi.fn(() => own.forEach((call) => call.finish()));
       disposals.push(dispose);
       return {
         play(options: PlayOptions) {
+          if (options.at! < time) throw new Error("scheduled in the past");
           if (fail && calls.length === 2) throw new Error("graph failed");
           let finish!: () => void;
           const ended = new Promise<void>((done) => {
@@ -182,6 +184,19 @@ test("audio-clock returns and sparse late cluster use independent bounded contro
   );
   s.control.dispose();
   for (const dispose of s.disposals) expect(dispose).toHaveBeenCalledOnce();
+});
+
+test("scheduling reads the audio clock after sound preparation", () => {
+  const s = setup(0.02);
+  try {
+    const event = s.control.emit([wall])!;
+    expect(event.at).toBeCloseTo(10.072, 10);
+    expect(s.calls[0].options.at).toBe(event.at);
+    expect(event.reflections[0].at - event.at).toBeCloseTo(0.54, 10);
+    expect(s.control.active).toBe(1);
+  } finally {
+    s.control.dispose();
+  }
 });
 
 test("strength and direction affect only gain or pan, never timing or material", () => {

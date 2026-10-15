@@ -48,7 +48,8 @@ export async function dispose() {
 Bound finite application input to the recipe's declared range. Rate-limit dense
 events with the application's existing update loop and use native parameter
 smoothing for audio ramps. Keep pointer handling, frame scheduling, canvas and
-3D in application presentation code. Use one clock for elapsed time.
+3D in application presentation code. Use the host's elapsed time for state updates;
+schedule audible onsets against the audio clock as described below.
 
 ## Coordinated sound behavior
 
@@ -103,6 +104,31 @@ elapsed milliseconds from the host's clock. The controller coordinates hum,
 ignition, swing, clash and retraction; it needs no stage, renderer or geometry.
 The installed README is the working example for each controller's exact API.
 
+## Scheduling, overlap and cancellation
+
+For scheduled voices, use `sound.play({ at })` with seconds from
+`audio.native.context.currentTime` after activation. Browser timers and animation
+frames can supply application events, but should not determine precise audio
+onsets. Keep handles to future voices so Stop can cancel them before onset.
+
+Choose what rapid interactions should do: overlap, replace older sound, or reject
+excess events. Budget scheduled voices, active voices and releasing effect tails,
+not just the current gesture. Prefer deliberate controller limits over relying
+on engine voice stealing to choose which acoustic detail survives.
+
+`voice.stop()` cancels a future onset, but an already sounding voice releases and
+allows effect tails. `voice.ended` settles after its graph is disconnected. Keep
+ownership until cleanup completes; an old completion must not clear a newer
+voice or restart cancelled work. If Stop must cut tails, a dedicated engine can
+use `stopAll({ tails: "cut" })`; a shared-engine controller can dispose its own
+sounds and recreate them when needed. Never cut unrelated voices.
+
+When presentation needs scheduled feedback, expose only the needed sound times
+and cancellation state. The host renders against that timeline and suppresses
+future feedback after cancellation. Do not use visual frames or completion
+callbacks as a precise audio scheduler or put rendering into the controller.
+Dispose owned sounds and subscriptions even if the audio clock is suspended.
+
 ## Host ownership and verification
 
 Call `play()` directly from a user gesture and surface rejected activation
@@ -117,7 +143,8 @@ this integration's voice or controller; the existing owner suspends and disposes
 the engine. Do not use shared `stopAll` to cut other components' voices.
 
 Check silent load, direct gesture activation, live input extrema, fast Play/Stop,
-hide and repeated removal. Validate the actual consuming application's imports
-and browser lifecycle, not just recipe data. When adding visuals, use analyser
+Stop before a scheduled onset and during tails, overlap limits, hide and repeated
+removal. Confirm owned resources return to baseline. Validate the actual consuming
+application's imports and browser lifecycle, not just recipe data. When adding visuals, use analyser
 data after activation and detach taps and caller-owned nodes on cleanup. Keep
 visual preferences and accessibility in the application.
