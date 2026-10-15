@@ -41,8 +41,11 @@ Leave headroom for feedback and overlapping voices. Use the
 [delay contract](https://www.audiobits.dev/docs/recipes#delay) for explanation,
 checking exact limits against the installed runtime.
 
-If composition cannot meet a concrete requirement, describe the missing behavior
-and evidence for a general-purpose capability. Do not silently patch the runtime
+Prefer composition when it produces comparably good results. A focused
+general-purpose capability may be justified by a concrete requirement or an
+experiment demonstrating a meaningful improvement in acoustic quality,
+expressiveness, performance or authoring simplicity, even when composition
+technically works. Avoid speculative expansion. Do not silently patch the runtime
 or introduce custom DSP; propose that work separately when outside the request.
 
 ## Construct and validate
