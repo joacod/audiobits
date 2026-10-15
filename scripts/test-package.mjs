@@ -830,9 +830,14 @@ try {
     copiedConfirmation,
   );
   const examples = [];
+  const githubReadme = await readFile(join(root, "README.md"), "utf8");
+  assert.equal(
+    [...githubReadme.matchAll(/```ts\n([\s\S]*?)```/g)].length,
+    0,
+    "GitHub README.md must defer the TypeScript quick start to the package README",
+  );
   for (const [file, content] of [
     ["README.md", await readFile(join(installed, "README.md"), "utf8")],
-    ["GitHub README.md", await readFile(join(root, "README.md"), "utf8")],
   ]) {
     const snippets = [...content.matchAll(/```ts\n([\s\S]*?)```/g)];
     assert.equal(
@@ -899,7 +904,7 @@ try {
   }));
   examples.push(...catalogExamples);
   console.log(
-    "[Browser/runtime verification] Chromium: README quick starts, all installed integrations, three Skill consumer paths and three repository demonstration hosts.",
+    "[Browser/runtime verification] Chromium: packaged README quick start, all installed integrations, three Skill consumer paths and three repository demonstration hosts.",
   );
   const browserOutput = join(consumer, "browser");
   await mkdir(browserOutput);
