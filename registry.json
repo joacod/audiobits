@@ -520,11 +520,11 @@
         "exportName": "echoProbe",
         "requiredCapabilities": {
           "sources": ["noise", "oscillator"],
-          "filters": ["bandpass", "lowpass"],
+          "filters": ["bandpass", "highpass", "lowpass"],
           "effects": ["delay", "filter"],
           "parameterModes": ["play"],
           "kinds": ["one-shot"],
-          "waveforms": ["sine", "triangle"],
+          "waveforms": ["sine"],
           "noiseColors": ["white"],
           "mappingScales": ["exponential"],
           "automationCurves": ["exponential"],
@@ -542,6 +542,11 @@
           "path": "catalog/experiences/echo-probe/recipe.ts",
           "type": "registry:file",
           "target": "~/src/sounds/experiences/echo-probe/recipe.ts"
+        },
+        {
+          "path": "catalog/experiences/echo-probe/materials.ts",
+          "type": "registry:file",
+          "target": "~/src/sounds/experiences/echo-probe/materials.ts"
         },
         {
           "path": "catalog/experiences/echo-probe/controller.ts",
