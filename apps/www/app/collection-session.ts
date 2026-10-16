@@ -18,6 +18,7 @@ import type {
 } from "audiobits";
 import { parametersFor, soundKinds, sounds } from "../lib/gallery";
 import type { SoundKind } from "../lib/gallery";
+import { prepareAudioPlayback } from "../lib/audio-gestures";
 
 const defaults = () =>
   Object.fromEntries(
@@ -154,6 +155,7 @@ export function useCollectionSession(landing = false) {
     setError("");
     setPlaying((value) => ({ ...value, [kind]: "starting" }));
     try {
+      prepareAudioPlayback();
       await engine.start();
       if (
         audio.current !== engine ||

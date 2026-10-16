@@ -10,6 +10,7 @@ import {
 import { mountLightsaber } from "../../../catalog/experiences/lightsaber/host";
 import { mountBladeStage3D } from "./lightsaber-stage";
 import "./lightsaber.css";
+import { bindAudioGestures } from "../lib/audio-gestures";
 
 const subscribeHydration = () => () => {};
 
@@ -50,7 +51,16 @@ export function LightsaberDetail() {
       ? mountBladeStage3D(surface.current, current, reportDisplayError)
       : undefined;
     stage.current = display ?? null;
+    const unbind = surface.current
+      ? bindAudioGestures(
+          surface.current,
+          current.audio,
+          current.stop,
+          reportError,
+        )
+      : undefined;
     return () => {
+      unbind?.();
       display?.dispose();
       stage.current = null;
       void current.dispose().catch(console.error);
@@ -58,10 +68,10 @@ export function LightsaberDetail() {
   }, [reportError, reportDisplayError]);
   return (
     <>
-      <div className="lightsaber-stage catalog-gesture-stage">
+      <div className="lightsaber-stage catalog-gesture-stage audio-gesture-surface">
         <div
           ref={surface}
-          className="lightsaber-canvas"
+          className="lightsaber-canvas audio-gesture-surface"
           role="group"
           aria-label="Lightsaber stage"
           aria-describedby="lightsaber-help"

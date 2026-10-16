@@ -30,7 +30,7 @@ export function EchoProbeDetail() {
     <>
       <div
         ref={surface}
-        className="echo-probe-stage catalog-gesture-stage"
+        className="echo-probe-stage catalog-gesture-stage audio-gesture-surface"
         role="group"
         aria-label="Echo Probe stage"
         aria-describedby="echo-probe-help"

@@ -8,7 +8,8 @@ interface Probe {
 }
 export async function instrument(
   page: Page,
-  activation: "normal" | "held" | "failed" = "normal",
+  activation:
+    "normal" | "held" | "failed" | "touch-start" | "touch-release" = "normal",
   route = "reactive-thruster",
 ) {
   await page.addInitScript((mode) => {
@@ -21,6 +22,16 @@ export async function instrument(
       releaseActivation: () => {},
     };
     let fail = mode === "failed";
+    let touchActivated = false;
+    if (mode === "touch-start" || mode === "touch-release") {
+      window.addEventListener(
+        mode === "touch-start" ? "touchstart" : "touchend",
+        () => {
+          touchActivated = true;
+        },
+        { capture: true },
+      );
+    }
     globalThis.AudioContext = class extends Native {
       constructor() {
         super();
@@ -63,6 +74,13 @@ export async function instrument(
         }
       }
       resume() {
+        if (
+          (mode === "touch-start" || mode === "touch-release") &&
+          !touchActivated
+        ) {
+          void super.suspend();
+          return new Promise<void>(() => {});
+        }
         if (fail) {
           fail = false;
           return Promise.reject(new Error("Activation denied"));

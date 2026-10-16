@@ -71,6 +71,13 @@ because their human purposes differ.
   audio cleanup may remain. Do not create a second UI solely to duplicate every
   pointer gesture or expand accessibility implementation and test scope beyond
   the requested task.
+- Use `audio-gesture-surface` and `lib/audio-gestures.ts` for interactive sound
+  surfaces. Disable selection, native dragging and long-press callouts only there.
+- Capture held pointers and handle release, cancellation and capture loss. Audio
+  activation retries must not restart released gestures. Prepare the shared
+  playback session before activation and use capability checks.
+- Stop on interruptions and preserve hosts on persisted `pagehide`; dispose on
+  teardown.
 - Respect reduced motion and responsive behavior. Keep ordinary documentation,
   forms, navigation, and installation controls functional and understandable,
   including keyboard access and visible focus.
