@@ -85,6 +85,7 @@ export function ThrusterHero() {
         setError(
           `${cause instanceof Error ? cause.message : String(cause)}. Drag again to retry.`,
         ),
+      () => setError(""),
     );
     return () => {
       unbind();

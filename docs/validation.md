@@ -54,6 +54,11 @@ browsers and operating systems are unverified and deliberately deferred.
 Background interruptions and device changes are outside automated coverage.
 Compare signal properties within Chromium; native sample identity is not guaranteed.
 
+Chromium touch input and injected AudioContext behavior verify application event
+handling and lifecycle. They do not validate iOS browser activation policy.
+Prefer existing shared coverage; do not add browser-policy simulations or input
+matrices as substitutes for device evidence.
+
 ## Checks by boundary
 
 | Boundary          | Evidence                                                                                                               |

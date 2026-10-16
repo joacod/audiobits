@@ -92,6 +92,7 @@ export function ThrusterDetail() {
       current.audio,
       current.stop,
       (cause) => setError(recovery(cause)),
+      () => setError(""),
     );
     return () => {
       unbind();

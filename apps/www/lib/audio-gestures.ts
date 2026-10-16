@@ -1,4 +1,4 @@
-import { AudioBitsError, type AudioEngine } from "audiobits";
+import { AudioBitsError, type AudioEngine, type AudioState } from "audiobits";
 
 /** Request playback audio for explicit sound interactions. */
 export function prepareAudioPlayback() {
@@ -7,12 +7,13 @@ export function prepareAudioPlayback() {
   if (session && session.type !== "playback") session.type = "playback";
 }
 
-/** Activate native taps and retry pending holds without scheduling sound. */
+/** Activate native touch starts and retry pending holds without scheduling sound. */
 export function bindAudioGestures(
   surface: HTMLElement,
   audio: AudioEngine,
   stop: () => void,
   error: (cause: unknown) => void,
+  recovered?: () => void,
 ) {
   const listeners = new AbortController();
   for (const type of ["contextmenu", "dragstart"] as const) {
@@ -28,51 +29,50 @@ export function bindAudioGestures(
     capture: true,
     signal: listeners.signal,
   });
-  const retryActivation = () => {
-    // The host owns this pending promise, including errors and cancellation.
-    // Never start an idle engine or independently report a cancelled gesture.
-    if (audio.state === "starting") void audio.start();
+  const activate = (states: readonly AudioState[]) => {
+    if (!states.includes(audio.state)) return;
+    // A pending host startup owns its own error handling; calling start()
+    // still synchronously retries that native activation.
+    if (audio.state === "starting") {
+      void audio.start();
+      return;
+    }
+    // Ignore cancelled gestures, torn-down listeners and disposed engines;
+    // report genuine activation failures.
+    void audio.start().catch((cause: unknown) => {
+      if (
+        listeners.signal.aborted ||
+        audio.state === "disposed" ||
+        (cause instanceof AudioBitsError && cause.code === "start-cancelled")
+      )
+        return;
+      error(cause);
+    });
   };
   surface.addEventListener(
     "touchstart",
-    () => {
+    (event) => {
+      event.preventDefault();
       prepareAudioPlayback();
-      retryActivation();
+      activate(["idle", "starting", "suspended", "interrupted"]);
+    },
+    { capture: true, passive: false, signal: listeners.signal },
+  );
+  // Touch release alone leaves an idle engine idle, but a pending or resumable
+  // hold may supply the activation its press lacked.
+  surface.addEventListener(
+    "touchend",
+    () => {
+      activate(["starting", "suspended", "interrupted"]);
     },
     { capture: true, passive: true, signal: listeners.signal },
-  );
-  surface.addEventListener("touchend", retryActivation, {
-    capture: true,
-    passive: true,
-    signal: listeners.signal,
-  });
-  // A native tap can unlock audio where the initial hold cannot. Keep this
-  // activation-only: the host has already cancelled any released gesture.
-  surface.addEventListener(
-    "click",
-    () => {
-      prepareAudioPlayback();
-      if (
-        ["idle", "starting", "suspended", "interrupted"].includes(audio.state)
-      )
-        void audio.start().catch((cause: unknown) => {
-          if (
-            listeners.signal.aborted ||
-            audio.state === "disposed" ||
-            (cause instanceof AudioBitsError &&
-              cause.code === "start-cancelled")
-          )
-            return;
-          error(cause);
-        });
-    },
-    { capture: true, signal: listeners.signal },
   );
   // An OS interruption can end voices without a pointer release or page hide.
   let previous = audio.state;
   const unsubscribe = audio.subscribe((state) => {
     const wasRunning = previous === "running";
     previous = state;
+    if (state === "running") recovered?.();
     if (wasRunning && (state === "interrupted" || state === "suspended"))
       stop();
   });
