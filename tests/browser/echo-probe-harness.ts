@@ -10,11 +10,11 @@ import {
   probeEchoes,
   probeReturns,
   type MaterialId,
-} from "../../catalog/experiences/echo-probe/recipe";
+  createEchoProbe,
+} from "../../catalog/experiences/echo-probe/controller";
 import { compile } from "../../packages/audiobits/src/compiler/plan";
 import { createGraph } from "../../packages/audiobits/src/compiler/graph";
 import { createAudio } from "audiobits";
-import { createEchoProbe } from "../../catalog/experiences/echo-probe/controller";
 import { thruster } from "../../catalog/recipes/thruster/recipe";
 
 /** Native acoustic bench used before presentation work and for regression evidence. */

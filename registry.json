@@ -544,6 +544,11 @@
           "target": "~/src/sounds/experiences/echo-probe/recipe.ts"
         },
         {
+          "path": "catalog/experiences/echo-probe/materials.ts",
+          "type": "registry:file",
+          "target": "~/src/sounds/experiences/echo-probe/materials.ts"
+        },
+        {
           "path": "catalog/experiences/echo-probe/controller.ts",
           "type": "registry:file",
           "target": "~/src/sounds/experiences/echo-probe/controller.ts"

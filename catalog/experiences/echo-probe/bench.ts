@@ -4,7 +4,8 @@ import { compile } from "../../../packages/audiobits/src/compiler/plan";
 import { createGraph } from "../../../packages/audiobits/src/compiler/graph";
 import { createEchoProbe } from "./controller";
 import { createEchoProbe as createBaseline } from "./baseline-controller";
-import { echoProbe, probeEchoes, type MaterialId } from "./recipe";
+import { echoProbe } from "./recipe";
+import { probeEchoes, type MaterialId } from "./controller";
 import { probeDiffusion as noiseWash } from "./baseline";
 
 export interface BenchSettings {

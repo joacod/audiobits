@@ -6,7 +6,8 @@ import {
   type PlayOptions,
   type Recipe,
 } from "audiobits";
-import * as recipes from "../catalog/experiences/echo-probe/recipe";
+import * as recipes from "../catalog/experiences/echo-probe/controller";
+import * as installed from "../catalog/experiences/echo-probe/recipe";
 import * as baseline from "../catalog/experiences/echo-probe/baseline";
 import { createEchoProbe } from "../catalog/experiences/echo-probe/controller";
 import { compile } from "../packages/audiobits/src/compiler/plan";
@@ -20,6 +21,12 @@ const sounds = [
   ...Object.values(recipes.probeEchoes),
 ];
 const ids = Object.keys(recipes.materials) as recipes.MaterialId[];
+
+test("the installed recipe module exports only valid recipes", () => {
+  // Package installs validate every recipe.ts export as a recipe.
+  for (const recipe of Object.values(installed))
+    expect(validateRecipe(recipe).ok).toBe(true);
+});
 
 test("definitions validate, round-trip, and compile deterministically", () => {
   for (const recipe of [...sounds, ...Object.values(baseline)]) {
@@ -125,9 +132,7 @@ test("every material frequency keeps a Nyquist margin at 32 kHz", () => {
         ([ratio, , , detune = 0]) => m.fundamental * ratio + detune,
       ),
       ...m.damping,
-      ...(m.exciter.effects ?? []).map((effect) =>
-        effect.type === "filter" ? (effect.frequency as number) : 0,
-      ),
+      m.exciter.frequency,
     ];
     expect(Math.max(...frequencies)).toBeLessThan(12000);
   }
