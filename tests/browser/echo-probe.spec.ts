@@ -98,6 +98,8 @@ test("1000 scheduled voices cancel without retained ownership or touching shared
 test("tap, repeated emission, measured output, Escape, interruption and navigation clean up @smoke", async ({
   page,
 }) => {
+  // Natural completion waits for metal's late echo (about 6 s per emission).
+  test.setTimeout(90_000);
   await instrument(page, "normal", "echo-probe");
   const stage = page.getByRole("group", stageName);
   await expect(stage).toHaveAttribute("data-ready", "true");
@@ -236,7 +238,7 @@ for (const width of [1440, 390])
     ).toContain("./sounds/experiences/echo-probe/controller");
   });
 
-test("controlled compositions compare seeded resynthesis with real filtered delay", async ({
+test("materials have distinct signatures, the surface fallback matches, and controls stay independent", async ({
   page,
 }) => {
   await page.goto("http://127.0.0.1:3100");
@@ -251,7 +253,7 @@ test("controlled compositions compare seeded resynthesis with real filtered dela
           clusterTimes: number[];
           earlyAt: number;
           earlyDifference: number;
-          matchedClusterEnergies: number[];
+          fallbackDifference: Record<string, number>;
         }>;
       }
     ).probeComparisons(),
@@ -263,48 +265,43 @@ test("controlled compositions compare seeded resynthesis with real filtered dela
     expect(value.peak).toBeLessThan(0.5);
     expect(value.tail).toBe(0);
   }
-  expect(result.coherence.replay).toBeGreaterThan(0.99999);
-  expect(result.coherence.variation).toBeLessThan(result.coherence.replay);
-  expect(result.coherence.delay).toBeGreaterThan(0.98);
-  expect(result.coherence.baseline).toBeLessThan(0.5);
-  expect(result.metrics.far.returnEnergy).toBeLessThan(
-    result.metrics.near.returnEnergy,
+  const { metrics, coherence } = result;
+  expect(coherence.replay).toBeGreaterThan(0.99999);
+  expect(coherence.variation).toBeLessThan(coherence.replay);
+  expect(coherence.baseline).toBeLessThan(0.5);
+  // Each material is its own sound, not a filtered copy of another.
+  for (const pair of ["woodMetal", "woodGlass", "metalGlass"])
+    expect(Math.abs(coherence[pair])).toBeLessThan(0.5);
+  for (const value of Object.values(result.fallbackDifference))
+    expect(value).toBeLessThan(1e-6);
+  // Glass is brightest, wood darkest; metal carries the most ringing energy.
+  expect(metrics.glass.returnBrightness).toBeGreaterThan(
+    metrics.metal.returnBrightness,
   );
-  expect(result.metrics.glass.returnBrightness).toBeGreaterThan(
-    result.metrics.felt.returnBrightness,
+  expect(metrics.metal.returnBrightness).toBeGreaterThan(
+    metrics.wood.returnBrightness,
   );
-  expect(result.metrics.cluster.lateEnergy).toBeGreaterThan(0);
-  expect(result.metrics.wash.lateEnergy).toBeGreaterThan(0);
-  expect(result.metrics.weak.returnEnergy).toBeLessThan(
-    result.metrics.hybrid.returnEnergy / 20,
+  expect(metrics.metal.lateEnergy).toBeGreaterThan(metrics.glass.lateEnergy);
+  expect(metrics.glass.lateEnergy).toBeGreaterThan(metrics.wood.lateEnergy);
+  expect(metrics.far.returnEnergy).toBeLessThan(metrics.near.returnEnergy);
+  expect(metrics.cluster.lateEnergy).toBeGreaterThan(
+    metrics.current.lateEnergy,
   );
-  expect(result.metrics.left.wetLeft).toBeGreaterThan(
-    result.metrics.left.wetRight * 100,
+  expect(metrics.wash.lateEnergy).toBeGreaterThan(0);
+  expect(metrics.weak.returnEnergy).toBeLessThan(
+    metrics.current.returnEnergy / 20,
   );
-  expect(result.metrics.right.wetRight).toBeGreaterThan(
-    result.metrics.right.wetLeft * 100,
-  );
-  expect(result.metrics.left.energy).toBeCloseTo(
-    result.metrics.right.energy,
-    5,
-  );
+  expect(metrics.left.wetLeft).toBeGreaterThan(metrics.left.wetRight * 100);
+  expect(metrics.right.wetRight).toBeGreaterThan(metrics.right.wetLeft * 100);
+  expect(metrics.left.energy).toBeCloseTo(metrics.right.energy, 5);
   expect(result.matchedEnergy).toBeCloseTo(0.05, 4);
-  expect(result.metrics.delay.sources).toBe(result.metrics.hybrid.sources);
-  expect(result.metrics.hybrid.delayNodes).toBe(0); // Early-only hybrid stays unchanged.
-  expect(result.metrics.resynthesis.delayNodes).toBe(0);
-  expect(result.metrics.cluster.delayNodes).toBe(3);
-  expect(result.metrics.cluster.clockSources).toBe(3);
-  expect(result.metrics.cluster.delaySeconds).toBeLessThanOrEqual(3 * 0.067);
+  // Early returns are dry; only the three late grains own native delays.
+  expect(metrics.current.delayNodes).toBe(0);
+  expect(metrics.cluster.delayNodes).toBe(3);
+  expect(metrics.cluster.clockSources).toBe(3);
+  expect(metrics.metalCluster.delaySeconds).toBeLessThanOrEqual(3 * 0.32);
+  expect(metrics.metalCluster.sources).toBe(2 + 4 * 7);
   expect(result.earlyDifference).toBeLessThan(1e-6);
-  for (const energy of result.matchedClusterEnergies)
-    expect(energy).toBeCloseTo(0.05, 4);
-  expect(result.metrics.cluster.lateEnergy).not.toBe(
-    result.metrics.resynthesis.lateEnergy,
-  );
-  expect(result.metrics.cluster.sources).toBe(
-    result.metrics.resynthesis.sources,
-  );
-  expect(result.metrics.delay.delayNodes).toBe(1);
   expect(result.clusterTimes).toHaveLength(3);
   for (const at of result.clusterTimes)
     expect(at).toBeGreaterThan(result.earlyAt + 0.11);
@@ -350,7 +347,8 @@ for (const count of [8, 40])
       expect(result.accepted).toBe(count);
       expect(result.groups).toBeLessThanOrEqual(3);
       expect(result.maximum).toBeLessThanOrEqual(30);
-      expect(result.maximumSources).toBeLessThanOrEqual(102);
+      // Three groups of at most 65 sources (all-metal worst case).
+      expect(result.maximumSources).toBeLessThanOrEqual(195);
       expect(result.peak).toBeGreaterThan(0);
       expect(result.peak).toBeLessThan(0.5);
       expect(result.afterStop).toEqual({ active: 0, retiring: 0 });
@@ -381,7 +379,7 @@ test("retirement removes cancelled paths and highlights while sounded returns fi
     h.probeVisuals = h.installProbeVisualProbe();
   });
   const box = (await stage.boundingBox())!;
-  // Close to Felt: that return sounds before retirement; Glass and Stone are pending.
+  // Close to Wood: that return sounds before retirement; Glass and Metal are pending.
   await stage.click({
     position: { x: box.width * 0.38, y: box.height * 0.27 },
   });
@@ -429,16 +427,17 @@ test("retirement removes cancelled paths and highlights while sounded returns fi
     await wait(
       () =>
         context.currentTime >=
-        Math.max(second[0].at + 0.12, first[4].at + 0.015),
+        Math.max(second[0].at + 0.12, first[2].at + 0.015),
     );
     offset = sources.length;
     tap(0.62, 0.72);
     await wait(() => sources.length > offset);
     const third = sources.slice(offset);
-    const retiredAt = first[8].cancelledAt!;
-    const firstFeltAt = first[4].at;
+    const retiredAt = first[6].cancelledAt!;
+    const firstWoodAt = first[2].at;
+    // Pulse sources are 0-1, wood 2-5, glass 6-11, metal 12-18.
     // Observe the old pending return times and the new valid returns through their full decay.
-    const end = Math.max(first[12].at, third[12].at, second[4].at) + 0.32;
+    const end = Math.max(first[12].at, third[12].at, second[2].at) + 0.32;
     await wait(() => frames.some((frame) => frame.at >= end));
     const width = surface.clientWidth,
       height = surface.clientHeight;
@@ -447,9 +446,9 @@ test("retirement removes cancelled paths and highlights while sounded returns fi
       Math.hypot(a[0] - b[0], a[1] - b[1]) < 2;
     const oldPaths = (frame: Frame) =>
       frame.paths.filter((path) => matches(path.from, origin));
-    const felt = "01 / FELT",
+    const wood = "01 / WOOD",
       glass = "02 / GLASS",
-      stone = "03 / STONE";
+      metal = "03 / METAL";
     const highlights = (label: string, times: number[]) =>
       frames.filter(
         (frame) =>
@@ -458,7 +457,7 @@ test("retirement removes cancelled paths and highlights while sounded returns fi
       );
     return {
       retiredAt,
-      firstFeltAt,
+      firstWoodAt,
       pendingAudioCancelled: first
         .filter((source) => source.at > retiredAt)
         .every(
@@ -466,7 +465,7 @@ test("retirement removes cancelled paths and highlights while sounded returns fi
             source.cancelledAt !== null && source.cancelledAt < source.at,
         ),
       soundedAudioNotCancelledEarly: first
-        .filter((source) => source.at === firstFeltAt)
+        .filter((source) => source.at === firstWoodAt)
         .every((source) => source.cancelledAt === null),
       oldPathsBeforeRetirement: frames.some(
         (frame) => frame.at < retiredAt && oldPaths(frame).length > 0,
@@ -476,52 +475,52 @@ test("retirement removes cancelled paths and highlights while sounded returns fi
         .flatMap(oldPaths)
         .filter((path) => !matches(path.to, [0.18 * width, 0.27 * height]))
         .length,
-      soundedFeltPath: frames.some(
+      soundedWoodPath: frames.some(
         (frame) =>
           frame.at >= retiredAt &&
           oldPaths(frame).some((path) =>
             matches(path.to, [0.18 * width, 0.27 * height]),
           ),
       ),
-      soundedFeltDecay: frames.some(
+      soundedWoodDecay: frames.some(
         (frame) =>
           frame.at >= retiredAt &&
-          frame.at < firstFeltAt + 0.3 &&
-          frame.lights[felt],
+          frame.at < firstWoodAt + 0.3 &&
+          frame.lights[wood],
       ),
-      unexpectedFelt: highlights(felt, [firstFeltAt, second[4].at, third[4].at])
+      unexpectedWood: highlights(wood, [firstWoodAt, second[2].at, third[2].at])
         .length,
-      unexpectedGlass: highlights(glass, [second[8].at, third[8].at]).length,
-      unexpectedStone: highlights(stone, [second[12].at, third[12].at]).length,
+      unexpectedGlass: highlights(glass, [second[6].at, third[6].at]).length,
+      unexpectedMetal: highlights(metal, [second[12].at, third[12].at]).length,
       newerGlass: frames.some(
         (frame) =>
-          frame.at >= second[8].at &&
-          frame.at < second[8].at + 0.3 &&
+          frame.at >= second[6].at &&
+          frame.at < second[6].at + 0.3 &&
           frame.lights[glass],
       ),
-      newerStone: frames.some(
+      newerMetal: frames.some(
         (frame) =>
           frame.at >= third[12].at &&
           frame.at < third[12].at + 0.3 &&
-          frame.lights[stone],
+          frame.lights[metal],
       ),
       newerAudioNotCancelled: [...second, ...third]
-        .filter((source) => [second[8].at, third[12].at].includes(source.at))
+        .filter((source) => [second[6].at, third[12].at].includes(source.at))
         .every((source) => source.cancelledAt === null),
     };
   });
-  expect(result.retiredAt).toBeGreaterThan(result.firstFeltAt);
+  expect(result.retiredAt).toBeGreaterThan(result.firstWoodAt);
   expect(result.pendingAudioCancelled).toBe(true);
   expect(result.soundedAudioNotCancelledEarly).toBe(true);
   expect(result.oldPathsBeforeRetirement).toBe(true);
   expect(result.oldPendingPathsAfterRetirement).toBe(0);
-  expect(result.soundedFeltPath).toBe(true);
-  expect(result.soundedFeltDecay).toBe(true);
-  expect(result.unexpectedFelt).toBe(0);
+  expect(result.soundedWoodPath).toBe(true);
+  expect(result.soundedWoodDecay).toBe(true);
+  expect(result.unexpectedWood).toBe(0);
   expect(result.unexpectedGlass).toBe(0);
-  expect(result.unexpectedStone).toBe(0);
+  expect(result.unexpectedMetal).toBe(0);
   expect(result.newerGlass).toBe(true);
-  expect(result.newerStone).toBe(true);
+  expect(result.newerMetal).toBe(true);
   expect(result.newerAudioNotCancelled).toBe(true);
   await stage.press("Escape");
   await expect(stage).toHaveAttribute("data-state", "stopped");
@@ -586,7 +585,8 @@ test("a new emission cuts sounding native late repeats and preserves shared audi
           .lateCancellation,
     ),
   ).toEqual({
-    before: 3,
+    // Three glass grains, each with a feedback delay and its quantum offset.
+    before: 6,
     cutOnNewEmission: true,
     earlyNotRetired: true,
     remaining: 1,
@@ -595,7 +595,7 @@ test("a new emission cuts sounding native late repeats and preserves shared audi
   });
 });
 
-test("native late echoes are quiet time-shifted copies of the filtered grain @smoke", async ({
+test("native late echoes are the material voice plus its own feedback repeats @smoke", async ({
   page,
 }) => {
   await page.goto("http://127.0.0.1:3100");
@@ -603,15 +603,16 @@ test("native late echoes are quiet time-shifted copies of the filtered grain @sm
   const result = await page.evaluate(() =>
     (
       globalThis as unknown as {
-        probeGrainCopies(): Promise<{
-          error: number;
-          copyEnergy: number;
-          tail: number;
-        }>;
+        probeGrainCopies(): Promise<
+          Record<string, { error: number; copyEnergy: number; tail: number }>
+        >;
       }
     ).probeGrainCopies(),
   );
-  expect(result.error).toBeLessThan(1e-6);
-  expect(result.copyEnergy).toBeGreaterThan(0);
-  expect(result.tail).toBe(0);
+  expect(Object.keys(result).sort()).toEqual(["glass", "metal", "wood"]);
+  for (const value of Object.values(result)) {
+    expect(value.error).toBeLessThan(1e-5);
+    expect(value.copyEnergy).toBeGreaterThan(0);
+    expect(value.tail).toBe(0);
+  }
 });

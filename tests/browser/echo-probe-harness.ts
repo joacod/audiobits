@@ -5,8 +5,11 @@ import {
 } from "../../catalog/experiences/echo-probe/bench";
 import {
   echoProbe,
-  probeReflection,
-  probeDiffusion,
+  materialFor,
+  materials,
+  probeEchoes,
+  probeReturns,
+  type MaterialId,
 } from "../../catalog/experiences/echo-probe/recipe";
 import { compile } from "../../packages/audiobits/src/compiler/plan";
 import { createGraph } from "../../packages/audiobits/src/compiler/graph";
@@ -23,16 +26,24 @@ async function probeSignal(
   seed = 42,
   count = 1,
   rate = 48000,
+  seconds = 8,
 ) {
+  // Production returns are selected through the same surface fallback as the controller.
   const recipe =
     kind === "emission"
       ? echoProbe
       : kind === "reference-reflection"
         ? referenceReflection
         : kind === "reflection"
-          ? probeReflection
-          : probeDiffusion;
-  const context = new OfflineAudioContext(2, rate, rate);
+          ? probeReturns[materialFor(surface)]
+          : probeEchoes[materialFor(surface)];
+  const controls: Record<string, number> =
+    kind === "emission"
+      ? {}
+      : kind === "reference-reflection"
+        ? { surface }
+        : { distance: 0 };
+  const context = new OfflineAudioContext(2, rate * seconds, rate);
   const master = context.createGain();
   master.gain.value = 10 ** (-12 / 20);
   master.connect(context.destination);
@@ -40,7 +51,7 @@ async function probeSignal(
     createGraph(
       context,
       master,
-      compile(recipe, kind === "emission" ? {} : { surface }, seed),
+      compile(recipe, controls, seed),
       0.02,
       gainDb,
       pan,
@@ -66,7 +77,7 @@ async function probeSignal(
     right += b[index] ** 2;
     if (index)
       slope += (a[index] - a[index - 1]) ** 2 + (b[index] - b[index - 1]) ** 2;
-    if (index > rate * 0.8)
+    if (index > rate * (seconds - 0.2))
       tail = Math.max(tail, Math.abs(a[index]), Math.abs(b[index]));
     if (onset < 0 && power > 1e-12) onset = index / rate;
   }
@@ -114,45 +125,47 @@ async function probeComparisons() {
       ...changes,
     });
   const baseline = await render({ composition: "baseline" });
-  const pulse = await render({ composition: "pulse" });
-  const hybrid = await render({ composition: "hybrid" });
-  const delay = await render({ composition: "delay" });
-  const resynthesis = await render({
-    composition: "resynthesis",
-    space: "cluster",
-  });
-  const replay = await render({ composition: "hybrid" });
-  const variation = await render({ composition: "hybrid", seed: 99 });
+  const current = await render({});
+  const replay = await render({});
+  const variation = await render({ seed: 99 });
+  const wood = await render({ material: "wood" });
+  const metal = await render({ material: "metal" });
+  const glass = await render({ material: "glass" });
+  const fallbackWood = await render({ surface: 0.1 });
+  const fallbackMetal = await render({ surface: 0.5 });
+  const fallbackGlass = await render({ surface: 0.9 });
   const near = await render({ distance: 0.1 });
   const far = await render({ distance: 0.9 });
-  const felt = await render({ surface: 0 });
-  const glass = await render({ surface: 1 });
   const left = await render({ pan: -0.9 });
   const right = await render({ pan: 0.9 });
   const weak = await render({ intensity: 0.2 });
   const cluster = await render({ space: "cluster" });
+  const metalCluster = await render({ space: "cluster", material: "metal" });
   const wash = await render({ space: "noise" });
+  const results = {
+    baseline,
+    current,
+    replay,
+    variation,
+    wood,
+    metal,
+    glass,
+    fallbackWood,
+    fallbackMetal,
+    fallbackGlass,
+    near,
+    far,
+    left,
+    right,
+    weak,
+    cluster,
+    metalCluster,
+    wash,
+  };
   const metrics = Object.fromEntries(
-    Object.entries({
-      baseline,
-      pulse,
-      hybrid,
-      delay,
-      resynthesis,
-      replay,
-      variation,
-      near,
-      far,
-      felt,
-      glass,
-      left,
-      right,
-      weak,
-      cluster,
-      wash,
-    }).map(([name, result]) => [name, result.metrics]),
+    Object.entries(results).map(([name, result]) => [name, result.metrics]),
   );
-  function correlation(a: AudioBuffer, b: AudioBuffer, lag = 0) {
+  function correlation(a: AudioBuffer, b: AudioBuffer) {
     let ab = 0,
       aa = 0,
       bb = 0;
@@ -161,75 +174,51 @@ async function probeComparisons() {
         y = b.getChannelData(ch);
       for (
         let i = Math.round(0.42 * a.sampleRate);
-        i < Math.round(0.65 * a.sampleRate);
+        i < Math.round(1.2 * a.sampleRate);
         i++
       ) {
-        ab += x[i] * y[i + lag];
+        ab += x[i] * y[i];
         aa += x[i] ** 2;
-        bb += y[i + lag] ** 2;
+        bb += y[i] ** 2;
       }
     }
     return ab / Math.sqrt(aa * bb);
   }
-  // A real delay must preserve the actual captured signal, including oscillator
-  // phase. Compare it to a shifted buffer through identical material filters.
-  const emissionOnly = await render({ intensity: 0 });
-  const reference = new OfflineAudioContext(2, 96000, 48000);
-  const source = reference.createBufferSource();
-  const mono = reference.createBuffer(1, 96000, 48000);
-  const captured = emissionOnly.buffer.getChannelData(0);
-  for (let i = 0; i < captured.length; i++)
-    mono.getChannelData(0)[i] = captured[i] * Math.SQRT2;
-  source.buffer = mono;
-  let output: AudioNode = source;
-  for (const effect of compile(
-    probeReflection,
-    { surface: benchDefaults.surface, distance: benchDefaults.distance },
-    42,
-  ).effects) {
-    const filter = reference.createBiquadFilter();
-    filter.type = effect.filter;
-    filter.frequency.value = effect.frequency as number;
-    filter.Q.value = effect.q;
-    output.connect(filter);
-    output = filter;
-  }
-  const level = reference.createGain(),
-    panner = reference.createStereoPanner();
-  level.gain.value =
-    10 ** ((hybrid.plans.find((p) => p.role === "early")!.gainDb + 2.4) / 20);
-  panner.pan.value = benchDefaults.pan;
-  output.connect(level).connect(panner).connect(reference.destination);
-  source.start(hybrid.plans.find((p) => p.role === "early")!.at - 0.012);
-  const capturedReturn = await reference.startRendering();
-  const matched = await render({ composition: "hybrid", matchLevel: true });
-  const matchedResynthesis = await render({
-    composition: "resynthesis",
-    space: "cluster",
-    matchLevel: true,
-  });
-  const matchedHybrid = await render({ space: "cluster", matchLevel: true });
+  const identical = (a: AudioBuffer, b: AudioBuffer) => {
+    let difference = 0;
+    for (let ch = 0; ch < 2; ch++) {
+      const x = a.getChannelData(ch),
+        y = b.getChannelData(ch);
+      for (let i = 0; i < x.length; i++)
+        difference = Math.max(difference, Math.abs(x[i] - y[i]));
+    }
+    return difference;
+  };
+  const matched = await render({ matchLevel: true });
   let earlyDifference = 0;
   const firstGrainAt = cluster.plans.find((plan) => plan.role === "late")!.at;
   for (let channel = 0; channel < 2; channel++) {
     const a = cluster.buffer.getChannelData(channel),
-      b = resynthesis.buffer.getChannelData(channel);
+      b = current.buffer.getChannelData(channel);
     for (let i = 0; i < Math.floor(firstGrainAt * 48000); i++)
       earlyDifference = Math.max(earlyDifference, Math.abs(a[i] - b[i]));
   }
   return {
     earlyDifference,
-    matchedClusterEnergies: [matchedResynthesis, matchedHybrid].map(
-      (result) => result.metrics.returnEnergy * result.metrics.scale ** 2,
-    ),
+    fallbackDifference: {
+      wood: identical(wood.buffer, fallbackWood.buffer),
+      metal: identical(metal.buffer, fallbackMetal.buffer),
+      glass: identical(glass.buffer, fallbackGlass.buffer),
+    },
     metrics,
     matchedEnergy: matched.metrics.returnEnergy * matched.metrics.scale ** 2,
     coherence: {
-      delay: correlation(capturedReturn, delay.buffer),
-      resynthesis: correlation(hybrid.buffer, delay.buffer),
-      baseline: correlation(hybrid.buffer, baseline.buffer),
-      replay: correlation(hybrid.buffer, replay.buffer),
-      variation: correlation(hybrid.buffer, variation.buffer),
+      baseline: correlation(current.buffer, baseline.buffer),
+      replay: correlation(current.buffer, replay.buffer),
+      variation: correlation(current.buffer, variation.buffer),
+      woodMetal: correlation(wood.buffer, metal.buffer),
+      woodGlass: correlation(wood.buffer, glass.buffer),
+      metalGlass: correlation(metal.buffer, glass.buffer),
     },
     clusterTimes: cluster.plans
       .filter((p) => p.role === "late")
@@ -461,48 +450,53 @@ async function probeLateCancellation() {
 }
 Object.assign(globalThis, { probeLateCancellation });
 
+/** Late grains are the material's early voice plus its own native feedback echo. */
 async function probeGrainCopies() {
-  const render = async (wet: boolean) => {
-    const context = new OfflineAudioContext(2, 48000, 48000);
+  const rate = 48000;
+  const render = async (id: MaterialId, wet: boolean) => {
+    const context = new OfflineAudioContext(2, rate * 8, rate);
     const graph = createGraph(
       context,
       context.destination,
-      compile(
-        {
-          ...probeDiffusion,
-          effects: probeDiffusion.effects.filter(
-            (effect) => wet || effect.type !== "delay",
-          ),
-        },
-        { distance: 0, surface: 0.7 },
-        42,
-      ),
+      compile((wet ? probeEchoes : probeReturns)[id], { distance: 0 }, 42),
       0.02,
       -12,
-      -0.6,
+      0,
       () => {},
     );
     const buffer = await context.startRendering();
     graph.finish();
     return buffer;
   };
-  const dry = await render(false),
-    wet = await render(true);
-  const lag = Math.round(0.041 * 48000);
-  let error = 0,
-    copyEnergy = 0,
-    tail = 0;
-  for (let channel = 0; channel < 2; channel++) {
-    const a = dry.getChannelData(channel),
-      b = wet.getChannelData(channel);
-    for (let i = 0; i < a.length; i++) {
-      if (!Number.isFinite(b[i])) throw new Error("Nonfinite late copy");
-      const copy = i >= lag ? a[i - lag] * 0.22 : 0;
-      error = Math.max(error, Math.abs(b[i] - (a[i] * 0.78 + copy)));
-      copyEnergy += copy ** 2;
-      if (i >= 48000 * 0.5) tail = Math.max(tail, Math.abs(b[i]));
+  const result: Record<
+    string,
+    { error: number; copyEnergy: number; tail: number }
+  > = {};
+  for (const id of Object.keys(materials) as MaterialId[]) {
+    const { time, feedback, mix } = materials[id].echo;
+    const dry = await render(id, false),
+      wet = await render(id, true);
+    const lag = Math.round(time[0] * rate);
+    let error = 0,
+      copyEnergy = 0,
+      tail = 0;
+    for (let channel = 0; channel < 2; channel++) {
+      const a = dry.getChannelData(channel),
+        b = wet.getChannelData(channel);
+      // echoes[i] = a[i - lag] + feedback * echoes[i - lag]
+      const echoes = new Float64Array(a.length);
+      for (let i = lag; i < a.length; i++)
+        echoes[i] = a[i - lag] + feedback * echoes[i - lag];
+      for (let i = 0; i < a.length; i++) {
+        if (!Number.isFinite(b[i])) throw new Error("Nonfinite late copy");
+        const copy = echoes[i] * mix;
+        error = Math.max(error, Math.abs(b[i] - (a[i] * (1 - mix) + copy)));
+        copyEnergy += copy ** 2;
+        if (i >= a.length - rate * 0.2) tail = Math.max(tail, Math.abs(b[i]));
+      }
     }
+    result[id] = { error, copyEnergy, tail };
   }
-  return { error, copyEnergy, tail };
+  return result;
 }
 Object.assign(globalThis, { probeGrainCopies });
