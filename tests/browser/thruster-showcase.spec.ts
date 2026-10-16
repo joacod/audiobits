@@ -8,9 +8,9 @@ test("idle showcase stays silent and only gestures start the thruster", async ({
   const errors: string[] = [];
   page.on("pageerror", (cause) => errors.push(cause.message));
   await instrument(page);
-  await expect(page.locator(".flight-controls").getByRole("button")).toHaveText(
-    ["Play impact"],
-  );
+  await expect(
+    page.locator(".flight-controls").getByRole("button"),
+  ).toHaveCount(0);
   await expect(page.getByRole("slider")).toHaveCount(0);
   expect((await probe(page)).contexts).toEqual([]);
   await dragThruster(page);
@@ -20,7 +20,7 @@ test("idle showcase stays silent and only gestures start the thruster", async ({
   expect(errors).toEqual([]);
 });
 
-test("showcase pointer, impact, release and navigation own their lifecycle", async ({
+test("showcase pointer, release and navigation own their lifecycle", async ({
   page,
 }) => {
   await instrument(page);
@@ -60,14 +60,6 @@ test("showcase pointer, impact, release and navigation own their lifecycle", asy
   await page.mouse.up();
   await expect(page.locator(".flight-state")).toHaveText("Thruster: stopped");
   await expect.poll(async () => (await probe(page)).ended).toBe(3);
-  await page.getByRole("button", { name: "Play impact" }).click();
-  expect((await probe(page)).sources).toBe(5);
-  await expect
-    .poll(async () => {
-      const p = await probe(page);
-      return p.ended === p.sources;
-    })
-    .toBe(true);
   for (let i = 0; i < 4; i++) {
     await dragThruster(page);
     await expect(page.locator(".flight-state")).toHaveText("Thruster: running");

@@ -404,7 +404,7 @@ export function mountBladeStage3D(
     "pointerdown",
     (event) => {
       if (!event.isPrimary || event.button !== 0 || pointer !== null) return;
-      event.preventDefault();
+      if (event.pointerType !== "touch") event.preventDefault();
       pointer = event.pointerId;
       surface.setPointerCapture(pointer);
       surface.focus({ preventScroll: true });

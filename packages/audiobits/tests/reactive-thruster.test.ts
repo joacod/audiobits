@@ -221,6 +221,19 @@ it("reports activation failure and permits a fresh gesture", async () => {
   s.interaction.dispose();
   await settle();
 });
+it("captures a touch press without suppressing its native tap and cancels pending playback", async () => {
+  const s = setup();
+  expect(s.event("pointerdown", { pointerType: "touch" })).toBe(true);
+  expect(s.surface.setPointerCapture).toHaveBeenCalledWith(1);
+  expect(s.audio.start).toHaveBeenCalledOnce();
+  s.event("pointerup", { pointerType: "touch" });
+  s.resolve();
+  await settle();
+  expect(s.play).not.toHaveBeenCalled();
+  expect(s.surface.releasePointerCapture).toHaveBeenCalledWith(1);
+  expect(s.frames.size).toBe(0);
+  s.interaction.dispose();
+});
 it("coalesces rapid movement, bounds updates, decays stationary motion, and releases capture", async () => {
   const s = setup();
   expect(s.event("pointerdown")).toBe(false);

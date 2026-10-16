@@ -61,7 +61,9 @@ export function EnergyChargeDetail() {
     });
     host.current = current;
     const unbind = pad.current
-      ? bindAudioGestures(pad.current, current.audio, current.stop)
+      ? bindAudioGestures(pad.current, current.audio, current.stop, (cause) =>
+          setError(recovery(cause)),
+        )
       : undefined;
     return () => {
       unbind?.();
@@ -133,10 +135,7 @@ export function EnergyChargeDetail() {
                 return;
               pointer.current = event.pointerId;
               event.currentTarget.setPointerCapture(event.pointerId);
-              if (event.pointerType !== "touch") beginHold();
-            }}
-            onTouchStart={() => {
-              if (pointer.current !== null) beginHold();
+              beginHold();
             }}
             onPointerUp={(event) => {
               if (pointer.current === event.pointerId) release();
