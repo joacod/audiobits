@@ -44,9 +44,9 @@ export function EchoProbeDetail() {
       </div>
       <div className="echo-probe-help">
         <p id="echo-probe-help">
-          Tap different positions to change the returns. Felt absorbs, stone
-          scatters, glass rings. Headphones reveal direction. Enter emits at the
-          center; Escape stops.
+          Tap different positions to change the returns. Wood knocks dry, metal
+          rings long, glass shimmers. Headphones reveal direction. Enter emits
+          at the center; Escape stops.
         </p>
         {error ? <p role="alert">{error}</p> : null}
       </div>

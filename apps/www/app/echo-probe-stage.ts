@@ -3,9 +3,9 @@ import type { ProbeEmission } from "../../../catalog/experiences/echo-probe/cont
 
 // All environment data and pixel-to-acoustic mapping belongs to this showcase.
 const reflectors = [
-  { x: 0.18, y: 0.27, surface: 0.08, intensity: 0.72, label: "01 / FELT" },
-  { x: 0.79, y: 0.3, surface: 0.98, intensity: 0.95, label: "02 / GLASS" },
-  { x: 0.62, y: 0.72, surface: 0.52, intensity: 0.85, label: "03 / STONE" },
+  { x: 0.18, y: 0.27, surface: 0.1, intensity: 0.72, label: "01 / WOOD" },
+  { x: 0.79, y: 0.3, surface: 0.95, intensity: 0.95, label: "02 / GLASS" },
+  { x: 0.62, y: 0.72, surface: 0.5, intensity: 0.85, label: "03 / METAL" },
 ] as const;
 
 export function mountProbeStage(

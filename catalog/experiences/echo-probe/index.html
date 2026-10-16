@@ -30,21 +30,23 @@
   <p>
     One reflector, seed 42. Change one control, then compare the same pulse. A
     preserves PR #100, including its original material/distance coupling and
-    noise wash. Resynthesis preserves PR #102. Hybrid keeps its early returns
-    and adds quiet native repeats to late grains. Native delay compares
-    same-onset excitation through independently filtered, fully wet recipe
-    delays.
+    noise wash. Materials plays the production wood, metal, and glass returns,
+    with each material's own native echo on the late grains.
   </p>
   <label
     >Composition
     <select id="composition">
       <option value="baseline">A / original independent returns</option>
-      <option value="pulse">B / preserved pulse</option>
-      <option value="resynthesis">
-        Existing resonant resynthesis (PR #102)
-      </option>
-      <option value="delay">Native delay early returns</option>
-      <option value="hybrid" selected>Hybrid / native late repeats</option>
+      <option value="materials" selected>Materials / wood, metal, glass</option>
+    </select></label
+  >
+  <label
+    >Material
+    <select id="material">
+      <option value="surface" selected>From surface slider</option>
+      <option value="wood">Wood</option>
+      <option value="metal">Metal</option>
+      <option value="glass">Glass</option>
     </select></label
   >
   <label
@@ -66,7 +68,7 @@
       value="0.35" /><output></output
   ></label>
   <label
-    >Material
+    >Surface
     <input
       id="surface"
       type="range"
