@@ -313,6 +313,9 @@ try {
       code: integration,
       source: exampleSource,
       sustained: item.meta.requiredCapabilities.kinds.includes("sustained"),
+      // Metal returns ring for 2.4 s and their late echo repeats for about
+      // 3.2 s more, so Echo Probe finishes about 7 s after its pulse.
+      ...(item.name === "echo-probe" ? { finishTimeout: 12000 } : {}),
     });
     manifestTypes.push(...types);
     // This consumer starts with only the packed runtime. No framework or

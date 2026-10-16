@@ -4,16 +4,14 @@ import { compile } from "../../../packages/audiobits/src/compiler/plan";
 import { createGraph } from "../../../packages/audiobits/src/compiler/graph";
 import { createEchoProbe } from "./controller";
 import { createEchoProbe as createBaseline } from "./baseline-controller";
-import {
-  echoProbe,
-  probeReflection,
-  probeReturn,
-  probeDiffusion,
-} from "./recipe";
+import { echoProbe } from "./recipe";
+import { probeEchoes, type MaterialId } from "./controller";
 import { probeDiffusion as noiseWash } from "./baseline";
 
 export interface BenchSettings {
-  composition: "baseline" | "pulse" | "resynthesis" | "hybrid" | "delay";
+  composition: "baseline" | "materials";
+  /** "surface" omits the material so the controller falls back from `surface`. */
+  material: MaterialId | "surface";
   space: "cluster" | "noise" | "none";
   distance: number;
   surface: number;
@@ -24,7 +22,8 @@ export interface BenchSettings {
   matchLevel: boolean;
 }
 export const benchDefaults: BenchSettings = {
-  composition: "hybrid",
+  composition: "materials",
+  material: "surface",
   space: "cluster",
   distance: 0.35,
   surface: 0.7,
@@ -38,9 +37,10 @@ export const benchDefaults: BenchSettings = {
 export async function renderProbeComparison(
   settings: BenchSettings,
   rate = 48000,
+  seconds = 8,
 ) {
   const buildStarted = performance.now();
-  const context = new OfflineAudioContext(4, rate * 2, rate);
+  const context = new OfflineAudioContext(4, rate * seconds, rate);
   const master = context.createGain();
   master.gain.value = 10 ** (-12 / 20);
   master.connect(context.destination);
@@ -88,32 +88,11 @@ export async function renderProbeComparison(
       const isPulse =
         original === echoProbe ||
         (original.layers[0].id === "struck-body" && !original.parameters);
-      const isLate = original === probeDiffusion || original === noiseWash;
-      let recipe: Recipe =
-        original === probeReflection && settings.composition === "pulse"
-          ? probeReturn
-          : isLate && settings.space === "noise"
-            ? noiseWash
-            : original;
-      if (original === probeDiffusion && settings.composition !== "hybrid")
-        recipe = {
-          ...recipe,
-          effects: recipe.effects?.filter((e) => e.type !== "delay"),
-        };
-      // Public recipe delay, with matching seed AND source onset. Each return
-      // needs its own excitation: the public API has no shared multi-tap bus.
-      if (!isPulse && !isLate && settings.composition === "delay")
-        recipe = {
-          ...probeReflection,
-          effects: [
-            ...probeReflection.effects,
-            {
-              type: "delay",
-              time: 0.09 + settings.distance * 0.9,
-              mix: 1,
-            },
-          ],
-        };
+      const isLate =
+        Object.values(probeEchoes).includes(original as never) ||
+        original === noiseWash;
+      const recipe: Recipe =
+        isLate && settings.space === "noise" ? noiseWash : original;
       return {
         play(options: PlayOptions = {}) {
           const at = options.at ?? 0;
@@ -135,14 +114,12 @@ export async function renderProbeComparison(
               ? { surface: settings.surface }
               : options.parameters;
           const plan = compile(recipe, parameters, seed);
-          const startAt =
-            settings.composition === "delay" && role === "early" ? 0.012 : at;
           graphs.push(
             createGraph(
               context,
               isPulse ? dry : wet,
               plan,
-              startAt,
+              at,
               gainDb,
               pan,
               () => {},
@@ -173,12 +150,16 @@ export async function renderProbeComparison(
     settings.composition === "baseline"
       ? createBaseline(audio)
       : createEchoProbe(audio);
-  const emission = control.emit([settings], { seed: settings.seed })!;
+  const { material, ...reflection } = settings;
+  const emission = control.emit(
+    [material === "surface" ? reflection : { ...reflection, material }],
+    { seed: settings.seed },
+  )!;
   const buildMs = performance.now() - buildStarted;
   const renderStarted = performance.now();
   const lanesBuffer = await context.startRendering();
   const renderMs = performance.now() - renderStarted;
-  const buffer = context.createBuffer(2, rate * 2, rate);
+  const buffer = context.createBuffer(2, rate * seconds, rate);
   for (const graph of graphs) graph.finish();
   control.dispose();
   for (const node of owned) node.disconnect();
@@ -224,7 +205,8 @@ export async function renderProbeComparison(
     }
     if (i > rate * ((emission.reflections[0]?.at ?? Infinity) + 0.3))
       lateEnergy += wetPower;
-    if (i > rate * 1.8) tail = Math.max(tail, Math.abs(a), Math.abs(b));
+    if (i > rate * (seconds - 0.2))
+      tail = Math.max(tail, Math.abs(a), Math.abs(b));
   }
   // Match only returned energy, preserving the dry pulse's level. This is an
   // audition aid, not a claim of equal perceived loudness.
