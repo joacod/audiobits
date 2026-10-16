@@ -520,11 +520,11 @@
         "exportName": "echoProbe",
         "requiredCapabilities": {
           "sources": ["noise", "oscillator"],
-          "filters": ["bandpass", "lowpass"],
+          "filters": ["bandpass", "highpass", "lowpass"],
           "effects": ["delay", "filter"],
           "parameterModes": ["play"],
           "kinds": ["one-shot"],
-          "waveforms": ["sine", "triangle"],
+          "waveforms": ["sine"],
           "noiseColors": ["white"],
           "mappingScales": ["exponential"],
           "automationCurves": ["exponential"],

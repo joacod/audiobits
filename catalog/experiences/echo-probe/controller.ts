@@ -1,5 +1,12 @@
 import type { AudioEngine, Voice } from "audiobits";
-import { echoProbe, probeReflection, probeDiffusion } from "./recipe";
+import {
+  echoProbe,
+  materialFor,
+  materials,
+  probeEchoes,
+  probeReturns,
+  type MaterialId,
+} from "./recipe";
 
 export interface ProbeReflection {
   /** Stylized relative distance [0, 1], not meters. */
@@ -7,8 +14,10 @@ export interface ProbeReflection {
   /** Stereo direction [-1, 1]. */
   readonly pan: number;
   readonly intensity: number;
-  /** Absorbent/dark (0) to hard/bright (1). */
+  /** Dark (0) to bright (1). Selects the material when `material` is absent. */
   readonly surface: number;
+  /** Overrides `surface` when present. */
+  readonly material?: MaterialId;
 }
 
 export interface ProbeEmission {
@@ -64,7 +73,7 @@ export function createEchoProbe(audio: AudioEngine) {
     if (now < nextEmission) return null;
     const strength = bound(options.strength ?? 0.8);
     if (strength === 0) return null;
-    // Early recipes release in <= 40 ms with a 50 ms filter tail. Late
+    // Early recipes are dry and release in <= 20 ms with a 50 ms filter tail. Late
     // delay graphs are cut separately. Reclaim only
     // after that audio-clock deadline, even if ended callbacks were delayed.
     for (const group of groups)
@@ -97,42 +106,65 @@ export function createEchoProbe(audio: AudioEngine) {
     try {
       const pulse = audio.sound(echoProbe);
       group.sounds.add(pulse);
-      const reflection = audio.sound(probeReflection);
-      group.sounds.add(reflection);
-      const diffusion = audio.sound(probeDiffusion);
-      group.sounds.add(diffusion);
+      const reflections = input
+        .slice(0, 6)
+        .map((value) => {
+          const surface = bound(value.surface);
+          return {
+            distance: bound(value.distance),
+            pan: bound(value.pan, -1, 1),
+            intensity: bound(value.intensity),
+            surface,
+            // Unknown materials from untyped callers fall back like a missing one.
+            material: Object.hasOwn(materials, value.material ?? "")
+              ? value.material!
+              : materialFor(surface),
+          };
+        })
+        .filter((value) => value.intensity > 0);
+      // One early and one late sound per material, so late grains can be cancelled alone.
+      type Sound = ReturnType<
+        typeof audio.sound<(typeof probeReturns)[MaterialId]>
+      >;
+      const early = new Map<MaterialId, Sound>();
+      const lateSounds = new Map<MaterialId, Sound>();
+      const soundFor = (late: boolean, id: MaterialId) => {
+        const map = late ? lateSounds : early;
+        let sound = map.get(id);
+        if (!sound) {
+          sound = audio.sound((late ? probeEchoes : probeReturns)[id]);
+          map.set(id, sound);
+          group.sounds.add(sound);
+        }
+        return sound;
+      };
+      for (const value of reflections) soundFor(false, value.material);
+      for (let index = 0; index < 3 && reflections.length; index++)
+        soundFor(true, reflections[index % reflections.length].material);
       // Recipe validation can advance the native clock. Take the shared onset
       // only after preparing every sound in this emission.
       const at = context.currentTime + 0.012;
-      const returns = input
-        .slice(0, 6)
-        .map((value) => {
-          const distance = bound(value.distance);
-          return Object.freeze({
-            distance,
-            pan: bound(value.pan, -1, 1),
-            intensity: bound(value.intensity),
-            surface: bound(value.surface),
-            at: at + 0.09 + distance * 0.9,
-          });
-        })
-        .filter((value) => value.intensity > 0);
+      const returns = reflections.map((value) =>
+        Object.freeze({ ...value, at: at + 0.09 + value.distance * 0.9 }),
+      );
       // voice.stop() preserves delay tails. This sound belongs only to this
       // emission, so disposal cancels late repeats without touching early
       // returns or unrelated users of the engine.
       group.cancelLate = () => {
-        if (group.sounds.delete(diffusion)) diffusion.dispose();
+        for (const sound of lateSounds.values())
+          if (group.sounds.delete(sound)) sound.dispose();
+        lateSounds.clear();
       };
       own(pulse.play({ at, seed, gainDb: -12 * (1 - strength) }));
       for (const value of returns)
         own(
-          reflection.play({
+          soundFor(false, value.material).play({
             at: value.at,
-            // Recreate the emitted rim and noise, including their exact variation.
+            // The emission seed keeps each material strike reproducible.
             seed,
             pan: value.pan,
             gainDb: gain(value),
-            parameters: { surface: value.surface, distance: value.distance },
+            parameters: { distance: value.distance },
           }),
         );
       if (returns.length) {
@@ -146,7 +178,7 @@ export function createEchoProbe(audio: AudioEngine) {
             0;
           const variation = grainSeed / 0x100000000;
           own(
-            diffusion.play({
+            soundFor(true, value.material).play({
               at: latest + 0.11 + index * 0.073 + variation * 0.027,
               seed: grainSeed,
               pan: bound(
@@ -155,9 +187,11 @@ export function createEchoProbe(audio: AudioEngine) {
                 -1,
                 1,
               ),
-              gainDb: Math.max(-60, gain(value) - 7 - index * 2.5),
+              gainDb: Math.max(
+                -60,
+                gain(value) - 12 - index * 3 + materials[value.material].lateDb,
+              ),
               parameters: {
-                surface: value.surface,
                 distance: bound(value.distance + index * 0.12),
               },
             }),

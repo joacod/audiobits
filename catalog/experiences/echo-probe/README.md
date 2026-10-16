@@ -57,29 +57,30 @@ export async function dispose() {
 After activation, `emit()` accepts up to six reflections. Distance, intensity,
 surface, and optional emission strength are normalized to `[0, 1]`; stereo pan
 is `[-1, 1]`. Finite out-of-range inputs clamp, nonfinite values become zero.
-Surface runs from dark/absorbent to bright/resonant. It controls a material filter
-with fixed resonance, independently of distance. Distance controls arrival,
-propagation loss, and a separate damping filter. Intensity sets reflection strength;
-pan sets stereo placement. These are stylized acoustics, not meters or a room
-simulation. The same material filter is used at every distance.
+Each reflection plays one of three materials: `wood` knocks short and dry,
+`metal` rings long with slow beating, and `glass` shimmers high. Pass an optional
+`material` to choose one. Without it (or with an unknown value), `surface`
+selects it: below 0.3 is wood, below 0.75 is metal, otherwise glass. Each material
+has its own exciter, resonant partials, decay, and echo. Distance controls
+arrival, propagation loss, and a damping filter, without retuning the material.
+Intensity sets reflection strength; pan sets stereo placement. These are stylized
+acoustics, not meters or a room simulation.
 
 `echo.emit(reflections, { strength: 0.8, seed: 42 })` returns an emission with
 audio-clock `at`, normalized `reflections` with their scheduled `at` times,
 `ended`, and `stop()`. The pulse begins 12 ms ahead of the audio clock; early
-returns follow it by `0.09 + distance * 0.9` seconds. Each early return regenerates
-the emitted layers with the same seed, including rim variation and noise.
+returns follow it by `0.09 + distance * 0.9` seconds. Each early return strikes
+its material with the emission seed, so the same emission replays identically.
 Native oscillator phase can vary with scheduled start time; this is deterministic
-resynthesis, not a sample-identical delayed recording.
+synthesis, not a sample-identical delayed recording.
 
 Three quiet late grains follow the last early return by 110 to 283 ms, with
 seeded timing, alternating stereo spread, spectral damping, and falling gain.
-Each grain blends 78% of its filtered signal with one 22% native delayed copy,
-41 to 67 ms later according to propagation distance. No feedback is used. The
-copy preserves that grain's body and air instead of introducing another seed
-or pitched note. Material and propagation filters precede delay; there is no
-per-repeat damping. These micro echoes belong to the diffuse field, not to the
-scheduled early surface events. The grains share the reflectors' material
-character and remain silent between emissions.
+Each grain replays its reflector's material through that material's own native
+echo: wood repeats after 55 to 85 ms with little feedback, glass after 130 to
+190 ms, and metal after 240 to 320 ms with the most feedback and late energy.
+Early returns stay dry, so the echo belongs to the diffuse field rather than to
+the scheduled surface events. Grains remain silent between emissions.
 There is no atmospheric loop. Omit reflections to hear the pulse alone.
 Use scheduled times for application feedback, while accounting for cancellation
 when a newer emission takes priority. Read-only `cancelledAt` is `null` until
@@ -90,11 +91,12 @@ and may finish their existing visual decay. Scheduled `reflections` stay immutab
 No JavaScript timer schedules sound.
 
 There are at most two foreground emissions and one releasing group, six early
-returns and three late grains per emission: ten voices and 34 source nodes per
-full group. Three delay voices also own one silent lifetime clock each and
-four delay-processing nodes each, with at most 201 ms of mono delay storage
-per group. At most 30 voices, 102 synthesis sources and nine lifetime clocks
-are owned by this controller.
+returns and three late grains per emission: ten voices per full group. Sources
+per voice are two for the pulse, four for wood, six for glass, and seven for
+metal, so an all-metal group uses at most 65 synthesis sources. The three late
+voices also own one silent lifetime clock each and four delay-processing nodes
+each, with at most 960 ms of mono delay storage per group. At most 30 voices,
+195 synthesis sources and nine lifetime clocks are owned by this controller.
 The example's 32-voice engine leaves two voices for other users. Smaller engine
 limits or additional shared sounds can still cause engine voice stealing.
 
@@ -102,8 +104,9 @@ At 120 ms intervals, new emissions cancel older pending late energy first.
 Late voices use an emission-owned sound whose disposal immediately cuts its
 pending grains and native repeats. A third foreground emission releases the
 oldest group, cancelling its future
-returns and fading its audible voices. Early releases are bounded to 40 ms plus a
-50 ms filter tail, shorter than the admission interval. Expired retiring groups
+returns and fading its audible voices. Early returns have no delay, so their
+releases are bounded to 20 ms plus a 50 ms filter tail, inside the 90 ms reclaim
+and shorter than the admission interval. Expired retiring groups
 can be reclaimed on the audio clock even if ended delivery is delayed.
 
 Calls before activation, during the 120 ms cooldown, at zero strength, or after
@@ -121,36 +124,24 @@ gesture. See the [lifecycle guide](https://www.audiobits.dev/docs/lifecycle).
 
 ## Sound and showcase source
 
-`echoProbe` combines a struck body, bending rim, pressure transient, and air edge.
-`probeReturn` preserves those layers with independent material and propagation
-filters. `probeReflection`, the provisional default, adds resonance to that
-material filter without adding a separately pitched answering note.
-`probeDiffusion` supplies two-layer late grains with native delay after the
-material and propagation filters. The provisional hybrid leaves the recognizable
-early returns unchanged and thickens only the quiet late field. It does not
-replace per-surface orchestration with equally spaced echoes.
+`echoProbe` combines a struck body and an air edge. `materials` describes wood,
+glass, and metal: exciter, partials, decay, distance damping, and echo.
+`probeReturns` holds one dry early return per material and `probeEchoes` the
+same voices with their native echo for late grains. `materialFor(surface)`
+maps a legacy surface value to a material.
 
 Try the [showcase](https://www.audiobits.dev/catalog/echo-probe).
 The [repository acoustic bench](https://github.com/joacod/audiobits/tree/main/catalog/experiences/echo-probe)
-keeps the original PR #100 reference, plain pulse returns, the PR #102 resonant
-resynthesis, native early delay, and the production hybrid available for review.
-Select a composition, remember it, then change one control and alternate the
-audition buttons. Seed, distance, material, strength, and direction remain fixed
-unless you change them. Return-energy matching keeps the dry pulse unchanged
-and bounds output headroom. Disable it for propagation loss or strength checks;
-it helps comparison but does not prove equal perceived loudness.
-
-Compare resynthesis and hybrid with the grain cluster enabled to hear the added
-short copies. Early-only playback is intentionally identical for those two modes.
-The native early option uses supported fully wet recipe delays, the same filters,
-and the same seeded layers starting at the emission time. Each surface needs a
-separate excitation voice: the public API does not route one voice to multiple
-independently filtered and panned delay taps. It therefore saves no synthesis
-sources, and its natural Stop would preserve pending echoes. This makes it a
-less suitable default for the current per-surface cancellation contract.
+keeps the original PR #100 reference and the production materials available for
+review. Select a composition and material, remember it, then change one control
+and alternate the audition buttons. Seed, distance, material, strength, and
+direction remain fixed unless you change them. Return-energy matching keeps the
+dry pulse unchanged and bounds output headroom. Disable it for propagation loss
+or strength checks; it helps comparison but does not prove equal perceived
+loudness.
 
 The original reference retains its material/distance coupling and noise wash.
-The rapid button exercises the production hybrid for twelve emissions at
+The rapid button exercises the production materials for twelve emissions at
 audio-clock intervals of at least 120 ms. Stop invalidates pending auditions and
 cancels playback. Run it with the
 [catalog demo setup](https://github.com/joacod/audiobits/blob/main/catalog/README.md#optional-standalone-demo).
@@ -162,4 +153,4 @@ The [website stage source](https://github.com/joacod/audiobits/blob/main/apps/ww
 owns pointer mapping, reflectors, and timing feedback. Automated Chromium signal
 and lifecycle checks establish technical behavior, not listening quality or
 physical-device compatibility. Final resonance, material balance, diffuse texture,
-and preference for the provisional hybrid require the owner's listening review.
+and the wood, metal, and glass voicing require the owner's listening review.
