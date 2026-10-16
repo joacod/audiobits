@@ -72,25 +72,29 @@ pnpm --filter @audiobits/vanilla dev
 
 ## Root commands
 
-| Command                | Behavior                                                             |
-| ---------------------- | -------------------------------------------------------------------- |
-| `pnpm dev`             | Initial library build, library watch, and site server                |
-| `pnpm build:lib`       | Library ESM and declarations                                         |
-| `pnpm build:mcp`       | Independent local stdio MCP server build                             |
-| `pnpm build:skill`     | Bundle optional MCP executable and licenses into the official Skill  |
-| `pnpm check:skill`     | Fail on stale committed Skill executable or dependency licenses      |
-| `pnpm build:site`      | Library build followed by site build                                 |
-| `pnpm build`           | Library, site, and vanilla production builds                         |
-| `pnpm typecheck`       | Build library, generate site types, check all workspaces             |
-| `pnpm lint`            | ESLint, formatting, Markdown/MDX files and documentation routes      |
-| `pnpm format`          | Format in-scope source/configuration/onboarding files                |
-| `pnpm test`            | Supervisor, recipe/runtime/release checks; schema/metadata drift     |
-| `pnpm test:package`    | Build, pack, isolated types/imports, tree-shaking and Chromium hosts |
-| `pnpm test:mcp`        | Offline MCP units and stdio protocol with packed external runtime    |
-| `pnpm test:mcp:github` | Explicit live GitHub source retrieval through the MCP protocol       |
-| `pnpm test:browser`    | Production builds, Chromium audio signal/lifecycle and UI checks     |
-| `pnpm release:prepare` | Explicit release only: quality, Chromium and package rehearsal       |
-| `pnpm changeset`       | Record published-package changes, including relevant docs/metadata   |
+| Command                   | Behavior                                                             |
+| ------------------------- | -------------------------------------------------------------------- |
+| `pnpm dev`                | Initial library build, library watch, and site server                |
+| `pnpm build:lib`          | Library ESM and declarations                                         |
+| `pnpm build:mcp`          | Independent local stdio MCP server build                             |
+| `pnpm build:skill`        | Bundle optional MCP executable and licenses into the official Skill  |
+| `pnpm check:skill`        | Fail on stale committed Skill executable or dependency licenses      |
+| `pnpm build:site`         | Library build followed by site build                                 |
+| `pnpm build`              | Library, site, and vanilla production builds                         |
+| `pnpm typecheck`          | Build library, generate site types, check all workspaces             |
+| `pnpm lint`               | ESLint, formatting, Markdown/MDX files and documentation routes      |
+| `pnpm format`             | Format in-scope source/configuration/onboarding files                |
+| `pnpm test`               | Supervisor, recipe/runtime/release checks; schema/metadata drift     |
+| `pnpm test:package`       | Build, pack, isolated types/imports, tree-shaking and Chromium hosts |
+| `pnpm test:mcp`           | Offline MCP units and stdio protocol with packed external runtime    |
+| `pnpm test:mcp:github`    | Explicit live GitHub source retrieval through the MCP protocol       |
+| `pnpm verify:local`       | Shared non-browser CI preflight, including library build             |
+| `pnpm hooks:install`      | One-time local staged formatting/lint hook installation              |
+| `pnpm test:browser:smoke` | Build and run critical Chromium tests, fail fast                     |
+| `pnpm test:browser:full`  | Build and run all retained Chromium regressions                      |
+| `pnpm test:browser`       | Compatible alias for full Chromium verification                      |
+| `pnpm release:prepare`    | Explicit release only: quality, Chromium and package rehearsal       |
+| `pnpm changeset`          | Record published-package changes, including relevant docs/metadata   |
 
 For stdio client setup and the consumer project boundary, see
 [local MCP development](../tools/mcp/README.md).
@@ -98,9 +102,30 @@ For stdio client setup and the consumer project boundary, see
 For browser checks, install the browser matching the pinned Playwright version:
 
 ```sh
-pnpm exec playwright install chromium
-pnpm test:browser
+pnpm exec playwright install --only-shell chromium
+pnpm test:browser:smoke
 ```
+
+## Local hooks and preflight
+
+Run `pnpm hooks:install` once per clone with the supported Node and pnpm on PATH.
+The repository-local pre-commit hook uses Git, Node, ESLint and Prettier, without
+an extra framework. It checks relevant staged contents, including partially
+staged files, without rewriting or staging edits. Deleted and ignored files are
+excluded. Format/lint failures require fixing and staging the intended changes.
+An existing custom `core.hooksPath` is preserved; integrate
+`node scripts/check-staged.mjs` there instead. Uninstall with
+`git config --local --unset core.hooksPath` if it points to `.githooks`.
+The hook uses a POSIX shell (macOS/Linux or Git's shell); other environments have
+not been verified. No slow pre-push hook is installed.
+
+Before code PRs, run `pnpm verify:local` and affected browser/package checks.
+CI uses the same preflight. For prepared, unchanged outputs, `:prepared` commands
+avoid rebuilding: run `pnpm prepare:browser` once, then
+`pnpm test:browser:smoke:prepared`, `pnpm test:browser:full:prepared` or a focused
+`pnpm exec playwright test <file>`. `pnpm test:package:prepared` requires a current
+library build. These shortcuts never check output freshness; rebuild after
+source changes. CI keeps two workers to bound native audio/graphics contention.
 
 ## Verification by task
 
@@ -123,7 +148,9 @@ Follow the [browser policy](validation.md#browser-policy). Do not provision
 compatibility infrastructure or investigate unrelated failures for ordinary work.
 Full release preparation is reserved for an explicit release request.
 
-Pull requests and pushes to `main` run quality and full Chromium integration.
+Pull requests run quality/build, packed consumers and Chromium smoke checks.
+Pushes to `main` run quality; the release gate retains full Chromium verification.
+[Test selection and tiers](validation.md#test-selection) are authoritative.
 The independent package publication flow is described in the
 [release guide](releases.md).
 

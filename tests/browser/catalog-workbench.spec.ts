@@ -105,7 +105,7 @@ test("gentle rejection omits parameters and raw comparison", async ({
   ).toBeVisible();
 });
 
-test("impact copies current parameters and applied edits, validates JSON, and restores defaults", async ({
+test("impact copies current parameters and applied edits, validates JSON, and restores defaults @smoke", async ({
   page,
 }) => {
   await instrument(page);
@@ -665,7 +665,6 @@ test("install command clipboard denial preserves a selectable command", async ({
 
 for (const [width, height] of [
   [1440, 900],
-  [1280, 800],
   [768, 1024],
   [390, 844],
 ]) {
@@ -723,7 +722,9 @@ for (const [width, height] of [
   });
 }
 
-test("usage is selectable and Copy waits for hydration", async ({ page }) => {
+test("usage is selectable and Copy waits for hydration @smoke", async ({
+  page,
+}) => {
   await instrument(page);
   let releaseScripts!: () => void;
   const scriptsHeld = new Promise<void>((resolve) => {

@@ -97,6 +97,8 @@ export const probe = (page: Page) =>
       sources: p.sources.length,
       ended: p.ended,
       connected: p.connected.size,
+      ownedSources: p.sources.filter((source) => p.connected.has(source))
+        .length,
     };
   });
 

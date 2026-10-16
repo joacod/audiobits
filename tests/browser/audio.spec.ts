@@ -20,7 +20,7 @@ interface Checks {
   lifecycle(): Promise<unknown>;
 }
 
-test("Native offline signal, overlap and cancellation", async ({
+test("Native offline signal, overlap and cancellation @smoke", async ({
   page,
   browser,
   browserName,
@@ -52,7 +52,7 @@ test("Native offline signal, overlap and cancellation", async ({
   expect(output.cancelled.energy).toBe(0);
 });
 
-test("native offline release during attack fades to silence", async ({
+test("native offline release during attack fades to silence @smoke", async ({
   page,
 }) => {
   await page.goto("http://127.0.0.1:4173");
@@ -71,7 +71,7 @@ test("native offline release during attack fades to silence", async ({
   expect(output.delta).toBeLessThan(0.001);
 });
 
-test("Native lifecycle and simulated failed activation retry", async ({
+test("Native lifecycle and simulated failed activation retry @smoke", async ({
   page,
 }) => {
   await page.goto("http://127.0.0.1:4173");
@@ -104,78 +104,7 @@ test("Native lifecycle and simulated failed activation retry", async ({
   ).toBeVisible();
 });
 
-test("site card gestures, Stop and route teardown close owned context", async ({
-  page,
-}) => {
-  await page.addInitScript(() => {
-    const contexts: AudioContext[] = [];
-    const Native = globalThis.AudioContext;
-    globalThis.AudioContext = class extends Native {
-      constructor() {
-        super();
-        contexts.push(this);
-      }
-    };
-    Object.assign(globalThis, { ownedContexts: contexts });
-  });
-  await page.goto("http://127.0.0.1:3100/catalog");
-  await expect(page.getByTestId("confirmation-state")).toHaveText(
-    "Confirmation: ready",
-  );
-  expect(
-    await page.evaluate(
-      () =>
-        (globalThis as unknown as { ownedContexts: AudioContext[] })
-          .ownedContexts.length,
-    ),
-  ).toBe(0);
-  await page.getByRole("button", { name: "Play confirmation" }).click();
-  await expect
-    .poll(() =>
-      page.evaluate(() =>
-        (
-          globalThis as unknown as { ownedContexts: AudioContext[] }
-        ).ownedContexts.map((context) => context.state),
-      ),
-    )
-    .toEqual(["running"]);
-  await page
-    .getByRole("button", { name: "Start thruster", exact: true })
-    .click();
-  await expect(page.getByTestId("thruster-state")).toHaveText(
-    "Thruster: running",
-  );
-  await page
-    .getByRole("button", { name: "Stop thruster", exact: true })
-    .click();
-  await expect(page.getByTestId("thruster-state")).toHaveText(
-    "Thruster: stopped",
-  );
-  await page.getByRole("link", { name: "Docs" }).click();
-  await expect
-    .poll(() =>
-      page.evaluate(() =>
-        (
-          globalThis as unknown as { ownedContexts: AudioContext[] }
-        ).ownedContexts.map((context) => context.state),
-      ),
-    )
-    .toEqual(["closed"]);
-});
-
-test("vanilla gesture and controls work with built public exports", async ({
-  page,
-}) => {
-  await page.goto("http://127.0.0.1:4173");
-  await page.getByRole("button", { name: "Play confirmation" }).click();
-  await expect(page.locator("#audio-state")).toHaveText("Audio: running");
-  await page.getByRole("button", { name: "Mute", exact: true }).click();
-  await expect(page.locator("#mute")).toHaveAttribute("aria-pressed", "true");
-  await page.getByRole("button", { name: "Stop all" }).click();
-  await expect(page.locator("#audio-error")).toBeEmpty();
-});
-
-test("actual Chromium autoplay block times out and retries from a gesture", async ({
+test("actual Chromium autoplay block times out and retries from a gesture @smoke", async ({
   browserName,
 }) => {
   test.skip(

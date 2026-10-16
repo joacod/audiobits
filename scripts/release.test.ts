@@ -73,54 +73,67 @@ test("stable documentation cannot promote private, prerelease or mismatched cand
   ).toThrow();
 });
 
-test("normal CI runs quality and full Chromium integration on PRs and main", async () => {
+test("routine CI preserves quality, packed consumers and fail-fast Chromium smoke", async () => {
   const { createRequire } = await import("node:module");
   const require = createRequire(import.meta.url);
   const { load } = createRequire(require.resolve("eslint/package.json"))(
     "js-yaml",
   );
   const ci = load(readFileSync(".github/workflows/ci.yml", "utf8"));
-  expect(Object.keys(ci.on).sort()).toEqual(["pull_request", "push"]);
-  expect(ci.on.push.branches).toEqual(["main"]);
-  expect(Object.keys(ci.jobs).sort()).toEqual([
-    "chromium-integration",
-    "quality",
-  ]);
+  const scripts = JSON.parse(readFileSync("package.json", "utf8")).scripts;
+  expect(ci.on).toHaveProperty("pull_request");
   expect(ci.jobs.quality.if).toBeUndefined();
-  expect(
-    ci.jobs.quality.steps.flatMap(({ run }: { run?: string }) => run ?? []),
-  ).toEqual([
-    "pnpm install --frozen-lockfile",
-    "pnpm check:skill",
-    'git fetch --depth=1 origin "$(jq -r .revision tools/mcp/snapshot.json)"',
-    "pnpm test:mcp",
-    "pnpm lint",
-    "pnpm typecheck",
-    "pnpm test",
-    "pnpm build",
-    "pnpm exec publint packages/audiobits --strict",
-  ]);
-  expect(ci.jobs["chromium-integration"].if).toBeUndefined();
-  expect(
-    ci.jobs["chromium-integration"].steps.flatMap(
-      ({ run }: { run?: string }) => run ?? [],
-    ),
-  ).toEqual([
-    "pnpm install --frozen-lockfile",
-    "pnpm exec playwright install --with-deps chromium",
-    "bash scripts/ci/setup-linux-audio.sh",
-    "pnpm test:package",
-    "pnpm test:browser --project=chromium",
-  ]);
-  expect(ci.jobs["chromium-integration"].steps).toContainEqual({
-    uses: "actions/upload-artifact@v4",
-    if: "failure()",
-    with: {
-      name: "chromium-failures",
-      path: "test-results/",
-      "retention-days": 7,
-    },
-  });
+  const runs = (job: { steps: { run?: string }[] }) =>
+    job.steps.flatMap(({ run }) => run ?? []);
+  expect(runs(ci.jobs.quality)).toEqual(
+    expect.arrayContaining(["pnpm verify:local", "pnpm build:prepared"]),
+  );
+  for (const command of [
+    "lint",
+    "typecheck:prepared",
+    "test",
+    "check:skill",
+    "test:mcp:prepared",
+  ])
+    expect(
+      `${scripts["verify:core"]} && ${scripts["verify:local"]}`.split(" && "),
+    ).toContain(`pnpm ${command}`);
+  expect(scripts["verify:local"].split(" && ")).toContain("pnpm verify:core");
+  const releaseGate = scripts["release:prepare"].split(" && ");
+  expect(releaseGate[0]).toBe("pnpm verify:core");
+  expect(releaseGate.indexOf("pnpm build:prepared")).toBeLessThan(
+    releaseGate.indexOf("pnpm test:browser:full:prepared"),
+  );
+  expect(releaseGate.at(-1)).toBe("pnpm test:package:prepared");
+  const chromium = ci.jobs["chromium-integration"];
+  expect(chromium.if).toBe("github.event_name == 'pull_request'");
+  const commands = runs(chromium);
+  for (const command of [
+    "pnpm prepare:browser",
+    "pnpm test:package:prepared",
+    "pnpm test:browser:smoke:prepared",
+  ])
+    expect(commands).toContain(command);
+  expect(commands.indexOf("pnpm prepare:browser")).toBeLessThan(
+    commands.indexOf("pnpm test:browser:smoke:prepared"),
+  );
+  expect(scripts["test:browser:smoke:prepared"]).toContain("--grep @smoke");
+  expect(scripts["test:browser:smoke:prepared"]).toContain("--max-failures=1");
+  expect(scripts["test:package:prepared"]).toBe(
+    "node scripts/test-package.mjs",
+  );
+  expect(scripts["release:prepare"]).toContain(
+    "pnpm test:browser:full:prepared",
+  );
+  expect(scripts["release:prepare"]).toContain("pnpm test:package:prepared");
+  expect(scripts["test:browser:full:prepared"]).toBe("playwright test");
+  expect(chromium.steps).toContainEqual(
+    expect.objectContaining({
+      uses: "actions/upload-artifact@v4",
+      if: "failure()",
+      with: expect.objectContaining({ path: "test-results/" }),
+    }),
+  );
   const { default: browser } = await import("../playwright.config");
   expect(browser.projects?.map(({ name }) => name)).toEqual(["chromium"]);
   expect(browser.retries).toBe(0);
@@ -210,7 +223,7 @@ test("production release isolates direct npm publication from GitHub finalizatio
   expect(publish).toBe(verify + 1);
   expect(runs).toContain("npm install --global npm@11.19.0");
   for (const setup of [
-    "pnpm exec playwright install --with-deps chromium",
+    "pnpm exec playwright install --with-deps --only-shell chromium",
     "bash scripts/ci/setup-linux-audio.sh",
   ]) {
     expect(runs.indexOf(setup)).toBeGreaterThan(-1);

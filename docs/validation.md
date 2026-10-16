@@ -3,6 +3,49 @@
 Use unit, type, browser and packed-package checks for the affected boundary.
 Automated tests check technical behavior; audible quality is evaluated through curation.
 
+## Test selection
+
+Add or modify tests when they protect meaningful, previously uncovered behavior
+or reproduce an actual regression. New production code alone does not require a
+new test. Prefer the cheapest level that demonstrates the invariant reliably:
+unit tests for validation, compilation, scheduling decisions and ownership
+accounting; Chromium for native signal, activation and browser lifecycle.
+Improve or consolidate existing tests before adding repetitive cases. Explain
+why a new browser test needs native behavior and why existing coverage is
+insufficient, without creating a separate testing document.
+
+Do not add viewport, input-method, audio-parameter or stress permutations without
+a concrete regression risk. Counts and implementation details are not test goals.
+Keep tests deterministic and maintainable. Never weaken legitimate failure
+detection merely to make checks pass.
+
+## Verification tiers
+
+- **Focused local checks:** run affected units, types or Chromium tests. Reuse
+  valid build outputs. `pnpm verify:local` shares CI's non-browser lint, formatting,
+  links, type, unit/contract, Skill and MCP checks. Run it before code PRs;
+  documentation-only edits can use focused static checks.
+- **Routine CI:** quality/build checks, actual packed-package consumers and
+  `pnpm test:browser:smoke`. Native `@smoke` tests cover signal, activation,
+  cancellation, routing, cleanup and representative interaction models. The
+  smoke run stops at the first failure. Quality also runs on `main`; Chromium
+  runs on PRs, avoiding a duplicate merged-main run. Keep required PR checks
+  enabled in branch protection.
+- **Full regression:** `pnpm test:browser:full` (also `pnpm test:browser`) includes
+  smoke plus retained stress, graphics, acoustic comparisons, documentation and
+  layout regressions. Run for explicit verification, broad changes and release
+  preparation. Untagged tests are extended coverage, not disabled tests.
+- **Publishing:** the release gate retains full Chromium and packed-package
+  verification before publishing the verified archive. See [releases](releases.md).
+
+Tests follow exposed behavior. Immersive stages use their actual pointer/touch
+interactions and existing shortcuts; they do not need duplicate action panels or
+new keyboard alternatives to satisfy a checklist. Ordinary navigation, forms,
+documentation and existing controls retain keyboard and focus expectations.
+Shared runtime lifecycle tests plus representative host checks should protect
+common invariants; do not reproduce every lifecycle/stress case for every sound.
+Hooks provide early feedback and never replace focused verification.
+
 ## Browser policy
 
 Current Chromium is the only automated browser verification target. Other
@@ -19,12 +62,12 @@ Compare signal properties within Chromium; native sample identity is not guarant
 | Compiler          | Parameter extrema, reference resolution, automation order, duration/release calculation, seeded choices                |
 | Native signal     | Chromium OfflineAudioContext: finite samples, non-silence, expected duration, energy regions, peak/headroom            |
 | Live engine       | Chromium AudioContext: gesture start, overlap, scheduled cancellation, stop/dispose, pending-start races, voice limits |
-| Site              | Keyboard controls, error recovery, mute/stop, route cleanup, package metadata, example typechecking                    |
+| Site              | Exposed gestures/controls, error recovery, route cleanup, example typechecking                                         |
 | Package           | Built ESM exports, declarations, metadata, tree-shaking check, SSR-safe import, isolated tarball consumer              |
 
 Offline rendering can test signal properties, but not autoplay, actual device
 interruption, page lifecycle, or live context cleanup. Mocks can test race logic,
-but the corresponding public workflow also needs a real browser check.
+with representative real-browser coverage for the corresponding public workflow.
 
 ## Signal and resource invariants
 
@@ -35,9 +78,10 @@ Use these property and resource bounds with documented gain and concurrency.
   below 0 dBFS. Keep quality tuning and resource limits distinct.
 - Active and retiring voice counts obey [voice ownership invariants](architecture.md#bounds-and-mixing).
   After finite tails, stop, or disposal, owned counts return to baseline.
-- Repeatedly trigger/stop 1000 voices in bounded batches in Chromium; no retained
-  voice records or owned connection records after completion. This is a resource
-  regression check, not proof of zero browser-internal memory retention.
+- Retain shared extended Chromium stress checks such as 1000-voice cancellation
+  for owned voice/connection cleanup. Run them when resource behavior changes or
+  during full verification, not for every sound. They do not prove zero
+  browser-internal memory retention.
 - Offline duration matches gate plus release/tail within one render quantum
   where applicable. Check the actual energy falloff with tolerances rather than
   exact sample equality.

@@ -5,6 +5,7 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: 0,
+  workers: 2,
   failOnFlakyTests: !!process.env.CI,
   use: { trace: process.env.CI ? "retain-on-failure" : "off" },
   reporter: "list",

@@ -87,12 +87,11 @@ because their human purposes differ.
   landing composition tests in `landing.spec.ts`.
 - Visual-only changes: lint/typecheck/build plus focused visual inspection.
 - Changed website interaction: run the affected Chromium Playwright test(s).
-- Before pushing interactive showcase changes, search all browser tests for
-  references to removed controls or gestures and run the full Chromium suite
-  locally. Reproduce timing-sensitive graphics checks with software rendering
-  at the viewport used by the committed test. Keep renderer, native audio, and
-  lifecycle assertions intact; bound rendering work rather than increasing
-  timeouts or adding retries.
+- Follow the root [testing policy](../../docs/validation.md#test-selection).
+  When controls or gestures change, search browser tests for stale references
+  and run affected tests. Use the full suite for broad impact or explicit requests.
+  Reproduce timing-sensitive graphics regressions at their committed viewport;
+  preserve meaningful assertions without increasing timeouts or adding retries.
 - Do not run package release gates or compatibility suites for ordinary website
   work.
 

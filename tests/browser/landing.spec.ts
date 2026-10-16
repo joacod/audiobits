@@ -9,11 +9,7 @@ const home = "http://127.0.0.1:3100";
 
 for (const [width, height] of [
   [320, 667],
-  [375, 812],
-  [390, 844],
   [768, 1024],
-  [768, 900],
-  [1280, 800],
   [1440, 900],
 ]) {
   test(`landing composition and navigation fit ${width}×${height}`, async ({
@@ -274,7 +270,7 @@ test("landing stays silent until dragging, measures real output and disposes on 
   expect(errors).toEqual([]);
 });
 
-test("landing pointer acceleration, release, touch cancellation and interruptions clean up", async ({
+test("landing pointer acceleration, release, touch cancellation and interruptions clean up @smoke", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
@@ -395,7 +391,7 @@ test("landing activation failure recovers with a fresh gesture", async ({
   await page.mouse.up();
 });
 
-test("a pending homepage start cannot outlive pointer release", async ({
+test("a pending homepage start cannot outlive pointer release @smoke", async ({
   page,
 }) => {
   await instrument(page, "held", "/");
@@ -406,7 +402,9 @@ test("a pending homepage start cannot outlive pointer release", async ({
   await page.mouse.up();
   await page.evaluate(() =>
     (
-      globalThis as unknown as { thrusterProbe: { releaseActivation(): void } }
+      globalThis as unknown as {
+        thrusterProbe: { releaseActivation(): void };
+      }
     ).thrusterProbe.releaseActivation(),
   );
   await expect

@@ -55,6 +55,8 @@ unless explicitly requested.
 
 ## Verification
 
+Follow the authoritative [testing policy](../../docs/validation.md#test-selection).
+
 - Run focused unit/type tests for internal changes.
 - Run affected Chromium integration tests when browser/runtime behavior changes.
 - Package verification is required only when exports/build/distribution change

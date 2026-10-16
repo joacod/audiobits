@@ -130,6 +130,9 @@ function setup(preparationSeconds = 0) {
     calls,
     disposals,
     unsubscribe,
+    setTime(seconds: number) {
+      time = seconds;
+    },
     advance(seconds = 0.12) {
       time += seconds;
     },
@@ -212,6 +215,23 @@ test("strength and direction affect only gain or pan, never timing or material",
   expect(quiet.gainDb).toBeLessThan(first.gainDb!);
   expect({ ...quiet, gainDb: 0 }).toEqual({ ...first, gainDb: 0 });
   expect(capture({}, 0.3).gainDb).toBeLessThan(first.gainDb!);
+});
+
+test("cooldown uses the controller clock, not a caller sample before emit", () => {
+  const s = setup();
+  const callerTime = 10;
+  const controllerTime = callerTime + 128 / 48000;
+  s.setTime(controllerTime);
+  expect(s.control.emit([wall])).not.toBeNull();
+  s.setTime(callerTime + 0.12);
+  expect(s.control.emit([wall])).toBeNull();
+  // Only one group exists: rejection is cooldown, not the three-group bound.
+  expect(s.control.active).toBe(1);
+  s.setTime(controllerTime + 0.12 - 0.000001);
+  expect(s.control.emit([wall])).toBeNull();
+  s.setTime(controllerTime + 0.12);
+  expect(s.control.emit([wall])).not.toBeNull();
+  s.control.dispose();
 });
 
 test("120 ms bursts admit new pulses, cancel late energy first, and bound delayed cleanup", async () => {

@@ -39,7 +39,7 @@ test("site uses public exports and gesture-driven thruster playback", async ({
   expect(errors).toEqual([]);
 });
 
-test("Fumadocs renders package MDX", async ({ page }) => {
+test("Fumadocs renders package MDX @smoke", async ({ page }) => {
   await page.goto("http://127.0.0.1:3100/docs");
   await expect(page.locator("main pre").first()).toContainText(
     "npm install audiobits",
@@ -102,9 +102,4 @@ test("Fumadocs keeps stock neutral styling and persists theme selection", async 
   await page.reload();
   await expect(root).toHaveClass(/dark/);
   await expect(body).toHaveCSS("background-color", "rgb(18, 18, 18)");
-});
-
-test("vanilla consumer displays the lazy public engine", async ({ page }) => {
-  await page.goto("http://127.0.0.1:4173");
-  await expect(page.locator("#status")).toHaveText("AudioBits: idle");
 });

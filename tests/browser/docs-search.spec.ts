@@ -101,7 +101,7 @@ for (const { query, path, title } of queries) {
   });
 }
 
-test("search indexes MDX body content and headings with working anchors", async ({
+test("search indexes MDX body content and headings with working anchors @smoke", async ({
   request,
   page,
 }) => {

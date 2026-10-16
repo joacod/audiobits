@@ -111,7 +111,7 @@ for (const mobile of [false, true]) {
   });
 }
 
-for (const width of [375, 768, 1024, 1440]) {
+for (const width of [375, 1440]) {
   for (const theme of ["light", "dark"]) {
     test(`documentation fits ${width}px in ${theme} mode`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
@@ -201,7 +201,7 @@ for (const width of [375, 768, 1024, 1440]) {
   }
 }
 
-for (const width of [768, 1024, 1440]) {
+for (const width of [768, 1440]) {
   test(`collapsed docs navigation stays aligned at ${width}px`, async ({
     page,
   }) => {

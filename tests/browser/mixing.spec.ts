@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 import { resolve } from "node:path";
 import { instrument, probe } from "./experience-probe";
 
-test("native offline bus gain and mute fade to silence", async ({
+test("native offline bus gain and mute fade to silence @smoke", async ({
   page,
   browser,
 }) => {
@@ -69,7 +69,7 @@ test("native offline bus gain and mute fade to silence", async ({
     `Mixing signal ${browser.browserType().name()} ${browser.version()}: ${JSON.stringify(results)}`,
   );
 });
-test("native combined routing stress returns to bus and engine baselines", async ({
+test("native combined routing stress returns to bus and engine baselines @smoke", async ({
   page,
 }) => {
   await page.goto("http://127.0.0.1:4173");

@@ -10,7 +10,7 @@ concurrency:
 jobs:
   select-mode:
     if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
     outputs:
@@ -27,7 +27,7 @@ jobs:
   version:
     needs: select-mode
     if: needs.select-mode.outputs.mode == 'version'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
       pull-requests: write
@@ -45,7 +45,7 @@ jobs:
   publish:
     needs: select-mode
     if: needs.select-mode.outputs.mode == 'publish'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       id-token: write
@@ -61,7 +61,7 @@ jobs:
           package-manager-cache: false
       - run: npm install --global npm@11.19.0
       - run: pnpm install --frozen-lockfile
-      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm exec playwright install --with-deps --only-shell chromium
       - run: bash scripts/ci/setup-linux-audio.sh
       - run: pnpm release:prepare
       - name: Verify retained release artifact
@@ -79,7 +79,7 @@ jobs:
           retention-days: 7
   github-release:
     needs: publish
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
       contents: write

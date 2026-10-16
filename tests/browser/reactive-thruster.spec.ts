@@ -94,7 +94,7 @@ const probe = (page: Page) =>
     };
   });
 
-test("native pointer velocity, stationary idle, live controls, impact coexistence, release and teardown", async ({
+test("native pointer velocity, stationary idle, live controls, impact coexistence, release and teardown @smoke", async ({
   page,
 }) => {
   await instrument(page);

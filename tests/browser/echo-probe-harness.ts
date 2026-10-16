@@ -238,7 +238,7 @@ async function probeComparisons() {
   };
 }
 
-async function probeRapid() {
+async function probeRapid(count = 40) {
   const audio = createAudio({ maxVoices: 32, maxVoicesPerSound: 16 });
   const control = createEchoProbe(audio);
   await audio.start();
@@ -258,9 +258,11 @@ async function probeRapid() {
   const detach = audio.native.connect(meter);
   const samples = new Float32Array(meter.fftSize);
   let peak = 0;
-  for (let i = 0; i < 40; i++) {
-    const at = context.currentTime;
+  for (let i = 0; i < count; i++) {
     last = control.emit(walls, { seed: 42 + i });
+    // This sample bounds the controller's internal clock read from above.
+    // Sampling before emit can cross a render quantum and undershoot cooldown.
+    const at = context.currentTime;
     if (last) accepted++;
     maximum = Math.max(maximum, audio.counts.active);
     const native = (
