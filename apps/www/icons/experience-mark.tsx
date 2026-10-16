@@ -1,3 +1,5 @@
+import { SoundMark } from "./catalog-marks";
+
 export function ExperienceMark({
   kind,
 }: {
@@ -19,7 +21,9 @@ export function ExperienceMark({
         />
       </svg>
     );
-  if (kind === "charge" || kind === "pulse") {
+  if (kind === "pulse")
+    return <SoundMark family="pulse" index={3} className="experience-mark" />;
+  if (kind === "charge") {
     return (
       <svg className="experience-mark" viewBox="0 0 64 64" aria-hidden="true">
         <circle cx="32" cy="32" r="5" fill="currentColor" />

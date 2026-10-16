@@ -133,7 +133,10 @@ export function EnergyChargeDetail() {
                 return;
               pointer.current = event.pointerId;
               event.currentTarget.setPointerCapture(event.pointerId);
-              beginHold();
+              if (event.pointerType !== "touch") beginHold();
+            }}
+            onTouchStart={() => {
+              if (pointer.current !== null) beginHold();
             }}
             onPointerUp={(event) => {
               if (pointer.current === event.pointerId) release();

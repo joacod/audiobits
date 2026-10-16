@@ -1,14 +1,16 @@
 export function SoundMark({
   family,
   index,
+  className = "",
 }: {
   family: "pulse" | "harmonic" | "flow";
   index: number;
+  className?: string;
 }) {
   const shift = index % 4;
   return (
     <svg
-      className={`catalog-mark catalog-mark-${family}`}
+      className={`catalog-mark catalog-mark-${family} ${className}`.trim()}
       viewBox="0 0 64 64"
       aria-hidden="true"
     >

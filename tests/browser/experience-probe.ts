@@ -14,7 +14,8 @@ export async function instrument(
     | "failed"
     | "touch-start"
     | "touch-release"
-    | "touch-source" = "normal",
+    | "touch-source"
+    | "touch-create" = "normal",
   route = "reactive-thruster",
 ) {
   await page.addInitScript((mode) => {
@@ -40,7 +41,7 @@ export async function instrument(
         },
       });
     }
-    if (mode === "touch-source") {
+    if (mode === "touch-source" || mode === "touch-create") {
       window.addEventListener(
         "touchstart",
         () => {
@@ -62,6 +63,7 @@ export async function instrument(
       );
     }
     globalThis.AudioContext = class extends Native {
+      private readonly touchCreated = insideTouchStart;
       constructor() {
         super();
         probe.contexts.push(this);
@@ -121,7 +123,12 @@ export async function instrument(
       }
       get state() {
         if (
-          ["touch-source", "touch-start", "touch-release"].includes(mode) &&
+          [
+            "touch-source",
+            "touch-create",
+            "touch-start",
+            "touch-release",
+          ].includes(mode) &&
           !nativeActivated &&
           super.state !== "closed"
         )
@@ -129,6 +136,11 @@ export async function instrument(
         return super.state;
       }
       resume() {
+        // Model a context created outside the native gesture that stays blocked.
+        if (mode === "touch-create" && !this.touchCreated) {
+          void super.suspend();
+          return new Promise<void>(() => {});
+        }
         if (mode === "touch-source" && !nativeActivated) {
           void super.suspend();
           return new Promise<void>((resolve, reject) =>
