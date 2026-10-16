@@ -145,8 +145,8 @@ function setup() {
     feedback,
   );
   const event = (type: string, props = {}) => {
-    surface.dispatchEvent(
-      Object.assign(new Event(type), {
+    return surface.dispatchEvent(
+      Object.assign(new Event(type, { cancelable: true }), {
         pointerId: 1,
         isPrimary: true,
         button: 0,
@@ -223,7 +223,7 @@ it("reports activation failure and permits a fresh gesture", async () => {
 });
 it("coalesces rapid movement, bounds updates, decays stationary motion, and releases capture", async () => {
   const s = setup();
-  s.event("pointerdown");
+  expect(s.event("pointerdown")).toBe(false);
   s.resolve();
   await settle();
   for (let i = 1; i <= 100; i++) {

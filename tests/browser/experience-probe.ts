@@ -23,6 +23,15 @@ export async function instrument(
     };
     let fail = mode === "failed";
     let touchActivated = false;
+    if (mode === "touch-release") {
+      Object.defineProperty(navigator, "userActivation", {
+        value: {
+          get isActive() {
+            return touchActivated;
+          },
+        },
+      });
+    }
     if (mode === "touch-start" || mode === "touch-release") {
       window.addEventListener(
         mode === "touch-start" ? "touchstart" : "touchend",

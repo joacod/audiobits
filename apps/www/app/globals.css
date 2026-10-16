@@ -63,6 +63,20 @@
     -webkit-touch-callout: none;
     -webkit-user-drag: none;
   }
+  .foundation .audio-gesture-surface[data-audio-activation="release"]::after {
+    content: "Release to enable sound";
+    position: absolute;
+    inset: auto 1rem 1rem;
+    z-index: 2;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--graphite-edge);
+    background: var(--void);
+    color: var(--ink);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1.4;
+    pointer-events: none;
+  }
   .foundation ::selection {
     background: var(--ink);
     color: var(--void);

@@ -218,6 +218,7 @@ export function attachPointerThruster(
         document.hidden
       )
         return;
+      event.preventDefault();
       pointer = event.pointerId;
       previous = {
         x: event.clientX,

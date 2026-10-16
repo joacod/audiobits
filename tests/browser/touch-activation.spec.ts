@@ -1,6 +1,57 @@
 import { expect, test } from "@playwright/test";
 import { instrument, probe } from "./experience-probe";
 
+for (const [route, selector] of [
+  ["/", ".flight-pad"],
+  ["reactive-thruster", ".flight-pad"],
+  ["lightsaber", ".lightsaber-canvas"],
+  ["energy-charge", ".charge-hold"],
+] as const) {
+  test(`${route} unlocks on touch release and starts the next held gesture`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await instrument(page, "touch-release", route);
+    const pad = page.locator(selector);
+    await expect(pad).toHaveAttribute("data-state", "stopped");
+    if (route === "energy-charge") await expect(pad).toBeEnabled();
+    if (route === "lightsaber")
+      await expect(pad).toHaveAttribute("data-renderer", "three");
+    await pad.scrollIntoViewIfNeeded();
+    const box = (await pad.boundingBox())!;
+    const touch = await page.context().newCDPSession(page);
+    const press = () =>
+      touch.send("Input.dispatchTouchEvent", {
+        type: "touchStart",
+        touchPoints: [{ x: box.x + box.width / 2, y: box.y + box.height / 2 }],
+      });
+    await press();
+    await expect(pad).toHaveAttribute("data-audio-activation", "release");
+    expect((await probe(page)).contexts).toEqual([]);
+    await expect(pad).toHaveAttribute("data-state", "stopped");
+    await touch.send("Input.dispatchTouchEvent", {
+      type: "touchEnd",
+      touchPoints: [],
+    });
+    await expect
+      .poll(async () => (await probe(page)).contexts)
+      .toEqual(["running"]);
+    await expect(pad).not.toHaveAttribute("data-audio-activation");
+    expect((await probe(page)).sources).toBe(0);
+    await press();
+    await expect(pad).toHaveAttribute("data-state", "running");
+    expect((await probe(page)).sources).toBeGreaterThan(0);
+    await touch.send("Input.dispatchTouchEvent", {
+      type: "touchEnd",
+      touchPoints: [],
+    });
+    await expect(pad).toHaveAttribute("data-state", "stopped");
+    expect(
+      (await page.getByRole("alert").allTextContents()).join("").trim(),
+    ).toBe("");
+  });
+}
+
 // Keep the initial resume pending until a native touch event retries activation.
 test("a first Echo Probe tap retries blocked activation on touch release", async ({
   page,
