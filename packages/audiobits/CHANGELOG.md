@@ -1,5 +1,11 @@
 # audiobits
 
+## 0.3.3
+
+### Patch Changes
+
+- 855900a: Prime suspended audio output with a silent frame during activation so held interactions can start from the initial touch.
+
 ## 0.3.2
 
 ### Patch Changes
