@@ -218,7 +218,7 @@ export function attachPointerThruster(
         document.hidden
       )
         return;
-      if (event.pointerType !== "touch") event.preventDefault();
+      event.preventDefault();
       pointer = event.pointerId;
       previous = {
         x: event.clientX,

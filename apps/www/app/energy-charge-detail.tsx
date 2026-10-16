@@ -61,8 +61,12 @@ export function EnergyChargeDetail() {
     });
     host.current = current;
     const unbind = pad.current
-      ? bindAudioGestures(pad.current, current.audio, current.stop, (cause) =>
-          setError(recovery(cause)),
+      ? bindAudioGestures(
+          pad.current,
+          current.audio,
+          current.stop,
+          (cause) => setError(recovery(cause)),
+          () => setError(""),
         )
       : undefined;
     return () => {

@@ -14,8 +14,7 @@ export async function instrument(
     | "failed"
     | "touch-start"
     | "touch-release"
-    | "touch-source"
-    | "click" = "normal",
+    | "touch-source" = "normal",
   route = "reactive-thruster",
 ) {
   await page.addInitScript((mode) => {
@@ -29,16 +28,6 @@ export async function instrument(
     };
     let fail = mode === "failed";
     let touchActivated = false;
-    let clickActivated = false;
-    if (mode === "click") {
-      window.addEventListener(
-        "click",
-        (event) => {
-          clickActivated = event.isTrusted;
-        },
-        { capture: true },
-      );
-    }
     let nativeActivated = false;
     let insideTouchStart = false;
     const sourceResumes: (() => void)[] = [];
@@ -132,9 +121,7 @@ export async function instrument(
       }
       get state() {
         if (
-          ["touch-source", "touch-start", "touch-release", "click"].includes(
-            mode,
-          ) &&
+          ["touch-source", "touch-start", "touch-release"].includes(mode) &&
           !nativeActivated &&
           super.state !== "closed"
         )
@@ -142,11 +129,6 @@ export async function instrument(
         return super.state;
       }
       resume() {
-        // Model the observed device policy: a click unlocks this same engine.
-        if (mode === "click" && !clickActivated) {
-          void super.suspend();
-          return new Promise<void>(() => {});
-        }
         if (mode === "touch-source" && !nativeActivated) {
           void super.suspend();
           return new Promise<void>((resolve, reject) =>

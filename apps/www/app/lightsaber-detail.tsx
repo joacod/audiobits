@@ -57,6 +57,7 @@ export function LightsaberDetail() {
           current.audio,
           current.stop,
           reportError,
+          () => setError(""),
         )
       : undefined;
     return () => {
