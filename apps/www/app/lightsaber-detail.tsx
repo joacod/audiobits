@@ -52,12 +52,7 @@ export function LightsaberDetail() {
       : undefined;
     stage.current = display ?? null;
     const unbind = surface.current
-      ? bindAudioGestures(
-          surface.current,
-          current.audio,
-          current.stop,
-          reportError,
-        )
+      ? bindAudioGestures(surface.current, current.audio, current.stop)
       : undefined;
     return () => {
       unbind?.();
@@ -87,7 +82,7 @@ export function LightsaberDetail() {
             {state === "stopped"
               ? "Hold to ignite"
               : state === "starting"
-                ? "Drawing the arc…"
+                ? "Activating audio…"
                 : displayError
                   ? "Move to swing. Release to retract."
                   : "Move. Cut through the field."}

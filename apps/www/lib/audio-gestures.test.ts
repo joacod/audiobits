@@ -13,7 +13,7 @@ it("prepares playback when supported and leaves unsupported navigators usable", 
   expect(session.type).toBe("playback");
 });
 
-it("activates from touchstart before pointerdown and retries without restarting gestures", () => {
+it("retries host activation without starting idle engines or restarting gestures", () => {
   const session = { type: "auto" };
   vi.stubGlobal("navigator", { audioSession: session });
   const surface = Object.assign(new EventTarget(), {
@@ -34,10 +34,12 @@ it("activates from touchstart before pointerdown and retries without restarting 
     surface,
     audio as unknown as AudioEngine,
     stop,
-    vi.fn(),
   );
   surface.dispatchEvent(new Event("touchend"));
   expect(audio.start).not.toHaveBeenCalled();
+  surface.dispatchEvent(new Event("touchstart"));
+  expect(audio.start).not.toHaveBeenCalled();
+  audio.state = "starting";
   const touch = new Event("touchstart", { cancelable: true });
   surface.dispatchEvent(touch);
   expect(audio.start).toHaveBeenCalledOnce();
@@ -83,10 +85,12 @@ it("accepts the first held touch even when transient activation is false", async
     surface,
     audio as unknown as AudioEngine,
     stop,
-    vi.fn(),
   );
   const hold = vi.fn();
-  surface.addEventListener("pointerdown", hold);
+  surface.addEventListener("pointerdown", () => {
+    audio.state = "starting";
+    hold();
+  });
   const press = () =>
     surface.dispatchEvent(
       Object.assign(new Event("pointerdown", { cancelable: true }), {

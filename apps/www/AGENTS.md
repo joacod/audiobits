@@ -73,9 +73,11 @@ because their human purposes differ.
   the requested task.
 - Use `audio-gesture-surface` and `lib/audio-gestures.ts` for interactive sound
   surfaces. Disable selection, native dragging and long-press callouts only there.
-- Capture held pointers and handle release, cancellation and capture loss. Audio
-  activation retries must not restart released gestures. Prepare the shared
-  playback session before activation and use capability checks.
+- Use the same press, hold, drag and release lifecycle for mouse, touch and pen.
+  Capture held pointers and handle cancellation and capture loss. Hosts own
+  activation, errors and pending-state cleanup; shared touch retries must never
+  restart released gestures or leave them stuck. Prepare the shared playback
+  session before activation and use capability checks.
 - Stop on interruptions and preserve hosts on persisted `pagehide`; dispose on
   teardown.
 - Respect reduced motion and responsive behavior. Keep ordinary documentation,

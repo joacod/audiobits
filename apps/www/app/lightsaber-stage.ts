@@ -404,9 +404,10 @@ export function mountBladeStage3D(
     "pointerdown",
     (event) => {
       if (!event.isPrimary || event.button !== 0 || pointer !== null) return;
+      event.preventDefault();
       pointer = event.pointerId;
       surface.setPointerCapture(pointer);
-      surface.focus();
+      surface.focus({ preventScroll: true });
       place(event);
       host.ignite();
       wake();
