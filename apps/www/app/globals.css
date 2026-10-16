@@ -53,6 +53,16 @@
   .foundation * {
     box-sizing: border-box;
   }
+  .foundation .audio-gesture-surface {
+    touch-action: none;
+  }
+  .foundation .audio-gesture-surface,
+  .foundation .audio-gesture-surface * {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-user-drag: none;
+  }
   .foundation ::selection {
     background: var(--ink);
     color: var(--void);

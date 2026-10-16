@@ -61,8 +61,13 @@ export function mountThruster(
   window.addEventListener("blur", stop, { signal: listeners.signal });
   window.addEventListener(
     "pagehide",
-    () => {
-      void dispose().catch(fail);
+    (event) => {
+      if (event.persisted) {
+        stop();
+        void audio.suspend().catch(fail);
+      } else {
+        void dispose().catch(fail);
+      }
     },
     { signal: listeners.signal },
   );
@@ -267,7 +272,14 @@ export function attachPointerThruster(
     { signal: listeners.signal },
   );
   window.addEventListener("blur", stop, { signal: listeners.signal });
-  window.addEventListener("pagehide", dispose, { signal: listeners.signal });
+  window.addEventListener(
+    "pagehide",
+    (event) => {
+      if (event.persisted) stop();
+      else dispose();
+    },
+    { signal: listeners.signal },
+  );
   function dispose() {
     if (disposed) return;
     stop();

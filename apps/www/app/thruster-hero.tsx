@@ -14,6 +14,7 @@ import { ArrowIcon } from "../icons/arrow-icon";
 import { OutputScope } from "./output-scope";
 import { ThrusterRibbons } from "./thruster-ribbons";
 import type { ThrusterTarget } from "./thruster-ribbons";
+import { bindAudioGestures } from "../lib/audio-gestures";
 
 /** Homepage presentation. The portable host owns all sound and pointer mapping. */
 export function ThrusterHero() {
@@ -75,7 +76,17 @@ export function ThrusterHero() {
       },
     });
     host.current = current;
+    const unbind = bindAudioGestures(
+      surface,
+      current.audio,
+      current.stop,
+      (cause) =>
+        setError(
+          `${cause instanceof Error ? cause.message : String(cause)}. Drag again to retry.`,
+        ),
+    );
     return () => {
+      unbind();
       host.current = null;
       void current.dispose().catch(console.error);
     };
@@ -120,7 +131,7 @@ export function ThrusterHero() {
       <div className="thruster-playground">
         <div
           ref={pad}
-          className="flight-pad"
+          className="flight-pad audio-gesture-surface"
           data-state={state}
           role="group"
           aria-label="Drag to fly"

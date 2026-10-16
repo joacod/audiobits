@@ -12,6 +12,7 @@ import { mountThruster } from "../../../catalog/experiences/reactive-thruster/ho
 import { OutputScope } from "./output-scope";
 import { ThrusterRibbons } from "./thruster-ribbons";
 import type { ThrusterTarget } from "./thruster-ribbons";
+import { bindAudioGestures } from "../lib/audio-gestures";
 
 function recovery(cause: unknown) {
   const message = cause instanceof Error ? cause.message : String(cause);
@@ -85,7 +86,14 @@ export function ThrusterDetail() {
       },
     });
     host.current = current;
+    const unbind = bindAudioGestures(
+      surface,
+      current.audio,
+      current.stop,
+      (cause) => setError(recovery(cause)),
+    );
     return () => {
+      unbind();
       host.current = null;
       void current.dispose().catch(console.error);
     };
@@ -118,7 +126,7 @@ export function ThrusterDetail() {
       <div className="catalog-stage catalog-thruster-stage catalog-gesture-stage">
         <div
           ref={pad}
-          className="flight-pad"
+          className="flight-pad audio-gesture-surface"
           data-state={state}
           role="group"
           aria-label="Drag to fly"

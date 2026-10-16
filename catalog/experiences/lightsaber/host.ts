@@ -44,8 +44,13 @@ export function mountLightsaber(feedback: {
   window.addEventListener("blur", stop, { signal: listeners.signal });
   window.addEventListener(
     "pagehide",
-    () => {
-      void dispose().catch(fail);
+    (event) => {
+      if (event.persisted) {
+        stop();
+        void audio.suspend().catch(fail);
+      } else {
+        void dispose().catch(fail);
+      }
     },
     { signal: listeners.signal },
   );

@@ -1,5 +1,6 @@
 import { mountEchoProbe } from "../../../catalog/experiences/echo-probe/host";
 import type { ProbeEmission } from "../../../catalog/experiences/echo-probe/controller";
+import { bindAudioGestures } from "../lib/audio-gestures";
 
 // All environment data and pixel-to-acoustic mapping belongs to this showcase.
 const reflectors = [
@@ -54,6 +55,12 @@ export function mountProbeStage(
   });
   surface.dataset.state = "stopped";
   surface.dataset.ready = "true";
+  const unbind = bindAudioGestures(
+    surface,
+    host.audio,
+    host.stop,
+    feedback.error,
+  );
 
   function circle(x: number, y: number, radius: number) {
     paint!.beginPath();
@@ -260,6 +267,7 @@ export function mountProbeStage(
     async dispose() {
       if (disposed) return;
       disposed = true;
+      unbind();
       listeners.abort();
       resize.disconnect();
       cancelAnimationFrame(frame);

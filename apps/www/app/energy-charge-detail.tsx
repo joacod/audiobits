@@ -10,6 +10,7 @@ import {
 import type { CSSProperties } from "react";
 import { mountEnergyCharge } from "../../../catalog/experiences/energy-charge/host";
 import { ChargeRings } from "./charge-rings";
+import { bindAudioGestures } from "../lib/audio-gestures";
 
 const subscribeHydration = () => () => {};
 
@@ -57,7 +58,13 @@ export function EnergyChargeDetail() {
       },
     });
     host.current = current;
+    const unbind = pad.current
+      ? bindAudioGestures(pad.current, current.audio, current.stop, (cause) =>
+          setError(recovery(cause)),
+        )
+      : undefined;
     return () => {
+      unbind?.();
       endHold();
       host.current = null;
       void current.dispose().catch(console.error);
@@ -110,7 +117,7 @@ export function EnergyChargeDetail() {
           <button
             ref={pad}
             type="button"
-            className="charge-hold"
+            className="charge-hold audio-gesture-surface"
             disabled={!ready}
             aria-label="Hold to charge"
             aria-describedby="charge-help"

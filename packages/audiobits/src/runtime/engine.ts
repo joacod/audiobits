@@ -141,6 +141,7 @@ export function createEngine(
   const taps = new Set<AudioNode>();
   let muted = false;
   let pending: Promise<void> | undefined;
+  let retryStart: (() => void) | undefined;
   let cancelStart: (() => void) | undefined;
   let disposal: Promise<void> | undefined;
   const voices: RecordVoice[] = [];
@@ -357,7 +358,11 @@ export function createEngine(
       } catch (error) {
         return Promise.reject(error);
       }
-      if (pending) return pending;
+      if (pending) {
+        // A touch release may supply activation that the initial press lacked.
+        if (context?.state !== "running") retryStart?.();
+        return pending;
+      }
       if (wantsRunning && state === "running" && context?.state === "running")
         return Promise.resolve();
       wantsRunning = true;
@@ -423,18 +428,28 @@ export function createEngine(
           2000,
         );
       });
-      void resume.then(
-        () => {
-          if (
-            !wantsRunning &&
-            context?.state === "running" &&
-            state !== "disposed"
-          )
-            void context.suspend().catch(() => {});
-        },
-        () => {},
-      );
-      const operation = Promise.race([resume, cancellation, deadline])
+      const resumed = new Promise<void>((resolve, reject) => {
+        const observe = (attempt: Promise<void>) => {
+          void attempt.then(() => {
+            if (
+              !wantsRunning &&
+              context?.state === "running" &&
+              state !== "disposed"
+            )
+              void context.suspend().catch(() => {});
+            resolve();
+          }, reject);
+        };
+        retryStart = () => {
+          try {
+            observe(context!.resume());
+          } catch (cause) {
+            reject(cause);
+          }
+        };
+        observe(resume);
+      });
+      const operation = Promise.race([resumed, cancellation, deadline])
         .then(() => {
           if (token !== generation && state !== "disposed")
             throw new AudioBitsError(
@@ -473,6 +488,7 @@ export function createEngine(
           clearTimeout(activationTimer);
           if (pending === operation) {
             pending = undefined;
+            retryStart = undefined;
             cancelStart = undefined;
           }
         });

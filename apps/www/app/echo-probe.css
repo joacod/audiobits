@@ -7,7 +7,7 @@
     border: 1px solid var(--graphite-edge);
     border-radius: 6px;
     cursor: crosshair;
-    touch-action: manipulation;
+    touch-action: none;
   }
   .foundation .echo-probe-stage:focus-visible {
     outline: 2px solid var(--ink);

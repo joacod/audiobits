@@ -121,6 +121,7 @@ it("starts synchronously, shares the pending operation and retries failures", as
         release = resolve;
       }),
   );
+  context.resume.mockImplementationOnce(() => new Promise<void>(() => {}));
   const first = audio.start();
   expect(factory).toHaveBeenCalledTimes(1);
   expect(context.resume).toHaveBeenCalledTimes(1);
@@ -136,6 +137,44 @@ it("starts synchronously, shares the pending operation and retries failures", as
   context.resume.mockRejectedValueOnce(new Error("blocked"));
   await expect(audio.start()).rejects.toMatchObject({ code: "start-failed" });
   await audio.start();
+  await audio.dispose();
+});
+it("retries a pending native resume synchronously on a later gesture", async () => {
+  const { audio, context } = setup();
+  context.resume.mockImplementationOnce(() => new Promise<void>(() => {}));
+  const first = audio.start();
+  expect(audio.state).toBe("starting");
+  const retry = audio.start();
+  expect(retry).toBe(first);
+  expect(context.resume).toHaveBeenCalledTimes(2);
+  expect(context.state).toBe("running");
+  await retry;
+  expect(audio.state).toBe("running");
+  await audio.dispose();
+});
+it("suspends a late activation retry after startup was cancelled", async () => {
+  const { audio, context } = setup();
+  let resume!: () => void;
+  context.resume.mockImplementationOnce(() => new Promise<void>(() => {}));
+  context.resume.mockImplementationOnce(
+    () =>
+      new Promise<void>((resolve) => {
+        resume = () => {
+          context.state = "running";
+          resolve();
+        };
+      }),
+  );
+  const first = audio.start();
+  const rejected = expect(first).rejects.toMatchObject({
+    code: "start-cancelled",
+  });
+  expect(audio.start()).toBe(first);
+  await audio.suspend();
+  resume();
+  await rejected;
+  expect(context.state).toBe("suspended");
+  expect(audio.state).toBe("suspended");
   await audio.dispose();
 });
 it("invalidates pending resume and closes exactly once", async () => {
