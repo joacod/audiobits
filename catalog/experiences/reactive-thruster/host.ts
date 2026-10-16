@@ -228,13 +228,21 @@ export function attachPointerThruster(
       speed = 0;
       try {
         surface.setPointerCapture(pointer);
-        start(0);
+        // Touch activation belongs to the native touchstart gesture.
+        if (event.pointerType !== "touch") start(0);
         frame = requestAnimationFrame(tick);
       } catch (cause) {
         fail(cause);
       }
     },
     { signal: listeners.signal },
+  );
+  surface.addEventListener(
+    "touchstart",
+    () => {
+      if (pointer !== undefined) start(0);
+    },
+    { passive: true, signal: listeners.signal },
   );
   surface.addEventListener(
     "pointermove",

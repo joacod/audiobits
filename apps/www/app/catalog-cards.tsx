@@ -124,7 +124,7 @@ function CatalogPreview({
   if (entry.category === "bundled")
     return <SoundMark family={entry.preview.family} index={index} />;
   if (entry.preview.family === "pulse")
-    return <SoundMark family="pulse" index={index} />;
+    return <SoundMark family="pulse" index={3} />;
   if (entry.preview.family === "charge")
     return (
       <div

@@ -73,6 +73,14 @@ for (const [width, height] of [
     await expect(page.locator(".landing-experience")).toHaveCount(
       experiences.length,
     );
+    await expect(page.locator(".landing-experience h3")).toHaveText(
+      experiences.map((entry) => entry.title),
+    );
+    await expect(
+      page.locator(
+        '.landing-experience[href="/catalog/echo-probe"] .catalog-mark-pulse',
+      ),
+    ).toBeVisible();
     for (const entry of experiences)
       await expect(
         page.locator(".landing-experience").filter({ hasText: entry.title }),

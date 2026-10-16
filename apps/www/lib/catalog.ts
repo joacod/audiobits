@@ -44,12 +44,12 @@ const experienceEntries = [
     experience: reactiveThrusterExperience,
   },
   { slug: "lightsaber", preview: "blade", experience: lightsaberExperience },
+  { slug: "echo-probe", preview: "pulse", experience: echoProbeExperience },
   {
     slug: "energy-charge",
     preview: "charge",
     experience: energyChargeExperience,
   },
-  { slug: "echo-probe", preview: "pulse", experience: echoProbeExperience },
 ] as const;
 
 export const catalogGroups = [
