@@ -13,6 +13,7 @@ import { OutputScope } from "./output-scope";
 import { ThrusterRibbons } from "./thruster-ribbons";
 import type { ThrusterTarget } from "./thruster-ribbons";
 import { bindAudioGestures } from "../lib/audio-gestures";
+import "./thruster-stage.css";
 
 function recovery(cause: unknown) {
   const message = cause instanceof Error ? cause.message : String(cause);
@@ -86,7 +87,12 @@ export function ThrusterDetail() {
       },
     });
     host.current = current;
-    const unbind = bindAudioGestures(surface, current.audio, current.stop);
+    const unbind = bindAudioGestures(
+      surface,
+      current.audio,
+      current.stop,
+      (cause) => setError(recovery(cause)),
+    );
     return () => {
       unbind();
       host.current = null;
@@ -175,18 +181,7 @@ export function ThrusterDetail() {
       </div>
       <div className="catalog-experience-feedback flight-controls">
         <OutputScope engine={readEngine} active={sampling} signal measured />
-        <div className="catalog-experience-status">
-          <p className="flight-state" role="status">{`Thruster: ${state}`}</p>
-          <button
-            type="button"
-            onClick={() => {
-              setError("");
-              void host.current?.impact();
-            }}
-          >
-            Play impact
-          </button>
-        </div>
+        <p className="flight-state" role="status">{`Thruster: ${state}`}</p>
         <p id="flight-help" className="sr-only">
           Drag to fly. Release to coast.
         </p>

@@ -15,7 +15,7 @@ export async function instrument(
     | "touch-start"
     | "touch-release"
     | "touch-source"
-    | "touch-create" = "normal",
+    | "click" = "normal",
   route = "reactive-thruster",
 ) {
   await page.addInitScript((mode) => {
@@ -29,6 +29,16 @@ export async function instrument(
     };
     let fail = mode === "failed";
     let touchActivated = false;
+    let clickActivated = false;
+    if (mode === "click") {
+      window.addEventListener(
+        "click",
+        (event) => {
+          clickActivated = event.isTrusted;
+        },
+        { capture: true },
+      );
+    }
     let nativeActivated = false;
     let insideTouchStart = false;
     const sourceResumes: (() => void)[] = [];
@@ -41,7 +51,7 @@ export async function instrument(
         },
       });
     }
-    if (mode === "touch-source" || mode === "touch-create") {
+    if (mode === "touch-source") {
       window.addEventListener(
         "touchstart",
         () => {
@@ -63,7 +73,6 @@ export async function instrument(
       );
     }
     globalThis.AudioContext = class extends Native {
-      private readonly touchCreated = insideTouchStart;
       constructor() {
         super();
         probe.contexts.push(this);
@@ -123,12 +132,9 @@ export async function instrument(
       }
       get state() {
         if (
-          [
-            "touch-source",
-            "touch-create",
-            "touch-start",
-            "touch-release",
-          ].includes(mode) &&
+          ["touch-source", "touch-start", "touch-release", "click"].includes(
+            mode,
+          ) &&
           !nativeActivated &&
           super.state !== "closed"
         )
@@ -136,8 +142,8 @@ export async function instrument(
         return super.state;
       }
       resume() {
-        // Model a context created outside the native gesture that stays blocked.
-        if (mode === "touch-create" && !this.touchCreated) {
+        // Model the observed device policy: a click unlocks this same engine.
+        if (mode === "click" && !clickActivated) {
           void super.suspend();
           return new Promise<void>(() => {});
         }

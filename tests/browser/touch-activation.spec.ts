@@ -11,11 +11,7 @@ for (const [route, selector] of [
     page,
   }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    await instrument(
-      page,
-      route === "lightsaber" ? "touch-source" : "touch-create",
-      route,
-    );
+    await instrument(page, "touch-source", route);
     const pad = page.locator(selector);
     await expect(pad).toHaveAttribute("data-state", "stopped");
     if (route === "energy-charge") await expect(pad).toBeEnabled();
@@ -66,57 +62,59 @@ for (const [route, selector] of [
 }
 
 // Keep the initial resume pending until a native touch event retries activation.
-test("a first Echo Probe tap retries blocked activation on touch release", async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.addInitScript(() => {
-    Object.defineProperty(navigator, "audioSession", {
-      value: { type: "auto" },
+for (const mode of ["touch-release", "click"] as const) {
+  test(`a first Echo Probe tap retries blocked activation on ${mode}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.addInitScript(() => {
+      Object.defineProperty(navigator, "audioSession", {
+        value: { type: "auto" },
+      });
     });
+    await instrument(page, mode, "echo-probe");
+    const stage = page.getByRole("group", { name: "Echo Probe stage" });
+    await expect(stage).toHaveAttribute("data-ready", "true");
+    await stage.scrollIntoViewIfNeeded();
+    const box = (await stage.boundingBox())!;
+    const touch = await page.context().newCDPSession(page);
+    await touch.send("Input.dispatchTouchEvent", {
+      type: "touchStart",
+      touchPoints: [{ x: box.x + 90, y: box.y + 100 }],
+    });
+    await expect(stage).toHaveAttribute("data-state", "starting");
+    expect((await probe(page)).contexts).toEqual(["suspended"]);
+    await touch.send("Input.dispatchTouchEvent", {
+      type: "touchEnd",
+      touchPoints: [],
+    });
+    await expect(stage).toHaveAttribute("data-state", "running");
+    expect((await probe(page)).sources).toBeGreaterThan(0);
+    expect(
+      await page.evaluate(
+        () =>
+          (navigator as Navigator & { audioSession: { type: string } })
+            .audioSession.type,
+      ),
+    ).toBe("playback");
+    expect(
+      await stage.evaluate((element) => {
+        const style = getComputedStyle(element);
+        return {
+          select: style.userSelect,
+          touch: style.touchAction,
+          callout: style.getPropertyValue("-webkit-touch-callout"),
+        };
+      }),
+    ).toMatchObject({ select: "none", touch: "none" });
+    expect(
+      await stage.evaluate((element) =>
+        element.dispatchEvent(new Event("contextmenu", { cancelable: true })),
+      ),
+    ).toBe(false);
+    await stage.press("Escape");
   });
-  await instrument(page, "touch-release", "echo-probe");
-  const stage = page.getByRole("group", { name: "Echo Probe stage" });
-  await expect(stage).toHaveAttribute("data-ready", "true");
-  await stage.scrollIntoViewIfNeeded();
-  const box = (await stage.boundingBox())!;
-  const touch = await page.context().newCDPSession(page);
-  await touch.send("Input.dispatchTouchEvent", {
-    type: "touchStart",
-    touchPoints: [{ x: box.x + 90, y: box.y + 100 }],
-  });
-  await expect(stage).toHaveAttribute("data-state", "starting");
-  expect((await probe(page)).contexts).toEqual(["suspended"]);
-  await touch.send("Input.dispatchTouchEvent", {
-    type: "touchEnd",
-    touchPoints: [],
-  });
-  await expect(stage).toHaveAttribute("data-state", "running");
-  expect((await probe(page)).sources).toBeGreaterThan(0);
-  expect(
-    await page.evaluate(
-      () =>
-        (navigator as Navigator & { audioSession: { type: string } })
-          .audioSession.type,
-    ),
-  ).toBe("playback");
-  expect(
-    await stage.evaluate((element) => {
-      const style = getComputedStyle(element);
-      return {
-        select: style.userSelect,
-        touch: style.touchAction,
-        callout: style.getPropertyValue("-webkit-touch-callout"),
-      };
-    }),
-  ).toMatchObject({ select: "none", touch: "none" });
-  expect(
-    await stage.evaluate((element) =>
-      element.dispatchEvent(new Event("contextmenu", { cancelable: true })),
-    ),
-  ).toBe(false);
-  await stage.press("Escape");
-});
+}
 
 test("native touch starts a hold, cancels cleanly and works after a persisted page hide", async ({
   page,
@@ -163,3 +161,72 @@ test("native touch starts a hold, cancels cleanly and works after a persisted pa
   await expect(pad).toHaveAttribute("data-state", "stopped");
   expect((await probe(page)).contexts).toEqual(["running"]);
 });
+
+for (const [route, selector] of [
+  ["reactive-thruster", ".flight-pad"],
+  ["energy-charge", ".charge-hold"],
+  ["lightsaber", ".lightsaber-canvas"],
+] as const) {
+  test(`${route} preserves a native tap to unlock a released hold without replay`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await instrument(page, "click", route);
+    const pad = page.locator(selector);
+    await expect(pad).toHaveAttribute("data-state", "stopped");
+    if (route === "energy-charge") await expect(pad).toBeEnabled();
+    if (route === "lightsaber")
+      await expect(pad).toHaveAttribute("data-renderer", "three");
+    await pad.scrollIntoViewIfNeeded();
+    const box = (await pad.boundingBox())!;
+    const touch = await page.context().newCDPSession(page);
+    const press = () =>
+      touch.send("Input.dispatchTouchEvent", {
+        type: "touchStart",
+        touchPoints: [{ x: box.x + box.width / 2, y: box.y + box.height / 2 }],
+      });
+    await press();
+    await expect(pad).toHaveAttribute("data-state", "starting");
+    await touch.send("Input.dispatchTouchEvent", {
+      type: "touchEnd",
+      touchPoints: [],
+    });
+    await expect(pad).toHaveAttribute("data-state", "stopped");
+    await expect
+      .poll(async () => (await probe(page)).contexts)
+      .toEqual(["running"]);
+    await expect.poll(async () => (await probe(page)).ownedSources).toBe(0);
+    await press();
+    await expect(pad).toHaveAttribute("data-state", "running");
+    await touch.send("Input.dispatchTouchEvent", {
+      type: "touchMove",
+      touchPoints: [{ x: box.x + box.width * 0.8, y: box.y + box.height / 2 }],
+    });
+    const signal = page
+      .locator(
+        route === "energy-charge"
+          ? ".charge-rings"
+          : route === "lightsaber"
+            ? ".lightsaber-canvas"
+            : ".thruster-ribbons canvas",
+      )
+      .first();
+    await expect
+      .poll(async () =>
+        Number(
+          await signal.getAttribute(
+            route === "energy-charge" ? "data-level" : "data-peak",
+          ),
+        ),
+      )
+      .toBeGreaterThan(0);
+    await touch.send("Input.dispatchTouchEvent", {
+      type: "touchCancel",
+      touchPoints: [],
+    });
+    await expect(pad).toHaveAttribute("data-state", "stopped");
+    expect(
+      (await page.getByRole("alert").allTextContents()).join("").trim(),
+    ).toBe("");
+  });
+}

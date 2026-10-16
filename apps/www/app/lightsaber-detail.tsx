@@ -52,7 +52,12 @@ export function LightsaberDetail() {
       : undefined;
     stage.current = display ?? null;
     const unbind = surface.current
-      ? bindAudioGestures(surface.current, current.audio, current.stop)
+      ? bindAudioGestures(
+          surface.current,
+          current.audio,
+          current.stop,
+          reportError,
+        )
       : undefined;
     return () => {
       unbind?.();

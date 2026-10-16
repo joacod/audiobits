@@ -15,6 +15,7 @@ import { OutputScope } from "./output-scope";
 import { ThrusterRibbons } from "./thruster-ribbons";
 import type { ThrusterTarget } from "./thruster-ribbons";
 import { bindAudioGestures } from "../lib/audio-gestures";
+import "./thruster-stage.css";
 
 /** Homepage presentation. The portable host owns all sound and pointer mapping. */
 export function ThrusterHero() {
@@ -76,7 +77,15 @@ export function ThrusterHero() {
       },
     });
     host.current = current;
-    const unbind = bindAudioGestures(surface, current.audio, current.stop);
+    const unbind = bindAudioGestures(
+      surface,
+      current.audio,
+      current.stop,
+      (cause) =>
+        setError(
+          `${cause instanceof Error ? cause.message : String(cause)}. Drag again to retry.`,
+        ),
+    );
     return () => {
       unbind();
       host.current = null;
@@ -103,6 +112,8 @@ export function ThrusterHero() {
     target.current.y = event.clientY - bounds.top;
     target.current.placed = true;
     target.current.engaged = true;
+    event.currentTarget.style.setProperty("--x", `${point.current.x}%`);
+    event.currentTarget.style.setProperty("--y", `${point.current.y}%`);
     wake.current();
   }
   function releasePointer(event: ReactPointerEvent<HTMLDivElement>) {

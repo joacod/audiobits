@@ -55,7 +55,12 @@ export function mountProbeStage(
   });
   surface.dataset.state = "stopped";
   surface.dataset.ready = "true";
-  const unbind = bindAudioGestures(surface, host.audio, host.stop);
+  const unbind = bindAudioGestures(
+    surface,
+    host.audio,
+    host.stop,
+    feedback.error,
+  );
 
   function circle(x: number, y: number, radius: number) {
     paint!.beginPath();
@@ -220,7 +225,7 @@ export function mountProbeStage(
     "pointerdown",
     (event) => {
       if (event.button !== 0 || !event.isPrimary) return;
-      event.preventDefault();
+      if (event.pointerType !== "touch") event.preventDefault();
       surface.focus({ preventScroll: true });
       const box = surface.getBoundingClientRect();
       void emit(

@@ -1,4 +1,4 @@
-import type { AudioEngine } from "audiobits";
+import { AudioBitsError, type AudioEngine } from "audiobits";
 
 /** Request playback audio for explicit sound interactions. */
 export function prepareAudioPlayback() {
@@ -7,11 +7,12 @@ export function prepareAudioPlayback() {
   if (session && session.type !== "playback") session.type = "playback";
 }
 
-/** Retry host-owned activation in native touch events without scheduling sound. */
+/** Activate native taps and retry pending holds without scheduling sound. */
 export function bindAudioGestures(
   surface: HTMLElement,
   audio: AudioEngine,
   stop: () => void,
+  error: (cause: unknown) => void,
 ) {
   const listeners = new AbortController();
   for (const type of ["contextmenu", "dragstart"] as const) {
@@ -34,18 +35,39 @@ export function bindAudioGestures(
   };
   surface.addEventListener(
     "touchstart",
-    (event) => {
-      event.preventDefault();
+    () => {
       prepareAudioPlayback();
       retryActivation();
     },
-    { capture: true, passive: false, signal: listeners.signal },
+    { capture: true, passive: true, signal: listeners.signal },
   );
   surface.addEventListener("touchend", retryActivation, {
     capture: true,
     passive: true,
     signal: listeners.signal,
   });
+  // A native tap can unlock audio where the initial hold cannot. Keep this
+  // activation-only: the host has already cancelled any released gesture.
+  surface.addEventListener(
+    "click",
+    () => {
+      prepareAudioPlayback();
+      if (
+        ["idle", "starting", "suspended", "interrupted"].includes(audio.state)
+      )
+        void audio.start().catch((cause: unknown) => {
+          if (
+            listeners.signal.aborted ||
+            audio.state === "disposed" ||
+            (cause instanceof AudioBitsError &&
+              cause.code === "start-cancelled")
+          )
+            return;
+          error(cause);
+        });
+    },
+    { capture: true, signal: listeners.signal },
+  );
   // An OS interruption can end voices without a pointer release or page hide.
   let previous = audio.state;
   const unsubscribe = audio.subscribe((state) => {
