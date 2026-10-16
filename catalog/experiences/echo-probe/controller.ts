@@ -1,12 +1,30 @@
 import type { AudioEngine, Voice } from "audiobits";
 import {
   echoProbe,
-  materialFor,
-  materials,
-  probeEchoes,
-  probeReturns,
-  type MaterialId,
+  glassEcho,
+  glassReturn,
+  metalEcho,
+  metalReturn,
+  woodEcho,
+  woodReturn,
 } from "./recipe";
+import { materialFor, materials, type MaterialId } from "./materials";
+
+export { echoProbe, materialFor, materials, type MaterialId };
+
+/** Dry early return per material. */
+export const probeReturns = {
+  wood: woodReturn,
+  glass: glassReturn,
+  metal: metalReturn,
+} as const satisfies Record<MaterialId, unknown>;
+
+/** Late grain per material: the same voice with its native echo. */
+export const probeEchoes = {
+  wood: woodEcho,
+  glass: glassEcho,
+  metal: metalEcho,
+} as const satisfies Record<MaterialId, unknown>;
 
 export interface ProbeReflection {
   /** Stylized relative distance [0, 1], not meters. */

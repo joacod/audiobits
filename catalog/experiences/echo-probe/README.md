@@ -1,7 +1,7 @@
 # Echo Probe
 
 Install with `npx shadcn@latest add joacod/audiobits/echo-probe`.
-The item installs `recipe.ts`, `controller.ts`, and this guide under
+The item installs `recipe.ts`, `materials.ts`, `controller.ts`, and this guide under
 `src/sounds/experiences/echo-probe/`. You own the source. `audiobits` is the only
 runtime dependency. Native late repeats require the delay capability declared
 in `audiobits/capabilities.json`; the registry specifies the compatible runtime
@@ -124,11 +124,13 @@ gesture. See the [lifecycle guide](https://www.audiobits.dev/docs/lifecycle).
 
 ## Sound and showcase source
 
-`echoProbe` combines a struck body and an air edge. `materials` describes wood,
-glass, and metal: exciter, partials, decay, distance damping, and echo.
-`probeReturns` holds one dry early return per material and `probeEchoes` the
-same voices with their native echo for late grains. `materialFor(surface)`
-maps a legacy surface value to a material.
+`echoProbe` combines a struck body and an air edge. `materials.ts` describes
+wood, glass, and metal: exciter, partials, decay, distance damping, and echo,
+plus `materialFor(surface)` for legacy surface values. `recipe.ts` builds one
+dry early return per material (`woodReturn`, `glassReturn`, `metalReturn`) and
+the same voices with their native echo for late grains (`woodEcho`,
+`glassEcho`, `metalEcho`). It exports only recipes. `controller.ts` exposes them
+by material as `probeReturns` and `probeEchoes`.
 
 Try the [showcase](https://www.audiobits.dev/catalog/echo-probe).
 The [repository acoustic bench](https://github.com/joacod/audiobits/tree/main/catalog/experiences/echo-probe)
