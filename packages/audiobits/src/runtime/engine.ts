@@ -142,8 +142,45 @@ export function createEngine(
   let muted = false;
   let pending: Promise<void> | undefined;
   let retryStart: (() => void) | undefined;
+  let activationSource: AudioBufferSourceNode | undefined;
+  let activationSourceStarted = false;
   let cancelStart: (() => void) | undefined;
   let disposal: Promise<void> | undefined;
+  function clearActivationSource() {
+    const source = activationSource;
+    if (!source) return;
+    activationSource = undefined;
+    source.onended = null;
+    if (activationSourceStarted) source.stop();
+    activationSourceStarted = false;
+    source.disconnect();
+    source.buffer = null;
+  }
+  function resumeContext() {
+    const native = context!;
+    const resume = native.resume();
+    // A suspended output can require a source started in the same gesture.
+    if (!activated && native.state === "suspended") {
+      try {
+        clearActivationSource();
+        const source = native.createBufferSource();
+        activationSource = source;
+        source.buffer = native.createBuffer(1, 1, native.sampleRate);
+        source.onended = () => {
+          if (activationSource === source) clearActivationSource();
+        };
+        source.connect(native.destination);
+        source.start(0);
+        activationSourceStarted = true;
+      } catch (cause) {
+        // Preserve the setup failure while handling the native promise too.
+        void resume.catch(() => {});
+        clearActivationSource();
+        throw cause;
+      }
+    }
+    return resume;
+  }
   const voices: RecordVoice[] = [];
   const listeners = new Set<(state: AudioState) => void>();
   const emit = (next: AudioState) => {
@@ -392,7 +429,7 @@ export function createEngine(
           buses.set("master", root);
         }
         // Invoke both creation and resume synchronously in the gesture path.
-        resume = context.resume();
+        resume = resumeContext();
       } catch {
         wantsRunning = false;
         emit(context?.state === "closed" ? "closed" : "suspended");
@@ -442,7 +479,7 @@ export function createEngine(
         };
         retryStart = () => {
           try {
-            observe(context!.resume());
+            observe(resumeContext());
           } catch (cause) {
             reject(cause);
           }
@@ -486,6 +523,7 @@ export function createEngine(
         })
         .finally(() => {
           clearTimeout(activationTimer);
+          clearActivationSource();
           if (pending === operation) {
             pending = undefined;
             retryStart = undefined;
@@ -609,6 +647,7 @@ export function createEngine(
       if (disposal) return disposal;
       if (state === "disposed") return Promise.resolve();
       wantsRunning = false;
+      clearActivationSource();
       generation++;
       emit("disposed");
       cancelStart?.();

@@ -60,7 +60,6 @@ export function mountProbeStage(
     host.audio,
     host.stop,
     feedback.error,
-    "tap",
   );
 
   function circle(x: number, y: number, radius: number) {
