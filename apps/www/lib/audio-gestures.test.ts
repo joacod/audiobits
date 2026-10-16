@@ -65,7 +65,7 @@ it("activates from touchstart before pointerdown and retries without restarting 
   ).toBe(true);
 });
 
-it("unlocks on release before accepting a hold when activation is unavailable", async () => {
+it("accepts the first held touch even when transient activation is false", async () => {
   const activation = { isActive: false };
   vi.stubGlobal("navigator", { userActivation: activation });
   const surface = Object.assign(new EventTarget(), {
@@ -97,17 +97,14 @@ it("unlocks on release before accepting a hold when activation is unavailable", 
     );
   press();
   surface.dispatchEvent(new Event("touchstart", { cancelable: true }));
-  expect(hold).not.toHaveBeenCalled();
-  expect(audio.start).not.toHaveBeenCalled();
-  expect(surface.dataset.audioActivation).toBe("release");
-  activation.isActive = true;
-  surface.dispatchEvent(new Event("touchend"));
   await Promise.resolve();
   expect(audio.start).toHaveBeenCalledOnce();
-  expect(surface.dataset.audioActivation).toBeUndefined();
-  expect(hold).not.toHaveBeenCalled();
-  press();
   expect(hold).toHaveBeenCalledOnce();
+  expect(activation.isActive).toBe(false);
+  surface.dispatchEvent(new Event("touchend"));
+  expect(audio.start).toHaveBeenCalledOnce();
+  press();
+  expect(hold).toHaveBeenCalledTimes(2);
   expect(stop).not.toHaveBeenCalled();
   unbind();
 });

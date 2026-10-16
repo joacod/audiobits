@@ -7,11 +7,11 @@ for (const [route, selector] of [
   ["lightsaber", ".lightsaber-canvas"],
   ["energy-charge", ".charge-hold"],
 ] as const) {
-  test(`${route} unlocks on touch release and starts the next held gesture`, async ({
+  test(`${route} starts sound on the first held touch without waiting for release`, async ({
     page,
   }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    await instrument(page, "touch-release", route);
+    await instrument(page, "touch-source", route);
     const pad = page.locator(selector);
     await expect(pad).toHaveAttribute("data-state", "stopped");
     if (route === "energy-charge") await expect(pad).toBeEnabled();
@@ -26,21 +26,30 @@ for (const [route, selector] of [
         touchPoints: [{ x: box.x + box.width / 2, y: box.y + box.height / 2 }],
       });
     await press();
-    await expect(pad).toHaveAttribute("data-audio-activation", "release");
-    expect((await probe(page)).contexts).toEqual([]);
-    await expect(pad).toHaveAttribute("data-state", "stopped");
-    await touch.send("Input.dispatchTouchEvent", {
-      type: "touchEnd",
-      touchPoints: [],
-    });
-    await expect
-      .poll(async () => (await probe(page)).contexts)
-      .toEqual(["running"]);
-    await expect(pad).not.toHaveAttribute("data-audio-activation");
-    expect((await probe(page)).sources).toBe(0);
-    await press();
     await expect(pad).toHaveAttribute("data-state", "running");
-    expect((await probe(page)).sources).toBeGreaterThan(0);
+    await touch.send("Input.dispatchTouchEvent", {
+      type: "touchMove",
+      touchPoints: [{ x: box.x + box.width * 0.8, y: box.y + box.height / 2 }],
+    });
+    const signal =
+      route === "lightsaber"
+        ? pad
+        : page
+            .locator(
+              route === "energy-charge"
+                ? ".charge-rings"
+                : ".thruster-ribbons canvas",
+            )
+            .first();
+    await expect
+      .poll(async () =>
+        Number(
+          await signal.getAttribute(
+            route === "energy-charge" ? "data-level" : "data-peak",
+          ),
+        ),
+      )
+      .toBeGreaterThan(0);
     await touch.send("Input.dispatchTouchEvent", {
       type: "touchEnd",
       touchPoints: [],
@@ -73,7 +82,7 @@ test("a first Echo Probe tap retries blocked activation on touch release", async
     touchPoints: [{ x: box.x + 90, y: box.y + 100 }],
   });
   await expect(stage).toHaveAttribute("data-state", "starting");
-  expect((await probe(page)).sources).toBe(0);
+  expect((await probe(page)).contexts).toEqual(["suspended"]);
   await touch.send("Input.dispatchTouchEvent", {
     type: "touchEnd",
     touchPoints: [],
