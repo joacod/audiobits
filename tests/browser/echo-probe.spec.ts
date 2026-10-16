@@ -95,7 +95,7 @@ test("1000 scheduled voices cancel without retained ownership or touching shared
   });
 });
 
-test("tap, repeated emission, measured output, Escape, interruption and navigation clean up", async ({
+test("tap, repeated emission, measured output, Escape, interruption and navigation clean up @smoke", async ({
   page,
 }) => {
   await instrument(page, "normal", "echo-probe");
@@ -310,57 +310,60 @@ test("controlled compositions compare seeded resynthesis with real filtered dela
     expect(at).toBeGreaterThan(result.earlyAt + 0.11);
 });
 
-test("sustained rapid interaction admits 40 pulses with bounded native sources and cleanup", async ({
-  page,
-}) => {
-  await instrument(page, "normal", "echo-probe");
-  await page.addScriptTag({ path: harness });
-  await page.evaluate(() => {
-    const h = globalThis as unknown as {
-      probeRapid(): Promise<unknown>;
-      rapid: Promise<unknown>;
-    };
-    const button = document.createElement("button");
-    button.textContent = "Run rapid bench";
-    button.onclick = () => {
-      h.rapid = h.probeRapid();
-    };
-    document.body.append(button);
-  });
-  await page.getByRole("button", { name: "Run rapid bench" }).click();
-  const result = await page.evaluate(
-    () =>
-      (
-        globalThis as unknown as {
-          rapid: Promise<{
-            accepted: number;
-            maximum: number;
-            maximumSources: number;
-            groups: number;
-            peak: number;
-            afterStop: { active: number; retiring: number };
-            final: { active: number; retiring: number };
-          }>;
-        }
-      ).rapid,
+for (const count of [8, 40])
+  test(
+    `rapid interaction admits ${count} pulses with bounded native sources and cleanup`,
+    { tag: count === 8 ? "@smoke" : "@extended" },
+    async ({ page }) => {
+      await instrument(page, "normal", "echo-probe");
+      await page.addScriptTag({ path: harness });
+      await page.evaluate((count) => {
+        const h = globalThis as unknown as {
+          probeRapid(count: number): Promise<unknown>;
+          rapid: Promise<unknown>;
+        };
+        const button = document.createElement("button");
+        button.textContent = "Run rapid bench";
+        button.onclick = () => {
+          h.rapid = h.probeRapid(count);
+        };
+        document.body.append(button);
+      }, count);
+      await page.getByRole("button", { name: "Run rapid bench" }).click();
+      const result = await page.evaluate(
+        () =>
+          (
+            globalThis as unknown as {
+              rapid: Promise<{
+                accepted: number;
+                maximum: number;
+                maximumSources: number;
+                groups: number;
+                peak: number;
+                afterStop: { active: number; retiring: number };
+                final: { active: number; retiring: number };
+              }>;
+            }
+          ).rapid,
+      );
+      console.log("Echo Probe rapid", JSON.stringify(result));
+      expect(result.accepted).toBe(count);
+      expect(result.groups).toBeLessThanOrEqual(3);
+      expect(result.maximum).toBeLessThanOrEqual(30);
+      expect(result.maximumSources).toBeLessThanOrEqual(102);
+      expect(result.peak).toBeGreaterThan(0);
+      expect(result.peak).toBeLessThan(0.5);
+      expect(result.afterStop).toEqual({ active: 0, retiring: 0 });
+      expect(result.final).toEqual({ active: 0, retiring: 0 });
+      await expect
+        .poll(async () => {
+          const p = await probe(page);
+          return p.sources - p.ended;
+        })
+        .toBe(0);
+      expect((await probe(page)).connected).toBe(0);
+    },
   );
-  console.log("Echo Probe rapid", JSON.stringify(result));
-  expect(result.accepted).toBe(40);
-  expect(result.groups).toBeLessThanOrEqual(3);
-  expect(result.maximum).toBeLessThanOrEqual(30);
-  expect(result.maximumSources).toBeLessThanOrEqual(102);
-  expect(result.peak).toBeGreaterThan(0);
-  expect(result.peak).toBeLessThan(0.5);
-  expect(result.afterStop).toEqual({ active: 0, retiring: 0 });
-  expect(result.final).toEqual({ active: 0, retiring: 0 });
-  await expect
-    .poll(async () => {
-      const p = await probe(page);
-      return p.sources - p.ended;
-    })
-    .toBe(0);
-  expect((await probe(page)).connected).toBe(0);
-});
 
 test("retirement removes cancelled paths and highlights while sounded returns finish fading", async ({
   page,
@@ -558,7 +561,7 @@ test("retirement removes cancelled paths and highlights while sounded returns fi
   expect(framesAfterDisposal.after).toBe(framesAfterDisposal.before);
 });
 
-test("a new emission cuts sounding native late repeats and preserves shared audio", async ({
+test("a new emission cuts sounding native late repeats and preserves shared audio @smoke", async ({
   page,
 }) => {
   await page.goto("http://127.0.0.1:3100");
@@ -592,7 +595,7 @@ test("a new emission cuts sounding native late repeats and preserves shared audi
   });
 });
 
-test("native late echoes are quiet time-shifted copies of the filtered grain", async ({
+test("native late echoes are quiet time-shifted copies of the filtered grain @smoke", async ({
   page,
 }) => {
   await page.goto("http://127.0.0.1:3100");

@@ -126,7 +126,7 @@ test("every card preview opens its own route with simple breadcrumbs and canonic
   }
 });
 
-test("card Play and Start/Stop use one engine, replace other previews, and dispose on navigation", async ({
+test("card Play and Start/Stop use one engine, replace other previews, and dispose on navigation @smoke", async ({
   page,
 }) => {
   await instrument(page, "normal", "/catalog");
@@ -174,7 +174,7 @@ test("card Play and Start/Stop use one engine, replace other previews, and dispo
   await expectClosed(page);
 });
 
-test("card Stop cancels pending activation before sources start", async ({
+test("card Stop cancels pending activation before sources start @smoke", async ({
   page,
 }) => {
   await instrument(page, "held", "/catalog");
@@ -189,7 +189,9 @@ test("card Stop cancels pending activation before sources start", async ({
     .click();
   await page.evaluate(() =>
     (
-      globalThis as unknown as { thrusterProbe: { releaseActivation(): void } }
+      globalThis as unknown as {
+        thrusterProbe: { releaseActivation(): void };
+      }
     ).thrusterProbe.releaseActivation(),
   );
   await expect
@@ -201,7 +203,9 @@ test("card Stop cancels pending activation before sources start", async ({
   expect((await probe(page)).sources).toBe(0);
 });
 
-test("card activation errors stay local and retry works", async ({ page }) => {
+test("card activation errors stay local and retry works @smoke", async ({
+  page,
+}) => {
   await instrument(page, "failed", "/catalog");
   const card = page.locator("#thruster");
   await card

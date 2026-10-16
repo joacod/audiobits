@@ -28,13 +28,13 @@ and pnpm versions pinned in the repository:
 
 ```sh
 pnpm install --frozen-lockfile
-pnpm exec playwright install chromium
+pnpm exec playwright install --only-shell chromium
 pnpm release:prepare
 ```
 
 On Linux, run [centralized audio setup](../scripts/ci/setup-linux-audio.sh) before
 browser verification. The gate runs lint, typechecking, units, production builds,
-Chromium integration and `test:package`. The package rehearsal includes strict
+full Chromium integration and `test:package`. The package rehearsal includes strict
 publint, archive inventory, a clean offline consumer install, SSR-safe imports,
 TypeScript examples, tree-shaking and packed Chromium host checks.
 

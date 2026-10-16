@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { instrument, probe } from "./experience-probe";
 import { requireOfflineCheckpoints } from "./offline-capabilities";
 
-test("holding grows charge on one voice, releases and tears down", async ({
+test("holding grows charge on one voice, releases and tears down @smoke", async ({
   page,
 }) => {
   await instrument(page, "normal", "energy-charge");
@@ -34,9 +34,9 @@ test("holding grows charge on one voice, releases and tears down", async ({
     await hold.focus();
     await page.keyboard.down("Space");
     await expect(page.locator(".energy-state")).toHaveText("Charge: running");
-    expect(
-      (await probe(page)).sources - (await probe(page)).ended,
-    ).toBeLessThanOrEqual(12);
+    // Two per-sound voices plus one retiring voice, each with four sources.
+    // Native ended delivery can lag disconnection of a stolen voice.
+    expect((await probe(page)).ownedSources).toBeLessThanOrEqual(12);
     await page.keyboard.up("Space");
   }
   await expect
@@ -191,7 +191,7 @@ test("controller usage copying, clipboard denial, narrow touch and reduced motio
   ).toBeVisible();
 });
 
-test("Chromium signal bounds, smooth retargeting, partial/full release and intensity", async ({
+test("Chromium signal bounds, smooth retargeting, partial/full release and intensity @smoke", async ({
   page,
 }) => {
   await page.goto("http://127.0.0.1:4173");

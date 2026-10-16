@@ -96,7 +96,17 @@ accurate. Briefly justify substantial README additions in the relevant PR.
 ## Verification discipline
 
 - Run the smallest check set that can validate the requested change.
-- Follow [browser verification policy](docs/validation.md#browser-policy).
+- Follow the authoritative [testing policy](docs/validation.md#test-selection).
+  New code does not automatically need a test. Protect meaningful uncovered
+  behavior or an actual regression at the cheapest reliable level; use Chromium
+  when native audio or browser lifecycle is essential. Improve existing coverage
+  before adding cases, and explain why a new browser test is needed.
+- Do not expand viewport, input, parameter or stress permutations without a
+  concrete regression risk. Do not add tests for counts, implementation details
+  or generic habits. Keep tests deterministic, maintainable and proportionate.
+- Run `pnpm verify:local` before opening code PRs, plus affected browser/package
+  checks. Documentation-only work may use focused static checks. Hooks do not
+  replace verification, including when bypassed.
 - Do not perform Firefox, WebKit, Safari, device, OS, or compatibility work
   unless explicitly requested.
 - Do not run `release:prepare` or equivalent release gates unless explicitly

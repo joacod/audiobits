@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { resolve } from "node:path";
 import { requireOfflineCheckpoints } from "./offline-capabilities";
 
-test("managed offline linear automation preserves signal without native hold", async ({
+test("managed offline linear automation preserves signal without native hold @smoke", async ({
   page,
 }) => {
   await page.goto("http://127.0.0.1:4173");
@@ -15,7 +15,11 @@ test("managed offline linear automation preserves signal without native hold", a
   const results = await page.evaluate(async () => {
     const helpers = globalThis as unknown as {
       audioChecks: {
-        stopSignal(): Promise<{ energy: number; late: number; delta: number }>;
+        stopSignal(): Promise<{
+          energy: number;
+          late: number;
+          delta: number;
+        }>;
       };
       dynamicSignal(
         rate: number,
@@ -31,7 +35,11 @@ test("managed offline linear automation preserves signal without native hold", a
       mixingSignal(
         rate: number,
         cut: boolean,
-      ): Promise<{ tailEnergy: number; fadeEnergy: number; latePeak: number }>;
+      ): Promise<{
+        tailEnergy: number;
+        fadeEnergy: number;
+        latePeak: number;
+      }>;
       catalogSignal(
         rate: number,
         kind: string,
@@ -72,7 +80,7 @@ test("managed offline linear automation preserves signal without native hold", a
   expect(results.catalog.latePeak).toBe(0);
 });
 
-test("managed live automation cleans up without native hold", async ({
+test("managed live automation cleans up without native hold @smoke", async ({
   page,
 }) => {
   await page.goto("http://127.0.0.1:4173");

@@ -36,7 +36,7 @@ interface Helpers {
   ): Promise<Signal>;
   dynamicLifecycle(): Promise<unknown>;
 }
-test("dynamic offline extrema, seeded replay, loop seams, rapid updates and release at both rates", async ({
+test("dynamic offline extrema, seeded replay, loop seams, rapid updates and release at both rates @smoke", async ({
   page,
   browser,
 }) => {

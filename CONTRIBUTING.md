@@ -50,7 +50,9 @@ updates, consumer verification, and related documentation and metadata.
 
 ## Verify and open a PR
 
-Run `pnpm lint` and the smallest checks relevant to your change:
+Install the optional fast staged-file hook once with `pnpm hooks:install`.
+Before a code PR, run `pnpm verify:local` and the smallest additional checks
+relevant to your change. Documentation-only changes can use focused static checks:
 
 - Runtime or recipe changes: focused unit tests with `pnpm exec vitest run <test-file>`
   and affected Chromium checks.
@@ -59,7 +61,11 @@ Run `pnpm lint` and the smallest checks relevant to your change:
 
 Use [verification by task](docs/development.md#verification-by-task) for commands
 and [validation guidance](docs/validation.md) for evidence expectations.
-Chromium is the automated browser target.
+Chromium is the automated browser target. Routine CI uses
+`pnpm test:browser:smoke`; `pnpm test:browser:full` retains extended regression
+coverage for explicit verification and releases. Follow the authoritative
+[test selection policy](docs/validation.md#test-selection); new code does not
+by itself require additional tests. Hooks do not replace focused checks.
 
 Keep each PR focused on one problem or use case. Describe what changed, why it
 helps, and which checks you ran. Include a Changeset with `pnpm changeset` for

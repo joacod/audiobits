@@ -12,7 +12,7 @@ env:
   NEXT_TELEMETRY_DISABLED: "1"
 jobs:
   quality:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4
@@ -28,17 +28,14 @@ jobs:
           key: ${{ runner.os }}-${{ runner.arch }}-next-${{ hashFiles('.node-version', 'pnpm-lock.yaml') }}-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-${{ runner.arch }}-next-${{ hashFiles('.node-version', 'pnpm-lock.yaml') }}-
-      - run: pnpm check:skill
-      # The snapshot check reads its pinned catalog commit, which a depth-1 checkout does not contain.
+      # The snapshot check reads its pinned catalog commit, absent in depth-1 checkout.
       - run: git fetch --depth=1 origin "$(jq -r .revision tools/mcp/snapshot.json)"
-      - run: pnpm test:mcp
-      - run: pnpm lint
-      - run: pnpm typecheck
-      - run: pnpm test
-      - run: pnpm build
+      - run: pnpm verify:local
+      - run: pnpm build:prepared
       - run: pnpm exec publint packages/audiobits --strict
   chromium-integration:
-    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4
@@ -54,10 +51,11 @@ jobs:
           key: ${{ runner.os }}-${{ runner.arch }}-next-${{ hashFiles('.node-version', 'pnpm-lock.yaml') }}-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-${{ runner.arch }}-next-${{ hashFiles('.node-version', 'pnpm-lock.yaml') }}-
-      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm exec playwright install --with-deps --only-shell chromium
       - run: bash scripts/ci/setup-linux-audio.sh
-      - run: pnpm test:package
-      - run: pnpm test:browser --project=chromium
+      - run: pnpm prepare:browser
+      - run: pnpm test:package:prepared
+      - run: pnpm test:browser:smoke:prepared
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

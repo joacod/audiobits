@@ -17,7 +17,7 @@ async function holdStage(page: Page) {
   return box;
 }
 
-test("held pointer ignition, swept target hits, release retraction and teardown", async ({
+test("held pointer ignition, swept target hits, release retraction and teardown @smoke", async ({
   page,
 }) => {
   // Bound software WebGL's pixel cost while retaining the full gesture and
@@ -411,7 +411,7 @@ test("keyboard alternatives, touch release and cancellation, reduced motion, sou
     .toBe(true);
 });
 
-test("Chromium native signal: five timbres, control extrema, rapid ramps and eight-voice headroom", async ({
+test("Chromium native signal: five timbres, control extrema, rapid ramps and eight-voice headroom @smoke", async ({
   page,
 }) => {
   await page.goto("http://127.0.0.1:4173");

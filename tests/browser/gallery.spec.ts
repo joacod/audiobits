@@ -295,7 +295,7 @@ test("failed gallery activation identifies Retry Play and recovers with a fresh 
   await expect(page.locator(".catalog-transport [role=alert]")).toHaveCount(0);
 });
 
-test("workbench controls stay disabled until hydration owns them", async ({
+test("workbench controls stay disabled until hydration owns them @smoke", async ({
   page,
 }) => {
   await instrument(page);
