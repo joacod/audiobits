@@ -76,15 +76,7 @@ export function ThrusterHero() {
       },
     });
     host.current = current;
-    const unbind = bindAudioGestures(
-      surface,
-      current.audio,
-      current.stop,
-      (cause) =>
-        setError(
-          `${cause instanceof Error ? cause.message : String(cause)}. Drag again to retry.`,
-        ),
-    );
+    const unbind = bindAudioGestures(surface, current.audio, current.stop);
     return () => {
       unbind();
       host.current = null;

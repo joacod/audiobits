@@ -26,6 +26,7 @@ export function EnergyChargeDetail() {
   const host = useRef<ReturnType<typeof mountEnergyCharge> | null>(null);
   const frame = useRef(0);
   const holding = useRef(false);
+  const running = useRef(false);
   const pointer = useRef<number | null>(null);
   const pad = useRef<HTMLButtonElement>(null);
   const progress = useRef(0);
@@ -49,6 +50,7 @@ export function EnergyChargeDetail() {
   useEffect(() => {
     const current = mountEnergyCharge({
       state(value) {
+        running.current = value === "running";
         setState(value);
         if (value === "starting") setError("");
         if (value === "stopped") endHold();
@@ -59,9 +61,7 @@ export function EnergyChargeDetail() {
     });
     host.current = current;
     const unbind = pad.current
-      ? bindAudioGestures(pad.current, current.audio, current.stop, (cause) =>
-          setError(recovery(cause)),
-        )
+      ? bindAudioGestures(pad.current, current.audio, current.stop)
       : undefined;
     return () => {
       unbind?.();
@@ -84,6 +84,11 @@ export function EnergyChargeDetail() {
     let previous: number | undefined;
     function tick(time: number) {
       if (!holding.current) return;
+      if (!running.current) {
+        previous = undefined;
+        frame.current = requestAnimationFrame(tick);
+        return;
+      }
       const elapsed = previous === undefined ? 0 : Math.max(0, time - previous);
       const next = Math.min(1, progress.current + elapsed / 3000);
       publish(next);

@@ -86,12 +86,7 @@ export function ThrusterDetail() {
       },
     });
     host.current = current;
-    const unbind = bindAudioGestures(
-      surface,
-      current.audio,
-      current.stop,
-      (cause) => setError(recovery(cause)),
-    );
+    const unbind = bindAudioGestures(surface, current.audio, current.stop);
     return () => {
       unbind();
       host.current = null;

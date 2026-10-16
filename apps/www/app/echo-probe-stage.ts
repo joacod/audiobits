@@ -55,12 +55,7 @@ export function mountProbeStage(
   });
   surface.dataset.state = "stopped";
   surface.dataset.ready = "true";
-  const unbind = bindAudioGestures(
-    surface,
-    host.audio,
-    host.stop,
-    feedback.error,
-  );
+  const unbind = bindAudioGestures(surface, host.audio, host.stop);
 
   function circle(x: number, y: number, radius: number) {
     paint!.beginPath();
