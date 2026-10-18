@@ -8,7 +8,7 @@ export function prepareAudioPlayback() {
   if (session && session.type !== "playback") session.type = "playback";
 }
 
-/** Prepare gestures and retry existing activation without owning sound intent. */
+/** Activate in native gestures without owning sound intent. */
 export function bindAudioGestures(
   surface: HTMLElement,
   audio: AudioEngine,
@@ -53,12 +53,14 @@ export function bindAudioGestures(
       signal: listeners.signal,
     },
   );
-  const activate = (states: readonly AudioState[]) => {
+  const activate = (states: readonly AudioState[], hostOwnsStart = false) => {
     if (!states.includes(audio.state)) return;
     // A pending host startup owns its own error handling; calling start()
     // still synchronously retries that native activation.
-    if (audio.state === "starting") {
-      void audio.start();
+    if (hostOwnsStart || audio.state === "starting") {
+      // The host joins the engine's pending start in this same event and
+      // reports failure only while its interaction is still current.
+      void audio.start().catch(() => {});
       return;
     }
     // Ignore cancelled gestures, torn-down listeners and disposed engines;
@@ -78,12 +80,13 @@ export function bindAudioGestures(
     (event) => {
       record(event);
       prepare();
-      // A touch host starts in this event after capture. Do not preempt it
-      // with a separate idle/suspended startup and immediately retry resume.
-      // Pointer-driven one-shots may already have a pending activation.
-      activate(["starting"]);
+      // Activate here even before the host establishes its hold. All surfaces
+      // use the native capture listener, including React-managed controls.
+      // The host still owns playback and invalidates it on release/cancel.
+      activate(["idle", "starting", "suspended", "interrupted"], true);
     },
-    { capture: true, passive: true, signal: listeners.signal },
+    // Keep touch dispatch synchronous without cancelling native touch defaults.
+    { capture: true, passive: false, signal: listeners.signal },
   );
   // Touch release alone leaves an idle engine idle, but a pending or resumable
   // hold may supply the activation its press lacked.
