@@ -1,6 +1,10 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { AudioBitsError, type AudioEngine, type AudioState } from "audiobits";
 import { bindAudioGestures, prepareAudioPlayback } from "./audio-gestures";
+import {
+  audioErrorMessage,
+  formatAudioActivationReport,
+} from "./audio-activation-report";
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -131,7 +135,12 @@ it("accepts the first held touch even when transient activation is false", async
 
 it("reports genuine touch activation failures but ignores cancellation and teardown", async () => {
   vi.stubGlobal("navigator", {});
-  const surface = new EventTarget() as HTMLElement;
+  const document = new EventTarget();
+  const surface = Object.assign(new EventTarget(), {
+    ownerDocument: document,
+    getAttribute: () => "Hold to charge",
+    hasPointerCapture: () => false,
+  }) as unknown as HTMLElement;
   let reject!: (cause: unknown) => void;
   const audio = {
     state: "suspended" as AudioState,
@@ -150,11 +159,37 @@ it("reports genuine touch activation failures but ignores cancellation and teard
     vi.fn(),
     error,
   );
+  surface.dispatchEvent(
+    Object.assign(new Event("pointerdown"), {
+      pointerId: 1,
+      pointerType: "touch",
+    }),
+  );
   surface.dispatchEvent(new Event("touchstart", { cancelable: true }));
   const failure = new Error("Activation denied");
   reject(failure);
   await Promise.resolve();
   expect(error).toHaveBeenCalledExactlyOnceWith(failure);
+  // Host failure can drop capture before reporting without a physical release.
+  surface.dispatchEvent(
+    Object.assign(new Event("lostpointercapture"), {
+      pointerId: 1,
+    }),
+  );
+  const report = formatAudioActivationReport(failure, surface);
+  expect(JSON.parse(report)).toMatchObject({
+    error: { name: "Error", message: "Activation denied" },
+    input: { pointersWithoutUpOrCancel: [1], capturedPointers: [] },
+  });
+  // An up outside the pad is observed, but cannot rewrite the captured report.
+  document.dispatchEvent(
+    Object.assign(new Event("pointerup"), { pointerId: 1 }),
+  );
+  expect(
+    JSON.parse(formatAudioActivationReport(failure, surface)).input
+      .pointersWithoutUpOrCancel,
+  ).toEqual([]);
+  expect(JSON.parse(report).input.pointersWithoutUpOrCancel).toEqual([1]);
   error.mockClear();
   surface.dispatchEvent(new Event("touchstart", { cancelable: true }));
   reject(new AudioBitsError("start-cancelled", "Explicit interruption"));
@@ -167,6 +202,9 @@ it("reports genuine touch activation failures but ignores cancellation and teard
   expect(error).not.toHaveBeenCalled();
   surface.dispatchEvent(new Event("touchstart", { cancelable: true }));
   expect(audio.start).toHaveBeenCalledTimes(3);
+  expect(
+    JSON.parse(formatAudioActivationReport(failure, surface)).input,
+  ).toBeUndefined();
 });
 
 it("clears stale activation errors when the engine reaches running", async () => {
@@ -207,5 +245,43 @@ it("clears stale activation errors when the engine reaches running", async () =>
   audio.state = "running";
   notify("running");
   expect(recovered).toHaveBeenCalledOnce();
+  unbind();
+});
+
+it("preserves exact error details and reports audio-session preparation failures", () => {
+  const failure = new DOMException(
+    "Playback session denied",
+    "NotAllowedError",
+  );
+  vi.stubGlobal("navigator", {
+    audioSession: {
+      get type() {
+        return "auto";
+      },
+      set type(_value: string) {
+        throw failure;
+      },
+    },
+  });
+  const surface = Object.assign(new EventTarget(), {
+    getAttribute: () => "Hold to charge",
+    hasPointerCapture: () => false,
+  }) as unknown as HTMLElement;
+  const audio = {
+    state: "idle",
+    subscribe: () => () => {},
+  } as unknown as AudioEngine;
+  let report = "";
+  const unbind = bindAudioGestures(surface, audio, vi.fn(), (cause) => {
+    report = formatAudioActivationReport(cause, surface);
+  });
+  surface.dispatchEvent(new Event("pointerdown"));
+  expect(JSON.parse(report).error).toMatchObject({
+    name: "NotAllowedError",
+    message: "Playback session denied",
+  });
+  expect(
+    audioErrorMessage(new AudioBitsError("start-failed", "Exact failure")),
+  ).toBe("AudioBitsError [start-failed]: Exact failure");
   unbind();
 });

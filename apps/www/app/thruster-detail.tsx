@@ -13,14 +13,12 @@ import { OutputScope } from "./output-scope";
 import { ThrusterRibbons } from "./thruster-ribbons";
 import type { ThrusterTarget } from "./thruster-ribbons";
 import { bindAudioGestures } from "../lib/audio-gestures";
+import {
+  audioErrorMessage,
+  formatAudioActivationReport,
+} from "../lib/audio-activation-report";
+import { AudioActivationReport } from "./audio-activation-report";
 import "./thruster-stage.css";
-
-function recovery(cause: unknown) {
-  const message = cause instanceof Error ? cause.message : String(cause);
-  return message.includes("Retry Play")
-    ? "Audio did not start. Drag again to retry."
-    : `${message}. Drag again to retry.`;
-}
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
@@ -46,6 +44,7 @@ export function ThrusterDetail() {
   const [state, setState] = useState("stopped");
   const [active, setActive] = useState(false);
   const [error, setError] = useState("");
+  const [report, setReport] = useState("");
   const readEngine = useCallback(() => host.current?.audio ?? null, []);
   const applyPoint = useCallback(() => {
     const node = craft.current;
@@ -60,6 +59,10 @@ export function ThrusterDetail() {
   useEffect(() => {
     const surface = pad.current;
     if (!surface) return;
+    const reportError = (cause: unknown) => {
+      setError(`${audioErrorMessage(cause)} Drag again to retry.`);
+      setReport(formatAudioActivationReport(cause, surface));
+    };
     const current = mountThruster(surface, {
       state(value) {
         setState(value);
@@ -74,9 +77,7 @@ export function ThrusterDetail() {
           wake.current();
         }
       },
-      error(cause) {
-        setError(recovery(cause));
-      },
+      error: reportError,
       output: setActive,
       throttle(value) {
         target.current.throttle = value;
@@ -91,7 +92,7 @@ export function ThrusterDetail() {
       surface,
       current.audio,
       current.stop,
-      (cause) => setError(recovery(cause)),
+      reportError,
       () => setError(""),
     );
     return () => {
@@ -186,7 +187,7 @@ export function ThrusterDetail() {
         <p id="flight-help" className="sr-only">
           Drag to fly. Release to coast.
         </p>
-        {error ? <p role="alert">{error}</p> : null}
+        <AudioActivationReport error={error} report={report} />
       </div>
     </>
   );

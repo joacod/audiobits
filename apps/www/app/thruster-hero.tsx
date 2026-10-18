@@ -15,6 +15,11 @@ import { OutputScope } from "./output-scope";
 import { ThrusterRibbons } from "./thruster-ribbons";
 import type { ThrusterTarget } from "./thruster-ribbons";
 import { bindAudioGestures } from "../lib/audio-gestures";
+import {
+  audioErrorMessage,
+  formatAudioActivationReport,
+} from "../lib/audio-activation-report";
+import { AudioActivationReport } from "./audio-activation-report";
 import "./thruster-stage.css";
 
 /** Homepage presentation. The portable host owns all sound and pointer mapping. */
@@ -37,6 +42,7 @@ export function ThrusterHero() {
   const [state, setState] = useState("stopped");
   const [active, setActive] = useState(false);
   const [error, setError] = useState("");
+  const [report, setReport] = useState("");
   const readEngine = useCallback(() => host.current?.audio ?? null, []);
   const applyPoint = useCallback(() => {
     craft.current?.style.setProperty("left", `${point.current.x}%`);
@@ -49,6 +55,10 @@ export function ThrusterHero() {
   useEffect(() => {
     const surface = pad.current;
     if (!surface) return;
+    const reportError = (cause: unknown) => {
+      setError(`${audioErrorMessage(cause)} Drag again to retry.`);
+      setReport(formatAudioActivationReport(cause, surface));
+    };
     const current = mountThruster(surface, {
       state(value) {
         setState(value);
@@ -63,10 +73,7 @@ export function ThrusterHero() {
           wake.current();
         }
       },
-      error(cause) {
-        const message = cause instanceof Error ? cause.message : String(cause);
-        setError(`${message}. Drag again to retry.`);
-      },
+      error: reportError,
       output: setActive,
       throttle(value) {
         target.current.throttle = value;
@@ -81,10 +88,7 @@ export function ThrusterHero() {
       surface,
       current.audio,
       current.stop,
-      (cause) =>
-        setError(
-          `${cause instanceof Error ? cause.message : String(cause)}. Drag again to retry.`,
-        ),
+      reportError,
       () => setError(""),
     );
     return () => {
@@ -198,11 +202,11 @@ export function ThrusterHero() {
         >
           {`Thruster: ${state}`}
         </p>
-        {error ? (
-          <p role="alert" className="thruster-error">
-            {error}
-          </p>
-        ) : null}
+        <AudioActivationReport
+          error={error}
+          report={report}
+          className="thruster-error"
+        />
       </div>
       <div className="landing-links thruster-links">
         <Link href="/catalog/reactive-thruster">

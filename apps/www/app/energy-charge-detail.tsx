@@ -11,15 +11,13 @@ import type { CSSProperties } from "react";
 import { mountEnergyCharge } from "../../../catalog/experiences/energy-charge/host";
 import { ChargeRings } from "./charge-rings";
 import { bindAudioGestures } from "../lib/audio-gestures";
+import {
+  audioErrorMessage,
+  formatAudioActivationReport,
+} from "../lib/audio-activation-report";
+import { AudioActivationReport } from "./audio-activation-report";
 
 const subscribeHydration = () => () => {};
-
-function recovery(cause: unknown) {
-  const message = cause instanceof Error ? cause.message : String(cause);
-  return message.includes("Retry Play")
-    ? "Audio did not start. Hold to charge again."
-    : `${message}. Hold to charge again.`;
-}
 
 /** Detail-page host for the catalog Energy Charge controller. One engine. */
 export function EnergyChargeDetail() {
@@ -33,6 +31,7 @@ export function EnergyChargeDetail() {
   const [charge, setCharge] = useState(0);
   const [state, setState] = useState("stopped");
   const [error, setError] = useState("");
+  const [report, setReport] = useState("");
   const ready = useSyncExternalStore(
     subscribeHydration,
     () => true,
@@ -48,6 +47,10 @@ export function EnergyChargeDetail() {
       pad.current.releasePointerCapture(id);
   }, []);
   useEffect(() => {
+    const reportError = (cause: unknown) => {
+      setError(`${audioErrorMessage(cause)} Hold to charge again.`);
+      setReport(formatAudioActivationReport(cause, pad.current));
+    };
     const current = mountEnergyCharge({
       state(value) {
         running.current = value === "running";
@@ -55,9 +58,7 @@ export function EnergyChargeDetail() {
         if (value === "starting") setError("");
         if (value === "stopped") endHold();
       },
-      error(cause) {
-        setError(recovery(cause));
-      },
+      error: reportError,
     });
     host.current = current;
     const unbind = pad.current
@@ -65,7 +66,7 @@ export function EnergyChargeDetail() {
           pad.current,
           current.audio,
           current.stop,
-          (cause) => setError(recovery(cause)),
+          reportError,
           () => setError(""),
         )
       : undefined;
@@ -176,7 +177,7 @@ export function EnergyChargeDetail() {
       <div className="catalog-experience-feedback energy-controls">
         <p id="charge-help">Hold to build. Release to let it ring.</p>
         <p className="energy-state" role="status">{`Charge: ${state}`}</p>
-        {error ? <p role="alert">{error}</p> : null}
+        <AudioActivationReport error={error} report={report} />
       </div>
     </>
   );

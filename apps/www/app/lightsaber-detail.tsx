@@ -11,6 +11,11 @@ import { mountLightsaber } from "../../../catalog/experiences/lightsaber/host";
 import { mountBladeStage3D } from "./lightsaber-stage";
 import "./lightsaber.css";
 import { bindAudioGestures } from "../lib/audio-gestures";
+import {
+  audioErrorMessage,
+  formatAudioActivationReport,
+} from "../lib/audio-activation-report";
+import { AudioActivationReport } from "./audio-activation-report";
 
 const subscribeHydration = () => () => {};
 
@@ -24,14 +29,11 @@ export function LightsaberDetail() {
     () => false,
   );
   const [error, setError] = useState("");
+  const [report, setReport] = useState("");
   const [displayError, setDisplayError] = useState("");
   const reportError = useCallback((cause: unknown) => {
-    const message = cause instanceof Error ? cause.message : String(cause);
-    setError(
-      message.includes("Retry Play")
-        ? "Audio did not start. Hold the stage again to retry."
-        : `${message}. Hold the stage again to retry.`,
-    );
+    setError(`${audioErrorMessage(cause)} Hold the stage again to retry.`);
+    setReport(formatAudioActivationReport(cause, surface.current));
   }, []);
   const reportDisplayError = useCallback(() => {
     setDisplayError(
@@ -104,7 +106,7 @@ export function LightsaberDetail() {
           Keyboard: Enter ignites, arrows move,{" "}
           {displayError ? "" : "Space strikes, "}Escape retracts.
         </p>
-        {error ? <p role="alert">{error}</p> : null}
+        <AudioActivationReport error={error} report={report} />
       </div>
     </>
   );
