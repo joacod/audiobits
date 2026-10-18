@@ -218,7 +218,7 @@ export function attachPointerThruster(
         document.hidden
       )
         return;
-      event.preventDefault();
+      if (event.pointerType !== "touch") event.preventDefault();
       pointer = event.pointerId;
       previous = {
         x: event.clientX,
@@ -228,13 +228,21 @@ export function attachPointerThruster(
       speed = 0;
       try {
         surface.setPointerCapture(pointer);
-        start(0);
+        // Keep touch intent/capture, but create and resume audio only in touchstart.
+        if (event.pointerType !== "touch") start(0);
         frame = requestAnimationFrame(tick);
       } catch (cause) {
         fail(cause);
       }
     },
     { signal: listeners.signal },
+  );
+  surface.addEventListener(
+    "touchstart",
+    () => {
+      if (pointer !== undefined) start(0);
+    },
+    { passive: true, signal: listeners.signal },
   );
   surface.addEventListener(
     "pointermove",
