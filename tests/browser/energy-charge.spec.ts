@@ -87,6 +87,10 @@ for (const mode of ["held", "failed"] as const) {
       exact: true,
     });
     await expect(hold).toBeEnabled();
+    const report = page.getByRole("textbox", {
+      name: "Audio activation report",
+    });
+    let failureReport = "";
     await hold.focus();
     await page.keyboard.down("Space");
     if (mode === "held") {
@@ -108,6 +112,32 @@ for (const mode of ["held", "failed"] as const) {
       await expect(page.locator(".energy-controls [role=alert]")).toContainText(
         "Hold to charge again",
       );
+      await expect(page.locator(".energy-controls [role=alert]")).toContainText(
+        "AudioBitsError [start-failed]: Audio activation failed.",
+      );
+      failureReport = await report.inputValue();
+      expect(JSON.parse(failureReport)).toMatchObject({
+        error: {
+          code: "start-failed",
+          message: "Audio activation failed. Retry Play with a user gesture.",
+        },
+        input: { engineState: "suspended" },
+      });
+      expect(JSON.parse(failureReport).input.events).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ type: "keydown" }),
+          expect.objectContaining({ type: "engine-state", state: "starting" }),
+        ]),
+      );
+      await report.focus();
+      expect(
+        await report.evaluate(
+          (element: HTMLTextAreaElement) =>
+            element.readOnly &&
+            element.selectionStart === 0 &&
+            element.selectionEnd === element.value.length,
+        ),
+      ).toBe(true);
     }
     expect((await probe(page)).sources).toBe(0);
     await page.keyboard.up("Space");
@@ -115,6 +145,7 @@ for (const mode of ["held", "failed"] as const) {
     await page.keyboard.down("Space");
     await expect(page.locator(".energy-state")).toHaveText("Charge: running");
     await expect(page.locator(".energy-controls [role=alert]")).toHaveCount(0);
+    if (mode === "failed") await expect(report).toHaveValue(failureReport);
     await page.evaluate(() => {
       Object.defineProperty(document, "hidden", {
         configurable: true,

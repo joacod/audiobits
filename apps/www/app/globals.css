@@ -419,6 +419,31 @@
     padding: 0.75rem;
     font-size: 0.9rem;
   }
+  .foundation .audio-activation-report {
+    min-width: 0;
+    font-size: 0.9rem;
+  }
+  .foundation .audio-activation-report label {
+    display: block;
+    margin-top: 0.5rem;
+  }
+  .foundation .audio-activation-report textarea {
+    display: block;
+    width: 100%;
+    margin-top: 0.5rem;
+    padding: 0.75rem;
+    border: 1px solid var(--graphite-edge);
+    border-radius: var(--control-radius);
+    background: var(--void);
+    color: var(--ink);
+    font: inherit;
+    font-size: 1rem;
+    line-height: 1.4;
+    resize: vertical;
+    -webkit-user-select: text;
+    user-select: text;
+    -webkit-touch-callout: default;
+  }
   .foundation .play-spark {
     position: relative;
   }

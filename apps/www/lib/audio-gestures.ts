@@ -1,4 +1,5 @@
 import { AudioBitsError, type AudioEngine, type AudioState } from "audiobits";
+import { observeAudioActivation } from "./audio-activation-report";
 
 /** Request playback audio for explicit sound interactions. */
 export function prepareAudioPlayback() {
@@ -16,19 +17,42 @@ export function bindAudioGestures(
   recovered?: () => void,
 ) {
   const listeners = new AbortController();
+  const record = observeAudioActivation(surface, audio, listeners.signal);
+  const prepare = () => {
+    try {
+      prepareAudioPlayback();
+    } catch (cause) {
+      error(cause);
+    }
+  };
   for (const type of ["contextmenu", "dragstart"] as const) {
     surface.addEventListener(type, (event) => event.preventDefault(), {
       signal: listeners.signal,
     });
   }
-  surface.addEventListener("pointerdown", prepareAudioPlayback, {
-    capture: true,
-    signal: listeners.signal,
-  });
-  surface.addEventListener("keydown", prepareAudioPlayback, {
-    capture: true,
-    signal: listeners.signal,
-  });
+  surface.addEventListener(
+    "pointerdown",
+    (event) => {
+      record(event);
+      prepare();
+    },
+    {
+      capture: true,
+      signal: listeners.signal,
+    },
+  );
+  surface.addEventListener(
+    "keydown",
+    (event) => {
+      if (event.key === "Enter" || event.key === " " || event.key === "Escape")
+        record(event);
+      prepare();
+    },
+    {
+      capture: true,
+      signal: listeners.signal,
+    },
+  );
   const activate = (states: readonly AudioState[]) => {
     if (!states.includes(audio.state)) return;
     // A pending host startup owns its own error handling; calling start()
@@ -53,7 +77,8 @@ export function bindAudioGestures(
     "touchstart",
     (event) => {
       event.preventDefault();
-      prepareAudioPlayback();
+      record(event);
+      prepare();
       activate(["idle", "starting", "suspended", "interrupted"]);
     },
     { capture: true, passive: false, signal: listeners.signal },
@@ -62,7 +87,8 @@ export function bindAudioGestures(
   // hold may supply the activation its press lacked.
   surface.addEventListener(
     "touchend",
-    () => {
+    (event) => {
+      record(event);
       activate(["starting", "suspended", "interrupted"]);
     },
     { capture: true, passive: true, signal: listeners.signal },
