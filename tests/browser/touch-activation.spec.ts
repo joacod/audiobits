@@ -11,7 +11,7 @@ for (const [route, selector] of [
     page,
   }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    await instrument(page, "touch-source", route);
+    await instrument(page, "normal", route);
     const pad = page.locator(selector);
     await expect(pad).toHaveAttribute("data-state", "stopped");
     if (route === "energy-charge") await expect(pad).toBeEnabled();

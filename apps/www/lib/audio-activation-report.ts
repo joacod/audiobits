@@ -1,6 +1,17 @@
 import { AudioBitsError, type AudioEngine } from "audiobits";
 
+// Troubleshooting: append ?error-details=true to the page URL and reload
+// before reproducing the issue. Any other value leaves diagnostics disabled.
+export function errorDetailsEnabled() {
+  return (
+    new URLSearchParams(globalThis.location?.search ?? "").get(
+      "error-details",
+    ) === "true"
+  );
+}
+
 export function audioErrorMessage(cause: unknown) {
+  if (!errorDetailsEnabled()) return "Audio did not start.";
   if (!(cause instanceof Error)) return String(cause);
   const code = cause instanceof AudioBitsError ? ` [${cause.code}]` : "";
   return `${cause.name}${code}: ${cause.message}`;
@@ -47,7 +58,8 @@ export function observeAudioActivation(
   surface: HTMLElement,
   audio: AudioEngine,
   signal: AbortSignal,
-) {
+): (event: Event) => void {
+  if (!errorDetailsEnabled()) return () => {};
   const startedAt = performance.now();
   const events: object[] = [];
   const pointers = new Set<number>();
@@ -159,6 +171,7 @@ export function formatAudioActivationReport(
   cause: unknown,
   surface: HTMLElement | null,
 ) {
+  if (!errorDetailsEnabled()) return "";
   const session = (
     navigator as Navigator & {
       audioSession?: { type: string; state?: string };

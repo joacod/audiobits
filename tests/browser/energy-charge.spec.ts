@@ -77,11 +77,15 @@ test("hold keyboard and pointer reach full without completing; cancellation cuts
   await expect(page.locator(".energy-state")).toHaveText("Charge: stopped");
 });
 
-for (const mode of ["held", "failed"] as const) {
+for (const mode of ["held", "failed", "friendly"] as const) {
   test(`${mode} activation is recoverable and cannot resurrect cancellation`, async ({
     page,
   }) => {
-    await instrument(page, mode, "energy-charge");
+    await instrument(
+      page,
+      mode === "friendly" ? "failed" : mode,
+      mode === "failed" ? "energy-charge?error-details=true" : "energy-charge",
+    );
     const hold = page.getByRole("button", {
       name: "Hold to charge",
       exact: true,
@@ -108,7 +112,7 @@ for (const mode of ["held", "failed"] as const) {
       await expect
         .poll(async () => (await probe(page)).contexts)
         .toEqual(["running"]);
-    } else {
+    } else if (mode === "failed") {
       await expect(page.locator(".energy-controls [role=alert]")).toContainText(
         "Hold to charge again",
       );
@@ -129,7 +133,29 @@ for (const mode of ["held", "failed"] as const) {
           expect.objectContaining({ type: "engine-state", state: "starting" }),
         ]),
       );
-      await report.focus();
+      await page
+        .getByRole("button", { name: "Copy report", exact: true })
+        .click();
+      await expect(
+        page.getByText("Report copied.", { exact: true }),
+      ).toBeVisible();
+      expect(
+        await page.evaluate(
+          () =>
+            (globalThis as unknown as { copiedSource: string }).copiedSource,
+        ),
+      ).toBe(failureReport);
+      await page.evaluate(() => {
+        navigator.clipboard.writeText = async () => {
+          throw new Error("Clipboard denied");
+        };
+      });
+      await page
+        .getByRole("button", { name: "Copy report", exact: true })
+        .click();
+      await expect(
+        page.getByText("Select the report text to copy.", { exact: true }),
+      ).toBeVisible();
       expect(
         await report.evaluate(
           (element: HTMLTextAreaElement) =>
@@ -138,6 +164,14 @@ for (const mode of ["held", "failed"] as const) {
             element.selectionEnd === element.value.length,
         ),
       ).toBe(true);
+    } else {
+      await expect(page.locator(".energy-controls [role=alert]")).toHaveText(
+        "Audio did not start. Hold to charge again.",
+      );
+      await expect(report).toHaveCount(0);
+      await expect(
+        page.getByRole("button", { name: "Copy report", exact: true }),
+      ).toHaveCount(0);
     }
     expect((await probe(page)).sources).toBe(0);
     await page.keyboard.up("Space");

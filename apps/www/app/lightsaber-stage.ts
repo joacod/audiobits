@@ -409,10 +409,17 @@ export function mountBladeStage3D(
       surface.setPointerCapture(pointer);
       surface.focus({ preventScroll: true });
       place(event);
-      host.ignite();
+      if (event.pointerType !== "touch") host.ignite();
       wake();
     },
     { signal: events.signal },
+  );
+  surface.addEventListener(
+    "touchstart",
+    () => {
+      if (pointer !== null) host.ignite();
+    },
+    { passive: true, signal: events.signal },
   );
   surface.addEventListener(
     "pointermove",

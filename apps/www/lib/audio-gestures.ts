@@ -8,7 +8,7 @@ export function prepareAudioPlayback() {
   if (session && session.type !== "playback") session.type = "playback";
 }
 
-/** Activate native touch starts and retry pending holds without scheduling sound. */
+/** Prepare gestures and retry existing activation without owning sound intent. */
 export function bindAudioGestures(
   surface: HTMLElement,
   audio: AudioEngine,
@@ -76,12 +76,14 @@ export function bindAudioGestures(
   surface.addEventListener(
     "touchstart",
     (event) => {
-      event.preventDefault();
       record(event);
       prepare();
-      activate(["idle", "starting", "suspended", "interrupted"]);
+      // A touch host starts in this event after capture. Do not preempt it
+      // with a separate idle/suspended startup and immediately retry resume.
+      // Pointer-driven one-shots may already have a pending activation.
+      activate(["starting"]);
     },
-    { capture: true, passive: false, signal: listeners.signal },
+    { capture: true, passive: true, signal: listeners.signal },
   );
   // Touch release alone leaves an idle engine idle, but a pending or resumable
   // hold may supply the activation its press lacked.

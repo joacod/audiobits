@@ -3,6 +3,7 @@ import { AudioBitsError, type AudioEngine, type AudioState } from "audiobits";
 import { bindAudioGestures, prepareAudioPlayback } from "./audio-gestures";
 import {
   audioErrorMessage,
+  observeAudioActivation,
   formatAudioActivationReport,
 } from "./audio-activation-report";
 
@@ -17,7 +18,7 @@ it("prepares playback when supported and leaves unsupported navigators usable", 
   expect(session.type).toBe("playback");
 });
 
-it("starts idle and resumable engines from a native touchstart and prevents its default", () => {
+it("leaves initial touch startup to the host and only retries an existing start", () => {
   vi.stubGlobal("navigator", {});
   const surface = new EventTarget() as HTMLElement;
   const play = vi.fn();
@@ -38,21 +39,20 @@ it("starts idle and resumable engines from a native touchstart and prevents its 
   );
   const touch = new Event("touchstart", { cancelable: true });
   surface.dispatchEvent(touch);
-  expect(touch.defaultPrevented).toBe(true);
-  expect(audio.start).toHaveBeenCalledOnce();
+  expect(touch.defaultPrevented).toBe(false);
+  expect(audio.start).not.toHaveBeenCalled();
   expect(audio.sound).not.toHaveBeenCalled();
   expect(play).not.toHaveBeenCalled();
   audio.state = "suspended";
   surface.dispatchEvent(new Event("touchstart", { cancelable: true }));
-  expect(audio.start).toHaveBeenCalledTimes(2);
-  // A held gesture already owns its pending native activation.
+  expect(audio.start).not.toHaveBeenCalled();
+  // One-shots that started on pointerdown still need a native touch retry.
   audio.state = "starting";
   surface.dispatchEvent(new Event("touchstart", { cancelable: true }));
-  expect(audio.start).toHaveBeenCalledTimes(3);
-  // A live engine must not restart from later contact.
+  expect(audio.start).toHaveBeenCalledOnce();
   audio.state = "running";
   surface.dispatchEvent(new Event("touchstart", { cancelable: true }));
-  expect(audio.start).toHaveBeenCalledTimes(3);
+  expect(audio.start).toHaveBeenCalledOnce();
   expect(stop).not.toHaveBeenCalled();
   unbind();
 });
@@ -86,7 +86,7 @@ it("leaves an idle engine idle on release and retries resumable holds on touchen
   unbind();
 });
 
-it("accepts the first held touch even when transient activation is false", async () => {
+it("lets the host activate once synchronously in touchstart while preserving its pending hold", async () => {
   const activation = { isActive: false };
   vi.stubGlobal("navigator", { userActivation: activation });
   const surface = Object.assign(new EventTarget(), {
@@ -95,6 +95,8 @@ it("accepts the first held touch even when transient activation is false", async
   const audio = {
     state: "idle" as AudioState,
     start: vi.fn(async () => {
+      audio.state = "starting";
+      await Promise.resolve();
       audio.state = "running";
     }),
     subscribe: () => () => {},
@@ -107,9 +109,9 @@ it("accepts the first held touch even when transient activation is false", async
     vi.fn(),
   );
   const hold = vi.fn();
-  surface.addEventListener("pointerdown", () => {
-    audio.state = "starting";
+  surface.addEventListener("touchstart", () => {
     hold();
+    void audio.start();
   });
   const press = () =>
     surface.dispatchEvent(
@@ -120,20 +122,29 @@ it("accepts the first held touch even when transient activation is false", async
       }),
     );
   press();
-  surface.dispatchEvent(new Event("touchstart", { cancelable: true }));
-  await Promise.resolve();
+  const touch = new Event("touchstart", { cancelable: true });
+  surface.dispatchEvent(touch);
+  expect(touch.defaultPrevented).toBe(false);
   expect(audio.start).toHaveBeenCalledOnce();
+  expect(audio.state).toBe("starting");
+  await Promise.resolve();
+  expect(audio.state).toBe("running");
   expect(hold).toHaveBeenCalledOnce();
   expect(activation.isActive).toBe(false);
   surface.dispatchEvent(new Event("touchend"));
   expect(audio.start).toHaveBeenCalledOnce();
   press();
+  surface.dispatchEvent(new Event("touchstart", { cancelable: true }));
   expect(hold).toHaveBeenCalledTimes(2);
   expect(stop).not.toHaveBeenCalled();
   unbind();
 });
 
 it("reports genuine touch activation failures but ignores cancellation and teardown", async () => {
+  vi.stubGlobal(
+    "location",
+    new URL("https://example.test/?error-details=true"),
+  );
   vi.stubGlobal("navigator", {});
   const document = new EventTarget();
   const surface = Object.assign(new EventTarget(), {
@@ -165,7 +176,7 @@ it("reports genuine touch activation failures but ignores cancellation and teard
       pointerType: "touch",
     }),
   );
-  surface.dispatchEvent(new Event("touchstart", { cancelable: true }));
+  surface.dispatchEvent(new Event("touchend", { cancelable: true }));
   const failure = new Error("Activation denied");
   reject(failure);
   await Promise.resolve();
@@ -191,16 +202,16 @@ it("reports genuine touch activation failures but ignores cancellation and teard
   ).toEqual([]);
   expect(JSON.parse(report).input.pointersWithoutUpOrCancel).toEqual([1]);
   error.mockClear();
-  surface.dispatchEvent(new Event("touchstart", { cancelable: true }));
+  surface.dispatchEvent(new Event("touchend", { cancelable: true }));
   reject(new AudioBitsError("start-cancelled", "Explicit interruption"));
   await Promise.resolve();
   expect(error).not.toHaveBeenCalled();
-  surface.dispatchEvent(new Event("touchstart", { cancelable: true }));
+  surface.dispatchEvent(new Event("touchend", { cancelable: true }));
   unbind();
   reject(new Error("Activation ended after unmount"));
   await Promise.resolve();
   expect(error).not.toHaveBeenCalled();
-  surface.dispatchEvent(new Event("touchstart", { cancelable: true }));
+  surface.dispatchEvent(new Event("touchend", { cancelable: true }));
   expect(audio.start).toHaveBeenCalledTimes(3);
   expect(
     JSON.parse(formatAudioActivationReport(failure, surface)).input,
@@ -234,13 +245,13 @@ it("clears stale activation errors when the engine reaches running", async () =>
     error,
     recovered,
   );
-  surface.dispatchEvent(new Event("touchstart", { cancelable: true }));
+  surface.dispatchEvent(new Event("touchend", { cancelable: true }));
   reject(new Error("Activation denied"));
   await Promise.resolve();
   expect(error).toHaveBeenCalledExactlyOnceWith(
     expect.objectContaining({ message: "Activation denied" }),
   );
-  surface.dispatchEvent(new Event("touchstart", { cancelable: true }));
+  surface.dispatchEvent(new Event("touchend", { cancelable: true }));
   await Promise.resolve();
   audio.state = "running";
   notify("running");
@@ -249,6 +260,10 @@ it("clears stale activation errors when the engine reaches running", async () =>
 });
 
 it("preserves exact error details and reports audio-session preparation failures", () => {
+  vi.stubGlobal(
+    "location",
+    new URL("https://example.test/?error-details=true"),
+  );
   const failure = new DOMException(
     "Playback session denied",
     "NotAllowedError",
@@ -285,3 +300,21 @@ it("preserves exact error details and reports audio-session preparation failures
   ).toBe("AudioBitsError [start-failed]: Exact failure");
   unbind();
 });
+
+it.each(["", "?error-details=false", "?error-details=1"])(
+  "keeps friendly errors and disables diagnostic collection for %s",
+  (search) => {
+    vi.stubGlobal("location", new URL(`https://example.test/${search}`));
+    const audio = { subscribe: vi.fn() } as unknown as AudioEngine;
+    const surface = new EventTarget() as HTMLElement;
+    observeAudioActivation(
+      surface,
+      audio,
+      new AbortController().signal,
+    )(new Event("pointerdown"));
+    const failure = new AudioBitsError("start-failed", "Technical failure");
+    expect(audio.subscribe).not.toHaveBeenCalled();
+    expect(audioErrorMessage(failure)).toBe("Audio did not start.");
+    expect(formatAudioActivationReport(failure, surface)).toBe("");
+  },
+);
