@@ -18,7 +18,7 @@ it("prepares playback when supported and leaves unsupported navigators usable", 
   expect(session.type).toBe("playback");
 });
 
-it("leaves initial touch startup to the host and only retries an existing start", () => {
+it("activates idle and suspended audio in native touch capture without playing sound", () => {
   vi.stubGlobal("navigator", {});
   const surface = new EventTarget() as HTMLElement;
   const play = vi.fn();
@@ -40,19 +40,19 @@ it("leaves initial touch startup to the host and only retries an existing start"
   const touch = new Event("touchstart", { cancelable: true });
   surface.dispatchEvent(touch);
   expect(touch.defaultPrevented).toBe(false);
-  expect(audio.start).not.toHaveBeenCalled();
+  expect(audio.start).toHaveBeenCalledOnce();
   expect(audio.sound).not.toHaveBeenCalled();
   expect(play).not.toHaveBeenCalled();
   audio.state = "suspended";
   surface.dispatchEvent(new Event("touchstart", { cancelable: true }));
-  expect(audio.start).not.toHaveBeenCalled();
-  // One-shots that started on pointerdown still need a native touch retry.
+  expect(audio.start).toHaveBeenCalledTimes(2);
+  // Pointer-driven one-shots can already have a pending activation.
   audio.state = "starting";
   surface.dispatchEvent(new Event("touchstart", { cancelable: true }));
-  expect(audio.start).toHaveBeenCalledOnce();
+  expect(audio.start).toHaveBeenCalledTimes(3);
   audio.state = "running";
   surface.dispatchEvent(new Event("touchstart", { cancelable: true }));
-  expect(audio.start).toHaveBeenCalledOnce();
+  expect(audio.start).toHaveBeenCalledTimes(3);
   expect(stop).not.toHaveBeenCalled();
   unbind();
 });
@@ -86,7 +86,7 @@ it("leaves an idle engine idle on release and retries resumable holds on touchen
   unbind();
 });
 
-it("lets the host activate once synchronously in touchstart while preserving its pending hold", async () => {
+it("activates before the touch host while leaving a single hold owned by the host", async () => {
   const activation = { isActive: false };
   vi.stubGlobal("navigator", { userActivation: activation });
   const surface = Object.assign(new EventTarget(), {
@@ -110,6 +110,7 @@ it("lets the host activate once synchronously in touchstart while preserving its
   );
   const hold = vi.fn();
   surface.addEventListener("touchstart", () => {
+    expect(["starting", "running"]).toContain(audio.state);
     hold();
     void audio.start();
   });
@@ -125,18 +126,58 @@ it("lets the host activate once synchronously in touchstart while preserving its
   const touch = new Event("touchstart", { cancelable: true });
   surface.dispatchEvent(touch);
   expect(touch.defaultPrevented).toBe(false);
-  expect(audio.start).toHaveBeenCalledOnce();
+  expect(audio.start).toHaveBeenCalledTimes(2);
   expect(audio.state).toBe("starting");
   await Promise.resolve();
   expect(audio.state).toBe("running");
   expect(hold).toHaveBeenCalledOnce();
   expect(activation.isActive).toBe(false);
   surface.dispatchEvent(new Event("touchend"));
-  expect(audio.start).toHaveBeenCalledOnce();
+  expect(audio.start).toHaveBeenCalledTimes(2);
   press();
   surface.dispatchEvent(new Event("touchstart", { cancelable: true }));
   expect(hold).toHaveBeenCalledTimes(2);
   expect(stop).not.toHaveBeenCalled();
+  unbind();
+});
+
+it("does not report a late touch-start failure after the host cancels its hold", async () => {
+  vi.stubGlobal("navigator", {});
+  const surface = new EventTarget() as HTMLElement;
+  let reject!: (cause: unknown) => void;
+  const pending = new Promise<void>((_resolve, fail) => {
+    reject = fail;
+  });
+  const audio = {
+    state: "idle" as AudioState,
+    start: vi.fn(() => {
+      audio.state = "starting";
+      return pending;
+    }),
+    subscribe: () => () => {},
+  };
+  const error = vi.fn();
+  let holding = false;
+  const unbind = bindAudioGestures(
+    surface,
+    audio as unknown as AudioEngine,
+    vi.fn(),
+    error,
+  );
+  surface.addEventListener("touchstart", () => {
+    holding = true;
+    void audio.start().catch((cause: unknown) => {
+      if (holding) error(cause);
+    });
+  });
+  surface.addEventListener("pointercancel", () => {
+    holding = false;
+  });
+  surface.dispatchEvent(new Event("touchstart", { cancelable: true }));
+  surface.dispatchEvent(new Event("pointercancel"));
+  reject(new Error("Activation denied after cancellation"));
+  await Promise.resolve();
+  expect(error).not.toHaveBeenCalled();
   unbind();
 });
 
