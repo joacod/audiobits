@@ -3,6 +3,7 @@ import { AudioBitsError, type AudioEngine, type AudioState } from "audiobits";
 import { bindAudioGestures, prepareAudioPlayback } from "./audio-gestures";
 import {
   audioErrorMessage,
+  observeAudioActivation,
   formatAudioActivationReport,
 } from "./audio-activation-report";
 
@@ -140,6 +141,10 @@ it("lets the host activate once synchronously in touchstart while preserving its
 });
 
 it("reports genuine touch activation failures but ignores cancellation and teardown", async () => {
+  vi.stubGlobal(
+    "location",
+    new URL("https://example.test/?error-details=true"),
+  );
   vi.stubGlobal("navigator", {});
   const document = new EventTarget();
   const surface = Object.assign(new EventTarget(), {
@@ -255,6 +260,10 @@ it("clears stale activation errors when the engine reaches running", async () =>
 });
 
 it("preserves exact error details and reports audio-session preparation failures", () => {
+  vi.stubGlobal(
+    "location",
+    new URL("https://example.test/?error-details=true"),
+  );
   const failure = new DOMException(
     "Playback session denied",
     "NotAllowedError",
@@ -291,3 +300,21 @@ it("preserves exact error details and reports audio-session preparation failures
   ).toBe("AudioBitsError [start-failed]: Exact failure");
   unbind();
 });
+
+it.each(["", "?error-details=false", "?error-details=1"])(
+  "keeps friendly errors and disables diagnostic collection for %s",
+  (search) => {
+    vi.stubGlobal("location", new URL(`https://example.test/${search}`));
+    const audio = { subscribe: vi.fn() } as unknown as AudioEngine;
+    const surface = new EventTarget() as HTMLElement;
+    observeAudioActivation(
+      surface,
+      audio,
+      new AbortController().signal,
+    )(new Event("pointerdown"));
+    const failure = new AudioBitsError("start-failed", "Technical failure");
+    expect(audio.subscribe).not.toHaveBeenCalled();
+    expect(audioErrorMessage(failure)).toBe("Audio did not start.");
+    expect(formatAudioActivationReport(failure, surface)).toBe("");
+  },
+);
