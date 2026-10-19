@@ -11,7 +11,6 @@ vi.mock("../../../catalog/experiences/energy-charge/host", () => ({
   createEnergyChargeAudio: createAudio,
 }));
 import {
-  prepareExperienceEntryAudio,
   prepareExperienceNavigationAudio,
   takeExperienceAudio,
 } from "./experience-audio";
@@ -147,38 +146,4 @@ it("prepares the landing lightsaber but ignores unrelated or external destinatio
     audioEntry: "navigation",
     audioEntryState: "running",
   });
-});
-
-it("prepares direct landing entry and transfers that same silent engine to its stage", () => {
-  const audio = {
-    state: "starting",
-    start: vi.fn(() => new Promise<void>(() => {})),
-    dispose: vi.fn(async () => {}),
-  };
-  createAudio.mockReturnValue(audio);
-  window.location.pathname = "/";
-  prepareExperienceEntryAudio("lightsaber");
-  const surface = { dataset: {} } as HTMLElement;
-  expect(audio.start).toHaveBeenCalledOnce();
-  expect(takeExperienceAudio("lightsaber", surface)).toBe(audio);
-  expect(surface.dataset).toEqual({
-    audioEntry: "entry",
-    audioEntryState: "starting",
-  });
-});
-
-it("keeps navigation preparation when the landing also requests entry preparation", () => {
-  const audio = {
-    state: "running",
-    start: vi.fn(async () => {}),
-    dispose: vi.fn(async () => {}),
-  };
-  createAudio.mockReturnValue(audio);
-  prepareExperienceNavigationAudio("/");
-  window.location.pathname = "/";
-  prepareExperienceEntryAudio("lightsaber");
-  const surface = { dataset: {} } as HTMLElement;
-  expect(takeExperienceAudio("lightsaber", surface)).toBe(audio);
-  expect(audio.start).toHaveBeenCalledOnce();
-  expect(surface.dataset.audioEntry).toBe("navigation");
 });

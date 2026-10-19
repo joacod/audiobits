@@ -362,7 +362,7 @@ test("homepage lightsaber uses one engine, reports output and disposes on naviga
   await page.goto("http://127.0.0.1:3100");
   await expect(page.locator(".lightsaber-canvas")).toHaveAttribute(
     "data-audio-entry",
-    "entry",
+    "stage",
   );
   const bounds = await page.locator(".lightsaber-canvas").boundingBox();
   expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(844);
@@ -377,7 +377,7 @@ test("homepage lightsaber uses one engine, reports output and disposes on naviga
         (globalThis as unknown as { galleryContexts: AudioContext[] })
           .galleryContexts.length,
     ),
-  ).toBe(1);
+  ).toBe(0);
   await expect(page.locator(".recipe-tools")).toHaveCount(0);
   const previews = page.locator(".landing-sound-entry");
   await expect(previews).toHaveCount(3);

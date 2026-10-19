@@ -10,48 +10,63 @@ import {
 import { mountLightsaber } from "../../../catalog/experiences/lightsaber/host";
 import { mountBladeStage3D } from "./lightsaber-stage";
 import "./lightsaber.css";
-import { bindAudioGestures } from "../lib/audio-gestures";
+import { bindAudioGestures, prepareAudioPlayback } from "../lib/audio-gestures";
 import {
   audioErrorMessage,
   formatAudioActivationReport,
 } from "../lib/audio-activation-report";
 import { AudioActivationReport } from "./audio-activation-report";
-import {
-  prepareExperienceEntryAudio,
-  takeExperienceAudio,
-} from "../lib/experience-audio";
+import { takeExperienceAudio } from "../lib/experience-audio";
 
 const subscribeHydration = () => () => {};
+const touchInputQuery = "(hover: none) and (pointer: coarse)";
+function subscribeTouchInput(changed: () => void) {
+  const query = window.matchMedia(touchInputQuery);
+  query.addEventListener("change", changed);
+  return () => query.removeEventListener("change", changed);
+}
+const hasTouchInput = () => window.matchMedia(touchInputQuery).matches;
 
 export function LightsaberDetail({
-  prepareOnEntry = false,
+  requireTouchActivation = false,
 }: {
-  prepareOnEntry?: boolean;
+  requireTouchActivation?: boolean;
 }) {
   const surface = useRef<HTMLDivElement>(null);
+  const host = useRef<ReturnType<typeof mountLightsaber> | null>(null);
+  const focusAfterActivation = useRef(false);
   const stage = useRef<ReturnType<typeof mountBladeStage3D> | null>(null);
+  const [audioReady, setAudioReady] = useState(!requireTouchActivation);
+  const [activating, setActivating] = useState(false);
   const [state, setState] = useState("stopped");
   const ready = useSyncExternalStore(
     subscribeHydration,
     () => true,
     () => false,
   );
+  const touchInput = useSyncExternalStore(
+    subscribeTouchInput,
+    hasTouchInput,
+    () => false,
+  );
   const [error, setError] = useState("");
   const [report, setReport] = useState("");
   const lastFailure = useRef<unknown>(undefined);
   const [displayError, setDisplayError] = useState("");
-  const reportError = useCallback((cause: unknown) => {
-    lastFailure.current = cause;
-    setError(`${audioErrorMessage(cause)} Hold the stage again to retry.`);
-    setReport(formatAudioActivationReport(cause, surface.current));
-  }, []);
+  const reportError = useCallback(
+    (cause: unknown, retry = "Hold the stage again to retry.") => {
+      lastFailure.current = cause;
+      setError(`${audioErrorMessage(cause)} ${retry}`);
+      setReport(formatAudioActivationReport(cause, surface.current));
+    },
+    [],
+  );
   const reportDisplayError = useCallback(() => {
     setDisplayError(
       "The 3D display is unavailable. Hold and move here to hear the blade. Release to retract. Reload to retry the display.",
     );
   }, []);
   useEffect(() => {
-    if (prepareOnEntry) prepareExperienceEntryAudio("lightsaber");
     const prepared = takeExperienceAudio("lightsaber", surface.current);
     const current = mountLightsaber(
       {
@@ -64,6 +79,12 @@ export function LightsaberDetail({
       },
       prepared,
     );
+    host.current = current;
+    const unsubscribe = current.audio.subscribe((value) => {
+      if (value === "running") setAudioReady(true);
+    });
+    // Navigation may have already activated this same engine before mounting.
+    if (current.audio.state === "running") setAudioReady(true);
     const display = surface.current
       ? mountBladeStage3D(surface.current, current, reportDisplayError)
       : undefined;
@@ -78,12 +99,43 @@ export function LightsaberDetail({
         )
       : undefined;
     return () => {
+      host.current = null;
+      unsubscribe();
       unbind?.();
       display?.dispose();
       stage.current = null;
       void current.dispose().catch(console.error);
     };
-  }, [prepareOnEntry, reportError, reportDisplayError]);
+  }, [reportError, reportDisplayError]);
+  useEffect(() => {
+    if (audioReady && focusAfterActivation.current) {
+      focusAfterActivation.current = false;
+      surface.current?.focus({ preventScroll: true });
+    }
+  }, [audioReady]);
+
+  async function activate() {
+    const current = host.current;
+    if (!current || activating) return;
+    focusAfterActivation.current = true;
+    setActivating(true);
+    setError("");
+    try {
+      // Start the stage's real engine inside the completed button click.
+      // Activation alone must never ignite the blade or schedule a sound.
+      prepareAudioPlayback();
+      await current.audio.start();
+      if (host.current !== current) return;
+      setAudioReady(true);
+      setActivating(false);
+    } catch (cause) {
+      if (host.current !== current) return;
+      reportError(cause, "Tap Use the Force to retry.");
+      setActivating(false);
+    }
+  }
+
+  const locked = requireTouchActivation && touchInput && !audioReady;
   return (
     <>
       <div className="lightsaber-stage catalog-gesture-stage audio-gesture-surface">
@@ -93,8 +145,21 @@ export function LightsaberDetail({
           role="group"
           aria-label="Lightsaber stage"
           aria-describedby="lightsaber-help"
-          tabIndex={ready ? 0 : -1}
+          tabIndex={ready && !locked ? 0 : -1}
+          inert={locked}
         />
+        {locked ? (
+          <div className="lightsaber-activation">
+            <button
+              type="button"
+              disabled={!ready || activating}
+              aria-busy={activating}
+              onClick={activate}
+            >
+              <span>{activating ? "Connecting…" : "Use the Force"}</span>
+            </button>
+          </div>
+        ) : null}
         {displayError ? (
           <p className="lightsaber-display-error" role="alert">
             {displayError}

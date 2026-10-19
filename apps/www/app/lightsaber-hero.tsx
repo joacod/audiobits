@@ -12,7 +12,7 @@ export function LightsaberHero() {
           Procedural sound effects for the web. Hold to ignite. Move to swing.
         </p>
       </div>
-      <LightsaberDetail prepareOnEntry />
+      <LightsaberDetail requireTouchActivation />
       <div className="landing-links lightsaber-links">
         <ExperienceLink href="/catalog/lightsaber">
           Open lightsaber source <ArrowIcon />
