@@ -2,23 +2,52 @@
 import { expect, test } from "@playwright/test";
 import { instrument, probe } from "./experience-probe";
 
+test.use({ hasTouch: true });
+
 for (const [route, selector] of [
   ["/", ".lightsaber-canvas"],
   ["reactive-thruster", ".flight-pad"],
   ["lightsaber", ".lightsaber-canvas"],
   ["energy-charge", ".charge-hold"],
 ] as const) {
-  test(`${route} Chromium cold entry starts sound during a held touch`, async ({
+  test(`${route} Chromium held touch starts sound after its entry flow`, async ({
     page,
   }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    await instrument(page, route === "/" ? "touch-start" : "normal", route);
+    await instrument(page, route === "/" ? "touch-release" : "normal", route);
     const pad = page.locator(selector);
     await expect(pad).toHaveAttribute("data-state", "stopped");
     if (route === "/") {
-      await expect(pad).toHaveAttribute("data-audio-entry", "entry");
-      expect((await probe(page)).contexts).toEqual(["suspended"]);
+      await expect(pad).toHaveAttribute("data-audio-entry", "stage");
+      expect((await probe(page)).contexts).toEqual([]);
+      await expect(pad).toHaveAttribute("inert", "");
+      const activation = page.getByRole("button", {
+        name: "Use the Force",
+        exact: true,
+      });
+      await expect(activation).toBeEnabled();
+      const button = (await activation.boundingBox())!;
+      expect(button.height).toBeGreaterThanOrEqual(44);
+      expect(button.x).toBeGreaterThanOrEqual(0);
+      expect(button.x + button.width).toBeLessThanOrEqual(390);
+      const tap = await page.context().newCDPSession(page);
+      await tap.send("Input.dispatchTouchEvent", {
+        type: "touchStart",
+        touchPoints: [
+          { x: button.x + button.width / 2, y: button.y + button.height / 2 },
+        ],
+      });
+      // A held button is not an activation: its completed tap supplies the click.
+      expect((await probe(page)).contexts).toEqual([]);
+      await tap.send("Input.dispatchTouchEvent", {
+        type: "touchEnd",
+        touchPoints: [],
+      });
+      await expect(activation).toHaveCount(0);
+      await expect(pad).not.toHaveAttribute("inert");
+      expect((await probe(page)).contexts).toEqual(["running"]);
       expect((await probe(page)).sources).toBe(0);
+      await tap.detach();
     }
     if (route === "energy-charge") await expect(pad).toBeEnabled();
     if (route === "lightsaber" || route === "/")
@@ -231,6 +260,8 @@ for (const [route, label, selector, signalSelector, signalAttribute] of [
       .poll(async () => (await probe(page)).contexts)
       .toEqual(["running"]);
     expect((await probe(page)).sources).toBe(0);
+    if (route === "/")
+      await expect(page.locator(".lightsaber-activation")).toHaveCount(0);
     await pad.scrollIntoViewIfNeeded();
     const box = (await pad.boundingBox())!;
     await touch.send("Input.dispatchTouchEvent", {

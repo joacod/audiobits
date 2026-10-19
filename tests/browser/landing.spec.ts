@@ -22,18 +22,17 @@ for (const [width, height] of [
       "data-renderer",
       /three|unavailable/,
     );
-    await expect(
-      page.locator(".lightsaber-hero button, .lightsaber-hero input"),
-    ).toHaveCount(0);
+    await expect(page.locator(".lightsaber-activation")).toHaveCount(0);
+    await expect(page.locator(".lightsaber-canvas")).not.toHaveAttribute(
+      "inert",
+    );
     await page.evaluate(() => document.fonts.ready);
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= innerWidth,
       ),
     ).toBe(true);
-    const pad = (await page
-      .getByRole("group", { name: "Lightsaber stage" })
-      .boundingBox())!;
+    const pad = (await page.locator(".lightsaber-canvas").boundingBox())!;
     expect(pad.height).toBeGreaterThanOrEqual(256);
     expect(pad.y + pad.height).toBeLessThanOrEqual(height);
     const nav = page.getByRole("navigation", { name: "Main navigation" });
@@ -232,9 +231,11 @@ test("landing stays silent until holding, measures real output and disposes on n
   await instrument(page, "normal", "/");
   await expect(page.locator(".lightsaber-canvas")).toHaveAttribute(
     "data-audio-entry",
-    "entry",
+    "stage",
   );
+  expect((await probe(page)).contexts).toEqual([]);
   expect((await probe(page)).sources).toBe(0);
+  await expect(page.locator(".lightsaber-activation")).toHaveCount(0);
   await holdLightsaber(page);
   await expect(page.locator(".lightsaber-canvas")).toHaveAttribute(
     "data-state",
@@ -370,69 +371,70 @@ test("landing swing, release, touch cancellation and interruptions clean up @smo
   await expect.poll(async () => (await probe(page)).connected).toBe(0);
 });
 
-test("landing activation failure recovers with a fresh gesture", async ({
-  page,
-}) => {
-  await instrument(page, "normal", "/");
-  const pad = page.getByRole("group", { name: "Lightsaber stage" });
-  await expect(pad).toHaveAttribute("data-renderer", /three|unavailable/);
-  await page.evaluate(async () => {
-    const context = (
-      globalThis as unknown as { thrusterProbe: { contexts: AudioContext[] } }
-    ).thrusterProbe.contexts[0];
-    await context.suspend();
-    const resume = context.resume.bind(context);
-    let fail = true;
-    context.resume = () => {
-      if (fail) {
-        fail = false;
-        return Promise.reject(new Error("Activation denied"));
-      }
-      return resume();
-    };
-  });
-  const box = (await pad.boundingBox())!;
-  await page.mouse.move(box.x + 40, box.y + 80);
-  await page.mouse.down();
-  await expect(page.locator(".lightsaber-hero [role=alert]")).toContainText(
-    "Hold the stage again to retry",
-  );
-  expect((await probe(page)).sources).toBe(0);
-  await page.mouse.up();
-  await holdLightsaber(page);
-  await expect(page.locator(".lightsaber-canvas")).toHaveAttribute(
-    "data-state",
-    "running",
-  );
-  await expect(page.locator(".lightsaber-hero [role=alert]")).toHaveCount(0);
-  await page.mouse.up();
-});
+test.describe("mobile landing activation", () => {
+  test.use({ hasTouch: true });
 
-test("a pending homepage start cannot outlive pointer release @smoke", async ({
-  page,
-}) => {
-  await instrument(page, "held", "/");
-  await holdLightsaber(page);
-  await expect(page.locator(".lightsaber-canvas")).toHaveAttribute(
-    "data-state",
-    "starting",
-  );
-  await page.mouse.up();
-  await page.evaluate(() =>
-    (
-      globalThis as unknown as {
-        thrusterProbe: { releaseActivation(): void };
-      }
-    ).thrusterProbe.releaseActivation(),
-  );
-  await expect
-    .poll(async () => (await probe(page)).contexts)
-    .toEqual(["running"]);
-  await expect(page.locator(".lightsaber-canvas")).toHaveAttribute(
-    "data-state",
-    "stopped",
-  );
-  expect((await probe(page)).sources).toBe(0);
+  test("landing activation failure keeps the button available for a fresh tap", async ({
+    page,
+  }) => {
+    await instrument(page, "failed", "/");
+    const activation = page.getByRole("button", {
+      name: "Use the Force",
+      exact: true,
+    });
+    const pad = page.locator(".lightsaber-canvas");
+    await expect(pad).toHaveAttribute("inert", "");
+    await activation.click();
+    await expect(page.locator(".lightsaber-hero [role=alert]")).toContainText(
+      "Tap Use the Force to retry",
+    );
+    await expect(activation).toBeEnabled();
+    expect((await probe(page)).sources).toBe(0);
+    // The retry also works from the keyboard and returns focus to the stage.
+    await activation.focus();
+    await page.keyboard.press("Enter");
+    await expect(activation).toHaveCount(0);
+    await expect(pad).toBeFocused();
+    await expect(pad).not.toHaveAttribute("inert");
+    await expect(page.locator(".lightsaber-hero [role=alert]")).toHaveCount(0);
+    expect((await probe(page)).sources).toBe(0);
+    await holdLightsaber(page);
+    await expect(pad).toHaveAttribute("data-state", "running");
+    await page.mouse.up();
+  });
+
+  test("pending landing activation waits for success without igniting @smoke", async ({
+    page,
+  }) => {
+    await instrument(page, "held", "/");
+    await page
+      .getByRole("button", { name: "Use the Force", exact: true })
+      .click();
+    await expect(
+      page.getByRole("button", { name: "Connecting…", exact: true }),
+    ).toBeDisabled();
+    await expect(page.locator(".lightsaber-canvas")).toHaveAttribute(
+      "inert",
+      "",
+    );
+    expect((await probe(page)).sources).toBe(0);
+    await page.evaluate(() =>
+      (
+        globalThis as unknown as {
+          thrusterProbe: { releaseActivation(): void };
+        }
+      ).thrusterProbe.releaseActivation(),
+    );
+    await expect
+      .poll(async () => (await probe(page)).contexts)
+      .toEqual(["running"]);
+    await expect(page.locator(".lightsaber-activation")).toHaveCount(0);
+    await expect(page.locator(".lightsaber-canvas")).toHaveAttribute(
+      "data-state",
+      "stopped",
+    );
+    expect((await probe(page)).sources).toBe(0);
+  });
 });
 
 test("reduced motion preserves gesture feedback, level feedback and navigation focus", async ({
@@ -442,9 +444,11 @@ test("reduced motion preserves gesture feedback, level feedback and navigation f
   await instrument(page, "normal", "/");
   await expect(page.locator(".lightsaber-canvas")).toHaveAttribute(
     "data-audio-entry",
-    "entry",
+    "stage",
   );
+  expect((await probe(page)).contexts).toEqual([]);
   expect((await probe(page)).sources).toBe(0);
+  await expect(page.locator(".lightsaber-activation")).toHaveCount(0);
   await holdLightsaber(page);
   await expect(page.locator(".lightsaber-canvas")).toHaveAttribute(
     "data-state",
@@ -466,6 +470,8 @@ test("reduced motion preserves gesture feedback, level feedback and navigation f
     "data-state",
     "stopped",
   );
+  // Switch from the preceding pointer gesture to keyboard focus visibility.
+  await page.keyboard.press("Tab");
   for (const name of ["GitHub", "npm"]) {
     const link = page
       .getByRole("navigation", { name: "Main navigation" })
@@ -551,6 +557,10 @@ for (const route of ["/", "/catalog/confirmation"]) {
     });
     try {
       await expect(copy).toBeDisabled();
+      if (route === "/")
+        await expect(
+          page.getByRole("button", { name: "Use the Force", exact: true }),
+        ).toHaveCount(0);
     } finally {
       release();
     }
