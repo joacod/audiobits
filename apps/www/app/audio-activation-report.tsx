@@ -6,10 +6,12 @@ import { useRef, useState } from "react";
 export function AudioActivationReport({
   error,
   report,
+  onRefresh,
   className = "",
 }: {
   error: string;
   report: string;
+  onRefresh?: () => void;
   className?: string;
 }) {
   const field = useRef<HTMLTextAreaElement>(null);
@@ -48,6 +50,11 @@ export function AudioActivationReport({
           <button type="button" onClick={copyReport}>
             Copy report
           </button>
+          {onRefresh ? (
+            <button type="button" onClick={onRefresh}>
+              Refresh report after retry
+            </button>
+          ) : null}
           {feedback.report === report && feedback.message ? (
             <p role="status">{feedback.message}</p>
           ) : null}
