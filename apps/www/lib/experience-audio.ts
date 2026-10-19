@@ -26,12 +26,12 @@ let pending:
 export function prepareExperienceNavigationAudio(href: string) {
   const target = new URL(href, window.location.href);
   const id = experienceAt(target.pathname);
-  if (
-    !id ||
-    target.origin !== window.location.origin ||
-    target.pathname === window.location.pathname
-  )
+  if (target.origin !== window.location.origin) return;
+  if (!id) {
+    pending?.discard();
     return;
+  }
+  if (target.pathname === window.location.pathname) return;
   if (pending?.id === id) return;
   pending?.discard();
   const audio = factories[id]();

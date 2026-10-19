@@ -7,15 +7,14 @@ to that contract. Keep engine creation in the host's client lifecycle; imports
 and recipe data can remain safe for server rendering. Do not start audio during
 render, module load, an effect, or a timer.
 
-For touch-and-hold controls, a trusted press can leave audio suspended. Prepare
-the destination's engine synchronously in an earlier accepted gesture, such as
-its navigation link tap, without playing a sound. Transfer that same engine to
-the interaction host, including disposal ownership. Do not replace the context
-at mount, cache an "unlocked" flag, or add a silent source as a permission bypass.
-Bound abandoned preparations and keep release/cancellation guards on playback.
-Use the same host policy for desktop and mobile rather than browser-name checks.
-Cold direct visits have no preceding gesture and must be tested separately;
-do not promise first-hold audio when the browser has not granted activation.
+Match activation to the application's actual input flow. A trusted event does
+not necessarily grant permission to play. When an interaction cannot activate
+audio itself, an existing earlier accepted gesture may prepare the same engine
+without playing a sound. Its owner may retain it or explicitly transfer disposal
+ownership to the destination host. Bound abandoned preparations and keep
+cancellation guards on playback. Do not treat an "unlocked" flag as a substitute
+for retaining the context, or impose the website's navigation/hold model on an
+unrelated integration. Verify browser eligibility in the intended application.
 See the [lifecycle guide](https://www.audiobits.dev/docs/lifecycle#held-touch-and-earlier-activation).
 
 A small local confirmation sound needs no catalog dependency:

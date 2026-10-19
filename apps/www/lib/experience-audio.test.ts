@@ -117,6 +117,18 @@ it("replaces abandoned destinations and never transfers an engine to a different
   expect(charge.dispose).toHaveBeenCalledOnce();
 });
 
+it("disposes an unclaimed preparation when navigation switches to an unrelated view", () => {
+  const audio = {
+    start: vi.fn(async () => {}),
+    dispose: vi.fn(async () => {}),
+  };
+  createAudio.mockReturnValue(audio);
+  prepareExperienceNavigationAudio("/catalog/lightsaber");
+  prepareExperienceNavigationAudio("/docs");
+  expect(audio.dispose).toHaveBeenCalledOnce();
+  expect(takeExperienceAudio("lightsaber", null)).toBeUndefined();
+});
+
 it("prepares the landing thruster but ignores unrelated or external destinations", () => {
   const audio = {
     state: "running",

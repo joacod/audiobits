@@ -12,8 +12,8 @@ Read root `AGENTS.md` first.
   importing the package remains SSR-safe.
 - Keep definition/voice separation, lifecycle, cleanup, audio-context scheduling,
   and graph ownership deterministic and explicit. Resume synchronously in a
-  browser-accepted gesture. `start()` prepares output without scheduling a
-  source; DOM input and navigation handoff stay in application hosts.
+  browser-accepted gesture. DOM input, navigation and playback intent stay in
+  application hosts rather than becoming runtime policy.
 - Native output/analyser taps use caller-owned nodes; arbitrary managed graph
   interoperability is not promised.
 - Read [architecture](../../docs/architecture.md) before changing these contracts.

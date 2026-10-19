@@ -52,12 +52,13 @@ A trusted event does not always grant audio activation. For example, WebKit's
 include completed touch taps, while a touch press alone may leave audio suspended.
 Calling `start()` synchronously is necessary, but does not override that policy.
 
-For a held interaction, prepare the destination's engine in an earlier accepted
-gesture, such as the existing link tap that opens an experience. Preparation calls
+If a held interaction cannot activate audio itself, an existing earlier accepted
+gesture, such as the link tap that opens an experience, can prepare its engine. Preparation calls
 `audio.start()` without playing a sound. Retain and pass that same engine to the
 stage; creating another engine or caching an "unlocked" boolean loses the native
 context's activation. Transfer ownership explicitly and dispose abandoned
-preparations. This works for desktop too, without browser-name checks.
+preparations. This application pattern can be shared across input methods;
+verify browser eligibility in the intended flow.
 
 The host still owns playback intent. Await activation before playing, and
 invalidate a pending hold on release, cancellation, hide or teardown. A later
@@ -91,10 +92,11 @@ responsibility.
 
 ## Host policy
 
-Stop with cut tails and suspend on page hide. Dispose on navigation/unmount.
-Never automatically restart on return. Unsubscribe listeners and remove host
-events on teardown. The catalog follows this policy and retains one shared
-engine per mounted catalog page.
+Stop with cut tails and suspend on page hide. Dispose when the owning host is
+removed, unless ownership is explicitly transferred to another host. Never
+automatically restart playback on return. Unsubscribe listeners and remove
+host events on teardown. Choose the engine's ownership boundary to match the
+application's lifecycle.
 
 Audio state is `idle`, `starting`, `running`, `suspended`, `interrupted`, `closed`,
 or `disposed`. `subscribe(listener)` returns an unsubscribe function.

@@ -360,7 +360,7 @@ export function createEngine(
         return Promise.reject(error);
       }
       if (pending) {
-        // A touch release may supply activation that the initial press lacked.
+        // A later accepted gesture can retry the pending native activation.
         if (context?.state !== "running") retryStart?.();
         return pending;
       }

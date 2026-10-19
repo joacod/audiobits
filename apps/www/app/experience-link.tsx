@@ -13,8 +13,9 @@ export function ExperienceLink(
       // Next calls this only for navigation in this tab, excluding downloads
       // and modified clicks. The engine must start before the route transition.
       onNavigate={() => {
-        if (typeof props.href === "string")
-          prepareExperienceNavigationAudio(props.href);
+        const destination =
+          typeof props.href === "string" ? props.href : props.href.pathname;
+        if (destination) prepareExperienceNavigationAudio(destination);
       }}
     />
   );
