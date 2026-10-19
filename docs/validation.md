@@ -59,6 +59,11 @@ handling and lifecycle. They do not validate iOS browser activation policy.
 Prefer existing shared coverage; do not add browser-policy simulations or input
 matrices as substitutes for device evidence.
 
+For held touch, check nonzero native output before release and verify that
+navigation transfers the same context. Compare cold direct entry separately.
+Script evaluation can grant artificial user activation in browser automation;
+exclude that side effect when investigating native activation eligibility.
+
 ## Checks by boundary
 
 | Boundary          | Evidence                                                                                                               |

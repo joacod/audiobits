@@ -1,3 +1,4 @@
+// These Chromium checks protect host wiring and native signal, not iOS policy.
 import { expect, test } from "@playwright/test";
 import { instrument, probe } from "./experience-probe";
 
@@ -7,7 +8,7 @@ for (const [route, selector] of [
   ["lightsaber", ".lightsaber-canvas"],
   ["energy-charge", ".charge-hold"],
 ] as const) {
-  test(`${route} starts sound on the first held touch without waiting for release`, async ({
+  test(`${route} Chromium cold entry starts sound during a held touch`, async ({
     page,
   }) => {
     await page.setViewportSize({ width: 390, height: 844 });
@@ -166,3 +167,97 @@ test("native touch starts a hold, cancels cleanly and works after a persisted pa
   await expect(pad).toHaveAttribute("data-state", "stopped");
   expect((await probe(page)).contexts).toEqual(["running"]);
 });
+
+// The handoff must preserve native context identity across real client navigation.
+// Direct-entry checks above cannot establish that earlier activation is retained.
+for (const [route, label, selector, signalSelector, signalAttribute] of [
+  [
+    "reactive-thruster",
+    "Open reactive thruster",
+    ".flight-pad",
+    ".thruster-ribbons canvas",
+    "data-peak",
+  ],
+  [
+    "lightsaber",
+    "Open lightsaber",
+    ".lightsaber-canvas",
+    ".lightsaber-canvas",
+    "data-peak",
+  ],
+  [
+    "energy-charge",
+    "Open energy charge",
+    ".charge-hold",
+    ".charge-rings",
+    "data-level",
+  ],
+  ["/", "AudioBits", ".flight-pad", ".thruster-ribbons canvas", "data-peak"],
+] as const) {
+  test(`${route} navigation prepares audio for the first held touch @smoke`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await instrument(page, "normal", "/catalog");
+    expect((await probe(page)).contexts).toEqual([]);
+    const link =
+      route === "/"
+        ? page
+            .getByRole("navigation", { name: "Main navigation" })
+            .getByRole("link", { name: label, exact: true })
+        : page.getByRole("link", { name: label, exact: true });
+    await link.scrollIntoViewIfNeeded();
+    const linkBox = (await link.boundingBox())!;
+    const touch = await page.context().newCDPSession(page);
+    await touch.send("Input.dispatchTouchEvent", {
+      type: "touchStart",
+      touchPoints: [
+        { x: linkBox.x + linkBox.width / 2, y: linkBox.y + linkBox.height / 2 },
+      ],
+    });
+    await touch.send("Input.dispatchTouchEvent", {
+      type: "touchEnd",
+      touchPoints: [],
+    });
+    const pad = page.locator(selector);
+    await expect(pad).toHaveAttribute("data-state", "stopped");
+    await expect(pad).toHaveAttribute("data-audio-entry", "navigation");
+    await expect
+      .poll(async () => (await probe(page)).contexts)
+      .toEqual(["running"]);
+    expect((await probe(page)).sources).toBe(0);
+    await pad.scrollIntoViewIfNeeded();
+    const box = (await pad.boundingBox())!;
+    await touch.send("Input.dispatchTouchEvent", {
+      type: "touchStart",
+      touchPoints: [{ x: box.x + box.width / 2, y: box.y + box.height / 2 }],
+    });
+    await expect(pad).toHaveAttribute("data-state", "running");
+    await expect
+      .poll(async () =>
+        Number(
+          await page
+            .locator(signalSelector)
+            .first()
+            .getAttribute(signalAttribute),
+        ),
+      )
+      .toBeGreaterThan(0);
+    if (route === "lightsaber")
+      await expect(pad).toHaveAttribute("data-extension", "1.000");
+    expect((await probe(page)).contexts).toEqual(["running"]);
+    await touch.send("Input.dispatchTouchEvent", {
+      type: "touchEnd",
+      touchPoints: [],
+    });
+    await expect(pad).toHaveAttribute("data-state", "stopped");
+    await page
+      .getByRole("navigation", { name: "Main navigation" })
+      .getByRole("link", { name: "Catalog", exact: true })
+      .click();
+    await expect
+      .poll(async () => (await probe(page)).contexts)
+      .toEqual(["closed"]);
+    expect((await probe(page)).connected).toBe(0);
+  });
+}

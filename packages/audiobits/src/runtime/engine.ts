@@ -78,6 +78,7 @@ export interface Sound<R extends Recipe = Recipe> {
 export interface AudioEngine {
   readonly state: AudioState;
   readonly counts: { readonly active: number; readonly retiring: number };
+  /** Resume synchronously in a browser-accepted gesture; await before playing. */
   start(): Promise<void>;
   suspend(): Promise<void>;
   sound<const R extends Recipe>(input: R): Sound<R>;
@@ -142,43 +143,8 @@ export function createEngine(
   let muted = false;
   let pending: Promise<void> | undefined;
   let retryStart: (() => void) | undefined;
-  let activationSource: AudioBufferSourceNode | undefined;
-  let activationSourceStarted = false;
   let cancelStart: (() => void) | undefined;
   let disposal: Promise<void> | undefined;
-  function clearActivationSource() {
-    const source = activationSource;
-    if (!source) return;
-    activationSource = undefined;
-    source.onended = null;
-    if (activationSourceStarted) source.stop();
-    activationSourceStarted = false;
-    source.disconnect();
-    source.buffer = null;
-  }
-  function resumeContext() {
-    const native = context!;
-    try {
-      // Start the source while still in the native gesture, before resume can
-      // defer playback admission. A joining handler must not cut this source
-      // before the output has rendered its first frame.
-      if (!activated && native.state === "suspended" && !activationSource) {
-        const source = native.createBufferSource();
-        activationSource = source;
-        source.buffer = native.createBuffer(1, 1, native.sampleRate);
-        source.onended = () => {
-          if (activationSource === source) clearActivationSource();
-        };
-        source.connect(native.destination);
-        source.start(0);
-        activationSourceStarted = true;
-      }
-      return native.resume();
-    } catch (cause) {
-      clearActivationSource();
-      throw cause;
-    }
-  }
   const voices: RecordVoice[] = [];
   const listeners = new Set<(state: AudioState) => void>();
   const emit = (next: AudioState) => {
@@ -394,7 +360,7 @@ export function createEngine(
         return Promise.reject(error);
       }
       if (pending) {
-        // A touch release may supply activation that the initial press lacked.
+        // A later accepted gesture can retry the pending native activation.
         if (context?.state !== "running") retryStart?.();
         return pending;
       }
@@ -427,7 +393,7 @@ export function createEngine(
           buses.set("master", root);
         }
         // Invoke both creation and resume synchronously in the gesture path.
-        resume = resumeContext();
+        resume = context.resume();
       } catch {
         wantsRunning = false;
         emit(context?.state === "closed" ? "closed" : "suspended");
@@ -477,7 +443,7 @@ export function createEngine(
         };
         retryStart = () => {
           try {
-            observe(resumeContext());
+            observe(context!.resume());
           } catch (cause) {
             reject(cause);
           }
@@ -521,7 +487,6 @@ export function createEngine(
         })
         .finally(() => {
           clearTimeout(activationTimer);
-          clearActivationSource();
           if (pending === operation) {
             pending = undefined;
             retryStart = undefined;
@@ -645,7 +610,6 @@ export function createEngine(
       if (disposal) return disposal;
       if (state === "disposed") return Promise.resolve();
       wantsRunning = false;
-      clearActivationSource();
       generation++;
       emit("disposed");
       cancelStart?.();

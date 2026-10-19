@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ExperienceLink } from "./experience-link";
 import {
   useCallback,
   useEffect,
@@ -14,6 +15,7 @@ import { ArrowIcon } from "../icons/arrow-icon";
 import { OutputScope } from "./output-scope";
 import { ThrusterRibbons } from "./thruster-ribbons";
 import type { ThrusterTarget } from "./thruster-ribbons";
+import { takeExperienceAudio } from "../lib/experience-audio";
 import { bindAudioGestures } from "../lib/audio-gestures";
 import {
   audioErrorMessage,
@@ -59,30 +61,34 @@ export function ThrusterHero() {
       setError(`${audioErrorMessage(cause)} Drag again to retry.`);
       setReport(formatAudioActivationReport(cause, surface));
     };
-    const current = mountThruster(surface, {
-      state(value) {
-        setState(value);
-        if (value === "starting") setError("");
-        if (value === "stopped") {
-          pointer.current = null;
-          target.current.throttle = 0;
-          target.current.engaged = false;
-          surface.style.setProperty("--thrust", "0");
-          readout.current = "0%";
+    const current = mountThruster(
+      surface,
+      {
+        state(value) {
+          setState(value);
+          if (value === "starting") setError("");
+          if (value === "stopped") {
+            pointer.current = null;
+            target.current.throttle = 0;
+            target.current.engaged = false;
+            surface.style.setProperty("--thrust", "0");
+            readout.current = "0%";
+            if (meter.current) meter.current.textContent = readout.current;
+            wake.current();
+          }
+        },
+        error: reportError,
+        output: setActive,
+        throttle(value) {
+          target.current.throttle = value;
+          surface.style.setProperty("--thrust", value.toFixed(4));
+          readout.current = `${Math.round(value * 100)}%`;
           if (meter.current) meter.current.textContent = readout.current;
           wake.current();
-        }
+        },
       },
-      error: reportError,
-      output: setActive,
-      throttle(value) {
-        target.current.throttle = value;
-        surface.style.setProperty("--thrust", value.toFixed(4));
-        readout.current = `${Math.round(value * 100)}%`;
-        if (meter.current) meter.current.textContent = readout.current;
-        wake.current();
-      },
-    });
+      takeExperienceAudio("reactive-thruster", surface),
+    );
     host.current = current;
     const unbind = bindAudioGestures(
       surface,
@@ -209,9 +215,9 @@ export function ThrusterHero() {
         />
       </div>
       <div className="landing-links thruster-links">
-        <Link href="/catalog/reactive-thruster">
+        <ExperienceLink href="/catalog/reactive-thruster">
           Open thruster source <ArrowIcon />
-        </Link>
+        </ExperienceLink>
         <Link href="/catalog">
           Explore the catalog <ArrowIcon />
         </Link>

@@ -65,6 +65,9 @@ accurate. Briefly justify substantial README additions in the relevant PR.
   dependencies unless explicitly reconsidered.
 - Recipes remain portable, serializable, versioned data and contain no UI or
   application state.
+- Browser activation and playback intent belong to the application host.
+  Keep resource ownership explicit when preparing audio before playback or
+  transferring an engine between views. See the [lifecycle guide](<apps/www/content/docs/(runtime)/lifecycle.mdx>).
 - Motivate new core or recipe capabilities with concrete sound-design or
   application requirements. Prefer composition with existing primitives when
   it produces comparably good results. A focused general-purpose capability

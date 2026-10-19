@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ExperienceLink } from "./experience-link";
 import { ArrowIcon } from "../icons/arrow-icon";
 import { ExperienceMark } from "../icons/experience-mark";
 import { SoundPortrait } from "../icons/sound-portrait";
@@ -138,7 +139,7 @@ export default function Home() {
         </div>
         <div className="landing-experiences">
           {experiences.map((experience) => (
-            <Link
+            <ExperienceLink
               key={experience.href}
               href={experience.href}
               className="landing-experience"
@@ -151,7 +152,7 @@ export default function Home() {
               <span className="landing-open">
                 Open example <ArrowIcon />
               </span>
-            </Link>
+            </ExperienceLink>
           ))}
         </div>
         <div className="landing-sound-list">

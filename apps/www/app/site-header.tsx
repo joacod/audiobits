@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ExperienceLink } from "./experience-link";
 import { BrandMark } from "../icons/brand-mark";
 import { GithubIcon } from "../icons/github-icon";
 import { NpmIcon } from "../icons/npm-icon";
@@ -10,10 +11,10 @@ export function SiteHeader({ current }: { current?: "home" | "catalog" }) {
   return (
     <header className="site-header">
       <nav className="site-nav" aria-label="Main navigation">
-        <Link href="/" className="wordmark">
+        <ExperienceLink href="/" className="wordmark">
           <BrandMark size={28} />
           AudioBits
-        </Link>
+        </ExperienceLink>
         <div className="site-nav-links">
           <Link
             href="/catalog"

@@ -78,6 +78,13 @@ because their human purposes differ.
   replays a released or cancelled interaction. Maintain one press, hold, drag
   and release lifecycle across mouse, touch and pen. Do not redefine a silent
   first interaction followed by a second interaction as the intended UX.
+- When a showcase needs audio prepared before its interaction, register its
+  engine factory in `lib/experience-audio.ts`, navigate through `ExperienceLink`,
+  and take the prepared engine at mount. The host then owns disposal. This is an
+  optional preparation path, not a required input model for every experience.
+  Use the same lifecycle across input methods without browser-name branches.
+  Keep direct-entry verification separate from navigation preparation; see the
+  [activation guidance](<content/docs/(runtime)/lifecycle.mdx#held-touch-and-earlier-activation>).
 - Stop on interruptions and preserve hosts on persisted `pagehide`; dispose on
   teardown.
 - Respect reduced motion and responsive behavior. Keep ordinary documentation,

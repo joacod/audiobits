@@ -8,7 +8,7 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from "react";
-import { CatalogLink } from "./catalog-link";
+import { ExperienceLink } from "./experience-link";
 import { usePathname } from "next/navigation";
 import { catalogEntries, catalogGroups } from "../lib/catalog";
 
@@ -130,7 +130,7 @@ export function CatalogLayout({ children }: { children: ReactNode }) {
                     .filter((entry) => entry.category === group.category)
                     .map((entry) => (
                       <li key={entry.slug}>
-                        <CatalogLink
+                        <ExperienceLink
                           href={entry.href}
                           aria-current={
                             routed === entry.slug ? "page" : undefined
@@ -138,7 +138,7 @@ export function CatalogLayout({ children }: { children: ReactNode }) {
                           onClick={() => setOpen(false)}
                         >
                           {entry.title}
-                        </CatalogLink>
+                        </ExperienceLink>
                       </li>
                     ))}
                 </ul>

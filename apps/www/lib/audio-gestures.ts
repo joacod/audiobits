@@ -53,13 +53,11 @@ export function bindAudioGestures(
       signal: listeners.signal,
     },
   );
-  const activate = (states: readonly AudioState[], hostOwnsStart = false) => {
+  const activate = (states: readonly AudioState[]) => {
     if (!states.includes(audio.state)) return;
     // A pending host startup owns its own error handling; calling start()
     // still synchronously retries that native activation.
-    if (hostOwnsStart || audio.state === "starting") {
-      // The host joins the engine's pending start in this same event and
-      // reports failure only while its interaction is still current.
+    if (audio.state === "starting") {
       void audio.start().catch(() => {});
       return;
     }
@@ -80,10 +78,9 @@ export function bindAudioGestures(
     (event) => {
       record(event);
       prepare();
-      // Activate here even before the host establishes its hold. All surfaces
-      // use the native capture listener, including React-managed controls.
-      // The host still owns playback and invalidates it on release/cancel.
-      activate(["idle", "starting", "suspended", "interrupted"], true);
+      // Holds start in their host's native touchstart. Only retry here when a
+      // pointer-driven one-shot has already requested activation.
+      activate(["starting"]);
     },
     // Keep touch dispatch synchronous without cancelling native touch defaults.
     { capture: true, passive: false, signal: listeners.signal },
@@ -97,6 +94,18 @@ export function bindAudioGestures(
       activate(["starting", "suspended", "interrupted"]);
     },
     { capture: true, passive: true, signal: listeners.signal },
+  );
+  surface.addEventListener(
+    "click",
+    (event) => {
+      if (!event.isTrusted) return;
+      record(event);
+      prepare();
+      // A browser may grant activation only for the completed tap. This unlocks
+      // audio without replaying a hold that its host has already released.
+      activate(["idle", "starting", "suspended", "interrupted"]);
+    },
+    { capture: true, signal: listeners.signal },
   );
   // An OS interruption can end voices without a pointer release or page hide.
   let previous = audio.state;

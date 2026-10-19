@@ -17,63 +17,6 @@ async function holdStage(page: Page) {
   return box;
 }
 
-// Native contexts and signal are needed to prove that navigation hands off the
-// activated engine, rather than creating a fresh context on the first hold.
-test("catalog navigation hands activated audio to the first held touch", async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 390, height: 844 });
-  await instrument(page, "normal", "/catalog");
-  expect((await probe(page)).contexts).toEqual([]);
-  const link = page.getByRole("link", { name: "Open lightsaber", exact: true });
-  await link.scrollIntoViewIfNeeded();
-  const linkBox = (await link.boundingBox())!;
-  const touch = await page.context().newCDPSession(page);
-  await touch.send("Input.dispatchTouchEvent", {
-    type: "touchStart",
-    touchPoints: [
-      { x: linkBox.x + linkBox.width / 2, y: linkBox.y + linkBox.height / 2 },
-    ],
-  });
-  await touch.send("Input.dispatchTouchEvent", {
-    type: "touchEnd",
-    touchPoints: [],
-  });
-  const pad = stage(page);
-  await expect(pad).toHaveAttribute("data-state", "stopped");
-  await expect(pad).toHaveAttribute("data-audio-entry", "navigation");
-  await expect
-    .poll(async () => (await probe(page)).contexts)
-    .toEqual(["running"]);
-  // The engine's silent activation frame may still be finishing its cleanup.
-  await expect.poll(async () => (await probe(page)).ownedSources).toBe(0);
-  await pad.scrollIntoViewIfNeeded();
-  const box = (await pad.boundingBox())!;
-  await touch.send("Input.dispatchTouchEvent", {
-    type: "touchStart",
-    touchPoints: [{ x: box.x + box.width / 2, y: box.y + box.height * 0.8 }],
-  });
-  await expect(pad).toHaveAttribute("data-state", "running");
-  await expect(pad).toHaveAttribute("data-extension", "1.000");
-  await expect
-    .poll(async () => Number(await pad.getAttribute("data-peak")))
-    .toBeGreaterThan(0);
-  expect((await probe(page)).contexts).toEqual(["running"]);
-  await touch.send("Input.dispatchTouchEvent", {
-    type: "touchEnd",
-    touchPoints: [],
-  });
-  await expect(pad).toHaveAttribute("data-state", "stopped");
-  await page
-    .getByRole("navigation", { name: "Main navigation" })
-    .getByRole("link", { name: "Catalog", exact: true })
-    .click();
-  await expect
-    .poll(async () => (await probe(page)).contexts)
-    .toEqual(["closed"]);
-  expect((await probe(page)).connected).toBe(0);
-});
-
 test("held pointer ignition, swept target hits, release retraction and teardown @smoke", async ({
   page,
 }) => {
@@ -342,8 +285,7 @@ for (const mode of ["held", "failed"] as const)
       );
       await page.mouse.up();
     }
-    // Startup may have rendered a silent activation frame, but cancellation
-    // must leave no connected sources and must never replay the blade.
+    // Cancellation must leave no sources and must never replay the blade.
     expect((await probe(page)).ownedSources).toBe(0);
     await holdStage(page);
     await expect(pad).toHaveAttribute("data-state", "running");

@@ -16,7 +16,7 @@ import {
   formatAudioActivationReport,
 } from "../lib/audio-activation-report";
 import { AudioActivationReport } from "./audio-activation-report";
-import { takeLightsaberNavigationAudio } from "../lib/lightsaber-navigation-audio";
+import { takeExperienceAudio } from "../lib/experience-audio";
 
 const subscribeHydration = () => () => {};
 
@@ -44,11 +44,7 @@ export function LightsaberDetail() {
     );
   }, []);
   useEffect(() => {
-    const prepared = takeLightsaberNavigationAudio();
-    if (surface.current) {
-      surface.current.dataset.audioEntry = prepared ? "navigation" : "stage";
-      surface.current.dataset.audioEntryState = prepared?.state ?? "idle";
-    }
+    const prepared = takeExperienceAudio("lightsaber", surface.current);
     const current = mountLightsaber(
       {
         state(value) {

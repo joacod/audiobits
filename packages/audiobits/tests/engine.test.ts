@@ -156,67 +156,14 @@ it("retries a pending native resume synchronously on a later gesture", async () 
   expect(audio.state).toBe("running");
   await audio.dispose();
 });
-it("primes suspended output synchronously before waiting for activation", async () => {
-  const { audio, context } = setup();
+it("prepares a suspended engine without scheduling a source or playing a voice", async () => {
+  const { audio, context, sources } = setup();
   context.state = "suspended";
-  const source = new Node();
-  context.createBufferSource.mockReturnValueOnce(source);
-  context.resume.mockImplementationOnce(async () => {
-    // The source must start in the native gesture before resume can defer work.
-    expect(source.start).toHaveBeenCalledWith(0);
-    context.state = "running";
-  });
   const starting = audio.start();
-  expect(source.start).toHaveBeenCalledWith(0);
-  expect(source.buffer?.data).toEqual(new Float32Array(1));
-  expect(source.connect).toHaveBeenCalledWith(context.destination);
+  expect(context.resume).toHaveBeenCalledOnce();
+  expect(sources).toHaveLength(0);
   expect(audio.counts).toEqual({ active: 0, retiring: 0 });
   await starting;
-  expect(audio.state).toBe("running");
-  expect(source.stop).toHaveBeenCalledOnce();
-  expect(source.disconnect).toHaveBeenCalledOnce();
-  expect(source.buffer).toBeNull();
-  expect(source.onended).toBeNull();
-  await audio.dispose();
-});
-it("keeps the activation source alive when another handler joins a pending start", async () => {
-  const { audio, context, sources } = setup();
-  context.state = "suspended";
-  let resume!: () => void;
-  context.resume.mockImplementation(
-    () =>
-      new Promise<void>((resolve) => {
-        resume = resolve;
-      }),
-  );
-  const starting = audio.start();
-  const source = sources[0];
-  expect(audio.start()).toBe(starting);
-  expect(source.stop).not.toHaveBeenCalled();
-  expect(source.disconnect).not.toHaveBeenCalled();
-  expect(source.buffer).not.toBeNull();
-  context.state = "running";
-  resume();
-  await starting;
-  expect(audio.state).toBe("running");
-  expect(source.stop).toHaveBeenCalledOnce();
-  expect(source.disconnect).toHaveBeenCalledOnce();
-  expect(source.buffer).toBeNull();
-  await audio.dispose();
-});
-it("cleans failed activation-source setup and permits a fresh start", async () => {
-  const { audio, context, sources } = setup();
-  context.state = "suspended";
-  context.createBuffer.mockImplementationOnce(() => {
-    throw new Error("allocation failed");
-  });
-  await expect(audio.start()).rejects.toMatchObject({ code: "start-failed" });
-  expect(sources[0].onended).toBeNull();
-  expect(sources[0].buffer).toBeNull();
-  expect(sources[0].start).not.toHaveBeenCalled();
-  expect(sources[0].stop).not.toHaveBeenCalled();
-  expect(sources[0].disconnect).toHaveBeenCalledOnce();
-  await audio.start();
   expect(audio.state).toBe("running");
   await audio.dispose();
 });
@@ -375,10 +322,8 @@ it("rejects pending starts immediately on disposal, without native resolution", 
   const rejection = expect(pending).rejects.toMatchObject({ code: "disposed" });
   await audio.dispose();
   await rejection;
-  expect(sources[0].stop).toHaveBeenCalledOnce();
-  expect(sources[0].disconnect).toHaveBeenCalledOnce();
-  expect(sources[0].buffer).toBeNull();
-  expect(sources[0].onended).toBeNull();
+  expect(context.close).toHaveBeenCalledOnce();
+  expect(sources).toHaveLength(0);
 });
 it("recovers from partial master allocation and finalizes native interruption", async () => {
   const { audio, context, nodes, sources } = setup();

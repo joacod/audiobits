@@ -257,11 +257,19 @@ test("experience cards stay silent and full interactions clean up on return", as
     if (entry.category !== "experience") continue;
     const card = page.locator(`[data-catalog-entry="${entry.slug}"]`);
     await expect(card.locator("canvas, button")).toHaveCount(0);
+    const before = await probe(page);
     await card.getByRole("link").click();
     await expect(page).toHaveURL(`${home}${entry.href}`);
-    expect(
-      (await probe(page)).contexts.filter((state) => state !== "closed"),
-    ).toEqual([]);
+    // Held experiences prepare their context during navigation, without sound.
+    // Echo Probe is a one-shot whose completed tap can activate its own context.
+    await expect
+      .poll(async () =>
+        (await probe(page)).contexts.filter((state) => state !== "closed"),
+      )
+      .toEqual(entry.slug === "echo-probe" ? [] : ["running"]);
+    const prepared = await probe(page);
+    expect(prepared.sources).toBe(before.sources);
+    expect(prepared.ownedSources).toBe(0);
     if (entry.slug === "energy-charge") {
       const hold = page.getByRole("button", {
         name: "Hold to charge",

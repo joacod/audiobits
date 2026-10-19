@@ -125,6 +125,15 @@ application boundary and present a retry action where a gesture is required.
 
 ## Ownership and lifecycle
 
+Browser activation and playback intent belong to the application. An app may
+prepare an engine in an accepted gesture before playing through it later.
+Retain the same engine and make ownership explicit when transferring it between
+views. The website's optional navigation preparation uses `ExperienceLink` and
+`apps/www/lib/experience-audio.ts`; the destination host takes disposal ownership.
+Unclaimed engines are bounded and disposed when abandoned. See the
+[lifecycle guide](<../apps/www/content/docs/(runtime)/lifecycle.mdx>) for browser
+eligibility and input-specific considerations.
+
 The engine owns exactly one lazily created context, master gain/mute stages, named buses, voice records,
 and its generated resources. A sound owns a recipe snapshot; each play resolves controls/seed into an internal
 plan and creates its own sources, envelopes, and bounded noise buffers. Disposing a sound stops its

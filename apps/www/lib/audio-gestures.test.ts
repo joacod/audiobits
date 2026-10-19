@@ -18,7 +18,7 @@ it("prepares playback when supported and leaves unsupported navigators usable", 
   expect(session.type).toBe("playback");
 });
 
-it("activates idle and suspended audio in native touch capture without playing sound", () => {
+it("leaves initial held-touch startup to its host and retries pending one-shots", () => {
   vi.stubGlobal("navigator", {});
   const surface = new EventTarget() as HTMLElement;
   const play = vi.fn();
@@ -40,19 +40,19 @@ it("activates idle and suspended audio in native touch capture without playing s
   const touch = new Event("touchstart", { cancelable: true });
   surface.dispatchEvent(touch);
   expect(touch.defaultPrevented).toBe(false);
-  expect(audio.start).toHaveBeenCalledOnce();
+  expect(audio.start).not.toHaveBeenCalled();
   expect(audio.sound).not.toHaveBeenCalled();
   expect(play).not.toHaveBeenCalled();
   audio.state = "suspended";
   surface.dispatchEvent(new Event("touchstart", { cancelable: true }));
-  expect(audio.start).toHaveBeenCalledTimes(2);
+  expect(audio.start).not.toHaveBeenCalled();
   // Pointer-driven one-shots can already have a pending activation.
   audio.state = "starting";
   surface.dispatchEvent(new Event("touchstart", { cancelable: true }));
-  expect(audio.start).toHaveBeenCalledTimes(3);
+  expect(audio.start).toHaveBeenCalledOnce();
   audio.state = "running";
   surface.dispatchEvent(new Event("touchstart", { cancelable: true }));
-  expect(audio.start).toHaveBeenCalledTimes(3);
+  expect(audio.start).toHaveBeenCalledOnce();
   expect(stop).not.toHaveBeenCalled();
   unbind();
 });
@@ -86,7 +86,7 @@ it("leaves an idle engine idle on release and retries resumable holds on touchen
   unbind();
 });
 
-it("activates before the touch host while leaving a single hold owned by the host", async () => {
+it("keeps one initial native touch start owned by the host", async () => {
   const activation = { isActive: false };
   vi.stubGlobal("navigator", { userActivation: activation });
   const surface = Object.assign(new EventTarget(), {
@@ -110,7 +110,7 @@ it("activates before the touch host while leaving a single hold owned by the hos
   );
   const hold = vi.fn();
   surface.addEventListener("touchstart", () => {
-    expect(["starting", "running"]).toContain(audio.state);
+    expect(["idle", "running"]).toContain(audio.state);
     hold();
     void audio.start();
   });
@@ -126,14 +126,14 @@ it("activates before the touch host while leaving a single hold owned by the hos
   const touch = new Event("touchstart", { cancelable: true });
   surface.dispatchEvent(touch);
   expect(touch.defaultPrevented).toBe(false);
-  expect(audio.start).toHaveBeenCalledTimes(2);
+  expect(audio.start).toHaveBeenCalledOnce();
   expect(audio.state).toBe("starting");
   await Promise.resolve();
   expect(audio.state).toBe("running");
   expect(hold).toHaveBeenCalledOnce();
   expect(activation.isActive).toBe(false);
   surface.dispatchEvent(new Event("touchend"));
-  expect(audio.start).toHaveBeenCalledTimes(2);
+  expect(audio.start).toHaveBeenCalledOnce();
   press();
   surface.dispatchEvent(new Event("touchstart", { cancelable: true }));
   expect(hold).toHaveBeenCalledTimes(2);

@@ -1,12 +1,19 @@
-import { createAudio } from "audiobits";
+import { createAudio, type AudioEngine } from "audiobits";
 import { createEnergyCharge } from "./progress";
 
+export function createEnergyChargeAudio() {
+  return createAudio({ maxVoices: 3, maxVoicesPerSound: 2 });
+}
+
 /** Browser policy around the portable progress controller, with no progress timer. */
-export function mountEnergyCharge(feedback: {
-  state(value: "starting" | "running" | "stopped"): void;
-  error(cause: unknown): void;
-}) {
-  const audio = createAudio({ maxVoices: 3, maxVoicesPerSound: 2 });
+export function mountEnergyCharge(
+  feedback: {
+    state(value: "starting" | "running" | "stopped"): void;
+    error(cause: unknown): void;
+  },
+  // Passing a prepared engine transfers ownership, including disposal.
+  audio: AudioEngine = createEnergyChargeAudio(),
+) {
   let engaged = false;
   let generation = 0;
   const control = createEnergyCharge(audio, {

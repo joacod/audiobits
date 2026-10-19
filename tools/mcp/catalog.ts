@@ -94,7 +94,7 @@ export function itemMetadata(item: CatalogItem) {
       inspect: `npx shadcn@latest view ${address}`,
       install: `npx shadcn@latest add ${address}`,
       guidance:
-        "Run the established shadcn registry command from the consumer project and review conflicts. Install only the needed sound source; connect recipes or controllers to existing application inputs. The app owns gesture activation, Stop and disposal. Demo hosts and renderers are excluded. This MCP returns source for review and never installs it.",
+        "Run the established shadcn registry command from the consumer project and review conflicts. Install only the needed sound source; connect recipes or controllers to existing application inputs. The app owns browser-accepted activation, playback intent, Stop and disposal. If preparing audio earlier, retain the same engine and keep its ownership explicit. Verify the intended input flow in the target browser. See https://www.audiobits.dev/docs/lifecycle for activation guidance. Demo hosts and renderers are excluded. This MCP returns source for review and never installs it.",
     },
   };
 }

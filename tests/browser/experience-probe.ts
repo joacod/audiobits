@@ -9,12 +9,7 @@ interface Probe {
 export async function instrument(
   page: Page,
   activation:
-    | "normal"
-    | "held"
-    | "failed"
-    | "touch-start"
-    | "touch-release"
-    | "touch-source" = "normal",
+    "normal" | "held" | "failed" | "touch-start" | "touch-release" = "normal",
   route = "reactive-thruster",
 ) {
   await page.addInitScript((mode) => {
@@ -29,27 +24,13 @@ export async function instrument(
     let fail = mode === "failed";
     let touchActivated = false;
     let nativeActivated = false;
-    let insideTouchStart = false;
-    const sourceResumes: (() => void)[] = [];
-    if (mode === "touch-release" || mode === "touch-source") {
+    if (mode === "touch-release") {
       Object.defineProperty(navigator, "userActivation", {
         value: {
           get isActive() {
-            return mode === "touch-source" ? false : touchActivated;
+            return touchActivated;
           },
         },
-      });
-    }
-    if (mode === "touch-source") {
-      window.addEventListener(
-        "touchstart",
-        () => {
-          insideTouchStart = true;
-        },
-        { capture: true },
-      );
-      window.addEventListener("touchstart", () => {
-        insideTouchStart = false;
       });
     }
     if (mode === "touch-start" || mode === "touch-release") {
@@ -96,23 +77,6 @@ export async function instrument(
                 node.addEventListener("ended", () => {
                   probe.ended++;
                 });
-                if (
-                  mode === "touch-source" &&
-                  node instanceof AudioBufferSourceNode
-                ) {
-                  const start = node.start.bind(node);
-                  Object.defineProperty(node, "start", {
-                    value: (
-                      ...args: Parameters<AudioBufferSourceNode["start"]>
-                    ) => {
-                      start(...args);
-                      if (insideTouchStart && node.buffer?.length === 1) {
-                        nativeActivated = true;
-                        sourceResumes.splice(0).forEach((resume) => resume());
-                      }
-                    },
-                  });
-                }
               }
               return node;
             },
@@ -121,7 +85,7 @@ export async function instrument(
       }
       get state() {
         if (
-          ["touch-source", "touch-start", "touch-release"].includes(mode) &&
+          ["touch-start", "touch-release"].includes(mode) &&
           !nativeActivated &&
           super.state !== "closed"
         )
@@ -129,14 +93,6 @@ export async function instrument(
         return super.state;
       }
       resume() {
-        if (mode === "touch-source" && !nativeActivated) {
-          void super.suspend();
-          return new Promise<void>((resolve, reject) =>
-            sourceResumes.push(() => {
-              void super.resume().then(resolve, reject);
-            }),
-          );
-        }
         if (
           (mode === "touch-start" || mode === "touch-release") &&
           !touchActivated
