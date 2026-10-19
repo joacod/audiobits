@@ -27,6 +27,13 @@ for (const [route, selector] of [
       });
     await press();
     await expect(pad).toHaveAttribute("data-state", "running");
+    if (route === "lightsaber") {
+      // Ignition must produce both the blade and sound before any drag/release.
+      await expect(pad).toHaveAttribute("data-extension", "1.000");
+      await expect
+        .poll(async () => Number(await pad.getAttribute("data-peak")))
+        .toBeGreaterThan(0);
+    }
     await touch.send("Input.dispatchTouchEvent", {
       type: "touchMove",
       touchPoints: [{ x: box.x + box.width * 0.8, y: box.y + box.height / 2 }],

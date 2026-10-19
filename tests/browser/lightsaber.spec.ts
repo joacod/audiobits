@@ -285,7 +285,9 @@ for (const mode of ["held", "failed"] as const)
       );
       await page.mouse.up();
     }
-    expect((await probe(page)).sources).toBe(0);
+    // Startup may have rendered a silent activation frame, but cancellation
+    // must leave no connected sources and must never replay the blade.
+    expect((await probe(page)).ownedSources).toBe(0);
     await holdStage(page);
     await expect(pad).toHaveAttribute("data-state", "running");
     await expect(page.locator(".lightsaber-help [role=alert]")).toHaveCount(0);

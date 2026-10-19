@@ -51,7 +51,9 @@ function setup(options = {}) {
   const context = {
     currentTime: 1,
     sampleRate: 48000,
-    state: "suspended",
+    // Voice/graph tests use output that needs no activation. Startup tests
+    // below explicitly suspend it to exercise the native activation path.
+    state: "running",
     destination: new Node(),
     createGain: vi.fn(make),
     createDelay: vi.fn(make),
@@ -114,6 +116,7 @@ it("constructs without globals and rejects play until started", async () => {
 });
 it("starts synchronously, shares the pending operation and retries failures", async () => {
   const { audio, context, factory } = setup();
+  context.state = "suspended";
   let release!: () => void;
   context.resume.mockImplementationOnce(
     () =>
@@ -141,6 +144,7 @@ it("starts synchronously, shares the pending operation and retries failures", as
 });
 it("retries a pending native resume synchronously on a later gesture", async () => {
   const { audio, context } = setup();
+  context.state = "suspended";
   context.resume.mockImplementationOnce(() => new Promise<void>(() => {}));
   const first = audio.start();
   expect(audio.state).toBe("starting");
@@ -154,18 +158,13 @@ it("retries a pending native resume synchronously on a later gesture", async () 
 });
 it("primes suspended output synchronously before waiting for activation", async () => {
   const { audio, context } = setup();
-  let resume!: () => void;
-  context.resume.mockImplementationOnce(
-    () =>
-      new Promise<void>((resolve) => {
-        resume = resolve;
-      }),
-  );
+  context.state = "suspended";
   const source = new Node();
   context.createBufferSource.mockReturnValueOnce(source);
-  source.start.mockImplementationOnce(() => {
+  context.resume.mockImplementationOnce(async () => {
+    // The source must start in the native gesture before resume can defer work.
+    expect(source.start).toHaveBeenCalledWith(0);
     context.state = "running";
-    resume();
   });
   const starting = audio.start();
   expect(source.start).toHaveBeenCalledWith(0);
@@ -180,9 +179,34 @@ it("primes suspended output synchronously before waiting for activation", async 
   expect(source.onended).toBeNull();
   await audio.dispose();
 });
+it("keeps the activation source alive when another handler joins a pending start", async () => {
+  const { audio, context, sources } = setup();
+  context.state = "suspended";
+  let resume!: () => void;
+  context.resume.mockImplementation(
+    () =>
+      new Promise<void>((resolve) => {
+        resume = resolve;
+      }),
+  );
+  const starting = audio.start();
+  const source = sources[0];
+  expect(audio.start()).toBe(starting);
+  expect(source.stop).not.toHaveBeenCalled();
+  expect(source.disconnect).not.toHaveBeenCalled();
+  expect(source.buffer).not.toBeNull();
+  context.state = "running";
+  resume();
+  await starting;
+  expect(audio.state).toBe("running");
+  expect(source.stop).toHaveBeenCalledOnce();
+  expect(source.disconnect).toHaveBeenCalledOnce();
+  expect(source.buffer).toBeNull();
+  await audio.dispose();
+});
 it("cleans failed activation-source setup and permits a fresh start", async () => {
   const { audio, context, sources } = setup();
-  context.resume.mockImplementationOnce(() => new Promise<void>(() => {}));
+  context.state = "suspended";
   context.createBuffer.mockImplementationOnce(() => {
     throw new Error("allocation failed");
   });
@@ -198,6 +222,7 @@ it("cleans failed activation-source setup and permits a fresh start", async () =
 });
 it("suspends a late activation retry after startup was cancelled", async () => {
   const { audio, context } = setup();
+  context.state = "suspended";
   let resume!: () => void;
   context.resume.mockImplementationOnce(() => new Promise<void>(() => {}));
   context.resume.mockImplementationOnce(
@@ -223,6 +248,7 @@ it("suspends a late activation retry after startup was cancelled", async () => {
 });
 it("invalidates pending resume and closes exactly once", async () => {
   const { audio, context } = setup();
+  context.state = "suspended";
   let release!: () => void;
   context.resume.mockImplementationOnce(
     () =>
@@ -343,6 +369,7 @@ it("finishes partial graphs when native allocation fails", async () => {
 
 it("rejects pending starts immediately on disposal, without native resolution", async () => {
   const { audio, context, sources } = setup();
+  context.state = "suspended";
   context.resume.mockImplementationOnce(() => new Promise<void>(() => {}));
   const pending = audio.start();
   const rejection = expect(pending).rejects.toMatchObject({ code: "disposed" });
@@ -410,6 +437,7 @@ it("bounds a blocked resume and permits a new gesture retry without old playback
   vi.useFakeTimers();
   try {
     const { audio, context } = setup();
+    context.state = "suspended";
     context.resume.mockImplementationOnce(() => new Promise<void>(() => {}));
     const sound = audio.sound(confirmation);
     const pending = audio.start();
@@ -604,6 +632,7 @@ it("keeps mute independent from gain automation and duplicate parent calls inert
 });
 it("invalidates blocked resume on suspension without waiting for native resolution", async () => {
   const { audio, context } = setup();
+  context.state = "suspended";
   let resolve!: () => void;
   context.resume.mockImplementationOnce(
     () =>

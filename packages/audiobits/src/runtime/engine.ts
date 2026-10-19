@@ -158,11 +158,11 @@ export function createEngine(
   }
   function resumeContext() {
     const native = context!;
-    const resume = native.resume();
-    // A suspended output can require a source started in the same gesture.
-    if (!activated && native.state === "suspended") {
-      try {
-        clearActivationSource();
+    try {
+      // Start the source while still in the native gesture, before resume can
+      // defer playback admission. A joining handler must not cut this source
+      // before the output has rendered its first frame.
+      if (!activated && native.state === "suspended" && !activationSource) {
         const source = native.createBufferSource();
         activationSource = source;
         source.buffer = native.createBuffer(1, 1, native.sampleRate);
@@ -172,14 +172,12 @@ export function createEngine(
         source.connect(native.destination);
         source.start(0);
         activationSourceStarted = true;
-      } catch (cause) {
-        // Preserve the setup failure while handling the native promise too.
-        void resume.catch(() => {});
-        clearActivationSource();
-        throw cause;
       }
+      return native.resume();
+    } catch (cause) {
+      clearActivationSource();
+      throw cause;
     }
-    return resume;
   }
   const voices: RecordVoice[] = [];
   const listeners = new Set<(state: AudioState) => void>();
