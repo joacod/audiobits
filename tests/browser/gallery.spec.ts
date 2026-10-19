@@ -1,5 +1,5 @@
 import { soundKinds, sounds, type SoundKind } from "../../apps/www/lib/gallery";
-import { dragThruster } from "./experience-probe";
+import { holdLightsaber } from "./experience-probe";
 import { requireOfflineCheckpoints } from "./offline-capabilities";
 import { expect, test } from "@playwright/test";
 import manifest from "../../packages/audiobits/package.json" with { type: "json" };
@@ -354,13 +354,13 @@ test("workbench controls stay disabled until hydration owns them @smoke", async 
   await expect(page.locator(".gallery-mixer > [role=alert]")).toHaveCount(0);
 });
 
-test("homepage thruster uses one engine, reports output and disposes on navigation", async ({
+test("homepage lightsaber uses one engine, reports output and disposes on navigation", async ({
   page,
 }) => {
   await instrument(page);
   await page.setViewportSize({ width: 375, height: 844 });
   await page.goto("http://127.0.0.1:3100");
-  const bounds = await page.locator(".flight-pad").boundingBox();
+  const bounds = await page.locator(".lightsaber-canvas").boundingBox();
   expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(844);
   expect(
     await page.evaluate(
@@ -382,23 +382,22 @@ test("homepage thruster uses one engine, reports output and disposes on navigati
       page.locator(`.landing-sound-entry[href="/catalog/${kind}"]`),
     ).toHaveCount(1);
   }
-  await dragThruster(page);
-  await expect(page.getByTestId("landing-playback-state")).toHaveText(
-    "Thruster: running",
+  await holdLightsaber(page);
+  await expect(page.locator(".lightsaber-canvas")).toHaveAttribute(
+    "data-state",
+    "running",
   );
   await expect
     .poll(() =>
-      page
-        .locator(".thruster-signal canvas")
-        .getAttribute("data-peak")
-        .then(Number),
+      page.locator(".lightsaber-canvas").getAttribute("data-peak").then(Number),
     )
     .toBeGreaterThan(0);
   await page.mouse.up();
-  await expect(page.getByTestId("landing-playback-state")).toHaveText(
-    "Thruster: stopped",
+  await expect(page.locator(".lightsaber-canvas")).toHaveAttribute(
+    "data-state",
+    "stopped",
   );
-  await expect(page.locator(".thruster-signal canvas")).toHaveAttribute(
+  await expect(page.locator(".lightsaber-canvas")).toHaveAttribute(
     "data-peak",
     "0",
   );

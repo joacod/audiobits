@@ -81,11 +81,11 @@ test("public pages expose unique metadata and content without JavaScript", async
     await expect(page.locator("h1")).not.toBeEmpty();
     if (route.path === "/") {
       await expect(page.locator("h1")).toHaveText("Sound that reacts.");
-      await expect(page.locator(".thruster-intro p")).toContainText(
+      await expect(page.locator(".lightsaber-intro p")).toContainText(
         "Procedural sound effects for the web.",
       );
       await expect(page.locator(".landing-own pre")).toHaveText(
-        "npx shadcn@latest add joacod/audiobits/reactive-thruster",
+        "npx shadcn@latest add joacod/audiobits/lightsaber",
       );
       await expect(page.locator(".landing-agents pre")).toHaveText(
         "npx skills add joacod/audiobits --skill audiobits",

@@ -38,12 +38,12 @@ export type CatalogEntry = ExperienceCatalogEntry | BundledCatalogEntry;
 export type CatalogCategory = CatalogEntry["category"];
 
 const experienceEntries = [
+  { slug: "lightsaber", preview: "blade", experience: lightsaberExperience },
   {
     slug: "reactive-thruster",
     preview: "thruster",
     experience: reactiveThrusterExperience,
   },
-  { slug: "lightsaber", preview: "blade", experience: lightsaberExperience },
   { slug: "echo-probe", preview: "pulse", experience: echoProbeExperience },
   {
     slug: "energy-charge",

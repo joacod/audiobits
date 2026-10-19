@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { instrument, probe, dragThruster } from "./experience-probe";
+import { instrument, probe, holdLightsaber } from "./experience-probe";
 import {
   catalogEntries,
   catalogEntriesByCategory,
@@ -18,12 +18,12 @@ for (const [width, height] of [
     await page.setViewportSize({ width, height });
     await page.goto(home);
     await expect(page.locator("h1")).toHaveCount(1);
-    await expect(page.locator(".thruster-ribbons")).toHaveAttribute(
+    await expect(page.locator(".lightsaber-canvas")).toHaveAttribute(
       "data-renderer",
-      /webgl|canvas|unavailable/,
+      /three|unavailable/,
     );
     await expect(
-      page.locator(".thruster-hero button, .thruster-hero input"),
+      page.locator(".lightsaber-hero button, .lightsaber-hero input"),
     ).toHaveCount(0);
     await page.evaluate(() => document.fonts.ready);
     expect(
@@ -32,12 +32,10 @@ for (const [width, height] of [
       ),
     ).toBe(true);
     const pad = (await page
-      .getByRole("group", { name: "Drag to fly" })
+      .getByRole("group", { name: "Lightsaber stage" })
       .boundingBox())!;
-    const signal = (await page.locator(".thruster-signal").boundingBox())!;
-    expect(pad.height).toBeGreaterThanOrEqual(208);
-    expect(signal.y).toBeCloseTo(pad.y + pad.height, 0);
-    expect(signal.y + signal.height).toBeLessThanOrEqual(height);
+    expect(pad.height).toBeGreaterThanOrEqual(256);
+    expect(pad.y + pad.height).toBeLessThanOrEqual(height);
     const nav = page.getByRole("navigation", { name: "Main navigation" });
     for (const [name, href] of [
       ["AudioBits", "/"],
@@ -62,13 +60,13 @@ for (const [width, height] of [
     }
     await expect(nav.getByRole("link")).toHaveCount(5);
     await expect(
-      page.getByRole("link", { name: "Open thruster source" }),
-    ).toHaveAttribute("href", "/catalog/reactive-thruster");
+      page.getByRole("link", { name: "Open lightsaber source" }),
+    ).toHaveAttribute("href", "/catalog/lightsaber");
     await expect(
       page.locator(".landing-experience").filter({ hasText: "Energy Charge" }),
     ).toHaveAttribute("href", "/catalog/energy-charge");
     const experiences = catalogEntriesByCategory("experience").filter(
-      (entry) => entry.slug !== "reactive-thruster",
+      (entry) => entry.slug !== "lightsaber",
     );
     await expect(page.locator(".landing-experience")).toHaveCount(
       experiences.length,
@@ -149,10 +147,7 @@ test("landing install commands copy exactly and documentation destinations resol
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   await page.goto(home);
   for (const [label, command] of [
-    [
-      "thruster install",
-      "npx shadcn@latest add joacod/audiobits/reactive-thruster",
-    ],
+    ["lightsaber install", "npx shadcn@latest add joacod/audiobits/lightsaber"],
     ["Skill install", "npx skills add joacod/audiobits --skill audiobits"],
   ]) {
     const copy = page.getByRole("button", { name: `Copy ${label} command` });
@@ -229,30 +224,29 @@ test("landing copy failure keeps the command available for manual copying", asyn
   ).toBe(true);
 });
 
-test("landing stays silent until dragging, measures real output and disposes on navigation", async ({
+test("landing stays silent until holding, measures real output and disposes on navigation", async ({
   page,
 }) => {
   const errors: string[] = [];
   page.on("pageerror", (cause) => errors.push(cause.message));
   await instrument(page, "normal", "/");
   expect((await probe(page)).contexts).toEqual([]);
-  await dragThruster(page);
-  await expect(page.getByTestId("landing-playback-state")).toHaveText(
-    "Thruster: running",
+  await holdLightsaber(page);
+  await expect(page.locator(".lightsaber-canvas")).toHaveAttribute(
+    "data-state",
+    "running",
   );
-  for (const selector of [
-    ".thruster-signal canvas",
-    ".thruster-ribbons canvas",
-  ]) {
-    await expect
-      .poll(async () =>
-        Number(await page.locator(selector).getAttribute("data-peak")),
-      )
-      .toBeGreaterThan(0);
-  }
+  await expect
+    .poll(async () =>
+      Number(
+        await page.locator(".lightsaber-canvas").getAttribute("data-peak"),
+      ),
+    )
+    .toBeGreaterThan(0);
   await page.mouse.up();
-  await expect(page.getByTestId("landing-playback-state")).toHaveText(
-    "Thruster: stopped",
+  await expect(page.locator(".lightsaber-canvas")).toHaveAttribute(
+    "data-state",
+    "stopped",
   );
   await expect
     .poll(async () => {
@@ -260,11 +254,11 @@ test("landing stays silent until dragging, measures real output and disposes on 
       return p.ended === p.sources;
     })
     .toBe(true);
-  await expect(page.locator(".thruster-signal canvas")).toHaveAttribute(
+  await expect(page.locator(".lightsaber-canvas")).toHaveAttribute(
     "data-peak",
     "0",
   );
-  await dragThruster(page);
+  await holdLightsaber(page);
   await page
     .getByRole("navigation", { name: "Main navigation" })
     .getByRole("link", { name: "Docs", exact: true })
@@ -278,70 +272,66 @@ test("landing stays silent until dragging, measures real output and disposes on 
   expect(errors).toEqual([]);
 });
 
-test("landing pointer acceleration, release, touch cancellation and interruptions clean up @smoke", async ({
+test("landing swing, release, touch cancellation and interruptions clean up @smoke", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await instrument(page, "normal", "/");
-  const pad = page.getByRole("group", { name: "Drag to fly" });
+  const pad = page.getByRole("group", { name: "Lightsaber stage" });
   const box = (await pad.boundingBox())!;
   await page.mouse.move(box.x + 30, box.y + 80);
   await page.mouse.down();
-  await expect(page.getByTestId("landing-playback-state")).toHaveText(
-    "Thruster: running",
+  await expect(page.locator(".lightsaber-canvas")).toHaveAttribute(
+    "data-state",
+    "running",
   );
   await page.mouse.move(box.x + box.width - 30, box.y + 130, { steps: 8 });
   await expect
-    .poll(async () =>
-      Number(
-        (await page.locator(".flight-readout output").textContent())!.replace(
-          "%",
-          "",
-        ),
-      ),
-    )
+    .poll(async () => Number(await pad.getAttribute("data-motion")))
     .toBeGreaterThan(0);
-  await expect(page.locator(".flight-craft")).not.toHaveAttribute(
-    "style",
-    /left: 50%/,
-  );
   await pad.dispatchEvent("pointercancel", { pointerId: 99 });
-  await expect(page.getByTestId("landing-playback-state")).toHaveText(
-    "Thruster: running",
+  await expect(page.locator(".lightsaber-canvas")).toHaveAttribute(
+    "data-state",
+    "running",
   );
   await page.mouse.up();
-  await expect(page.getByTestId("landing-playback-state")).toHaveText(
-    "Thruster: stopped",
+  await expect(page.locator(".lightsaber-canvas")).toHaveAttribute(
+    "data-state",
+    "stopped",
   );
-  await expect.poll(async () => (await probe(page)).ended).toBe(3);
+  await expect
+    .poll(async () => {
+      const p = await probe(page);
+      return p.ended === p.sources;
+    })
+    .toBe(true);
   const touch = await page.context().newCDPSession(page);
   await touch.send("Input.dispatchTouchEvent", {
     type: "touchStart",
     touchPoints: [{ x: box.x + 50, y: box.y + 80 }],
   });
-  await expect(page.getByTestId("landing-playback-state")).toHaveText(
-    "Thruster: running",
+  await expect(page.locator(".lightsaber-canvas")).toHaveAttribute(
+    "data-state",
+    "running",
   );
   await touch.send("Input.dispatchTouchEvent", {
     type: "touchMove",
     touchPoints: [{ x: box.x + box.width - 40, y: box.y + 140 }],
   });
-  await expect(page.locator(".flight-craft")).not.toHaveAttribute(
-    "style",
-    /left: 50%/,
-  );
   await touch.send("Input.dispatchTouchEvent", {
     type: "touchCancel",
     touchPoints: [],
   });
-  await expect(page.getByTestId("landing-playback-state")).toHaveText(
-    "Thruster: stopped",
+  await expect(page.locator(".lightsaber-canvas")).toHaveAttribute(
+    "data-state",
+    "stopped",
   );
   await touch.detach();
-  await dragThruster(page);
+  await holdLightsaber(page);
   await page.evaluate(() => window.dispatchEvent(new Event("blur")));
-  await expect(page.getByTestId("landing-playback-state")).toHaveText(
-    "Thruster: stopped",
+  await expect(page.locator(".lightsaber-canvas")).toHaveAttribute(
+    "data-state",
+    "stopped",
   );
   await expect
     .poll(async () => {
@@ -350,9 +340,10 @@ test("landing pointer acceleration, release, touch cancellation and interruption
     })
     .toBe(true);
   await page.mouse.up();
-  await dragThruster(page);
-  await expect(page.getByTestId("landing-playback-state")).toHaveText(
-    "Thruster: running",
+  await holdLightsaber(page);
+  await expect(page.locator(".lightsaber-canvas")).toHaveAttribute(
+    "data-state",
+    "running",
   );
   await page.evaluate(() => {
     Object.defineProperty(document, "hidden", {
@@ -361,8 +352,9 @@ test("landing pointer acceleration, release, touch cancellation and interruption
     });
     document.dispatchEvent(new Event("visibilitychange"));
   });
-  await expect(page.getByTestId("landing-playback-state")).toHaveText(
-    "Thruster: stopped",
+  await expect(page.locator(".lightsaber-canvas")).toHaveAttribute(
+    "data-state",
+    "stopped",
   );
   await expect
     .poll(async () => (await probe(page)).contexts)
@@ -378,24 +370,22 @@ test("landing activation failure recovers with a fresh gesture", async ({
   page,
 }) => {
   await instrument(page, "failed", "/");
-  const pad = page.getByRole("group", { name: "Drag to fly" });
-  await expect(pad.locator(".thruster-ribbons")).toHaveAttribute(
-    "data-renderer",
-    /webgl|canvas|unavailable/,
-  );
+  const pad = page.getByRole("group", { name: "Lightsaber stage" });
+  await expect(pad).toHaveAttribute("data-renderer", /three|unavailable/);
   const box = (await pad.boundingBox())!;
   await page.mouse.move(box.x + 40, box.y + 80);
   await page.mouse.down();
-  await expect(page.locator(".thruster-hero [role=alert]")).toContainText(
-    "Drag again to retry",
+  await expect(page.locator(".lightsaber-hero [role=alert]")).toContainText(
+    "Hold the stage again to retry",
   );
   expect((await probe(page)).sources).toBe(0);
   await page.mouse.up();
-  await dragThruster(page);
-  await expect(page.getByTestId("landing-playback-state")).toHaveText(
-    "Thruster: running",
+  await holdLightsaber(page);
+  await expect(page.locator(".lightsaber-canvas")).toHaveAttribute(
+    "data-state",
+    "running",
   );
-  await expect(page.locator(".thruster-hero [role=alert]")).toHaveCount(0);
+  await expect(page.locator(".lightsaber-hero [role=alert]")).toHaveCount(0);
   await page.mouse.up();
 });
 
@@ -403,9 +393,10 @@ test("a pending homepage start cannot outlive pointer release @smoke", async ({
   page,
 }) => {
   await instrument(page, "held", "/");
-  await dragThruster(page);
-  await expect(page.getByTestId("landing-playback-state")).toHaveText(
-    "Thruster: starting",
+  await holdLightsaber(page);
+  await expect(page.locator(".lightsaber-canvas")).toHaveAttribute(
+    "data-state",
+    "starting",
   );
   await page.mouse.up();
   await page.evaluate(() =>
@@ -418,8 +409,9 @@ test("a pending homepage start cannot outlive pointer release @smoke", async ({
   await expect
     .poll(async () => (await probe(page)).contexts)
     .toEqual(["running"]);
-  await expect(page.getByTestId("landing-playback-state")).toHaveText(
-    "Thruster: stopped",
+  await expect(page.locator(".lightsaber-canvas")).toHaveAttribute(
+    "data-state",
+    "stopped",
   );
   expect((await probe(page)).sources).toBe(0);
 });
@@ -430,30 +422,26 @@ test("reduced motion preserves gesture feedback, level feedback and navigation f
   await page.emulateMedia({ reducedMotion: "reduce" });
   await instrument(page, "normal", "/");
   expect((await probe(page)).contexts).toEqual([]);
-  await dragThruster(page);
-  await expect(page.getByTestId("landing-playback-state")).toHaveText(
-    "Thruster: running",
+  await holdLightsaber(page);
+  await expect(page.locator(".lightsaber-canvas")).toHaveAttribute(
+    "data-state",
+    "running",
   );
-  await expect(page.locator(".thruster-ribbons")).toHaveAttribute(
-    "data-renderer",
-    "canvas",
-  );
-  await expect(page.locator(".thruster-signal canvas")).toHaveAttribute(
-    "data-peak",
-    "0",
+  await expect(page.locator(".lightsaber-canvas")).toHaveAttribute(
+    "data-reduced-motion",
+    "true",
   );
   await expect
-    .poll(() =>
-      page
-        .locator(".thruster-signal figure")
-        .evaluate((node) =>
-          Number((node as HTMLElement).style.getPropertyValue("--level")),
-        ),
+    .poll(async () =>
+      Number(
+        await page.locator(".lightsaber-canvas").getAttribute("data-peak"),
+      ),
     )
     .toBeGreaterThan(0);
   await page.mouse.up();
-  await expect(page.getByTestId("landing-playback-state")).toHaveText(
-    "Thruster: stopped",
+  await expect(page.locator(".lightsaber-canvas")).toHaveAttribute(
+    "data-state",
+    "stopped",
   );
   for (const name of ["GitHub", "npm"]) {
     const link = page
@@ -534,7 +522,7 @@ for (const route of ["/", "/catalog/confirmation"]) {
     const copy = page.getByRole("button", {
       name:
         route === "/"
-          ? "Copy thruster install command"
+          ? "Copy lightsaber install command"
           : "Copy Confirmation command",
       exact: true,
     });

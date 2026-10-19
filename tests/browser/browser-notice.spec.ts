@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { dragThruster, instrument, probe } from "./experience-probe";
+import { holdLightsaber, instrument, probe } from "./experience-probe";
 
 const home = "http://127.0.0.1:3100";
 const copy =
@@ -111,17 +111,19 @@ for (const width of [320, 1280]) {
       });
       const geometry = () =>
         page.evaluate(() =>
-          [".site-header", ".thruster-hero", ".flight-pad"].map((selector) => {
-            const { top, height } = document
-              .querySelector(selector)!
-              .getBoundingClientRect();
-            return { top, height };
-          }),
+          [".site-header", ".lightsaber-hero", ".lightsaber-canvas"].map(
+            (selector) => {
+              const { top, height } = document
+                .querySelector(selector)!
+                .getBoundingClientRect();
+              return { top, height };
+            },
+          ),
         );
       let before: Awaited<ReturnType<typeof geometry>>;
       try {
         await page.goto(home, { waitUntil: "commit" });
-        await expect(page.locator(".flight-pad")).toBeVisible();
+        await expect(page.locator(".lightsaber-canvas")).toBeVisible();
         await page.evaluate(() => document.fonts.ready);
         await expect(page.locator(".browser-notice")).toBeHidden();
         before = await geometry();
@@ -129,7 +131,7 @@ for (const width of [320, 1280]) {
         release();
       }
       await expect(
-        page.getByRole("button", { name: "Copy thruster install command" }),
+        page.getByRole("button", { name: "Copy lightsaber install command" }),
       ).toBeEnabled();
       await expect(page.locator(".browser-notice")).toBeVisible({
         visible: !recognized,
@@ -156,14 +158,14 @@ for (const width of [320, 1280]) {
     await instrument(page, "normal", "/");
     await expect(page.locator(".browser-notice")).toBeVisible();
     await page.screenshot({ path: testInfo.outputPath(`notice-${width}.png`) });
-    await dragThruster(page);
+    await holdLightsaber(page);
     await expect
       .poll(async () => (await probe(page)).contexts)
       .toEqual(["running"]);
     expect((await probe(page)).sources).toBeGreaterThan(0);
     await page.mouse.up();
     await expect(
-      page.getByRole("group", { name: "Drag to fly" }),
+      page.getByRole("group", { name: "Lightsaber stage" }),
     ).toHaveAttribute("data-state", "stopped");
     await page
       .getByRole("navigation", { name: "Main navigation" })

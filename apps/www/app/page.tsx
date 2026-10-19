@@ -4,7 +4,7 @@ import { ExperienceLink } from "./experience-link";
 import { ArrowIcon } from "../icons/arrow-icon";
 import { ExperienceMark } from "../icons/experience-mark";
 import { SoundPortrait } from "../icons/sound-portrait";
-import { ThrusterHero } from "./thruster-hero";
+import { LightsaberHero } from "./lightsaber-hero";
 import { SiteHeader } from "./site-header";
 import { LandingCommand } from "./landing-command";
 import { catalogEntries, catalogEntriesByCategory } from "../lib/catalog";
@@ -13,7 +13,6 @@ import { siteBuild } from "../lib/site-build";
 import { siteUrl } from "../lib/site-url";
 import audiobitsPackage from "../../../packages/audiobits/package.json";
 import "./landing.css";
-import "./thruster-hero.css";
 
 export const metadata: Metadata = {
   title: { absolute: "AudioBits | Procedural Sound Effects" },
@@ -49,9 +48,9 @@ const previews = previewSlugs.map((slug) => {
   return entry;
 });
 const experiences = catalogEntriesByCategory("experience").filter(
-  (entry) => entry.slug !== "reactive-thruster",
+  (entry) => entry.slug !== "lightsaber",
 );
-const thrusterInstall = `npx shadcn@latest add joacod/audiobits/${registryItem("reactive-thruster").name}`;
+const lightsaberInstall = `npx shadcn@latest add joacod/audiobits/${registryItem("lightsaber").name}`;
 
 export default function Home() {
   return (
@@ -66,7 +65,7 @@ export default function Home() {
         />
       ))}
       <SiteHeader current="home" />
-      <ThrusterHero />
+      <LightsaberHero />
       <section
         className="landing-own landing-adopt"
         aria-labelledby="own-heading"
@@ -76,10 +75,13 @@ export default function Home() {
           <p>Add editable sounds to your project. Powered by AudioBits.</p>
         </div>
         <div className="landing-action">
-          <LandingCommand command={thrusterInstall} label="thruster install" />
+          <LandingCommand
+            command={lightsaberInstall}
+            label="lightsaber install"
+          />
           <p className="landing-context">
-            Run in your project. The registry adds editable Thruster source and
-            the required{" "}
+            Run in your project. The registry adds editable Lightsaber source
+            and the required{" "}
             <a
               target="_blank"
               rel="noopener noreferrer"

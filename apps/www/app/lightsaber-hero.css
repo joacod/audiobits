@@ -1,0 +1,59 @@
+.landing .lightsaber-hero {
+  padding: 2rem 0 1.5rem;
+}
+.landing .lightsaber-intro {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem 2rem;
+  margin-bottom: 1.5rem;
+}
+.landing .lightsaber-intro h1 {
+  font-size: clamp(3.5rem, 8vw, 7rem);
+}
+.landing .lightsaber-intro p {
+  max-width: 29ch;
+  margin: 0;
+  color: var(--mute);
+  font-size: 0.9rem;
+}
+.foundation.landing .lightsaber-canvas {
+  height: clamp(20rem, 48svh, 32rem);
+}
+.foundation.landing .lightsaber-help {
+  padding-block: 0.75rem;
+}
+.landing .lightsaber-links {
+  margin-top: 0.5rem;
+}
+.landing .lightsaber-links a {
+  font-size: 0.8rem;
+  color: var(--mute);
+}
+.landing .lightsaber-links a:hover {
+  color: var(--ink);
+}
+@media (max-width: 900px) {
+  .landing .lightsaber-intro {
+    display: block;
+  }
+  .landing .lightsaber-intro p {
+    max-width: none;
+    margin-top: 0.75rem;
+  }
+}
+@media (max-width: 760px) {
+  .landing .lightsaber-hero {
+    padding-top: 1rem;
+  }
+  .landing .lightsaber-intro {
+    margin-bottom: 1rem;
+  }
+  .landing .lightsaber-intro h1 {
+    max-width: 10ch;
+    font-size: clamp(3rem, 13vw, 5rem);
+  }
+  .foundation.landing .lightsaber-canvas {
+    height: clamp(16rem, 36svh, 23rem);
+  }
+}

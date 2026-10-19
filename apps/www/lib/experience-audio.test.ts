@@ -129,7 +129,7 @@ it("disposes an unclaimed preparation when navigation switches to an unrelated v
   expect(takeExperienceAudio("lightsaber", null)).toBeUndefined();
 });
 
-it("prepares the landing thruster but ignores unrelated or external destinations", () => {
+it("prepares the landing lightsaber but ignores unrelated or external destinations", () => {
   const audio = {
     state: "running",
     start: vi.fn(async () => {}),
@@ -141,7 +141,7 @@ it("prepares the landing thruster but ignores unrelated or external destinations
   expect(createAudio).not.toHaveBeenCalled();
   prepareExperienceNavigationAudio("/");
   const surface = { dataset: {} } as HTMLElement;
-  expect(takeExperienceAudio("reactive-thruster", surface)).toBe(audio);
+  expect(takeExperienceAudio("lightsaber", surface)).toBe(audio);
   expect(surface.dataset).toEqual({
     audioEntry: "navigation",
     audioEntryState: "running",

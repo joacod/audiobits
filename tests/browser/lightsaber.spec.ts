@@ -1,21 +1,15 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { resolve } from "node:path";
 import { build } from "esbuild";
-import { instrument, probe } from "./experience-probe";
+import {
+  instrument,
+  probe,
+  holdLightsaber as holdStage,
+} from "./experience-probe";
 import { requireOfflineCheckpoints } from "./offline-capabilities";
 
 const stage = (page: import("@playwright/test").Page) =>
   page.getByRole("group", { name: "Lightsaber stage", exact: true });
-
-async function holdStage(page: Page) {
-  const pad = stage(page);
-  await expect(pad).toHaveAttribute("data-state", "stopped");
-  await pad.scrollIntoViewIfNeeded();
-  const box = (await pad.boundingBox())!;
-  await page.mouse.move(box.x + box.width / 2, box.y + box.height * 0.8);
-  await page.mouse.down();
-  return box;
-}
 
 test("held pointer ignition, swept target hits, release retraction and teardown @smoke", async ({
   page,

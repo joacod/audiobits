@@ -154,7 +154,7 @@ Both faces are SIL Open Font License 1.1 and self-hosted with `next/font/local` 
 
 ## Layout
 
-Content width (76rem) with gutter `max(1.5rem, calc((100vw - 76rem) / 2))`, (1rem) below (760px). The home order stays: header, Reactive Thruster playground, installation, AI agents, catalog preview, footer. The headline and instruction share a row above (900px) and stack below it. A signal band closes the playground: the live waveform during output, the still mark otherwise.
+Content width (76rem) with gutter `max(1.5rem, calc((100vw - 76rem) / 2))`, (1rem) below (760px). The home order stays: header, Lightsaber stage, installation, AI agents, catalog preview, footer. The headline and instruction share a row above (900px) and stack below it. The shared Lightsaber stage carries the hero interaction, with instructions and source links below it.
 
 The catalog index uses a grouped navigation sidebar and preview rows; the workbench keeps its stage, playback controls and inspector in one frame. Every interactive target keeps a (44px) minimum height.
 
@@ -174,7 +174,7 @@ Native range inputs keep their roles, labels, steps and keyboard behaviour. They
 
 ### Output scope
 
-`OutputScope` taps the existing engine output. On the home hero (`signal`), the band shows the still Ink mark until a user gesture has started audio, then draws real samples with the signal gradient. On the workbench (`measured`), the scope adds an LED meter: 16 segments, lit to the current output level with the gradient. With reduced motion the canvas stays still and only the meter updates.
+`OutputScope` taps the existing engine output. A signal scope shows the still Ink mark until a user gesture has started audio, then draws real samples with the signal gradient. On the workbench (`measured`), the scope adds an LED meter: 16 segments, lit to the current output level with the gradient. With reduced motion the canvas stays still and only the meter updates.
 
 ### Charge and thruster instruments
 
@@ -196,4 +196,4 @@ Charge rings and the progress ring rest in Mute and Graphite edge and take the s
 - **Don't** animate anything that is not following sound or state.
 - **Don't** fork or restyle Fumadocs components. Keep showcase tokens and fonts scoped to `.foundation`.
 
-Source of truth: [global styles](app/globals.css), [landing styles](app/landing.css), [hero styles](app/thruster-hero.css), [catalog styles](app/catalog.css), [mark](icons/brand-mark.tsx), [header](app/site-header.tsx), [output scope](app/output-scope.tsx).
+Source of truth: [global styles](app/globals.css), [landing styles](app/landing.css), [hero styles](app/lightsaber-hero.css), [catalog styles](app/catalog.css), [mark](icons/brand-mark.tsx), [header](app/site-header.tsx), [output scope](app/output-scope.tsx).

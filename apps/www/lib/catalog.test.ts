@@ -47,8 +47,8 @@ test("catalog index discovers every registry entry once and groups collections",
     ),
   );
   expect(catalogEntries.map((entry) => entry.slug)).toEqual([
-    "reactive-thruster",
     "lightsaber",
+    "reactive-thruster",
     "echo-probe",
     "energy-charge",
     ...registry.items
@@ -73,7 +73,7 @@ test("catalog index discovers every registry entry once and groups collections",
 });
 
 test("catalog entries derive links and playback from website metadata", () => {
-  const [reactive, lightsaber, , charge] = catalogEntries;
+  const [lightsaber, reactive, , charge] = catalogEntries;
   expect(energyChargeExperience.href).toBe("/catalog/energy-charge");
   expect(reactiveThrusterExperience.href).toBe("/catalog/reactive-thruster");
   expect(charge).toMatchObject({
