@@ -230,7 +230,11 @@ test("landing stays silent until holding, measures real output and disposes on n
   const errors: string[] = [];
   page.on("pageerror", (cause) => errors.push(cause.message));
   await instrument(page, "normal", "/");
-  expect((await probe(page)).contexts).toEqual([]);
+  await expect(page.locator(".lightsaber-canvas")).toHaveAttribute(
+    "data-audio-entry",
+    "entry",
+  );
+  expect((await probe(page)).sources).toBe(0);
   await holdLightsaber(page);
   await expect(page.locator(".lightsaber-canvas")).toHaveAttribute(
     "data-state",
@@ -369,9 +373,24 @@ test("landing swing, release, touch cancellation and interruptions clean up @smo
 test("landing activation failure recovers with a fresh gesture", async ({
   page,
 }) => {
-  await instrument(page, "failed", "/");
+  await instrument(page, "normal", "/");
   const pad = page.getByRole("group", { name: "Lightsaber stage" });
   await expect(pad).toHaveAttribute("data-renderer", /three|unavailable/);
+  await page.evaluate(async () => {
+    const context = (
+      globalThis as unknown as { thrusterProbe: { contexts: AudioContext[] } }
+    ).thrusterProbe.contexts[0];
+    await context.suspend();
+    const resume = context.resume.bind(context);
+    let fail = true;
+    context.resume = () => {
+      if (fail) {
+        fail = false;
+        return Promise.reject(new Error("Activation denied"));
+      }
+      return resume();
+    };
+  });
   const box = (await pad.boundingBox())!;
   await page.mouse.move(box.x + 40, box.y + 80);
   await page.mouse.down();
@@ -421,7 +440,11 @@ test("reduced motion preserves gesture feedback, level feedback and navigation f
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await instrument(page, "normal", "/");
-  expect((await probe(page)).contexts).toEqual([]);
+  await expect(page.locator(".lightsaber-canvas")).toHaveAttribute(
+    "data-audio-entry",
+    "entry",
+  );
+  expect((await probe(page)).sources).toBe(0);
   await holdLightsaber(page);
   await expect(page.locator(".lightsaber-canvas")).toHaveAttribute(
     "data-state",

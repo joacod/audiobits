@@ -16,11 +16,18 @@ import {
   formatAudioActivationReport,
 } from "../lib/audio-activation-report";
 import { AudioActivationReport } from "./audio-activation-report";
-import { takeExperienceAudio } from "../lib/experience-audio";
+import {
+  prepareExperienceEntryAudio,
+  takeExperienceAudio,
+} from "../lib/experience-audio";
 
 const subscribeHydration = () => () => {};
 
-export function LightsaberDetail() {
+export function LightsaberDetail({
+  prepareOnEntry = false,
+}: {
+  prepareOnEntry?: boolean;
+}) {
   const surface = useRef<HTMLDivElement>(null);
   const stage = useRef<ReturnType<typeof mountBladeStage3D> | null>(null);
   const [state, setState] = useState("stopped");
@@ -44,6 +51,7 @@ export function LightsaberDetail() {
     );
   }, []);
   useEffect(() => {
+    if (prepareOnEntry) prepareExperienceEntryAudio("lightsaber");
     const prepared = takeExperienceAudio("lightsaber", surface.current);
     const current = mountLightsaber(
       {
@@ -75,7 +83,7 @@ export function LightsaberDetail() {
       stage.current = null;
       void current.dispose().catch(console.error);
     };
-  }, [reportError, reportDisplayError]);
+  }, [prepareOnEntry, reportError, reportDisplayError]);
   return (
     <>
       <div className="lightsaber-stage catalog-gesture-stage audio-gesture-surface">

@@ -17,10 +17,16 @@ function experienceAt(path: string): ExperienceId | undefined {
   return Object.hasOwn(factories, slug) ? (slug as ExperienceId) : undefined;
 }
 
-// Browser-only handoff between a navigation gesture and the destination effect.
-// A failed or abandoned navigation must not retain a running audio context.
+// Browser-only preparation handed to the stage that takes ownership.
+// Failed or abandoned entry must not retain a running audio context.
 let pending:
-  | { id: ExperienceId; audio: AudioEngine; detach(): void; discard(): void }
+  | {
+      id: ExperienceId;
+      source: "navigation" | "entry";
+      audio: AudioEngine;
+      detach(): void;
+      discard(): void;
+    }
   | undefined;
 
 export function prepareExperienceNavigationAudio(href: string) {
@@ -32,6 +38,18 @@ export function prepareExperienceNavigationAudio(href: string) {
     return;
   }
   if (target.pathname === window.location.pathname) return;
+  prepareExperienceAudio(id, "navigation");
+}
+
+/** Prepare direct entry using the same engine handoff as in-site navigation. */
+export function prepareExperienceEntryAudio(id: ExperienceId) {
+  prepareExperienceAudio(id, "entry");
+}
+
+function prepareExperienceAudio(
+  id: ExperienceId,
+  source: "navigation" | "entry",
+) {
   if (pending?.id === id) return;
   pending?.discard();
   const audio = factories[id]();
@@ -46,6 +64,7 @@ export function prepareExperienceNavigationAudio(href: string) {
   const expiry = window.setTimeout(discard, 15_000);
   const entry = {
     id,
+    source,
     audio,
     discard,
     detach() {
@@ -64,7 +83,7 @@ export function prepareExperienceNavigationAudio(href: string) {
   );
   try {
     prepareAudioPlayback();
-    // Keep this synchronous with the accepted link click. No sounds play here.
+    // Start immediately at the entry point. No sounds play here.
     // If this optional activation fails, the stage retains its normal retry path.
     void audio.start().catch(discard);
   } catch {
@@ -81,7 +100,7 @@ export function takeExperienceAudio(
   pending = undefined;
   entry?.detach();
   if (surface) {
-    surface.dataset.audioEntry = entry ? "navigation" : "stage";
+    surface.dataset.audioEntry = entry?.source ?? "stage";
     surface.dataset.audioEntryState = entry?.audio.state ?? "idle";
   }
   return entry?.audio;

@@ -12,9 +12,14 @@ for (const [route, selector] of [
     page,
   }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    await instrument(page, "normal", route);
+    await instrument(page, route === "/" ? "touch-start" : "normal", route);
     const pad = page.locator(selector);
     await expect(pad).toHaveAttribute("data-state", "stopped");
+    if (route === "/") {
+      await expect(pad).toHaveAttribute("data-audio-entry", "entry");
+      expect((await probe(page)).contexts).toEqual(["suspended"]);
+      expect((await probe(page)).sources).toBe(0);
+    }
     if (route === "energy-charge") await expect(pad).toBeEnabled();
     if (route === "lightsaber" || route === "/")
       await expect(pad).toHaveAttribute("data-renderer", "three");
