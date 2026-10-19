@@ -1,17 +1,24 @@
-import { createAudio } from "audiobits";
+import { createAudio, type AudioEngine } from "audiobits";
 import { createLightsaber, type BladeState } from "./controller";
 
-/** The browser host owns one bounded engine; the controller owns its voices. */
-export function mountLightsaber(feedback: {
-  state(value: BladeState): void;
-  error(cause: unknown): void;
-  impact?(force: number): void;
-}) {
-  const audio = createAudio({
+export function createLightsaberAudio() {
+  return createAudio({
     maxVoices: 8,
     maxVoicesPerSound: 3,
     masterGainDb: -6,
   });
+}
+
+/** The browser host owns one bounded engine; the controller owns its voices. */
+export function mountLightsaber(
+  feedback: {
+    state(value: BladeState): void;
+    error(cause: unknown): void;
+    impact?(force: number): void;
+  },
+  // Passing an activated engine transfers ownership, including disposal.
+  audio: AudioEngine = createLightsaberAudio(),
+) {
   let state: BladeState = "stopped";
   let generation = 0;
   const control = createLightsaber(audio, {

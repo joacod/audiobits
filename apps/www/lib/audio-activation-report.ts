@@ -255,6 +255,12 @@ export function observeAudioActivation(
 
   reports.set(surface, () => ({
     elapsedMs: Math.round(performance.now() - startedAt),
+    entry: surface.dataset?.audioEntry
+      ? {
+          source: surface.dataset.audioEntry,
+          engineState: surface.dataset.audioEntryState,
+        }
+      : undefined,
     engineState: audio.state,
     native: nativeState(audio, native),
     resume: {

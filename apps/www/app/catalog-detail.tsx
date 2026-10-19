@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { CatalogLayout } from "./catalog-layout";
+import { CatalogLink } from "./catalog-link";
 import { catalogEntries } from "../lib/catalog";
 import type { CatalogEntry } from "../lib/catalog";
 
@@ -50,14 +51,14 @@ function CatalogPagination({ entry }: { entry: CatalogEntry }) {
   return (
     <nav className="catalog-pagination" aria-label="Previous and next">
       {previous && (
-        <Link rel="prev" href={previous.href}>
+        <CatalogLink rel="prev" href={previous.href}>
           ← Previous: {previous.title}
-        </Link>
+        </CatalogLink>
       )}
       {next && (
-        <Link rel="next" href={next.href}>
+        <CatalogLink rel="next" href={next.href}>
           Next: {next.title} →
-        </Link>
+        </CatalogLink>
       )}
     </nav>
   );
