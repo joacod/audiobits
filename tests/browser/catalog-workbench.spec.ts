@@ -458,6 +458,7 @@ test("desktop and mobile workbenches put interaction before adoption and source"
           .filter((animation) => animation.playState === "running").length,
     ),
   ).toBe(0);
+  await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({
     path: testInfo.outputPath("workbench-desktop.png"),
     fullPage: true,
@@ -530,6 +531,7 @@ test("desktop and mobile workbenches put interaction before adoption and source"
   await expect(dialog).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(menu).toBeFocused();
+  await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({
     path: testInfo.outputPath("workbench-mobile.png"),
     fullPage: true,

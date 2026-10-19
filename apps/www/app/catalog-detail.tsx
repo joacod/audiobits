@@ -16,7 +16,11 @@ export function CatalogDetail({
   return (
     <CatalogLayout>
       <CatalogEntryHeader entry={entry} />
-      <div className="catalog-bench" id={entry.slug}>
+      <div
+        className="catalog-bench"
+        id={entry.slug}
+        data-family={entry.preview.family}
+      >
         {children}
       </div>
       <CatalogPagination entry={entry} />
@@ -26,7 +30,7 @@ export function CatalogDetail({
 
 function CatalogEntryHeader({ entry }: { entry: CatalogEntry }) {
   return (
-    <header className="catalog-entry-header">
+    <header className="catalog-entry-header" data-family={entry.preview.family}>
       <nav className="catalog-breadcrumb" aria-label="Breadcrumb">
         <ol>
           <li>

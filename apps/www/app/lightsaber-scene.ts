@@ -52,8 +52,9 @@ export function createBladeScene(
     shaderFailed = true;
   };
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color("#08080c");
-  const fog = new THREE.Fog("#08080c", 1200, 3000);
+  const ground = getComputedStyle(surface).getPropertyValue("--void").trim();
+  scene.background = new THREE.Color(ground);
+  const fog = new THREE.Fog(ground, 1200, 3000);
   scene.fog = fog;
   const camera = new THREE.PerspectiveCamera(35, 1, 1, 4000);
   const geometries = new Set<THREE.BufferGeometry>();

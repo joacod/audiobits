@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { RootProvider } from "fumadocs-ui/provider/next";
+import { brandColors } from "../lib/brand-colors";
 import { siteUrl } from "../lib/site-url";
 import { bigShoulders, geistMono } from "./fonts";
 import "./globals.css";
@@ -19,7 +20,11 @@ export const metadata: Metadata = {
     icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
     apple: "/apple-icon.png",
     other: [
-      { rel: "mask-icon", url: "/safari-pinned-tab.svg", color: "#050507" },
+      {
+        rel: "mask-icon",
+        url: "/safari-pinned-tab.svg",
+        color: brandColors.void,
+      },
     ],
   },
   openGraph: { siteName: "AudioBits", type: "website" },
@@ -27,7 +32,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#050507",
+  themeColor: brandColors.void,
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

@@ -13,57 +13,69 @@ social link or recommendation. Technically sophisticated designers also explore.
 
 ## Product Purpose
 
-Let a visitor hear browser-generated sound, manipulate its character, inspect
-portable recipe data and copy a small integration example.
+Let a visitor play browser-generated sound, manipulate its character, then bring
+editable sound source and a small integration example into their project.
 
 ## Positioning
 
 AudioBits provides procedural sound effects for the web. Its primary slogan is
-"Sound that reacts." The installable library uses Web Audio, portable versioned
-JSON recipes, typed controls and installed-version metadata. The npm package
-ships the engine and recipe language; copy-owned recipes and independent
-experiences live in the repository-root catalog. The website showcases both
-and lets visitors customize and copy them.
+"Sound that reacts." The npm package supplies the framework-independent Web Audio
+engine and portable versioned recipe language. The repository-root catalog
+supplies editable recipes and sound controllers, plus integration guidance.
+The website proves the sounds through direct audiovisual interaction and makes
+their source available. The official Skill supports adoption through coding agents.
 
 ## Capabilities and Constraints
 
-Eight catalog sounds exercise one-shots, sustained voices, play/live controls and
-seeded variation. The homepage session is one lazy Energy Charge engine. The
-catalog holds one lazy engine per mounted session. Real caller-owned native analyser
-data drives output-reactive detail. No autoplay. Runtime remains independent of
-website dependencies.
-AudioBits is available on npm. Fumadocs remains a separate reference experience.
+The catalog includes one-shots, sustained voices, typed controls, seeded variation
+and interactive experiences. Entries and group membership come from the current
+catalog metadata, not fixed promotional counts. The homepage runs the actual
+Lightsaber interaction through one lazy audio session. The catalog index shares
+one playback session for sounds; static experience previews mount no audio hosts.
+Detail views own their session and disposal. Real native analyser samples drive
+live output visuals. No autoplay. Presentation stays outside portable sound
+behavior; the website redesign adds no runtime or recipe capabilities.
+
+Fumadocs remains a separate reference experience with neutral surfaces and its
+existing documentation accents.
 
 ## Brand Commitments
 
-Inventive, precise, tactile, playful and confident. Restrained copy. Avoid generic
-neon, glass, SaaS gradients, noisy effects and a DAW interface. Sound leads.
+Inventive, precise, tactile, playful and confident. A playable audiovisual
+playground with music-poster typography, bold color fields and collectible sound
+covers. Restrained copy and precise controls keep sound central. Avoid generic
+SaaS presentation, glass and a DAW interface.
 
 ## Evidence on Hand
 
-Public exports, recipe metadata, browser signal/lifecycle checks and copyable
-examples. Physical device compatibility is unverified and deliberately deferred.
+Public exports, recipe metadata, automated Chromium signal/lifecycle checks and
+copyable consumer examples. These do not establish listening quality or physical
+device compatibility; device acceptance remains separate.
 
 ## Product Principles
 
 - Let one interaction prove the value.
+- Hear it. Interact with it. Bring it into your project.
 - Express sound intent with portable data and semantic controls.
 - Keep sound generation separate from presentation.
 - Let real requirements earn new runtime features.
 
 ## Accessibility & Inclusion
 
-Keyboard and touch operation, labelled controls, visible focus and playback state,
-adequate contrast, reduced motion, mute and explicit Stop. No sound-only feedback.
+Preserve existing mouse, touch and keyboard activation, labelled controls,
+visible focus, playback state, interruption handling and cleanup. Provide reduced
+motion and explicit playback controls where the workbench needs them. Immersive
+stages prioritize their direct gestures and existing keyboard alternatives.
 
 ## Route purposes
 
-- `/`: persuade on a first visit. A short explanation sits with one Energy
-  Charge instrument. Hold is the proof. The page then distinguishes the
-  installable package, eight copy-owned recipes, and two copy-paste examples, and
-  previews Energy Charge, Reactive Thruster, and three catalog sounds without
-  starting them. Catalog, documentation, and `npm install audiobits` stay in
-  reach. No second live engine.
-- `/catalog`: browse every current example and catalog sound. Experiences come first, then sounds. One shared playback session covers the sounds. Experience previews are static and link to the full interactions without mounting audio hosts. The shared header's Catalog item points here. Experience and sound rows open `/catalog/[slug]`.
-- `/catalog/[slug]`: understand one catalog sound, or open Energy Charge or Reactive Thruster in the same frame. The stage, playback, and inspector stay on one page. Each visit owns one audio session and disposes it on leave. Experience pages show the independent catalog source.
-- `/docs`: read the calm Fumadocs reference; marketing components do not enter it.
+- `/`: persuade through a full-bleed Lightsaber interaction, then preview the
+  catalog, show how to install editable source, introduce Skill/AI adoption and
+  finish with the footer. Static previews add no live audio sessions.
+- `/catalog`: browse current experiences first and sounds second through
+  collectible covers. Play sounds from the shared session and open each full
+  interaction or workbench. Grouping uses current catalog metadata.
+- `/catalog/[slug]`: hear and manipulate one sound or experience, then install
+  source and connect its usage example. The stage, playback and inspector share
+  one frame; the host owns audio intent, interruption handling and disposal.
+- `/docs`: read the calm Fumadocs reference, separate from showcase presentation.

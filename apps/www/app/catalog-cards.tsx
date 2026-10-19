@@ -6,6 +6,7 @@ import { Button } from "@base-ui/react/button";
 import { SoundMark } from "../icons/catalog-marks";
 import { ThrusterPreviewMark } from "../icons/thruster-preview";
 import { BladePreviewMark } from "../icons/blade-preview";
+import { SignalArtwork } from "./signal-artwork";
 import { PlayIcon } from "../icons/play-icon";
 import {
   catalogEntries,
@@ -47,12 +48,24 @@ export function CatalogCards() {
                     id={entry.slug}
                     className="catalog-card"
                     data-catalog-entry={entry.slug}
+                    data-family={entry.preview.family}
+                    data-category={entry.category}
                     data-status={
                       entry.category === "bundled" ? status : undefined
                     }
                   >
                     <div className="catalog-card-preview" aria-hidden="true">
-                      <CatalogPreview entry={entry} index={index} />
+                      <SignalArtwork family={entry.preview.family} />
+                      <div className="catalog-cover-glyph">
+                        <CatalogPreview entry={entry} index={index} />
+                      </div>
+                      <span className="catalog-cover-type">
+                        {entry.category === "experience"
+                          ? "Interactive"
+                          : entry.playback === "sustained"
+                            ? "Sustained"
+                            : "One shot"}
+                      </span>
                     </div>
                     <div className="catalog-card-copy">
                       <h3>
