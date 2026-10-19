@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type CSSProperties } from "react";
-import Link from "next/link";
+import { CatalogLink } from "./catalog-link";
 import { Button } from "@base-ui/react/button";
 import { SoundMark } from "../icons/catalog-marks";
 import { ThrusterPreviewMark } from "../icons/thruster-preview";
@@ -56,12 +56,12 @@ export function CatalogCards() {
                     </div>
                     <div className="catalog-card-copy">
                       <h3>
-                        <Link
+                        <CatalogLink
                           href={entry.href}
                           aria-label={openCatalogLabel(entry)}
                         >
                           {entry.title}
-                        </Link>
+                        </CatalogLink>
                       </h3>
                       <p>{entry.description}</p>
                     </div>

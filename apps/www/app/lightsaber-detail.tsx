@@ -16,6 +16,7 @@ import {
   formatAudioActivationReport,
 } from "../lib/audio-activation-report";
 import { AudioActivationReport } from "./audio-activation-report";
+import { takeLightsaberNavigationAudio } from "../lib/lightsaber-navigation-audio";
 
 const subscribeHydration = () => () => {};
 
@@ -43,14 +44,22 @@ export function LightsaberDetail() {
     );
   }, []);
   useEffect(() => {
-    const current = mountLightsaber({
-      state(value) {
-        setState(value);
-        if (value === "starting") setError("");
-        stage.current?.stateChanged();
+    const prepared = takeLightsaberNavigationAudio();
+    if (surface.current) {
+      surface.current.dataset.audioEntry = prepared ? "navigation" : "stage";
+      surface.current.dataset.audioEntryState = prepared?.state ?? "idle";
+    }
+    const current = mountLightsaber(
+      {
+        state(value) {
+          setState(value);
+          if (value === "starting") setError("");
+          stage.current?.stateChanged();
+        },
+        error: reportError,
       },
-      error: reportError,
-    });
+      prepared,
+    );
     const display = surface.current
       ? mountBladeStage3D(surface.current, current, reportDisplayError)
       : undefined;
