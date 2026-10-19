@@ -1,5 +1,14 @@
 # audiobits
 
+## 0.3.5
+
+### Patch Changes
+
+- 7cb3480: Remove the silent buffer source from audio activation. Starting an engine now
+  creates its output and resumes its context without scheduling a source.
+  Browser activation remains the application's responsibility. Pending-start
+  retries, cancellation, the activation deadline and disposal remain supported.
+
 ## 0.3.4
 
 ### Patch Changes
