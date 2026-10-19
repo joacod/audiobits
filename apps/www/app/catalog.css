@@ -879,3 +879,201 @@
     }
   }
 }
+
+@layer components {
+  .foundation.catalog-page .catalog-index {
+    padding-top: 3rem;
+  }
+  .foundation.catalog-page .catalog-index > h1 {
+    font-size: clamp(5rem, 12vw, 10rem);
+    line-height: 0.85;
+  }
+  .foundation.catalog-page .catalog-intro {
+    margin-block: 1.5rem 3rem;
+    font-size: 1rem;
+  }
+  .foundation.catalog-page .catalog-index h2 {
+    font-size: clamp(2rem, 4vw, 3rem);
+    margin-bottom: 1.5rem;
+  }
+  .foundation.catalog-page .catalog-cards {
+    gap: 2.5rem 1.5rem;
+  }
+  .foundation.catalog-page .catalog-card {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+  .foundation.catalog-page .catalog-card-preview {
+    position: relative;
+    height: auto;
+    aspect-ratio: 1.35;
+    border: 0;
+    border-radius: 3px;
+    color: var(--art-ink);
+    background: var(--art-ground);
+  }
+  .foundation.catalog-page
+    .catalog-card[data-category="experience"]
+    .catalog-card-preview {
+    aspect-ratio: 1.1;
+  }
+  .foundation.catalog-page .catalog-cover-type {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .foundation.catalog-page .catalog-cover-glyph {
+    position: absolute;
+    bottom: 0.5rem;
+    right: 0.75rem;
+    width: 3rem;
+    height: 3rem;
+    display: grid;
+    place-items: center;
+    color: var(--art-ink);
+  }
+  .foundation.catalog-page .catalog-cover-glyph .catalog-mark,
+  .foundation.catalog-page .catalog-cover-glyph .catalog-blade-mark,
+  .foundation.catalog-page .catalog-cover-glyph .charge-well,
+  .foundation.catalog-page .catalog-cover-glyph .thruster-field,
+  .foundation.catalog-page .catalog-cover-glyph .thruster-field svg {
+    width: 3rem;
+    height: 3rem;
+    color: currentColor;
+    background: transparent;
+  }
+  .foundation.catalog-page .catalog-cover-glyph .charge-ring {
+    border-color: currentColor;
+  }
+  .foundation.catalog-page .catalog-cover-glyph .charge-core {
+    background: currentColor;
+  }
+  .foundation.catalog-page .catalog-card-copy {
+    padding: 1.2rem 0 0;
+    min-height: 0;
+    flex: 1;
+  }
+  .foundation.catalog-page .catalog-card h3 {
+    font-size: clamp(2rem, 3vw, 2.8rem);
+    line-height: 1;
+  }
+  .foundation.catalog-page .catalog-card-copy p {
+    font-size: 0.8rem;
+    line-height: 1.65;
+  }
+  .foundation.catalog-page .catalog-card-actions {
+    margin-top: 1rem;
+    padding: 0.75rem 0;
+    border-top: 1px solid var(--graphite-edge);
+  }
+  .foundation.catalog-page .catalog-card-actions > span {
+    font-size: 0.75rem;
+  }
+  .foundation.catalog-page .catalog-card h3 a::after {
+    border-radius: 3px;
+  }
+  .foundation.catalog-page
+    .catalog-card:is([data-status="playing"], [data-status="running"])
+    .catalog-card-actions {
+    border-color: var(--signal-mid);
+  }
+  .foundation.catalog-page .catalog-entry-header {
+    position: relative;
+    padding-block: 0.5rem 1.75rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--graphite-edge);
+  }
+  .foundation.catalog-page .catalog-entry-header::after {
+    position: absolute;
+    content: "";
+    bottom: -1px;
+    left: 0;
+    width: 4rem;
+    height: 1px;
+    background: var(--art-ground);
+  }
+  .foundation.catalog-page .catalog-entry-header h1 {
+    font-size: clamp(3rem, 6vw, 5.5rem);
+    line-height: 0.95;
+    margin-top: 1rem;
+  }
+  .foundation.catalog-page .catalog-entry-header > p {
+    max-width: 60ch;
+    font-size: 0.85rem;
+  }
+  .foundation.catalog-page .catalog-nav-panel h2 {
+    color: var(--mute);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .foundation.catalog-page .catalog-nav-panel a {
+    font-size: 0.8rem;
+  }
+  .foundation.catalog-page .catalog-nav-panel a[aria-current="page"] {
+    color: var(--signal-mid);
+  }
+  .foundation.catalog-page .catalog-bench {
+    border-radius: 4px;
+  }
+  .foundation.catalog-page .catalog-stage {
+    position: relative;
+    background: var(--graphite);
+    border: 1px solid var(--graphite-edge);
+    border-radius: 4px;
+  }
+  .foundation.catalog-page .catalog-stage .output-scope {
+    background: radial-gradient(
+      ellipse at 50% 100%,
+      color-mix(in srgb, var(--art-ground) 15%, transparent),
+      transparent 75%
+    );
+  }
+  .foundation.catalog-page .catalog-stage .output-scope canvas {
+    height: clamp(10rem, 20vw, 17rem);
+  }
+  .foundation.catalog-page .catalog-playback {
+    background: linear-gradient(165deg, var(--graphite), var(--void));
+  }
+  .foundation.catalog-page .flight-pad {
+    min-height: clamp(16rem, calc(100svh - 30rem), 24rem);
+  }
+  .foundation.catalog-page .catalog-pagination {
+    margin-top: 2rem;
+    padding-block: 1.5rem;
+  }
+  @media (max-width: 760px) {
+    .foundation.catalog-page .catalog-index {
+      padding-top: 2rem;
+    }
+    .foundation.catalog-page .catalog-intro {
+      margin-bottom: 2rem;
+    }
+    .foundation.catalog-page .catalog-cards {
+      gap: 2rem 1rem;
+    }
+    .foundation.catalog-page .catalog-card-preview,
+    .foundation.catalog-page
+      .catalog-card[data-category="experience"]
+      .catalog-card-preview {
+      aspect-ratio: 1.6;
+    }
+    .foundation.catalog-page .catalog-cover-type {
+      top: 0.75rem;
+      left: 0.75rem;
+    }
+    .foundation.catalog-page .catalog-card-copy {
+      padding-top: 1rem;
+    }
+    .foundation.catalog-page .catalog-entry-header h1 {
+      font-size: clamp(2.8rem, 12vw, 5rem);
+    }
+    .foundation.catalog-page .catalog-stage .output-scope canvas {
+      height: 9rem;
+    }
+  }
+}

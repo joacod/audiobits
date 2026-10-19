@@ -32,6 +32,24 @@ for (const [width, height] of [
         () => document.documentElement.scrollWidth <= innerWidth,
       ),
     ).toBe(true);
+    const headingLines = await page
+      .locator(".lightsaber-intro h1 > span")
+      .evaluateAll((lines) =>
+        lines.map((line) => {
+          const range = document.createRange();
+          range.selectNodeContents(line);
+          const bounds = range.getBoundingClientRect();
+          const gutter = parseFloat(
+            getComputedStyle(document.querySelector(".foundation")!)
+              .paddingLeft,
+          );
+          return { left: bounds.left, right: bounds.right, gutter };
+        }),
+      );
+    for (const line of headingLines) {
+      expect(line.left).toBeGreaterThanOrEqual(line.gutter);
+      expect(line.right).toBeLessThanOrEqual(width - line.gutter);
+    }
     const pad = (await page.locator(".lightsaber-canvas").boundingBox())!;
     expect(pad.height).toBeGreaterThanOrEqual(256);
     expect(pad.y + pad.height).toBeLessThanOrEqual(height);
@@ -83,9 +101,9 @@ for (const [width, height] of [
         page.locator(".landing-experience").filter({ hasText: entry.title }),
       ).toHaveAttribute("href", entry.href);
     await expect(page.locator(".landing h2")).toHaveText([
+      "Find your frequency.",
       "Hear it. Own it.",
       "Let your AI agent build the sound.",
-      "Explore more",
     ]);
     await expect(page.locator(".landing-command pre")).toHaveCount(2);
     for (const command of await page.locator(".landing-command-row").all()) {
@@ -102,6 +120,7 @@ for (const [width, height] of [
       ).toBe("solid");
       expect((await copy.boundingBox())!.height).toBeGreaterThanOrEqual(44);
     }
+    await page.evaluate(() => window.scrollTo(0, 0));
     await page.screenshot({ path: testInfo.outputPath(`hero-${width}.png`) });
     await page.screenshot({
       path: testInfo.outputPath(`landing-${width}.png`),
@@ -248,6 +267,19 @@ test("landing stays silent until holding, measures real output and disposes on n
       ),
     )
     .toBeGreaterThan(0);
+  await expect(page.locator(".hero-wave")).not.toHaveAttribute(
+    "d",
+    "M0 30H600",
+  );
+  await expect
+    .poll(async () =>
+      page
+        .locator(".lightsaber-hero")
+        .evaluate((element) =>
+          Number(getComputedStyle(element).getPropertyValue("--hero-level")),
+        ),
+    )
+    .toBeGreaterThan(0);
   await page.mouse.up();
   await expect(page.locator(".lightsaber-canvas")).toHaveAttribute(
     "data-state",
@@ -263,6 +295,16 @@ test("landing stays silent until holding, measures real output and disposes on n
     "data-peak",
     "0",
   );
+  await expect(page.locator(".hero-wave")).toHaveAttribute("d", "M0 30H600");
+  await expect
+    .poll(async () =>
+      page
+        .locator(".lightsaber-hero")
+        .evaluate((element) =>
+          Number(getComputedStyle(element).getPropertyValue("--hero-level")),
+        ),
+    )
+    .toBe(0);
   await holdLightsaber(page);
   await page
     .getByRole("navigation", { name: "Main navigation" })
@@ -457,6 +499,11 @@ test("reduced motion preserves gesture feedback, level feedback and navigation f
   await expect(page.locator(".lightsaber-canvas")).toHaveAttribute(
     "data-reduced-motion",
     "true",
+  );
+  await expect(page.locator(".hero-wave")).toHaveAttribute("d", "M0 30H600");
+  await expect(page.locator(".lightsaber-intro h1")).toHaveCSS(
+    "transform",
+    "none",
   );
   await expect
     .poll(async () =>

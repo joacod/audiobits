@@ -54,9 +54,10 @@ because their human purposes differ.
 
 ## Design
 
-- Preserve the AudioBits showcase design (Void, Ink, signal gradient on live elements,
-  Big Shoulders Display and Geist Mono; see DESIGN.md) unless the
-  task explicitly requests a redesign.
+- Preserve the approved AudioBits playable audiovisual playground identity
+  (near-black, white, violet, blue and pink; music-poster Big
+  Shoulders Display, Geist Mono and collectible sound covers; see DESIGN.md)
+  unless the task explicitly requests a redesign.
 - Sound is the hero. Visual effects must support the audio rather than compete
   with it.
 - Do not turn the site into a React Bits sampler or generic shadcn layout.

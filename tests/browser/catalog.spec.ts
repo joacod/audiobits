@@ -432,12 +432,19 @@ for (const [width, height] of [
         () => document.documentElement.scrollWidth <= innerWidth,
       ),
     ).toBe(true);
-    const previews = await page
-      .locator(".catalog-card-preview")
-      .evaluateAll((nodes) =>
-        nodes.map((node) => node.getBoundingClientRect().height),
+    // Experience and sound covers have their own proportions. Each group
+    // stays aligned, allowing fractional grid-track rounding between columns.
+    for (const group of catalogGroups) {
+      const previews = await page
+        .locator(`[data-category="${group.category}"] .catalog-card-preview`)
+        .evaluateAll((nodes) =>
+          nodes.map((node) => node.getBoundingClientRect().height),
+        );
+      expect(Math.min(...previews)).toBeGreaterThanOrEqual(160);
+      expect(Math.max(...previews) - Math.min(...previews)).toBeLessThanOrEqual(
+        1,
       );
-    expect(new Set(previews).size).toBe(1);
+    }
     for (const entry of catalogEntries) {
       const card = page.locator(`[data-catalog-entry="${entry.slug}"]`);
       const link = card.getByRole("link");
@@ -466,6 +473,7 @@ for (const [width, height] of [
             .filter((animation) => animation.playState === "running").length,
       ),
     ).toBe(0);
+    await page.evaluate(() => window.scrollTo(0, 0));
     await page.screenshot({
       path: testInfo.outputPath(`catalog-${width}.png`),
       fullPage: true,

@@ -28,6 +28,8 @@ export function mountBladeStage3D(
     initialFailure = cause;
   }
   const events = new AbortController();
+  const hero = surface.closest<HTMLElement>(".lightsaber-hero");
+  const heroWave = hero?.querySelector<SVGPathElement>(".hero-wave");
   const reduced = matchMedia("(prefers-reduced-motion: reduce)");
   // A failed display retains input and audio motion, but has no visible targets.
   let failed = false;
@@ -106,6 +108,9 @@ export function mountBladeStage3D(
     assistedTarget = null;
     trails.length = particles.length = 0;
     disconnect();
+    hero?.style.setProperty("--hero-level", "0");
+    hero?.style.setProperty("--hero-extension", "0");
+    heroWave?.setAttribute("d", "M0 30H600");
     wake();
   }
   function stateChanged() {
@@ -212,8 +217,24 @@ export function mountBladeStage3D(
     if (analyser) {
       analyser.getFloatTimeDomainData(samples);
       for (const sample of samples) peak = Math.max(peak, Math.abs(sample));
-    }
+    } else samples.fill(0);
     surface.dataset.peak = String(peak);
+    // Share the existing analyser and frame, without React updates or another
+    // engine. Only the hero presentation consumes these visual values.
+    if (hero) {
+      hero.style.setProperty("--hero-level", String(Math.min(1, peak / 0.025)));
+      hero.style.setProperty("--hero-extension", String(extension));
+      hero.style.setProperty("--hero-x", `${position.x * 100}%`);
+      if (heroWave && !reduced.matches && peak > 0) {
+        let path = "";
+        for (let i = 0; i < samples.length; i += 4) {
+          const x = (i / (samples.length - 4)) * 600;
+          const y = 30 - Math.max(-1, Math.min(1, samples[i] * 16)) * 27;
+          path += `${i ? "L" : "M"}${x.toFixed(1)} ${y.toFixed(1)}`;
+        }
+        heroWave.setAttribute("d", path);
+      } else heroWave?.setAttribute("d", "M0 30H600");
+    }
     const fullLength = bladeLength();
     const rawAngle =
       (position.x - 0.5) * 1.45 +
@@ -525,6 +546,10 @@ export function mountBladeStage3D(
     trails.length = particles.length = 0;
     display?.dispose();
     canvas.remove();
+    hero?.style.removeProperty("--hero-level");
+    hero?.style.removeProperty("--hero-extension");
+    hero?.style.removeProperty("--hero-x");
+    heroWave?.setAttribute("d", "M0 30H600");
   }
   return { stateChanged, dispose };
 }
