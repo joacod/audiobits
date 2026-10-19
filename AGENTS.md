@@ -65,6 +65,10 @@ accurate. Briefly justify substantial README additions in the relevant PR.
   dependencies unless explicitly reconsidered.
 - Recipes remain portable, serializable, versioned data and contain no UI or
   application state.
+- Browser activation belongs to the application host. For held interactions,
+  prepare and retain the same engine in an earlier browser-accepted gesture;
+  do not assume a trusted touch press grants activation or add runtime primers
+  to bypass browser policy. See the [lifecycle guide](<apps/www/content/docs/(runtime)/lifecycle.mdx>).
 - Motivate new core or recipe capabilities with concrete sound-design or
   application requirements. Prefer composition with existing primitives when
   it produces comparably good results. A focused general-purpose capability

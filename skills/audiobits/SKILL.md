@@ -55,11 +55,15 @@ on MCP setup. Installing this Skill does not register or start the server.
    Keep recipes serializable and bound normalized state before passing sound inputs.
    Use `defineSound` for typed local definitions and `validateRecipe` for
    generated or external data. Fix reported issues before integrating playback.
-3. Call `audio.start()` synchronously in a direct user gesture, await activation,
-   then play. Surface failures and allow a new gesture to retry. Invalidate
+3. Call `audio.start()` synchronously in a browser-accepted gesture, await activation,
+   then play. For held touch, prepare the same engine in an earlier accepted
+   gesture and transfer ownership to the interaction host; a trusted press alone
+   may not grant activation. See [integration](references/integration.md).
+   Surface failures and allow a new gesture to retry. Invalidate
    pending starts on Stop, hide and teardown so cancelled audio never plays later.
 4. Own resources at the existing host boundary. Stop voices, suspend on hide,
-   require a new gesture on return, and dispose on navigation/unmount. Clean up
+   require a new gesture on return, and dispose on navigation/unmount unless
+   ownership is explicitly transferred to the destination. Clean up
    listeners, frames, subscriptions and caller-owned native connections.
 5. Typecheck through public exports, validate recipes, and check relevant control
    extrema and browser lifecycle behavior. Report the checks run and their results.

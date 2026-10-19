@@ -2,9 +2,9 @@
 
 import type { ComponentProps } from "react";
 import Link from "next/link";
-import { prepareLightsaberNavigationAudio } from "../lib/lightsaber-navigation-audio";
+import { prepareExperienceNavigationAudio } from "../lib/experience-audio";
 
-export function CatalogLink(
+export function ExperienceLink(
   props: Omit<ComponentProps<typeof Link>, "onNavigate">,
 ) {
   return (
@@ -13,8 +13,8 @@ export function CatalogLink(
       // Next calls this only for navigation in this tab, excluding downloads
       // and modified clicks. The engine must start before the route transition.
       onNavigate={() => {
-        if (props.href === "/catalog/lightsaber")
-          prepareLightsaberNavigationAudio();
+        if (typeof props.href === "string")
+          prepareExperienceNavigationAudio(props.href);
       }}
     />
   );

@@ -78,6 +78,15 @@ because their human purposes differ.
   replays a released or cancelled interaction. Maintain one press, hold, drag
   and release lifecycle across mouse, touch and pen. Do not redefine a silent
   first interaction followed by a second interaction as the intended UX.
+- Use `ExperienceLink` for navigation into held experiences, including the
+  landing page. Register each engine factory in `lib/experience-audio.ts` and
+  take its prepared engine at stage mount. The host then owns its disposal.
+  Keep one shared policy across mouse and touch, with no browser-name branches.
+  Native hold startup belongs to the host; shared helpers prepare playback and
+  retry pending activation without replaying released input. Do not add another
+  capture-phase initial start, a silent-source primer, or an alternate toolbar.
+  A cold direct visit has no preceding navigation gesture: report that case
+  separately instead of claiming navigation preparation solves it.
 - Stop on interruptions and preserve hosts on persisted `pagehide`; dispose on
   teardown.
 - Respect reduced motion and responsive behavior. Keep ordinary documentation,

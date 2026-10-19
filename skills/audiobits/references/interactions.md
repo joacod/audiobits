@@ -131,8 +131,10 @@ Dispose owned sounds and subscriptions even if the audio clock is suspended.
 
 ## Host ownership and verification
 
-Call `play()` directly from a user gesture and surface rejected activation
-promises. Bind `update` to existing application state and Stop to cancellation.
+Call `play()` directly from a browser-accepted gesture and surface rejected
+activation promises. For held touch, use the earlier-gesture preparation and
+same-engine handoff in [integration](integration.md); the host still owns the
+hold's playback and cancellation. Bind `update` to existing application state and Stop to cancellation.
 On hide or blur, invalidate pending activation and stop; the engine owner
 suspends on hide. On route removal, call `dispose()`. Returning stays silent until
 a fresh gesture. Use the host pattern in [integration](integration.md) for

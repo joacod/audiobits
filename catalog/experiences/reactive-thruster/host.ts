@@ -2,14 +2,19 @@ import { createAudio, type AudioEngine } from "audiobits";
 import { impact } from "../../recipes/impact/recipe";
 import { createThruster } from "./pointer";
 
+export function createThrusterAudio() {
+  return createAudio({ maxVoices: 8, maxVoicesPerSound: 2 });
+}
+
 /** Framework-independent host. The caller owns presentation and calls dispose on teardown. */
 export function mountThruster(
   pad: HTMLElement,
   feedback: Parameters<typeof attachPointerThruster>[2] & {
     output(active: boolean): void;
   },
+  // Passing a prepared engine transfers ownership, including disposal.
+  audio: AudioEngine = createThrusterAudio(),
 ) {
-  const audio = createAudio({ maxVoices: 8, maxVoicesPerSound: 2 });
   const hit = audio.sound(impact);
   let disposed = false;
   let generation = 0;

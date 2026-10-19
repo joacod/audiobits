@@ -11,7 +11,9 @@ Read root `AGENTS.md` first.
 - Browser-only resources such as `AudioContext` must be created lazily so
   importing the package remains SSR-safe.
 - Keep definition/voice separation, lifecycle, cleanup, audio-context scheduling,
-  and graph ownership deterministic and explicit. Activate from a user gesture.
+  and graph ownership deterministic and explicit. Resume synchronously in a
+  browser-accepted gesture. `start()` prepares output without scheduling a
+  source; DOM input and navigation handoff stay in application hosts.
 - Native output/analyser taps use caller-owned nodes; arbitrary managed graph
   interoperability is not promised.
 - Read [architecture](../../docs/architecture.md) before changing these contracts.

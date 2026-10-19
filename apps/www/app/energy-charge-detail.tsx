@@ -10,6 +10,7 @@ import {
 import type { CSSProperties } from "react";
 import { mountEnergyCharge } from "../../../catalog/experiences/energy-charge/host";
 import { ChargeRings } from "./charge-rings";
+import { takeExperienceAudio } from "../lib/experience-audio";
 import { bindAudioGestures } from "../lib/audio-gestures";
 import {
   audioErrorMessage,
@@ -51,15 +52,18 @@ export function EnergyChargeDetail() {
       setError(`${audioErrorMessage(cause)} Hold to charge again.`);
       setReport(formatAudioActivationReport(cause, pad.current));
     };
-    const current = mountEnergyCharge({
-      state(value) {
-        running.current = value === "running";
-        setState(value);
-        if (value === "starting") setError("");
-        if (value === "stopped") endHold();
+    const current = mountEnergyCharge(
+      {
+        state(value) {
+          running.current = value === "running";
+          setState(value);
+          if (value === "starting") setError("");
+          if (value === "stopped") endHold();
+        },
+        error: reportError,
       },
-      error: reportError,
-    });
+      takeExperienceAudio("energy-charge", pad.current),
+    );
     host.current = current;
     const unbind = pad.current
       ? bindAudioGestures(

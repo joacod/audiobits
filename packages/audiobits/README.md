@@ -25,6 +25,9 @@ npm install audiobits
 
 Create the engine and sound once. Construction is silent; call `play()` directly
 from a user gesture, such as a button click. It awaits activation before playback.
+For touch-and-hold controls, prepare the same engine in an earlier accepted
+gesture, such as navigation into the experience. See the
+[activation guidance](https://www.audiobits.dev/docs/lifecycle#held-touch-and-earlier-activation).
 
 ```ts
 import { createAudio, defineSound } from "audiobits";

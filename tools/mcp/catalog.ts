@@ -94,7 +94,7 @@ export function itemMetadata(item: CatalogItem) {
       inspect: `npx shadcn@latest view ${address}`,
       install: `npx shadcn@latest add ${address}`,
       guidance:
-        "Run the established shadcn registry command from the consumer project and review conflicts. Install only the needed sound source; connect recipes or controllers to existing application inputs. The app owns gesture activation, Stop and disposal. Demo hosts and renderers are excluded. This MCP returns source for review and never installs it.",
+        "Run the established shadcn registry command from the consumer project and review conflicts. Install only the needed sound source; connect recipes or controllers to existing application inputs. The app owns gesture activation, Stop and disposal. For held touch, prepare the same engine in an earlier browser-accepted gesture and transfer its ownership to the host; a trusted press alone may not activate audio. Cold direct entry needs separate browser verification. Demo hosts and renderers are excluded. This MCP returns source for review and never installs it.",
     },
   };
 }

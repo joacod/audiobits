@@ -45,6 +45,30 @@ in a user gesture. Construction is silent; playback before successful activation
 fails without queuing. Blocked resume times out after two wall-clock seconds,
 with a retryable `start-failed` error. Concurrent starts share a promise.
 
+## Held touch and earlier activation
+
+A trusted event does not always grant audio activation. For example, WebKit's
+[activation-triggering events](https://webkit.org/blog/13862/the-user-activation-api/)
+include completed touch taps, while a touch press alone may leave audio suspended.
+Calling `start()` synchronously is necessary, but does not override that policy.
+
+For a held interaction, prepare the destination's engine in an earlier accepted
+gesture, such as the existing link tap that opens an experience. Preparation calls
+`audio.start()` without playing a sound. Retain and pass that same engine to the
+stage; creating another engine or caching an "unlocked" boolean loses the native
+context's activation. Transfer ownership explicitly and dispose abandoned
+preparations. This works for desktop too, without browser-name checks.
+
+The host still owns playback intent. Await activation before playing, and
+invalidate a pending hold on release, cancellation, hide or teardown. A later
+activation must never replay released input. Keep normal touch defaults intact;
+use scoped `touch-action` and selection/callout CSS on the stage.
+
+A cold direct visit has no earlier gesture. Navigation preparation cannot make
+that first held touch eligible on a browser that blocks it. Surface activation
+failure and allow a fresh gesture to retry; test this case separately. Silent
+buffer sources and delayed calls do not establish permission to play.
+
 ## Stop and disposal
 
 `voice.stop()` cancels before onset or releases from the current envelope.
