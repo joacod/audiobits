@@ -1,5 +1,11 @@
 # audiobits
 
+## 0.3.4
+
+### Patch Changes
+
+- c2d8186: Start the silent activation source before resuming suspended output and preserve it when concurrent gesture handlers join startup, so the initial held interaction can activate audio without cutting its first frame.
+
 ## 0.3.3
 
 ### Patch Changes
