@@ -36,12 +36,12 @@ for (const route of ["/catalog/energy-charge"]) {
   });
 }
 
-test("homepage pointer movement keeps one voice until capture is lost", async ({
+test("thruster pointer movement keeps one voice until capture is lost", async ({
   page,
 }) => {
-  await instrument(page, "normal", "/");
+  await instrument(page, "normal", "reactive-thruster");
   await dragThruster(page);
-  const state = page.getByTestId("landing-playback-state");
+  const state = page.locator(".flight-state");
   await expect(state).toHaveText("Thruster: running");
   expect((await probe(page)).sources).toBe(3);
   expect((await probe(page)).contexts).toEqual(["running"]);

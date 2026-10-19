@@ -216,7 +216,7 @@ test("vanilla impact and one continuous thruster through public exports", async 
     .toEqual(["closed"]);
 });
 
-test("homepage reactive thruster keeps one voice through live updates and hide", async ({
+test("reactive thruster keeps one voice through live updates and hide", async ({
   page,
 }) => {
   await page.addInitScript(() => {
@@ -241,14 +241,14 @@ test("homepage reactive thruster keeps one voice through live updates and hide",
     };
     Object.assign(globalThis, { sources, contexts });
   });
-  await page.goto("http://127.0.0.1:3100");
+  await page.goto("http://127.0.0.1:3100/catalog/reactive-thruster");
   expect(
     await page.evaluate(
       () =>
         (globalThis as unknown as { contexts: AudioContext[] }).contexts.length,
     ),
   ).toBe(0);
-  const state = page.getByTestId("landing-playback-state");
+  const state = page.locator(".flight-state");
   const box = await dragThruster(page);
   await expect(state).toHaveText("Thruster: running");
   const count = await page.evaluate(
@@ -273,9 +273,7 @@ test("homepage reactive thruster keeps one voice through live updates and hide",
     )
     .toBeGreaterThan(0);
   await expect(
-    page
-      .getByRole("region", { name: "Reactive Thruster hero" })
-      .getByRole("alert"),
+    page.locator(".catalog-gesture-stage").getByRole("alert"),
   ).toHaveCount(0);
   await page.mouse.up();
   await expect(state).toHaveText("Thruster: stopped");

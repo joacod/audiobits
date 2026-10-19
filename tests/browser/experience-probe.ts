@@ -155,3 +155,17 @@ export async function dragThruster(page: Page) {
   await page.mouse.move(box.x + box.width - 40, box.y + 140, { steps: 8 });
   return box;
 }
+
+/** The same direct hold drives the landing and catalog Lightsaber stage. */
+export async function holdLightsaber(page: Page) {
+  const pad = page.getByRole("group", {
+    name: "Lightsaber stage",
+    exact: true,
+  });
+  await expect(pad).toHaveAttribute("data-state", "stopped");
+  await pad.scrollIntoViewIfNeeded();
+  const box = (await pad.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height * 0.8);
+  await page.mouse.down();
+  return box;
+}

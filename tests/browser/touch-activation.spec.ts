@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 import { instrument, probe } from "./experience-probe";
 
 for (const [route, selector] of [
-  ["/", ".flight-pad"],
+  ["/", ".lightsaber-canvas"],
   ["reactive-thruster", ".flight-pad"],
   ["lightsaber", ".lightsaber-canvas"],
   ["energy-charge", ".charge-hold"],
@@ -16,7 +16,7 @@ for (const [route, selector] of [
     const pad = page.locator(selector);
     await expect(pad).toHaveAttribute("data-state", "stopped");
     if (route === "energy-charge") await expect(pad).toBeEnabled();
-    if (route === "lightsaber")
+    if (route === "lightsaber" || route === "/")
       await expect(pad).toHaveAttribute("data-renderer", "three");
     await pad.scrollIntoViewIfNeeded();
     const box = (await pad.boundingBox())!;
@@ -28,7 +28,7 @@ for (const [route, selector] of [
       });
     await press();
     await expect(pad).toHaveAttribute("data-state", "running");
-    if (route === "lightsaber") {
+    if (route === "lightsaber" || route === "/") {
       // Ignition must produce both the blade and sound before any drag/release.
       await expect(pad).toHaveAttribute("data-extension", "1.000");
       await expect
@@ -40,7 +40,7 @@ for (const [route, selector] of [
       touchPoints: [{ x: box.x + box.width * 0.8, y: box.y + box.height / 2 }],
     });
     const signal =
-      route === "lightsaber"
+      route === "lightsaber" || route === "/"
         ? pad
         : page
             .locator(
@@ -192,7 +192,7 @@ for (const [route, label, selector, signalSelector, signalAttribute] of [
     ".charge-rings",
     "data-level",
   ],
-  ["/", "AudioBits", ".flight-pad", ".thruster-ribbons canvas", "data-peak"],
+  ["/", "AudioBits", ".lightsaber-canvas", ".lightsaber-canvas", "data-peak"],
 ] as const) {
   test(`${route} navigation prepares audio for the first held touch @smoke`, async ({
     page,
@@ -243,7 +243,7 @@ for (const [route, label, selector, signalSelector, signalAttribute] of [
         ),
       )
       .toBeGreaterThan(0);
-    if (route === "lightsaber")
+    if (route === "lightsaber" || route === "/")
       await expect(pad).toHaveAttribute("data-extension", "1.000");
     expect((await probe(page)).contexts).toEqual(["running"]);
     await touch.send("Input.dispatchTouchEvent", {

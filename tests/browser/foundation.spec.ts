@@ -1,8 +1,8 @@
-import { dragThruster } from "./experience-probe";
+import { holdLightsaber } from "./experience-probe";
 import { expect, test } from "@playwright/test";
 import manifest from "../../packages/audiobits/package.json" with { type: "json" };
 
-test("site uses public exports and gesture-driven thruster playback", async ({
+test("site uses public exports and gesture-driven lightsaber playback", async ({
   page,
   browser,
 }) => {
@@ -12,7 +12,7 @@ test("site uses public exports and gesture-driven thruster playback", async ({
   await page.goto("http://127.0.0.1:3100");
   await expect(page).toHaveTitle("AudioBits | Procedural Sound Effects");
   await expect(page.locator(".landing-own pre")).toHaveText(
-    "npx shadcn@latest add joacod/audiobits/reactive-thruster",
+    "npx shadcn@latest add joacod/audiobits/lightsaber",
   );
   await expect(
     page
@@ -31,9 +31,10 @@ test("site uses public exports and gesture-driven thruster playback", async ({
   await expect(
     page.getByText(`Available on npm · ${manifest.version}`),
   ).toBeVisible();
-  await dragThruster(page);
-  await expect(page.getByTestId("landing-playback-state")).toHaveText(
-    "Thruster: running",
+  await holdLightsaber(page);
+  await expect(page.locator(".lightsaber-canvas")).toHaveAttribute(
+    "data-state",
+    "running",
   );
   await page.mouse.up();
   expect(errors).toEqual([]);

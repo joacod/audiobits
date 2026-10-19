@@ -12,7 +12,7 @@ const factories = {
 export type ExperienceId = keyof typeof factories;
 
 function experienceAt(path: string): ExperienceId | undefined {
-  if (path === "/") return "reactive-thruster";
+  if (path === "/") return "lightsaber";
   const slug = path.replace(/^\/catalog\//, "");
   return Object.hasOwn(factories, slug) ? (slug as ExperienceId) : undefined;
 }
