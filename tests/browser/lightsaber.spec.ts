@@ -318,6 +318,82 @@ for (const mode of ["held", "failed"] as const)
     expect((await probe(page)).connected).toBe(0);
   });
 
+// Native context access and the rendered refresh/copy controls need a browser;
+// unit coverage separately protects promise identity and disabled diagnostics.
+test("opt-in activation report captures native failure and refreshes after recovery", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await instrument(page, "failed", "lightsaber?error-details=true");
+  const pad = stage(page);
+  await expect(pad).toHaveAttribute("data-state", "stopped");
+  await pad.press("Enter");
+  const field = page.getByRole("textbox", { name: "Audio activation report" });
+  await expect(field).toBeVisible();
+  const failure = await field.inputValue();
+  const parsed = JSON.parse(failure);
+  expect(parsed).toMatchObject({
+    report: "AudioBits activation v2",
+    input: {
+      engineState: "suspended",
+      native: {
+        state: expect.any(String),
+        currentTime: expect.any(Number),
+        sampleRate: expect.any(Number),
+      },
+      resume: {
+        rejected: 1,
+        pending: 0,
+        callStack: expect.stringContaining("/_next/static/chunks/"),
+      },
+      events: expect.arrayContaining([
+        expect.objectContaining({
+          type: "native-resume",
+          gesture: {
+            type: "keydown",
+            trusted: true,
+            cancelable: true,
+            defaultPrevented: true,
+          },
+        }),
+        expect.objectContaining({
+          type: "native-resume-rejected",
+          error: expect.objectContaining({
+            message: "Activation denied",
+            stack: expect.any(String),
+          }),
+        }),
+      ]),
+    },
+  });
+  await pad.press("Enter");
+  await expect(pad).toHaveAttribute("data-state", "running");
+  await expect
+    .poll(async () => Number(await pad.getAttribute("data-peak")))
+    .toBeGreaterThan(0);
+  // Keep the failure snapshot stable until the user explicitly refreshes it.
+  await expect(field).toHaveValue(failure);
+  await page
+    .getByRole("button", { name: "Refresh report after retry" })
+    .click();
+  const recovered = await field.inputValue();
+  expect(JSON.parse(recovered).input).toMatchObject({
+    native: { state: "running" },
+    resume: { rejected: 1, resolved: 1, pending: 0 },
+    events: expect.arrayContaining([
+      expect.objectContaining({ type: "native-resume-rejected" }),
+      expect.objectContaining({ type: "native-resume-resolved" }),
+    ]),
+  });
+  await page.getByRole("button", { name: "Copy report", exact: true }).click();
+  expect(
+    await page.evaluate(
+      () => (globalThis as unknown as { copiedSource: string }).copiedSource,
+    ),
+  ).toBe(recovered);
+  await pad.press("Escape");
+});
+
 test("keyboard alternatives, touch release and cancellation, reduced motion, source fidelity and mobile layout", async ({
   page,
 }) => {

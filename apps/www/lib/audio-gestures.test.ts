@@ -342,11 +342,174 @@ it("preserves exact error details and reports audio-session preparation failures
   unbind();
 });
 
+function nativeDiagnostics() {
+  vi.stubGlobal(
+    "location",
+    new URL("https://example.test/?error-details=true"),
+  );
+  vi.stubGlobal("navigator", {
+    userActivation: { isActive: false, hasBeenActive: true },
+  });
+  let resolve!: () => void;
+  let reject!: (cause: unknown) => void;
+  const pending = new Promise<void>((yes, no) => {
+    resolve = yes;
+    reject = no;
+  });
+  class NativeContext extends EventTarget {
+    state = "interrupted";
+    currentTime = 0;
+    sampleRate = 48000;
+    resume() {
+      return pending;
+    }
+  }
+  vi.stubGlobal("AudioContext", NativeContext);
+  const context = new NativeContext();
+  const surface = Object.assign(new EventTarget(), {
+    getAttribute: () => "Lightsaber stage",
+    hasPointerCapture: () => false,
+  }) as unknown as HTMLElement;
+  const audio = {
+    state: "suspended",
+    start: vi.fn(() => context.resume()),
+    subscribe: () => () => {},
+  } as unknown as AudioEngine;
+  const originalStart = audio.start;
+  const originalResume = NativeContext.prototype.resume;
+  const listeners = new AbortController();
+  const record = observeAudioActivation(surface, audio, listeners.signal);
+  const report = () =>
+    JSON.parse(
+      formatAudioActivationReport(new Error("Engine timeout"), surface),
+    );
+  return {
+    audio,
+    context,
+    surface,
+    listeners,
+    record,
+    report,
+    pending,
+    resolve,
+    reject,
+    originalStart,
+    originalResume,
+  };
+}
+
+it("observes pending native startup before engine activation without replacing promises", async () => {
+  const d = nativeDiagnostics();
+  let result: Promise<void> | undefined;
+  d.surface.addEventListener("touchstart", (event) => {
+    d.record(event);
+    result = d.audio.start();
+  });
+  d.surface.dispatchEvent(new Event("touchstart", { cancelable: true }));
+  expect(result).toBe(d.pending);
+  expect(AudioContext.prototype.resume).toBe(d.originalResume);
+  const failure = d.report();
+  expect(failure).toMatchObject({
+    report: "AudioBits activation v2",
+    input: {
+      engineState: "suspended",
+      native: { state: "interrupted", currentTime: 0, sampleRate: 48000 },
+      resume: { calls: 1, resolved: 0, rejected: 0, pending: 1 },
+      events: expect.arrayContaining([
+        expect.objectContaining({
+          type: "native-resume",
+          attempt: 1,
+          userActivation: { isActive: false, hasBeenActive: true },
+          gesture: {
+            type: "touchstart",
+            trusted: false,
+            defaultPrevented: false,
+            cancelable: true,
+          },
+        }),
+      ]),
+    },
+  });
+  expect(failure.input.resume.callStack).toContain(
+    "Native audio resume requested",
+  );
+  // A native transition and promise resolution remain visible after the error.
+  d.context.state = "running";
+  d.context.currentTime = 0.25;
+  d.context.dispatchEvent(new Event("statechange"));
+  d.resolve();
+  await d.pending;
+  expect(d.report().input).toMatchObject({
+    native: { state: "running", currentTime: 0.25 },
+    resume: { resolved: 1, pending: 0 },
+    events: expect.arrayContaining([
+      expect.objectContaining({
+        type: "native-state",
+        native: { state: "running", currentTime: 0.25, sampleRate: 48000 },
+      }),
+      expect.objectContaining({ type: "native-resume-resolved", attempt: 1 }),
+    ]),
+  });
+  expect(failure.input.resume.pending).toBe(1);
+  // Native calls outside this engine's synchronous startup are not intercepted.
+  await d.context.resume();
+  expect(d.report().input.resume.calls).toBe(1);
+  d.listeners.abort();
+  expect(d.audio.start).toBe(d.originalStart);
+  expect(d.report().input).toBeUndefined();
+});
+
+it("preserves native rejection details and bounds history across retries", async () => {
+  const d = nativeDiagnostics();
+  const pending = d.audio.start();
+  const cause = new Error("Output device denied", {
+    cause: new Error("Native reason"),
+  });
+  const failure = new DOMException("Playback blocked", "NotAllowedError");
+  Object.defineProperty(failure, "cause", { value: cause });
+  d.reject(failure);
+  await expect(pending).rejects.toBe(failure);
+  expect(d.report().input).toMatchObject({
+    resume: { calls: 1, rejected: 1, pending: 0 },
+    events: expect.arrayContaining([
+      expect.objectContaining({
+        type: "native-resume-rejected",
+        attempt: 1,
+        elapsedMs: expect.any(Number),
+        error: {
+          name: "NotAllowedError",
+          message: "Playback blocked",
+          stack: failure.stack,
+          code: failure.code,
+          cause: expect.objectContaining({ message: "Output device denied" }),
+        },
+      }),
+    ]),
+  });
+  const throwingResume = () => {
+    throw failure;
+  };
+  AudioContext.prototype.resume = throwingResume;
+  expect(() => d.audio.start()).toThrow(failure);
+  expect(AudioContext.prototype.resume).toBe(throwingResume);
+  expect(d.report().input.resume).toMatchObject({ rejected: 2, pending: 0 });
+  for (let i = 0; i < 45; i++) d.record(new Event("click"));
+  expect(d.report().input.events).toHaveLength(40);
+  expect(d.report().input.omittedEvents).toBeGreaterThan(0);
+  d.listeners.abort();
+});
+
 it.each(["", "?error-details=false", "?error-details=1"])(
   "keeps friendly errors and disables diagnostic collection for %s",
   (search) => {
     vi.stubGlobal("location", new URL(`https://example.test/${search}`));
-    const audio = { subscribe: vi.fn() } as unknown as AudioEngine;
+    const start = vi.fn();
+    class NativeContext {
+      resume() {}
+    }
+    vi.stubGlobal("AudioContext", NativeContext);
+    const resume = NativeContext.prototype.resume;
+    const audio = { start, subscribe: vi.fn() } as unknown as AudioEngine;
     const surface = new EventTarget() as HTMLElement;
     observeAudioActivation(
       surface,
@@ -355,6 +518,8 @@ it.each(["", "?error-details=false", "?error-details=1"])(
     )(new Event("pointerdown"));
     const failure = new AudioBitsError("start-failed", "Technical failure");
     expect(audio.subscribe).not.toHaveBeenCalled();
+    expect(audio.start).toBe(start);
+    expect(NativeContext.prototype.resume).toBe(resume);
     expect(audioErrorMessage(failure)).toBe("Audio did not start.");
     expect(formatAudioActivationReport(failure, surface)).toBe("");
   },

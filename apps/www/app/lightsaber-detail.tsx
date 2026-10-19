@@ -30,8 +30,10 @@ export function LightsaberDetail() {
   );
   const [error, setError] = useState("");
   const [report, setReport] = useState("");
+  const lastFailure = useRef<unknown>(undefined);
   const [displayError, setDisplayError] = useState("");
   const reportError = useCallback((cause: unknown) => {
+    lastFailure.current = cause;
     setError(`${audioErrorMessage(cause)} Hold the stage again to retry.`);
     setReport(formatAudioActivationReport(cause, surface.current));
   }, []);
@@ -106,7 +108,15 @@ export function LightsaberDetail() {
           Keyboard: Enter ignites, arrows move,{" "}
           {displayError ? "" : "Space strikes, "}Escape retracts.
         </p>
-        <AudioActivationReport error={error} report={report} />
+        <AudioActivationReport
+          error={error}
+          report={report}
+          onRefresh={() =>
+            setReport(
+              formatAudioActivationReport(lastFailure.current, surface.current),
+            )
+          }
+        />
       </div>
     </>
   );
