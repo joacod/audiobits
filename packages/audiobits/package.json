@@ -1,6 +1,6 @@
 {
   "name": "audiobits",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "Browser audio engine and recipe language. Copy sounds from the AudioBits catalog and own them.",
   "license": "MIT",
   "homepage": "https://www.audiobits.dev/",
