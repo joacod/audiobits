@@ -63,6 +63,9 @@
 .foundation.landing .lightsaber-canvas {
   height: clamp(28rem, 70svh, 43rem);
 }
+.foundation.landing .lightsaber-canvas:focus-visible {
+  outline: none;
+}
 .landing .lightsaber-stage-caption {
   inset-inline: var(--gutter);
   bottom: 1.5rem;
