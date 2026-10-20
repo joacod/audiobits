@@ -755,6 +755,10 @@
     --art-ground: var(--signal-high);
     --art-ink: var(--void);
   }
+  .foundation [data-family="rift"] {
+    --art-ground: var(--void);
+    --art-ink: var(--signal-high);
+  }
   .foundation [data-family="blade"] {
     --art-ground: var(--graphite);
     --art-ink: var(--signal-mid);
