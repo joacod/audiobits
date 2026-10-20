@@ -768,6 +768,28 @@
     stroke-width: 1.4;
     transition: transform 600ms cubic-bezier(0.16, 1, 0.3, 1);
   }
+  .foundation.landing :is(.landing-experience, .landing-sound-entry) h3,
+  .foundation.catalog-page .catalog-card h3 a {
+    color: var(--ink);
+    text-shadow: none;
+    transition: text-shadow 240ms ease-out;
+  }
+  .foundation.landing
+    :is(.landing-experience, .landing-sound-entry):is(:hover, :focus-visible)
+    h3,
+  .foundation.catalog-page .catalog-card:is(:hover, :focus-within) h3 a {
+    text-shadow:
+      -0.025em 0 0.045em var(--signal-low),
+      0.025em 0 0.045em var(--signal-high),
+      0 0 0.22em color-mix(in srgb, var(--signal-mid) 70%, transparent),
+      0 0 0.65em color-mix(in srgb, var(--signal-mid) 35%, transparent);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .foundation.landing :is(.landing-experience, .landing-sound-entry) h3,
+    .foundation.catalog-page .catalog-card h3 a {
+      transition: none;
+    }
+  }
   .foundation
     :is(a:hover, a:focus-visible, article:focus-within, article:hover)
     .signal-artwork {

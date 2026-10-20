@@ -754,9 +754,6 @@
   .foundation.catalog-page .catalog-card:focus-within {
     border-color: var(--signal-mid);
   }
-  .foundation.catalog-page .catalog-card:is(:hover, :focus-within) h3 a {
-    color: var(--signal-mid);
-  }
   .foundation.catalog-page .catalog-card-preview {
     display: grid;
     place-items: center;
@@ -795,7 +792,6 @@
   }
   .foundation.catalog-page .catalog-card h3 a {
     text-decoration: none;
-    transition: color 160ms ease-out;
   }
   .foundation.catalog-page .catalog-card h3 a::after {
     position: absolute;
