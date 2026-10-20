@@ -315,7 +315,10 @@ try {
       sustained: item.meta.requiredCapabilities.kinds.includes("sustained"),
       // Metal returns ring for 2.4 s and their late echo repeats for about
       // 3.2 s more, so Echo Probe finishes about 7 s after its pulse.
-      ...(item.name === "echo-probe" ? { finishTimeout: 12000 } : {}),
+      // The Rift's collapse folds, implodes and repeats its pocket echo.
+      ...(["echo-probe", "the-rift"].includes(item.name)
+        ? { finishTimeout: 12000 }
+        : {}),
     });
     manifestTypes.push(...types);
     // This consumer starts with only the packed runtime. No framework or
@@ -970,6 +973,7 @@ const probe = {
   ${example.sustained ? "update," : ""}
   ${["thruster", "energy-charge"].includes(example.file) ? "release," : ""}
   ${example.file === "lightsaber" ? "strike, retract," : ""}
+  ${example.file === "the-rift" ? "close," : ""}
   async dispose() { unsubscribe(); detach?.(); analyser?.disconnect(); await dispose(); },
   get signal() { return signal; },
   get contextTime() { return context?.currentTime; },
@@ -1320,8 +1324,29 @@ Object.assign(globalThis, { probe });`,
         assert.ok(
           (await page.evaluate(() => globalThis.probe.counts)).active > 0,
         );
-        await page.evaluate(() => globalThis.probe.update(0.8));
-        await page.evaluate(() => globalThis.probe.update(0.3));
+        if (example.file === "the-rift") {
+          await page.evaluate(() =>
+            globalThis.probe.update({
+              aperture: 0.9,
+              tension: 0.8,
+              instability: 0.7,
+            }),
+          );
+          await page.evaluate(() => globalThis.probe.update({ aperture: 0.3 }));
+          // The creative collapse completes on its own, inside a bounded tail.
+          const timeline = await page.evaluate(() => globalThis.probe.close());
+          assert.ok(timeline.implodeAt > timeline.at, "Collapse timeline");
+          await expect
+            .poll(() => page.evaluate(() => globalThis.probe.counts), {
+              timeout: example.finishTimeout,
+              message: "The Rift collapse must finish its owned tails",
+            })
+            .toEqual({ active: 0, retiring: 0 });
+          await page.evaluate(() => globalThis.probe.play());
+        } else {
+          await page.evaluate(() => globalThis.probe.update(0.8));
+          await page.evaluate(() => globalThis.probe.update(0.3));
+        }
         if (example.file === "lightsaber") {
           assert.equal(
             await page.evaluate(() => globalThis.probe.strike()),

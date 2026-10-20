@@ -64,6 +64,15 @@ const EchoProbeDetail = dynamic(
   },
 );
 
+const RiftDetail = dynamic(
+  () => import("../../rift-detail").then((module) => module.RiftDetail),
+  {
+    loading: () => (
+      <div className="catalog-stage" aria-label="Loading The Rift" />
+    ),
+  },
+);
+
 export function generateStaticParams() {
   return catalogEntries.map((entry) => ({ slug: entry.slug }));
 }
@@ -111,7 +120,9 @@ export default async function CatalogEntryPage({
   const tokens = await highlightCode(code, "typescript");
   return (
     <CatalogDetail entry={experience}>
-      {experience.slug === "echo-probe" ? (
+      {experience.slug === "the-rift" ? (
+        <RiftDetail />
+      ) : experience.slug === "echo-probe" ? (
         <EchoProbeDetail />
       ) : experience.slug === "lightsaber" ? (
         <LightsaberDetail />

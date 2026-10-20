@@ -560,6 +560,65 @@
         }
       ],
       "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/main/catalog/README.md for integration and update guidance."
+    },
+    {
+      "name": "the-rift",
+      "type": "registry:item",
+      "title": "The Rift",
+      "description": "Tear open a living fracture. Stretch, destabilize and seal it into a collapsing implosion.",
+      "dependencies": ["audiobits@^0.3.0"],
+      "categories": ["experience"],
+      "meta": {
+        "classification": "experience",
+        "tags": ["portal", "sustained", "evolving", "collapse", "ambient"],
+        "schemaVersion": 1,
+        "compatibility": {
+          "runtime": "audiobits >=0.3.0 with native recipe delay",
+          "language": "TypeScript",
+          "moduleResolution": "Bundler",
+          "browser": "Web Audio; automated verification in Chromium",
+          "framework": "none"
+        },
+        "exportName": "riftField",
+        "requiredCapabilities": {
+          "sources": ["noise", "oscillator"],
+          "filters": ["bandpass", "highpass", "lowpass"],
+          "effects": ["delay", "filter"],
+          "parameterModes": ["live", "play"],
+          "kinds": ["one-shot", "sustained"],
+          "waveforms": ["sawtooth", "sine", "square", "triangle"],
+          "noiseColors": ["white"],
+          "mappingScales": ["exponential", "linear"],
+          "automationCurves": ["exponential"],
+          "runtime": [
+            "gesture-start",
+            "bounded-voices",
+            "live-controls",
+            "seeded-replay",
+            "buses",
+            "suspend",
+            "dispose"
+          ]
+        }
+      },
+      "files": [
+        {
+          "path": "catalog/experiences/the-rift/recipe.ts",
+          "type": "registry:file",
+          "target": "~/src/sounds/experiences/the-rift/recipe.ts"
+        },
+        {
+          "path": "catalog/experiences/the-rift/controller.ts",
+          "type": "registry:file",
+          "target": "~/src/sounds/experiences/the-rift/controller.ts"
+        },
+        {
+          "path": "catalog/experiences/the-rift/README.md",
+          "type": "registry:file",
+          "target": "~/src/sounds/experiences/the-rift/README.md"
+        }
+      ],
+      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/main/catalog/README.md for integration and update guidance."
     }
   ]
 }

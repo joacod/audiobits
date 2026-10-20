@@ -313,6 +313,19 @@ test("experience cards stay silent and full interactions clean up on return", as
       });
       await expect(stage).toHaveAttribute("data-ready", "true");
       await stage.click();
+    } else if (entry.slug === "the-rift") {
+      const stage = page.getByRole("group", {
+        name: "The Rift stage",
+        exact: true,
+      });
+      await expect(stage).toHaveAttribute("data-ready", "true");
+      await stage.scrollIntoViewIfNeeded();
+      const box = (await stage.boundingBox())!;
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height * 0.25);
+      await page.mouse.down();
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height * 0.7, {
+        steps: 6,
+      });
     } else await dragThruster(page);
     await expect
       .poll(

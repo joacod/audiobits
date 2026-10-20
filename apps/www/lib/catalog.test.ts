@@ -51,6 +51,7 @@ test("catalog index discovers every registry entry once and groups collections",
     "reactive-thruster",
     "echo-probe",
     "energy-charge",
+    "the-rift",
     ...registry.items
       .filter((item) => item.meta.classification === "recipe")
       .map((item) => item.name),

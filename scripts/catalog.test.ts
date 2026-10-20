@@ -16,6 +16,9 @@ import registry from "../registry.json" with { type: "json" };
 import { compile } from "../packages/audiobits/src/compiler/plan";
 import { controlsFor } from "../packages/audiobits/src/compiler/values";
 
+// Experiences whose recipes use native delay, which needs the 0.3 runtime line.
+const delayExperiences = ["echo-probe", "the-rift"];
+
 test("canonical gallery imports resolve in native Node tooling", () => {
   execFileSync(process.execPath, [
     "--input-type=module",
@@ -73,7 +76,9 @@ test("registry covers every canonical recipe and sound-only experience", async (
   );
   for (const item of registry.items) {
     expect(item.dependencies).toEqual(
-      item.name === "echo-probe" ? ["audiobits@^0.3.0"] : ["audiobits"],
+      delayExperiences.includes(item.name)
+        ? ["audiobits@^0.3.0"]
+        : ["audiobits"],
     );
     expect(item.title.length).toBeGreaterThan(0);
     expect(item.description.length).toBeGreaterThan(0);
@@ -88,7 +93,7 @@ test("registry covers every canonical recipe and sound-only experience", async (
           : capabilities.recipe[key as keyof typeof capabilities.recipe];
       for (const value of values) expect(supported).toContain(value);
     }
-    if (item.name === "echo-probe") {
+    if (delayExperiences.includes(item.name)) {
       expect(item.meta.requiredCapabilities).toHaveProperty("effects", [
         "delay",
         "filter",

@@ -17,6 +17,16 @@ export const experienceSourcePurpose = {
     "baseline-controller.ts":
       "Original PR #100 scheduling and acoustic mapping for reference A.",
   },
+  "the-rift": {
+    "recipe.ts":
+      "Sustained fracture field plus opening, disturbance, collapse and implosion recipes as schema-1 data.",
+    "controller.ts":
+      "Phase transitions, live shape updates, autonomous evolution on the audio clock, and owned cleanup.",
+    "host.ts":
+      "Gesture activation, pending opening intent, hide, blur, Stop, and disposal.",
+    "index.html":
+      "Standalone acoustic bench with Open, Collapse, Stop and shape sliders.",
+  },
   lightsaber: {
     "recipe.ts":
       "Five original schema-1 recipes: hum, ignition, swing, clash, and retraction.",
@@ -93,6 +103,14 @@ export function experienceDemoSourceFiles(
     path: `catalog/experiences/${id}/${name}`,
   }));
 }
+
+export const riftExperience = {
+  title: registryItem("the-rift").title,
+  href: "/catalog/the-rift",
+  description: registryItem("the-rift").description,
+  controls: ["Tear open", "Aperture", "Tension", "Instability", "Seal"],
+  sourceFiles: experienceDemoSourceFiles("the-rift").map((file) => file.name),
+} as const;
 
 export const echoProbeExperience = {
   title: registryItem("echo-probe").title,
