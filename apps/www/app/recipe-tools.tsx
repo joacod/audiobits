@@ -4,6 +4,7 @@ import { memo, useState, useSyncExternalStore } from "react";
 import { Button } from "@base-ui/react/button";
 import { CatalogInstall } from "./catalog-install";
 import { UsageCode } from "./usage-code";
+import { LiveCodeBlock } from "./live-code-block";
 import { validateRecipe } from "audiobits";
 import type { Recipe } from "audiobits";
 import { sounds, quickExample } from "../lib/gallery";
@@ -128,9 +129,7 @@ export const RecipeTools = memo(function RecipeTools({
               <Button onClick={apply}>Apply {kind} recipe</Button>
             </>
           ) : (
-            <pre>
-              <code>{JSON.stringify(recipe, null, 2)}</code>
-            </pre>
+            <LiveCodeBlock code={JSON.stringify(recipe, null, 2)} lang="json" />
           )}
           {!!issues.length && (
             <div role="alert">

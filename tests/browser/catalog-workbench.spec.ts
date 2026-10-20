@@ -299,6 +299,10 @@ test("whoosh shows only the controls in the applied recipe", async ({
     .getByRole("button", { name: "Copy whoosh recipe", exact: true })
     .click();
   expect(JSON.parse(await copied(page))).toEqual(recipe);
+  await page.getByRole("button", { name: "View recipe", exact: true }).click();
+  const preview = page.locator(".recipe-tools pre");
+  await expect(preview.locator("span[style]").first()).toBeAttached();
+  expect(JSON.parse(await preview.innerText())).toEqual(recipe);
   await page.getByRole("button", { name: "Play whoosh", exact: true }).click();
   await expect(page.locator(".catalog-transport [role=alert]")).toHaveCount(0);
   await page
@@ -370,7 +374,7 @@ test("thruster stays sustained, follows live throttle, and navigation disposes a
   await expect(state).toHaveText("Thruster: running");
   await page
     .getByRole("navigation", { name: "Previous and next" })
-    .getByRole("link", { name: "Next: Tactile click →", exact: true })
+    .getByRole("link", { name: "Next Tactile click", exact: true })
     .click();
   await expect(page).toHaveURL(`${home}/catalog/tactile-click`);
   await expect(
@@ -588,6 +592,7 @@ test("every catalog item copies its registry command and links to installation d
       .getByRole("button", { name: `Copy ${entry.slug} code`, exact: true })
       .click();
     await expect(usage.getByRole("status")).toHaveText("Copied.");
+    await expect(usage.locator("pre span[style]").first()).toBeAttached();
     expect(await copied(page)).toBe(await usage.locator("pre").innerText());
     expect(await copied(page)).toContain('from "audiobits"');
     expect(await copied(page)).toContain(

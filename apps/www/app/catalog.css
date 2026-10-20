@@ -532,6 +532,14 @@
     margin-block: 0.75rem;
     max-height: 32rem;
   }
+  .foundation.catalog-page .catalog-code > code {
+    display: block;
+    padding: 0;
+    background: transparent;
+    border-radius: 0;
+    color: #a9b1d6;
+    font-size: inherit;
+  }
   .foundation.catalog-page .catalog-usage h3 {
     font-size: 1.35rem;
     margin-block: 1rem 0.5rem;
@@ -708,6 +716,14 @@
   }
   .foundation.catalog-page .landing-command-row button {
     flex: none;
+    color: var(--void);
+    background: var(--signal-mid);
+    border-color: var(--signal-mid);
+  }
+  .foundation.catalog-page .landing-command-row button:enabled:hover {
+    color: var(--void);
+    background: var(--ink);
+    border-color: var(--ink);
   }
   .foundation.catalog-page .landing-copy-status {
     min-height: 1.5em;
@@ -832,22 +848,56 @@
     margin: 0 1.25rem 1rem;
   }
   .foundation.catalog-page .catalog-pagination {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 0.5rem 1.5rem;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
     margin-top: 2rem;
     padding-top: 1rem;
     border-top: 1px solid var(--graphite-edge);
   }
   .foundation.catalog-page .catalog-pagination a {
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    min-height: 44px;
-    font-size: 0.875rem;
+    gap: 0.75rem;
+    min-width: 0;
+    min-height: 6.5rem;
+    padding: 1rem;
+    border: 1px solid var(--graphite-edge);
+    border-radius: 4px;
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .foundation.catalog-page .catalog-pagination a:is(:hover, :focus-visible) {
+    border-color: var(--signal-mid);
+    background: var(--graphite);
+  }
+  .foundation.catalog-page .catalog-pagination-copy {
+    display: grid;
+    gap: 0.25rem;
+    min-width: 0;
+  }
+  .foundation.catalog-page .catalog-pagination-label {
+    color: var(--mute);
+    font-size: 0.6875rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .foundation.catalog-page .catalog-pagination-title {
+    font-family: var(--font-display);
+    font-size: clamp(1.25rem, 3vw, 1.75rem);
+    line-height: 1.1;
+    text-transform: uppercase;
+    overflow-wrap: anywhere;
+  }
+  .foundation.catalog-page .catalog-pagination-arrow {
+    flex: none;
+    color: var(--signal-mid);
+    font-size: 1.25rem;
   }
   .foundation.catalog-page .catalog-pagination [rel="next"] {
-    margin-left: auto;
+    grid-column: 2;
+    justify-content: flex-end;
+    text-align: right;
   }
   @media (max-width: 1000px) {
     .foundation.catalog-page .catalog-cards {
