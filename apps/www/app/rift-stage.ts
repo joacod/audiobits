@@ -7,6 +7,12 @@ import type {
 } from "../../../catalog/experiences/the-rift/controller";
 import type { AudioEngine } from "audiobits";
 import { bindAudioGestures } from "../lib/audio-gestures";
+import {
+  createRiftField,
+  RIFT_SAMPLES,
+  type RiftField,
+  type RiftFieldFrame,
+} from "./rift-field-gl";
 
 // Showcase geometry: gestures map to a normalized shape. Phases come only from
 // the controller; this module keeps pointer details and drawing state.
@@ -33,6 +39,7 @@ export function mountRiftStage(
     clearError(): void;
   },
   prepared?: AudioEngine,
+  field?: HTMLCanvasElement,
 ) {
   const paint = canvas.getContext("2d");
   const style = getComputedStyle(surface);
@@ -63,6 +70,32 @@ export function mountRiftStage(
   let analyser: AnalyserNode | undefined;
   let detach: (() => void) | undefined;
   const samples = new Float32Array(1024);
+  // WebGL2 shades the field when available and motion is allowed; the
+  // Canvas 2D overlay still draws discharges, and paints everything otherwise.
+  let gl: RiftField | null = null;
+  let pixels: [number, number] = [1, 1];
+  let ratio = 1;
+  const offsets = new Float32Array(RIFT_SAMPLES);
+  const opens = new Float32Array(RIFT_SAMPLES);
+  function publishRenderer() {
+    surface.dataset.renderer = gl ? "webgl" : paint ? "canvas" : "unavailable";
+    if (field) field.hidden = !gl;
+  }
+  function chooseRenderer() {
+    if (disposed) return;
+    if (motion.matches || !field) {
+      gl?.dispose();
+      gl = null;
+    } else if (!gl) {
+      gl = createRiftField(field, () => {
+        gl = null;
+        publishRenderer();
+        wake();
+      });
+      gl?.resize(...pixels);
+    }
+    publishRenderer();
+  }
   let gesture:
     | {
         id: number;
@@ -385,8 +418,14 @@ export function mountRiftStage(
     const energy = level();
     paint.globalCompositeOperation = "source-over";
     paint.globalAlpha = 1;
-    paint.fillStyle = "#050507";
-    paint.fillRect(0, 0, width, height);
+    if (gl) paint.clearRect(0, 0, width, height);
+    else {
+      paint.fillStyle = "#050507";
+      paint.fillRect(0, 0, width, height);
+    }
+    const pulses: RiftFieldFrame["pulses"] = [];
+    let fracture:
+      Pick<RiftFieldFrame, "center" | "axis" | "normal" | "half"> | undefined;
     // Kinetic instability relaxes toward rest after the hand lets go.
     if (!gesture && kinetic > 0.001 && phase === "active") {
       kinetic *= 0.94;
@@ -426,6 +465,8 @@ export function mountRiftStage(
         const open = width0 * profile * (1 + 0.15 * (draws() - 0.5));
         const cx = tear.x + u.x * along + n.x * offset;
         const cy = tear.y + u.y * along + n.y * offset;
+        offsets[i] = offset;
+        opens[i] = open;
         top.push([cx + n.x * open, cy + n.y * open]);
         bottom.push([cx - n.x * open, cy - n.y * open]);
       }
@@ -438,71 +479,79 @@ export function mountRiftStage(
           paint.lineTo(bottom[i][0], bottom[i][1]);
         paint.closePath();
       };
-      // Light leaking from the other side.
-      paint.globalCompositeOperation = "lighter";
-      const glow = paint.createRadialGradient(
-        tear.x,
-        tear.y,
-        0,
-        tear.x,
-        tear.y,
-        half * 1.3 + width0 * 4,
-      );
-      glow.addColorStop(0, tint(mid, 0.15 + 0.5 * shown * (0.6 + energy)));
-      glow.addColorStop(0.5, tint(low, 0.13));
-      glow.addColorStop(1, tint(low, 0));
-      paint.fillStyle = glow;
-      paint.fillRect(0, 0, width, height);
-      const inner = paint.createLinearGradient(
-        tear.x + n.x * width0,
-        tear.y + n.y * width0,
-        tear.x - n.x * width0,
-        tear.y - n.y * width0,
-      );
-      // A bright rim around a deep void: the other side is dark, not lit.
-      const rim = shape.instability > 0.6 ? high : mid;
-      inner.addColorStop(0, rim);
-      inner.addColorStop(0.18, tint(low, 0.9));
-      inner.addColorStop(0.5, "#06030d");
-      inner.addColorStop(0.82, tint(low, 0.9));
-      inner.addColorStop(1, rim);
-      paint.globalCompositeOperation = "source-over";
-      paint.shadowColor = mid;
-      paint.shadowBlur = reduced ? 12 : 18 + 50 * energy;
-      paint.globalAlpha = 0.6 + 0.4 * Math.min(1, shown * 2);
-      paint.fillStyle = inner;
-      shapePath();
-      paint.fill();
-      paint.shadowBlur = 0;
-      paint.globalCompositeOperation = "lighter";
-      // Internal turbulence streaks.
-      if (!reduced && shown > 0.05) {
-        paint.globalAlpha = 0.12 + 0.35 * energy;
-        paint.strokeStyle = rim;
-        paint.lineWidth = 0.7;
-        for (let k = 0; k < 5; k++) {
-          const phaseShift = (now * (0.2 + k * 0.07 + shape.instability)) % 1;
-          const s = 0.15 + 0.7 * ((phaseShift + k / 5) % 1);
-          const i = Math.round(s * points);
-          const [tx, ty] = top[i];
-          const [bx, by] = bottom[i];
+      fracture = {
+        center: [tear.x, tear.y],
+        axis: [u.x, u.y],
+        normal: [n.x, n.y],
+        half,
+      };
+      if (!gl) {
+        // Light leaking from the other side.
+        paint.globalCompositeOperation = "lighter";
+        const glow = paint.createRadialGradient(
+          tear.x,
+          tear.y,
+          0,
+          tear.x,
+          tear.y,
+          half * 1.3 + width0 * 4,
+        );
+        glow.addColorStop(0, tint(mid, 0.15 + 0.5 * shown * (0.6 + energy)));
+        glow.addColorStop(0.5, tint(low, 0.13));
+        glow.addColorStop(1, tint(low, 0));
+        paint.fillStyle = glow;
+        paint.fillRect(0, 0, width, height);
+        const inner = paint.createLinearGradient(
+          tear.x + n.x * width0,
+          tear.y + n.y * width0,
+          tear.x - n.x * width0,
+          tear.y - n.y * width0,
+        );
+        // A bright rim around a deep void: the other side is dark, not lit.
+        const rim = shape.instability > 0.6 ? high : mid;
+        inner.addColorStop(0, rim);
+        inner.addColorStop(0.18, tint(low, 0.9));
+        inner.addColorStop(0.5, "#06030d");
+        inner.addColorStop(0.82, tint(low, 0.9));
+        inner.addColorStop(1, rim);
+        paint.globalCompositeOperation = "source-over";
+        paint.shadowColor = mid;
+        paint.shadowBlur = reduced ? 12 : 18 + 50 * energy;
+        paint.globalAlpha = 0.6 + 0.4 * Math.min(1, shown * 2);
+        paint.fillStyle = inner;
+        shapePath();
+        paint.fill();
+        paint.shadowBlur = 0;
+        paint.globalCompositeOperation = "lighter";
+        // Internal turbulence streaks.
+        if (!reduced && shown > 0.05) {
+          paint.globalAlpha = 0.12 + 0.35 * energy;
+          paint.strokeStyle = rim;
+          paint.lineWidth = 0.7;
+          for (let k = 0; k < 5; k++) {
+            const phaseShift = (now * (0.2 + k * 0.07 + shape.instability)) % 1;
+            const s = 0.15 + 0.7 * ((phaseShift + k / 5) % 1);
+            const i = Math.round(s * points);
+            const [tx, ty] = top[i];
+            const [bx, by] = bottom[i];
+            paint.beginPath();
+            paint.moveTo(tx + (bx - tx) * 0.3, ty + (by - ty) * 0.3);
+            paint.lineTo(tx + (bx - tx) * 0.7, ty + (by - ty) * 0.7);
+            paint.stroke();
+          }
+        }
+        // Thin unstable edges.
+        paint.globalCompositeOperation = "source-over";
+        paint.globalAlpha = 0.9;
+        paint.lineWidth = gesture?.sealing ? 2.2 : 1.1;
+        paint.strokeStyle = gesture?.sealing ? high : ink;
+        for (const edge of [top, bottom]) {
           paint.beginPath();
-          paint.moveTo(tx + (bx - tx) * 0.3, ty + (by - ty) * 0.3);
-          paint.lineTo(tx + (bx - tx) * 0.7, ty + (by - ty) * 0.7);
+          edge.forEach(([x, y], i) =>
+            i ? paint.lineTo(x, y) : paint.moveTo(x, y),
+          );
           paint.stroke();
         }
-      }
-      // Thin unstable edges.
-      paint.globalCompositeOperation = "source-over";
-      paint.globalAlpha = 0.9;
-      paint.lineWidth = gesture?.sealing ? 2.2 : 1.1;
-      paint.strokeStyle = gesture?.sealing ? high : ink;
-      for (const edge of [top, bottom]) {
-        paint.beginPath();
-        edge.forEach(([x, y], i) =>
-          i ? paint.lineTo(x, y) : paint.moveTo(x, y),
-        );
-        paint.stroke();
       }
       // Discharges and knocks, drawn at their scheduled audio-clock times.
       events = events.filter((event) => now < event.at + 0.6);
@@ -514,6 +563,14 @@ export function mountRiftStage(
         const i = Math.round(clamp(0.5 + event.pan * 0.6, 0.1, 0.9) * points);
         const [ex, ey] = event.pan < 0 ? top[i] : bottom[i];
         paint.globalAlpha = fade * event.strength;
+        if (pulses.length < 4)
+          pulses.push({
+            s: i / points,
+            side: event.pan < 0 ? 1 : -1,
+            age,
+            strength: event.strength,
+            kind: event.kind === "crackle" ? 0 : event.kind === "groan" ? 1 : 2,
+          });
         if (event.kind === "crackle" && !reduced) {
           paint.strokeStyle = ink;
           paint.lineWidth = 1;
@@ -528,7 +585,7 @@ export function mountRiftStage(
             paint.lineTo(x, y);
           }
           paint.stroke();
-        } else {
+        } else if (!gl) {
           paint.strokeStyle = event.kind === "groan" ? high : low;
           paint.lineWidth = 1.5;
           paint.beginPath();
@@ -544,7 +601,7 @@ export function mountRiftStage(
       }
     }
     // The implosion: an inward ring and a brief flash at the seal.
-    if (collapseAt && tear && now >= collapseAt.implodeAt) {
+    if (collapseAt && tear && now >= collapseAt.implodeAt && !gl) {
       const age = now - collapseAt.implodeAt;
       if (age < 0.9) {
         paint.globalCompositeOperation = "lighter";
@@ -576,6 +633,32 @@ export function mountRiftStage(
     }
     paint.globalCompositeOperation = "source-over";
     paint.globalAlpha = 1;
+    gl?.render({
+      width,
+      height,
+      ratio: pixels[0] / Math.max(1, width),
+      time: now || performance.now() / 1000,
+      active: fracture ? 1 : 0,
+      center: fracture?.center ?? [width / 2, height / 2],
+      axis: fracture?.axis ?? [1, 0],
+      normal: fracture?.normal ?? [0, 1],
+      half: fracture?.half ?? 1,
+      offsets,
+      opens,
+      shown,
+      tension: shape.tension,
+      instability: shape.instability,
+      energy,
+      sealing: gesture?.sealing ? 1 : 0,
+      seed: tear?.seed ?? 0,
+      implosion:
+        collapseAt && now >= collapseAt.implodeAt
+          ? now - collapseAt.implodeAt
+          : -1,
+      span: span(),
+      pulses,
+      colors: { ink, low, mid, high },
+    });
     const busy =
       phase !== "idle" ||
       starting ||
@@ -590,14 +673,26 @@ export function mountRiftStage(
   const resize = new ResizeObserver(() => {
     width = surface.clientWidth;
     height = surface.clientHeight;
-    const ratio = Math.min(2, devicePixelRatio || 1);
+    ratio = Math.min(2, devicePixelRatio || 1);
     canvas.width = Math.round(width * ratio);
     canvas.height = Math.round(height * ratio);
+    // The shaded field is soft; cap its density to keep frames cheap.
+    const fieldRatio = Math.min(ratio, 1.5);
+    pixels = [Math.round(width * fieldRatio), Math.round(height * fieldRatio)];
+    gl?.resize(...pixels);
     paint?.setTransform(ratio, 0, 0, ratio, 0, 0);
     wake();
   });
   resize.observe(surface);
-  motion.addEventListener("change", wake, { signal: listeners.signal });
+  chooseRenderer();
+  motion.addEventListener(
+    "change",
+    () => {
+      chooseRenderer();
+      wake();
+    },
+    { signal: listeners.signal },
+  );
   document.addEventListener(
     "visibilitychange",
     () => {
@@ -615,6 +710,8 @@ export function mountRiftStage(
       listeners.abort();
       resize.disconnect();
       cancelAnimationFrame(frame);
+      gl?.dispose();
+      gl = null;
       detach?.();
       analyser?.disconnect();
       await host.dispose();

@@ -8,6 +8,7 @@ import "./rift.css";
 export function RiftDetail() {
   const surface = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
+  const field = useRef<HTMLCanvasElement>(null);
   const [error, setError] = useState("");
   const [hint, setHint] = useState("Press and drag to tear the dark open.");
   useEffect(() => {
@@ -28,6 +29,7 @@ export function RiftDetail() {
         },
       },
       prepared,
+      field.current ?? undefined,
     );
     return () => {
       void stage.dispose().catch(console.error);
@@ -43,7 +45,8 @@ export function RiftDetail() {
         aria-describedby="rift-help"
         tabIndex={0}
       >
-        <canvas ref={canvas} aria-hidden="true" />
+        <canvas ref={field} className="rift-field" aria-hidden="true" hidden />
+        <canvas ref={canvas} className="rift-overlay" aria-hidden="true" />
         <div className="rift-caption" aria-hidden="true">
           <span>{hint}</span>
           <span>Procedural audio · No samples</span>
