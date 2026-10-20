@@ -303,65 +303,69 @@ export const bladeSwing = defineSound({
 export const bladeClash = defineSound({
   schemaVersion: 1,
   kind: "one-shot",
-  duration: 0.32,
+  duration: 0.58,
   parameters: { force: { min: 0, max: 1, default: 0.7, mode: "play" } },
   layers: [
     {
-      id: "collision-body",
+      id: "shockwave",
       source: {
         type: "oscillator",
-        waveform: "sawtooth",
+        waveform: "sine",
         frequency: {
           points: [
-            [0, 185],
-            [0.045, 108],
-            [0.32, 84],
+            [0, 155],
+            [0.035, 83],
+            [0.22, 42],
+            [0.58, 30],
           ],
           curve: "exponential",
         },
       },
-      gainDb: { control: "force", range: [-28, -22], scale: "linear" },
-      envelope: { attack: 0.002, decay: 0.18, sustain: 0.01, release: 0.1 },
-      effects: [{ type: "filter", filter: "bandpass", frequency: 950, q: 1.2 }],
+      gainDb: { control: "force", range: [-26, -20], scale: "linear" },
+      envelope: { attack: 0.003, decay: 0.36, sustain: 0, release: 0.14 },
     },
     {
-      id: "electrical-fracture",
+      id: "plasma-burst",
       source: { type: "noise", color: "white" },
-      gainDb: { control: "force", range: [-25, -18], scale: "linear" },
-      envelope: { attack: 0.001, decay: 0.16, sustain: 0.02, release: 0.12 },
+      gainDb: { control: "force", range: [-24, -17], scale: "linear" },
+      envelope: { attack: 0.002, decay: 0.26, sustain: 0, release: 0.12 },
+      effects: [
+        {
+          type: "filter",
+          filter: "lowpass",
+          frequency: {
+            points: [
+              [0, 6200],
+              [0.055, 2400],
+              [0.26, 430],
+              [0.58, 150],
+            ],
+            curve: "exponential",
+          },
+          q: 0.7,
+        },
+      ],
+    },
+    {
+      id: "debris-tail",
+      source: { type: "noise", color: "white" },
+      gainDb: { control: "force", range: [-32, -25], scale: "linear" },
+      envelope: { attack: 0.025, decay: 0.42, sustain: 0, release: 0.13 },
       effects: [
         {
           type: "filter",
           filter: "bandpass",
           frequency: {
             points: [
-              [0, 4200],
-              [0.07, 1600],
-              [0.32, 650],
+              [0, 1800],
+              [0.16, 850],
+              [0.58, 230],
             ],
             curve: "exponential",
           },
-          q: 0.8,
+          q: 0.6,
         },
       ],
-    },
-    {
-      id: "hot-metal",
-      source: {
-        type: "oscillator",
-        waveform: "square",
-        frequency: {
-          points: [
-            [0, 430],
-            [0.06, 415],
-            [0.32, 390],
-          ],
-          curve: "exponential",
-        },
-      },
-      gainDb: { control: "force", range: [-38, -30], scale: "linear" },
-      envelope: { attack: 0.002, decay: 0.13, sustain: 0, release: 0.1 },
-      effects: [{ type: "filter", filter: "lowpass", frequency: 2700, q: 0.6 }],
     },
   ],
 });
