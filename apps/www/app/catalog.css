@@ -784,15 +784,6 @@
     width: 15rem;
     height: 10rem;
   }
-  .foundation.catalog-page
-    .catalog-card:is(
-      [data-status="starting"],
-      [data-status="playing"],
-      [data-status="running"]
-    )
-    .catalog-mark {
-    color: var(--signal-mid);
-  }
   .foundation.catalog-page .catalog-card-copy {
     min-height: 9rem;
     padding: 1.25rem 1.25rem 0;
@@ -945,6 +936,25 @@
     height: 3rem;
     color: currentColor;
     background: transparent;
+  }
+  @keyframes catalog-glyph-pulse {
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.16);
+    }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .foundation.catalog-page
+      .catalog-card[data-category="bundled"]:is(
+        [data-status="playing"],
+        [data-status="running"]
+      )
+      .catalog-cover-glyph {
+      animation: catalog-glyph-pulse 600ms ease-in-out infinite;
+    }
   }
   .foundation.catalog-page .catalog-cover-glyph .charge-ring {
     border-color: currentColor;
