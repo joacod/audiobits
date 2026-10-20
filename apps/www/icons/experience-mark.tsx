@@ -3,8 +3,20 @@ import { SoundMark } from "./catalog-marks";
 export function ExperienceMark({
   kind,
 }: {
-  kind: "charge" | "thruster" | "blade" | "pulse";
+  kind: "charge" | "thruster" | "blade" | "pulse" | "rift";
 }) {
+  if (kind === "rift")
+    return (
+      <svg className="experience-mark" viewBox="0 0 64 64" aria-hidden="true">
+        <path
+          d="M33 4 L28 18 L36 30 L27 44 L32 60 L37 44 L30 31 L38 18 Z"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
   if (kind === "blade")
     return (
       <svg className="experience-mark" viewBox="0 0 64 64" aria-hidden="true">

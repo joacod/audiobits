@@ -7,6 +7,7 @@ import { SoundMark } from "../icons/catalog-marks";
 import { ThrusterPreviewMark } from "../icons/thruster-preview";
 import { BladePreviewMark } from "../icons/blade-preview";
 import { SignalArtwork } from "./signal-artwork";
+import { ExperienceMark } from "../icons/experience-mark";
 import { PlayIcon } from "../icons/play-icon";
 import {
   catalogEntries,
@@ -139,6 +140,7 @@ function CatalogPreview({
     return <SoundMark family={entry.preview.family} index={index} />;
   if (entry.preview.family === "pulse")
     return <SoundMark family="pulse" index={3} />;
+  if (entry.preview.family === "rift") return <ExperienceMark kind="rift" />;
   if (entry.preview.family === "charge")
     return (
       <div
