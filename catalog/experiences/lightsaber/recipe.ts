@@ -134,7 +134,7 @@ export const lightsaber = defineSound({
 export const bladeIgnition = defineSound({
   schemaVersion: 1,
   kind: "one-shot",
-  duration: 0.4,
+  duration: 0.5,
   layers: [
     {
       id: "arc-draw",
@@ -143,71 +143,73 @@ export const bladeIgnition = defineSound({
         waveform: "sawtooth",
         frequency: {
           points: [
-            [0, 132],
-            [0.065, 108],
-            [0.18, 97],
-            [0.4, 96],
+            [0, 78],
+            [0.08, 103],
+            [0.22, 96],
+            [0.5, 96],
           ],
           curve: "exponential",
         },
       },
-      gainDb: -21,
-      envelope: { attack: 0.006, decay: 0.22, sustain: 0.08, release: 0.08 },
+      gainDb: -23,
+      envelope: { attack: 0.012, decay: 0.25, sustain: 0.03, release: 0.09 },
       effects: [
         {
           type: "filter",
           filter: "lowpass",
           frequency: {
             points: [
-              [0, 2200],
-              [0.06, 1500],
-              [0.18, 760],
-              [0.4, 540],
+              [0, 250],
+              [0.1, 950],
+              [0.17, 1100],
+              [0.32, 650],
+              [0.5, 420],
             ],
             curve: "exponential",
           },
-          q: 0.8,
+          q: 0.7,
         },
       ],
     },
     {
       id: "plasma-tear",
       source: { type: "noise", color: "white" },
-      gainDb: -22,
-      envelope: { attack: 0.002, decay: 0.2, sustain: 0, release: 0.08 },
+      gainDb: -26,
+      envelope: { attack: 0.065, decay: 0.28, sustain: 0, release: 0.09 },
       effects: [
         {
           type: "filter",
           filter: "bandpass",
           frequency: {
             points: [
-              [0, 3200],
-              [0.035, 1900],
-              [0.14, 850],
-              [0.4, 400],
+              [0, 500],
+              [0.13, 2200],
+              [0.3, 1500],
+              [0.5, 750],
             ],
             curve: "exponential",
           },
-          q: 1.1,
+          q: 0.7,
         },
       ],
     },
     {
-      id: "switch-buzz",
+      id: "electrical-growl",
       source: {
         type: "oscillator",
         waveform: "square",
         frequency: {
           points: [
-            [0, 62],
-            [0.08, 50],
+            [0, 47],
+            [0.1, 55],
+            [0.32, 48],
           ],
           curve: "exponential",
         },
       },
       gainDb: -30,
-      envelope: { attack: 0.002, decay: 0.065, sustain: 0, release: 0.045 },
-      effects: [{ type: "filter", filter: "lowpass", frequency: 1900, q: 0.6 }],
+      envelope: { attack: 0.006, decay: 0.28, sustain: 0, release: 0.07 },
+      effects: [{ type: "filter", filter: "lowpass", frequency: 950, q: 0.7 }],
     },
   ],
 });
@@ -376,7 +378,7 @@ export const bladeClash = defineSound({
 export const bladeRetraction = defineSound({
   schemaVersion: 1,
   kind: "one-shot",
-  duration: 0.28,
+  duration: 0.66,
   layers: [
     {
       id: "field-collapse",
@@ -386,15 +388,15 @@ export const bladeRetraction = defineSound({
         frequency: {
           points: [
             [0, 96],
-            [0.07, 86],
-            [0.18, 60],
-            [0.28, 42],
+            [0.15, 96],
+            [0.35, 80],
+            [0.66, 40],
           ],
           curve: "exponential",
         },
       },
-      gainDb: -23,
-      envelope: { attack: 0.008, decay: 0.18, sustain: 0, release: 0.06 },
+      gainDb: -24,
+      envelope: { attack: 0.012, decay: 0.4, sustain: 0.01, release: 0.08 },
       effects: [
         {
           type: "filter",
@@ -402,8 +404,9 @@ export const bladeRetraction = defineSound({
           frequency: {
             points: [
               [0, 1100],
-              [0.08, 850],
-              [0.28, 160],
+              [0.18, 850],
+              [0.45, 430],
+              [0.66, 150],
             ],
             curve: "exponential",
           },
@@ -414,41 +417,57 @@ export const bladeRetraction = defineSound({
     {
       id: "vacuum",
       source: { type: "noise", color: "white" },
-      gainDb: -23,
-      envelope: { attack: 0.045, decay: 0.13, sustain: 0, release: 0.055 },
+      gainDb: -25,
+      envelope: { attack: 0.06, decay: 0.45, sustain: 0, release: 0.09 },
       effects: [
         {
           type: "filter",
           filter: "bandpass",
           frequency: {
             points: [
-              [0, 600],
-              [0.07, 2400],
-              [0.15, 950],
-              [0.28, 180],
+              [0, 2000],
+              [0.18, 1400],
+              [0.38, 650],
+              [0.6, 280],
+              [0.66, 150],
             ],
             curve: "exponential",
           },
-          q: 1.1,
+          q: 0.7,
         },
       ],
     },
     {
-      id: "core-drain",
+      id: "returning-growl",
       source: {
         type: "oscillator",
-        waveform: "sine",
+        waveform: "square",
         frequency: {
           points: [
-            [0, 96],
-            [0.09, 62],
-            [0.24, 36],
+            [0, 48],
+            [0.35, 47],
+            [0.66, 32],
           ],
           curve: "exponential",
         },
       },
       gainDb: -32,
-      envelope: { attack: 0.008, decay: 0.15, sustain: 0, release: 0.06 },
+      envelope: { attack: 0.018, decay: 0.42, sustain: 0, release: 0.08 },
+      effects: [
+        {
+          type: "filter",
+          filter: "lowpass",
+          frequency: {
+            points: [
+              [0, 950],
+              [0.3, 650],
+              [0.66, 160],
+            ],
+            curve: "exponential",
+          },
+          q: 0.7,
+        },
+      ],
     },
   ],
 });
