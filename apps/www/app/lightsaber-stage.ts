@@ -458,6 +458,15 @@ export function mountBladeStage3D(
   );
   const cancel = (event: PointerEvent) => {
     if (pointer === event.pointerId) {
+      // Desktop Chrome can release capture without delivering pointerup here.
+      if (
+        event.type === "lostpointercapture" &&
+        event.pointerType === "mouse" &&
+        event.buttons === 0
+      ) {
+        retract();
+        return;
+      }
       releasePointer();
       reset();
       host.stop();

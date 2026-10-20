@@ -184,14 +184,14 @@ for (const cancellation of ["capture", "blur"] as const)
     expect((await probe(page)).connected).toBe(0);
   });
 
-test("repeated holds and releases bound voices and dispose on navigation", async ({
+test("repeated landing holds and releases bound voices and dispose on navigation", async ({
   page,
 }) => {
   // Bound software WebGL's pixel cost in this voice stress test.
   await page.setViewportSize({ width: 390, height: 844 });
   const errors: string[] = [];
   page.on("pageerror", (cause) => errors.push(cause.message));
-  await instrument(page, "normal", "lightsaber");
+  await instrument(page, "normal", "/");
   const pad = stage(page);
   await expect(pad).toHaveAttribute("data-renderer", "three");
   for (let i = 0; i < 5; i++) {
@@ -199,8 +199,28 @@ test("repeated holds and releases bound voices and dispose on navigation", async
     await expect(pad).toHaveAttribute("data-state", "running");
     const current = await probe(page);
     expect(current.sources - current.ended).toBeLessThanOrEqual(26);
+    if (i === 4) {
+      const box = (await pad.boundingBox())!;
+      await page.mouse.move(box.x + box.width * 0.8, box.y + box.height * 0.7, {
+        steps: 4,
+      });
+      // Reproduce the observed desktop release: capture is lost with buttons=0,
+      // but pointerup never reaches the stage. Chromium still releases capture.
+      await page.evaluate(() =>
+        document.addEventListener(
+          "pointerup",
+          (event) => event.stopImmediatePropagation(),
+          {
+            capture: true,
+            once: true,
+          },
+        ),
+      );
+    }
+    const beforeRelease = await probe(page);
     await page.mouse.up();
     await expect(pad).toHaveAttribute("data-state", "stopped");
+    expect((await probe(page)).sources).toBeGreaterThan(beforeRelease.sources);
     // Release plays a retraction tail; measure the next ignition after it ends.
     await expect
       .poll(async () => {
