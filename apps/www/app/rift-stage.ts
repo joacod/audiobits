@@ -2,7 +2,6 @@ import { mountRift } from "../../../catalog/experiences/the-rift/host";
 import type {
   RiftCollapseTimeline,
   RiftDisturbance,
-  RiftPhase,
   RiftShape,
 } from "../../../catalog/experiences/the-rift/controller";
 import type { AudioEngine } from "audiobits";
@@ -54,9 +53,7 @@ export function mountRiftStage(
   let width = 1,
     height = 1,
     frame = 0,
-    disposed = false,
-    phase: RiftPhase = "idle",
-    starting = false;
+    disposed = false;
   let shape: RiftShape = restingShape;
   // Fracture geometry in CSS pixels, from the opening gesture.
   let tear:
@@ -115,8 +112,9 @@ export function mountRiftStage(
 
   const host = mountRift(
     {
+      // The controller owns the phase and the host owns pending activation;
+      // these callbacks only re-render and publish, they store nothing.
       phase(value) {
-        phase = value;
         surface.dataset.phase = value;
         if (value === "opening") ensureAnalyser();
         if (value === "idle") {
@@ -136,9 +134,9 @@ export function mountRiftStage(
         wake();
       },
       starting(value) {
-        starting = value;
         surface.dataset.starting = String(value);
-        if (!value && phase === "idle" && !gesture) tear = undefined;
+        if (!value && host.control.phase === "idle" && !gesture)
+          tear = undefined;
         wake();
       },
       error(cause) {
@@ -219,7 +217,7 @@ export function mountRiftStage(
         outward: 1,
         sealing: false,
       };
-      if (phase === "idle" && !starting) {
+      if (host.control.phase === "idle" && !host.starting) {
         gesture = { ...base, mode: "open" };
         tear = {
           x: point.x,
@@ -233,7 +231,7 @@ export function mountRiftStage(
         shape = restingShape;
         // Activation must start inside this gesture.
         host.open(shape);
-      } else if (phase === "active" && tear) {
+      } else if (host.control.phase === "active" && tear) {
         const { u, n } = axes();
         const dx = point.x - tear.x,
           dy = point.y - tear.y;
@@ -350,11 +348,12 @@ export function mountRiftStage(
       };
       if (event.key === "Escape") {
         event.preventDefault();
-        if (phase === "active") collapseAt = host.collapse();
-        else if (phase === "opening" || starting) host.cancel();
+        if (host.control.phase === "active") collapseAt = host.collapse();
+        else if (host.control.phase === "opening" || host.starting)
+          host.cancel();
         return;
       }
-      if (phase === "idle" && !starting) {
+      if (host.control.phase === "idle" && !host.starting) {
         if ((event.key === "Enter" || event.key === " ") && !event.repeat) {
           event.preventDefault();
           tear = {
@@ -372,7 +371,7 @@ export function mountRiftStage(
         }
         return;
       }
-      if (phase !== "active") return;
+      if (host.control.phase !== "active") return;
       if (event.key === "ArrowUp") step("aperture", 0.08);
       else if (event.key === "ArrowDown") step("aperture", -0.08);
       else if (event.key === "ArrowRight") step("tension", 0.08);
@@ -427,15 +426,18 @@ export function mountRiftStage(
     let fracture:
       Pick<RiftFieldFrame, "center" | "axis" | "normal" | "half"> | undefined;
     // Kinetic instability relaxes toward rest after the hand lets go.
-    if (!gesture && kinetic > 0.001 && phase === "active") {
+    if (!gesture && kinetic > 0.001 && host.control.phase === "active") {
       kinetic *= 0.94;
       const instability = clamp(0.15 + kinetic * 0.85);
       if (performance.now() - lastSent > 60 || kinetic < 0.01)
         send({ instability });
     }
-    let target = phase === "idle" && !starting && !gesture ? 0 : shape.aperture;
+    let target =
+      host.control.phase === "idle" && !host.starting && !gesture
+        ? 0
+        : shape.aperture;
     let pinch = 1;
-    if (collapseAt && phase === "collapsing") {
+    if (collapseAt && host.control.phase === "collapsing") {
       const progress = clamp(
         (now - collapseAt.at) / (collapseAt.implodeAt - collapseAt.at),
       );
@@ -660,8 +662,8 @@ export function mountRiftStage(
       colors: { ink, low, mid, high },
     });
     const busy =
-      phase !== "idle" ||
-      starting ||
+      host.control.phase !== "idle" ||
+      host.starting ||
       gesture ||
       events.length ||
       kinetic > 0.01;

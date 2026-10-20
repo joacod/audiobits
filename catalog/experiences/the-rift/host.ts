@@ -118,6 +118,10 @@ export function mountRift(
   return {
     audio,
     control,
+    /** True while an opening gesture waits for audio activation. */
+    get starting() {
+      return pending !== undefined;
+    },
     open,
     settle,
     cancel,
