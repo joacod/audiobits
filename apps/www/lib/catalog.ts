@@ -2,6 +2,7 @@ import registry from "../../../registry.json" with { type: "json" };
 import {
   energyChargeExperience,
   echoProbeExperience,
+  riftExperience,
   lightsaberExperience,
   reactiveThrusterExperience,
 } from "./experiences";
@@ -9,7 +10,7 @@ import { demos, type SoundKind } from "./gallery";
 
 // Navigation metadata only. Recipes stay in the gallery module.
 export type CatalogFamily =
-  "charge" | "thruster" | "blade" | "pulse" | "harmonic" | "flow";
+  "charge" | "thruster" | "blade" | "pulse" | "rift" | "harmonic" | "flow";
 
 type CatalogEntryBase = {
   slug: string;
@@ -21,7 +22,7 @@ type CatalogEntryBase = {
 export type ExperienceCatalogEntry = CatalogEntryBase & {
   category: "experience";
   controls: readonly string[];
-  preview: { family: "charge" | "thruster" | "blade" | "pulse" };
+  preview: { family: "charge" | "thruster" | "blade" | "pulse" | "rift" };
   source: { files: readonly string[] };
 };
 
@@ -50,6 +51,7 @@ const experienceEntries = [
     preview: "charge",
     experience: energyChargeExperience,
   },
+  { slug: "the-rift", preview: "rift", experience: riftExperience },
 ] as const;
 
 export const catalogGroups = [

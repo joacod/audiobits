@@ -43,6 +43,13 @@ over older late tails, with two foreground groups and one releasing group.
 Its installed guide covers
 voice budgets, cancellation, and scheduled times for application feedback.
 
+The Rift's `createRift(audio)` opens a persistent field with `open()`, keeps it
+with `settle()` or heals it with `cancel()`, and takes normalized aperture,
+tension and instability through `update()`. Without input, the controller
+evolves the field and schedules bounded disturbances on the audio clock.
+`collapse()` is a deliberate finale that returns to `idle`; `nextPhase` is the
+complete transition table, observable through `rift.phase` and `onPhase()`.
+
 The installed guide defines each controller's bounded inputs and lifecycle.
 Activate the application-owned engine before starting a controller, then own
 input mapping, suspension and engine disposal. Controllers dispose only their
