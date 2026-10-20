@@ -772,19 +772,13 @@
   .foundation.catalog-page .catalog-card h3 a {
     color: var(--ink);
     text-shadow: none;
-    transition:
-      color 180ms ease-out,
-      text-shadow 240ms ease-out;
+    transition: text-shadow 220ms cubic-bezier(0.16, 1, 0.3, 1);
   }
   .foundation.landing
     :is(.landing-experience, .landing-sound-entry):is(:hover, :focus-visible)
     h3,
   .foundation.catalog-page .catalog-card:is(:hover, :focus-within) h3 a {
-    color: var(--signal-mid);
-    text-shadow:
-      0 0 0.18em color-mix(in srgb, var(--signal-mid) 90%, transparent),
-      0 0 0.5em color-mix(in srgb, var(--signal-mid) 80%, transparent),
-      0 0 0.95em color-mix(in srgb, var(--signal-mid) 55%, transparent);
+    text-shadow: 0.08em 0.07em 0 var(--signal-mid);
   }
   @media (prefers-reduced-motion: reduce) {
     .foundation.landing :is(.landing-experience, .landing-sound-entry) h3,
