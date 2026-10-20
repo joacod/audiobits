@@ -8,7 +8,7 @@ async function owned(page: Page) {
   return p.sources - p.ended;
 }
 const peak = async (stage: Locator) =>
-  Number(await stage.locator("canvas").getAttribute("data-peak"));
+  Number(await stage.locator("canvas.rift-overlay").getAttribute("data-peak"));
 
 test("tear, persist without input, shape, interrupted seal, collapse, keyboard and navigation clean up @smoke", async ({
   page,
@@ -18,6 +18,7 @@ test("tear, persist without input, shape, interrupted seal, collapse, keyboard a
   const stage = page.getByRole("group", stageName);
   await expect(stage).toHaveAttribute("data-ready", "true");
   await expect(stage).toHaveAttribute("data-phase", "idle");
+  await expect(stage).toHaveAttribute("data-renderer", "webgl");
   expect((await probe(page)).contexts).toEqual([]);
   await stage.scrollIntoViewIfNeeded();
   const box = (await stage.boundingBox())!;
@@ -86,4 +87,39 @@ test("tear, persist without input, shape, interrupted seal, collapse, keyboard a
       };
     })
     .toEqual({ connected: 0, contexts: [] });
+});
+
+test("reduced motion and a lost WebGL context fall back to the Canvas 2D stage", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await instrument(page, "normal", "the-rift");
+  const stage = page.getByRole("group", stageName);
+  await expect(stage).toHaveAttribute("data-ready", "true");
+  await expect(stage).toHaveAttribute("data-renderer", "canvas");
+  await expect(stage.locator("canvas.rift-field")).toBeHidden();
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await expect(stage).toHaveAttribute("data-renderer", "webgl");
+  await expect(stage.locator("canvas.rift-field")).toBeVisible();
+  await stage.press("Enter");
+  await expect(stage).toHaveAttribute("data-phase", "active");
+  await page.evaluate(() => {
+    const field =
+      document.querySelector<HTMLCanvasElement>("canvas.rift-field")!;
+    field
+      .getContext("webgl2")!
+      .getExtension("WEBGL_lose_context")!
+      .loseContext();
+  });
+  await expect(stage).toHaveAttribute("data-renderer", "canvas");
+  await expect(stage).toHaveAttribute("data-phase", "active");
+  await expect
+    .poll(async () =>
+      Number(
+        await stage.locator("canvas.rift-overlay").getAttribute("data-peak"),
+      ),
+    )
+    .toBeGreaterThan(0);
+  await stage.press("Escape");
+  await expect(stage).toHaveAttribute("data-phase", "idle", { timeout: 8000 });
 });
