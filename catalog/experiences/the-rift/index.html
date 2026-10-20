@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>The Rift acoustic bench</title>
+  <h1>The Rift acoustic bench</h1>
+  <p>
+    Open, shape and leave the field alone to hear it evolve. Collapse is the
+    creative finale; Stop is an immediate reset.
+  </p>
+  <button id="open">Open</button>
+  <button id="collapse">Collapse</button>
+  <button id="stop">Stop</button>
+  <label
+    >Aperture
+    <input id="aperture" type="range" min="0" max="1" step="0.01" value="0.6"
+  /></label>
+  <label
+    >Tension
+    <input id="tension" type="range" min="0" max="1" step="0.01" value="0.35"
+  /></label>
+  <label
+    >Instability
+    <input
+      id="instability"
+      type="range"
+      min="0"
+      max="1"
+      step="0.01"
+      value="0.2"
+  /></label>
+  <p id="status" role="status">idle</p>
+  <p id="error" role="alert"></p>
+  <script type="module">
+    import { mountRift } from "./host.ts";
+    const error = document.querySelector("#error");
+    const shape = () =>
+      Object.fromEntries(
+        ["aperture", "tension", "instability"].map((name) => [
+          name,
+          Number(document.querySelector(`#${name}`).value),
+        ]),
+      );
+    const host = mountRift({
+      phase(value) {
+        document.querySelector("#status").textContent = value;
+      },
+      starting(value) {
+        if (value) error.textContent = "";
+      },
+      error(cause) {
+        error.textContent = `${String(cause)}. Try Open again.`;
+      },
+    });
+    document.querySelector("#open").onclick = () => {
+      host.open(shape());
+      host.settle();
+    };
+    for (const input of document.querySelectorAll("input"))
+      input.oninput = () => host.update(shape());
+    document.querySelector("#collapse").onclick = host.collapse;
+    document.querySelector("#stop").onclick = host.stop;
+    // In an SPA, call await host.dispose() when removing the view.
+  </script>
+</html>

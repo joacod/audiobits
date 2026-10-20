@@ -73,7 +73,10 @@ test("registry covers every canonical recipe and sound-only experience", async (
   );
   for (const item of registry.items) {
     expect(item.dependencies).toEqual(
-      item.name === "echo-probe" ? ["audiobits@^0.3.0"] : ["audiobits"],
+      // Native recipe delay requires the 0.3 runtime line.
+      ["echo-probe", "the-rift"].includes(item.name)
+        ? ["audiobits@^0.3.0"]
+        : ["audiobits"],
     );
     expect(item.title.length).toBeGreaterThan(0);
     expect(item.description.length).toBeGreaterThan(0);
@@ -88,7 +91,7 @@ test("registry covers every canonical recipe and sound-only experience", async (
           : capabilities.recipe[key as keyof typeof capabilities.recipe];
       for (const value of values) expect(supported).toContain(value);
     }
-    if (item.name === "echo-probe") {
+    if (["echo-probe", "the-rift"].includes(item.name)) {
       expect(item.meta.requiredCapabilities).toHaveProperty("effects", [
         "delay",
         "filter",
