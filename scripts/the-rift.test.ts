@@ -9,6 +9,7 @@ import {
   type RiftPhase,
 } from "../catalog/experiences/the-rift/controller";
 import { compile } from "../packages/audiobits/src/compiler/plan";
+import { checkNyquist } from "../packages/audiobits/src/compiler/graph";
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -132,6 +133,22 @@ test("the installed recipe module exports only valid recipes that compile at ext
         );
     }
   }
+});
+
+test("every recipe keeps a Nyquist margin across seeds, extrema and sample rates", () => {
+  for (const recipe of Object.values(recipes))
+    for (const edge of ["min", "default", "max"] as const) {
+      const controls = Object.fromEntries(
+        Object.entries("parameters" in recipe ? recipe.parameters : {}).map(
+          ([name, parameter]) => [name, parameter[edge]],
+        ),
+      );
+      for (const seed of [0, 7, 42, 0xffffffff]) {
+        const plan = compile(recipe, controls, seed);
+        for (const rate of [22050, 32000, 44100, 48000])
+          expect(() => checkNyquist(plan, rate)).not.toThrow();
+      }
+    }
 });
 
 test("each shape control moves its own acoustic responsibility", () => {
@@ -313,6 +330,22 @@ test("a collapse expires pending evolution so it cannot undo the contraction", a
   await s.advance(evolutionPeriod);
   expect(fieldBus.setGainDb).toHaveBeenLastCalledWith(-60, expect.any(Number));
   expect(s.field().voices[0].set.mock.calls.length).toBe(sets);
+  s.rift.dispose();
+});
+
+test("the field ending during a collapse cannot cut the implosion short", async () => {
+  // Guards the field's own generation check: its voice is still current here.
+  const s = setup();
+  s.rift.open();
+  s.rift.settle();
+  s.rift.collapse();
+  s.field().voices[0].finish();
+  await settle();
+  expect(s.rift.phase).toBe("collapsing");
+  expect(s.buses[0].setGainDb).not.toHaveBeenCalledWith(-60, 0.02);
+  s.of(recipes.riftImplosion).voices[0].finish();
+  await settle();
+  expect(s.rift.phase).toBe("idle");
   s.rift.dispose();
 });
 

@@ -302,8 +302,9 @@ export function createRift(
     publish("cancel");
   }
 
+  // Runs from open() and from its own generation-checked timer in later().
   function evolve(token: number) {
-    if (token !== generation || !voice || audio.state !== "running") return;
+    if (!voice || audio.state !== "running") return;
     const now = audio.native.context.currentTime;
     if (now >= moodEnds) {
       const options = moods[mood].next;
