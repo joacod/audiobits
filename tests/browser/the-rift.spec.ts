@@ -112,6 +112,11 @@ test("reduced motion and a lost WebGL context fall back to the Canvas 2D stage",
       .loseContext();
   });
   await expect(stage).toHaveAttribute("data-renderer", "canvas");
+  // A lost context stays on Canvas 2D even when motion preferences change.
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await expect(stage).toHaveAttribute("data-renderer", "canvas");
+  await expect(stage.locator("canvas.rift-field")).toBeHidden();
   await expect(stage).toHaveAttribute("data-phase", "active");
   await expect
     .poll(async () =>
@@ -120,6 +125,36 @@ test("reduced motion and a lost WebGL context fall back to the Canvas 2D stage",
       ),
     )
     .toBeGreaterThan(0);
+  await stage.press("Escape");
+  await expect(stage).toHaveAttribute("data-phase", "idle", { timeout: 8000 });
+});
+
+test("without WebGL2 the stage paints Canvas 2D and still plays", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const native = HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext = function (
+      this: HTMLCanvasElement,
+      type: string,
+      ...rest: unknown[]
+    ) {
+      if (type === "webgl2") return null;
+      return (native as (...args: unknown[]) => unknown).call(
+        this,
+        type,
+        ...rest,
+      );
+    } as typeof native;
+  });
+  await instrument(page, "normal", "the-rift");
+  const stage = page.getByRole("group", stageName);
+  await expect(stage).toHaveAttribute("data-ready", "true");
+  await expect(stage).toHaveAttribute("data-renderer", "canvas");
+  await expect(stage.locator("canvas.rift-field")).toBeHidden();
+  await stage.press("Enter");
+  await expect(stage).toHaveAttribute("data-phase", "active");
+  await expect.poll(() => peak(stage)).toBeGreaterThan(0);
   await stage.press("Escape");
   await expect(stage).toHaveAttribute("data-phase", "idle", { timeout: 8000 });
 });

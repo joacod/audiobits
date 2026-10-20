@@ -70,6 +70,7 @@ export function mountRiftStage(
   // WebGL2 shades the field when available and motion is allowed; the
   // Canvas 2D overlay still draws discharges, and paints everything otherwise.
   let gl: RiftField | null = null;
+  let fieldLost = false;
   let pixels: [number, number] = [1, 1];
   let ratio = 1;
   const offsets = new Float32Array(RIFT_SAMPLES);
@@ -80,11 +81,12 @@ export function mountRiftStage(
   }
   function chooseRenderer() {
     if (disposed) return;
-    if (motion.matches || !field) {
+    if (motion.matches || !field || fieldLost) {
       gl?.dispose();
       gl = null;
     } else if (!gl) {
       gl = createRiftField(field, () => {
+        fieldLost = true;
         gl = null;
         publishRenderer();
         wake();

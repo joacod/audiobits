@@ -323,8 +323,10 @@ export function createRiftField(
   const pulses = new Float32Array(PULSES * 4);
   const kinds = new Float32Array(PULSES);
   let alive = true;
-  const onLost = (event: Event) => {
-    event.preventDefault();
+  // A lost context is final for this renderer: it detaches itself and the
+  // stage stays on Canvas 2D, so no restore handling is needed.
+  const onLost = () => {
+    canvas.removeEventListener("webglcontextlost", onLost);
     if (!alive) return;
     alive = false;
     lost();
