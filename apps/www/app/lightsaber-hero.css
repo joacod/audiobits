@@ -17,7 +17,6 @@
   font-size: clamp(5rem, 11.8vw, 11rem);
   line-height: 0.82;
   letter-spacing: -0.025em;
-  transform: skewX(calc(var(--hero-level) * -2deg));
 }
 .landing .lightsaber-intro h1 > span {
   display: block;
@@ -30,6 +29,42 @@
 .landing .hero-period {
   color: var(--signal-mid);
   -webkit-text-stroke: 0;
+}
+.landing .hero-letter {
+  position: relative;
+  display: inline-block;
+  white-space: pre;
+}
+.landing .hero-letter::before,
+.landing .hero-letter::after {
+  content: attr(data-letter);
+  position: absolute;
+  inset: 0;
+  opacity: var(--letter-heat, 0);
+  -webkit-text-stroke: 0;
+  pointer-events: none;
+}
+.landing .hero-letter::before {
+  color: var(--ink);
+  clip-path: inset(0 0 46% 0);
+  transform: translate(
+    calc(var(--letter-heat, 0) * -0.035em),
+    calc(var(--letter-heat, 0) * -0.012em)
+  );
+  text-shadow:
+    0 0 0.045em var(--ink),
+    0 0 0.12em var(--signal-mid);
+}
+.landing .hero-letter::after {
+  color: var(--signal-mid);
+  clip-path: inset(48% 0 0 0);
+  transform: translate(
+    calc(var(--letter-heat, 0) * 0.045em),
+    calc(var(--letter-heat, 0) * 0.012em)
+  );
+  text-shadow:
+    0 0 0.045em var(--signal-high),
+    0 0 0.14em var(--signal-mid);
 }
 .landing .hero-description {
   position: absolute;
@@ -62,6 +97,9 @@
 }
 .foundation.landing .lightsaber-canvas {
   height: clamp(28rem, 70svh, 43rem);
+}
+.foundation.landing .lightsaber-canvas:focus-visible {
+  outline: none;
 }
 .landing .lightsaber-stage-caption {
   inset-inline: var(--gutter);
@@ -187,8 +225,9 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .landing .lightsaber-intro h1 {
-    transform: none;
+  .landing .hero-letter::before,
+  .landing .hero-letter::after {
+    display: none;
   }
   .landing .lightsaber-stage::after {
     display: none;

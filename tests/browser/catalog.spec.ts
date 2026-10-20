@@ -43,6 +43,23 @@ test("catalog presents every registry entry once with one card system and no ind
     await expect(card).toContainText(entry.description);
     await expect(card.getByRole("link")).toHaveAttribute("href", entry.href);
     await expect(page.locator(`a[href="${entry.href}"]`)).toHaveCount(1);
+    if (entry.category === "bundled") {
+      // Inspect the playback state synchronously, before a short one-shot ends.
+      const colors = await card.evaluate((node) => {
+        const mark = node.querySelector(".catalog-mark")!;
+        const cover = node.querySelector(".catalog-card-preview")!;
+        const status = node.getAttribute("data-status");
+        node.setAttribute("data-status", "playing");
+        const result = {
+          icon: getComputedStyle(mark).color,
+          contrast: getComputedStyle(cover).color,
+        };
+        if (status === null) node.removeAttribute("data-status");
+        else node.setAttribute("data-status", status);
+        return result;
+      });
+      expect(colors.icon).toBe(colors.contrast);
+    }
   }
   await expect(page.locator(".catalog-card")).toHaveCount(
     catalogEntries.length,

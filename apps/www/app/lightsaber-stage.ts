@@ -30,6 +30,12 @@ export function mountBladeStage3D(
   const events = new AbortController();
   const hero = surface.closest<HTMLElement>(".lightsaber-hero");
   const heroWave = hero?.querySelector<SVGPathElement>(".hero-wave");
+  const heroHeading = hero?.querySelector<HTMLElement>("h1");
+  const heroLetters = Array.from(
+    heroHeading?.querySelectorAll<HTMLElement>(".hero-letter") ?? [],
+  )
+    .filter((node) => node.textContent?.trim())
+    .map((node) => ({ node, x: 0, y: 0, width: 0, height: 0, heat: 0 }));
   const reduced = matchMedia("(prefers-reduced-motion: reduce)");
   // A failed display retains input and audio motion, but has no visible targets.
   let failed = false;
@@ -91,6 +97,35 @@ export function mountBladeStage3D(
     analyser?.disconnect();
     analyser = undefined;
   }
+  function clearLetterHeat() {
+    for (const letter of heroLetters) {
+      letter.heat = 0;
+      letter.node.style.removeProperty("--letter-heat");
+    }
+  }
+  function crossesLetter(
+    letter: (typeof heroLetters)[number],
+    a: Point,
+    b: Point,
+  ) {
+    let enter = 0,
+      leave = 1;
+    for (const [start, delta, low, high] of [
+      [a.x, b.x - a.x, letter.x - 6, letter.x + letter.width + 6],
+      [a.y, b.y - a.y, letter.y - 6, letter.y + letter.height + 6],
+    ]) {
+      if (Math.abs(delta) < 0.0001) {
+        if (start < low || start > high) return false;
+      } else {
+        const near = (low - start) / delta;
+        const far = (high - start) / delta;
+        enter = Math.max(enter, Math.min(near, far));
+        leave = Math.min(leave, Math.max(near, far));
+        if (enter > leave) return false;
+      }
+    }
+    return true;
+  }
   function releasePointer() {
     const id = pointer;
     pointer = null;
@@ -108,6 +143,7 @@ export function mountBladeStage3D(
     assistedTarget = null;
     trails.length = particles.length = 0;
     disconnect();
+    clearLetterHeat();
     hero?.style.setProperty("--hero-level", "0");
     hero?.style.setProperty("--hero-extension", "0");
     heroWave?.setAttribute("d", "M0 30H600");
@@ -271,6 +307,41 @@ export function mountBladeStage3D(
       x: base.x + Math.sin(angle) * length,
       y: base.y - Math.cos(angle) * length,
     };
+    // Reuse the stage's swept blade geometry. Letter bounds are measured only
+    // on resize, and only the existing stage frame advances the cooling trail.
+    const letterSteps =
+      lastBase && lastTip
+        ? Math.min(
+            16,
+            Math.max(
+              1,
+              Math.ceil(Math.hypot(tip.x - lastTip.x, tip.y - lastTip.y) / 24),
+            ),
+          )
+        : 1;
+    for (const letter of heroLetters) {
+      let contact = false;
+      if (active && !reduced.matches && extension > 0.2)
+        for (let step = 0; step <= letterSteps && !contact; step++) {
+          const t = step / letterSteps;
+          const from = lastBase ?? base;
+          const to = lastTip ?? tip;
+          contact = crossesLetter(
+            letter,
+            {
+              x: from.x + (base.x - from.x) * t,
+              y: from.y + (base.y - from.y) * t,
+            },
+            { x: to.x + (tip.x - to.x) * t, y: to.y + (tip.y - to.y) * t },
+          );
+        }
+      const cooling = letter.heat * Math.exp(-dt / 120);
+      const heat = contact ? 1 : cooling < 0.003 ? 0 : cooling;
+      if (heat !== letter.heat) {
+        letter.heat = heat;
+        letter.node.style.setProperty("--letter-heat", heat.toFixed(3));
+      }
+    }
     const points = targets();
     if (
       !failed &&
@@ -365,7 +436,13 @@ export function mountBladeStage3D(
     surface.dataset.reducedMotion = String(reduced.matches);
     // State changes wake the stage when activation completes. Waiting for audio
     // needs no continuous graphics work while the blade is still retracted.
-    if (active || extension > 0 || particles.length || trails.length)
+    if (
+      active ||
+      extension > 0 ||
+      particles.length ||
+      trails.length ||
+      heroLetters.some((letter) => letter.heat > 0)
+    )
       frame = requestAnimationFrame(draw);
     else previous = 0;
   }
@@ -399,6 +476,13 @@ export function mountBladeStage3D(
     const box = surface.getBoundingClientRect();
     width = Math.max(1, box.width);
     height = Math.max(1, box.height);
+    for (const letter of heroLetters) {
+      const bounds = letter.node.getBoundingClientRect();
+      letter.x = bounds.left - box.left;
+      letter.y = bounds.top - box.top;
+      letter.width = bounds.width;
+      letter.height = bounds.height;
+    }
     desired = boundPosition(desired);
     const bounded = boundPosition(position);
     position.x = bounded.x;
@@ -458,6 +542,15 @@ export function mountBladeStage3D(
   );
   const cancel = (event: PointerEvent) => {
     if (pointer === event.pointerId) {
+      // Desktop Chrome can release capture without delivering pointerup here.
+      if (
+        event.type === "lostpointercapture" &&
+        event.pointerType === "mouse" &&
+        event.buttons === 0
+      ) {
+        retract();
+        return;
+      }
       releasePointer();
       reset();
       host.stop();
@@ -524,12 +617,14 @@ export function mountBladeStage3D(
     "change",
     () => {
       trails.length = particles.length = 0;
+      clearLetterHeat();
       wake();
     },
     { signal: events.signal },
   );
   const observer = new ResizeObserver(resize);
   observer.observe(surface);
+  if (heroHeading) observer.observe(heroHeading);
   surface.dataset.state = host.control.state;
   surface.dataset.hits = "0";
   if (!display) fail(initialFailure);
@@ -543,6 +638,7 @@ export function mountBladeStage3D(
     observer.disconnect();
     cancelAnimationFrame(frame);
     disconnect();
+    clearLetterHeat();
     trails.length = particles.length = 0;
     display?.dispose();
     canvas.remove();

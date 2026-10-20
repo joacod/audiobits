@@ -209,8 +209,12 @@ test("one hum survives normalized updates, swings rearm, and generic clashes are
   s.control.retract();
   expect(s.records[4].play).toHaveBeenCalledTimes(1);
   expect(s.voices[1].stop).toHaveBeenCalledTimes(1);
+  const retraction = s.voices.at(-1)!;
   s.control.retract();
   expect(s.records[4].play).toHaveBeenCalledTimes(1);
+  expect(retraction.stop).not.toHaveBeenCalled();
+  s.control.stop();
+  expect(retraction.stop).toHaveBeenCalledTimes(1);
   s.control.dispose();
   s.control.dispose();
   expect(s.unsubscribe).toHaveBeenCalledTimes(1);

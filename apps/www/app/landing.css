@@ -92,10 +92,6 @@
     text-decoration: underline;
     text-underline-offset: 0.35rem;
   }
-  .landing .landing-experience:is(:hover, :focus-visible) h3,
-  .landing .landing-sound-entry:is(:hover, :focus-visible) h3 {
-    color: var(--signal-mid);
-  }
   .landing .landing-sound-list {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -214,9 +210,17 @@
   }
   .landing .landing-agent-request {
     margin: 1rem 0;
-    padding: 0;
+    padding-inline-start: 1rem;
+    border-inline-start: 3px solid currentColor;
     font-size: 0.9rem;
+    font-style: italic;
     line-height: 1.7;
+  }
+  .landing .landing-agent-request::before {
+    content: "“";
+  }
+  .landing .landing-agent-request::after {
+    content: "”";
   }
   .landing .landing-footer {
     display: flex;

@@ -129,10 +129,13 @@ export function createLightsaber(
   }
   function retract() {
     if (disposed) return;
-    const active = state === "running";
+    if (state !== "running") {
+      // Settle a cancelled host startup without cutting an existing retract tail.
+      publish("stopped");
+      return;
+    }
     stop();
-    if (active && audio.state === "running")
-      accent(() => retraction.play({ seed: 42 }));
+    if (audio.state === "running") accent(() => retraction.play({ seed: 42 }));
   }
   const unsubscribe = audio.subscribe((value) => {
     if (state === "running" && value !== "running" && value !== "starting")
