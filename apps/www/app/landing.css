@@ -214,9 +214,17 @@
   }
   .landing .landing-agent-request {
     margin: 1rem 0;
-    padding: 0;
+    padding-inline-start: 1rem;
+    border-inline-start: 3px solid currentColor;
     font-size: 0.9rem;
+    font-style: italic;
     line-height: 1.7;
+  }
+  .landing .landing-agent-request::before {
+    content: "“";
+  }
+  .landing .landing-agent-request::after {
+    content: "”";
   }
   .landing .landing-footer {
     display: flex;
