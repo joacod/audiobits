@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useSyncExternalStore } from "react";
+import { useState, useSyncExternalStore, type ReactNode } from "react";
+import { LiveCodeBlock } from "./live-code-block";
 
 const subscribeHydration = () => () => {};
 
@@ -9,10 +10,12 @@ export function UsageCode({
   slug,
   code,
   disabled = false,
+  children,
 }: {
   slug: string;
   code: string;
   disabled?: boolean;
+  children?: ReactNode;
 }) {
   const [status, setStatus] = useState("");
   const ready = useSyncExternalStore(
@@ -48,9 +51,7 @@ export function UsageCode({
       >
         Copy usage
       </button>
-      <pre>
-        <code>{code}</code>
-      </pre>
+      {children ?? <LiveCodeBlock code={code} />}
       <p role="status">{status}</p>
       <Link href="/docs/lifecycle">Production lifecycle</Link>
     </div>

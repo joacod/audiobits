@@ -13,6 +13,8 @@ import {
   experienceDetailDescription,
 } from "../../../lib/catalog";
 import { experienceUsage } from "../../../lib/site-build";
+import { highlightCode } from "../../../lib/highlight-code";
+import { CodeBlock } from "../../code-block";
 
 function ChargeStageFallback() {
   return (
@@ -105,6 +107,8 @@ export default async function CatalogEntryPage({
   }
   const experience = experienceCatalogEntry(slug);
   if (!experience) notFound();
+  const code = experienceUsage(experience.slug);
+  const tokens = await highlightCode(code, "typescript");
   return (
     <CatalogDetail entry={experience}>
       {experience.slug === "echo-probe" ? (
@@ -117,10 +121,9 @@ export default async function CatalogEntryPage({
         <ThrusterDetail />
       )}
       <CatalogInstall slug={experience.slug}>
-        <UsageCode
-          slug={experience.slug}
-          code={experienceUsage(experience.slug)}
-        />
+        <UsageCode slug={experience.slug} code={code}>
+          <CodeBlock code={code} tokens={tokens} />
+        </UsageCode>
       </CatalogInstall>
       <section className="catalog-inspector">
         <h2>Customize or inspect</h2>

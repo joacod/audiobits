@@ -532,6 +532,14 @@
     margin-block: 0.75rem;
     max-height: 32rem;
   }
+  .foundation.catalog-page .catalog-code > code {
+    display: block;
+    padding: 0;
+    background: transparent;
+    border-radius: 0;
+    color: #a9b1d6;
+    font-size: inherit;
+  }
   .foundation.catalog-page .catalog-usage h3 {
     font-size: 1.35rem;
     margin-block: 1rem 0.5rem;
