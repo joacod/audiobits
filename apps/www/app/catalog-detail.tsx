@@ -56,12 +56,24 @@ function CatalogPagination({ entry }: { entry: CatalogEntry }) {
     <nav className="catalog-pagination" aria-label="Previous and next">
       {previous && (
         <ExperienceLink rel="prev" href={previous.href}>
-          ← Previous: {previous.title}
+          <span className="catalog-pagination-arrow" aria-hidden="true">
+            ←
+          </span>
+          <span className="catalog-pagination-copy">
+            <span className="catalog-pagination-label">Previous</span>
+            <span className="catalog-pagination-title">{previous.title}</span>
+          </span>
         </ExperienceLink>
       )}
       {next && (
         <ExperienceLink rel="next" href={next.href}>
-          Next: {next.title} →
+          <span className="catalog-pagination-copy">
+            <span className="catalog-pagination-label">Next</span>
+            <span className="catalog-pagination-title">{next.title}</span>
+          </span>
+          <span className="catalog-pagination-arrow" aria-hidden="true">
+            →
+          </span>
         </ExperienceLink>
       )}
     </nav>

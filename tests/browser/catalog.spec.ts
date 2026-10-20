@@ -110,7 +110,7 @@ test("every card preview opens its own route with simple breadcrumbs and canonic
     if (previous)
       await expect(
         pagination.getByRole("link", {
-          name: `← Previous: ${previous.title}`,
+          name: `Previous ${previous.title}`,
           exact: true,
         }),
       ).toHaveAttribute("href", previous.href);
@@ -118,7 +118,7 @@ test("every card preview opens its own route with simple breadcrumbs and canonic
     if (next)
       await expect(
         pagination.getByRole("link", {
-          name: `Next: ${next.title} →`,
+          name: `Next ${next.title}`,
           exact: true,
         }),
       ).toHaveAttribute("href", next.href);

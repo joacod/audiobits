@@ -374,7 +374,7 @@ test("thruster stays sustained, follows live throttle, and navigation disposes a
   await expect(state).toHaveText("Thruster: running");
   await page
     .getByRole("navigation", { name: "Previous and next" })
-    .getByRole("link", { name: "Next: Tactile click →", exact: true })
+    .getByRole("link", { name: "Next Tactile click", exact: true })
     .click();
   await expect(page).toHaveURL(`${home}/catalog/tactile-click`);
   await expect(
