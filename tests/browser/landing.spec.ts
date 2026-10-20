@@ -254,6 +254,9 @@ test("landing stays silent until holding, measures real output and disposes on n
   );
   expect((await probe(page)).contexts).toEqual([]);
   expect((await probe(page)).sources).toBe(0);
+  await expect(page.locator(".lightsaber-intro h1")).toHaveAccessibleName(
+    "Sound that reacts.",
+  );
   await expect(page.locator(".lightsaber-activation")).toHaveCount(0);
   await holdLightsaber(page);
   await expect(page.locator(".lightsaber-canvas")).toHaveAttribute(
@@ -280,6 +283,22 @@ test("landing stays silent until holding, measures real output and disposes on n
         ),
     )
     .toBeGreaterThan(0);
+  const surface = page.locator(".lightsaber-canvas");
+  await expect(surface).toHaveAttribute("data-extension", "1.000");
+  const box = (await surface.boundingBox())!;
+  await page.mouse.move(box.x + box.width * 0.28, box.y + box.height * 0.65, {
+    steps: 6,
+  });
+  const letterHeat = () =>
+    page
+      .locator(".hero-letter")
+      .evaluateAll((letters) =>
+        letters.map((letter) =>
+          Number(getComputedStyle(letter).getPropertyValue("--letter-heat")),
+        ),
+      );
+  await expect.poll(async () => Math.max(...(await letterHeat()))).toBe(1);
+  expect((await letterHeat()).some((heat) => heat === 0)).toBe(true);
   await page.mouse.up();
   await expect(page.locator(".lightsaber-canvas")).toHaveAttribute(
     "data-state",
@@ -296,6 +315,7 @@ test("landing stays silent until holding, measures real output and disposes on n
     "0",
   );
   await expect(page.locator(".hero-wave")).toHaveAttribute("d", "M0 30H600");
+  await expect.poll(async () => Math.max(...(await letterHeat()))).toBe(0);
   await expect
     .poll(async () =>
       page
@@ -505,6 +525,22 @@ test("reduced motion preserves gesture feedback, level feedback and navigation f
     "transform",
     "none",
   );
+  const box = (await page.locator(".lightsaber-canvas").boundingBox())!;
+  await page.mouse.move(box.x + box.width * 0.28, box.y + box.height * 0.65, {
+    steps: 6,
+  });
+  expect(
+    await page
+      .locator(".hero-letter")
+      .evaluateAll((letters) =>
+        letters.every(
+          (letter) =>
+            Number(
+              getComputedStyle(letter).getPropertyValue("--letter-heat"),
+            ) === 0 && getComputedStyle(letter, "::before").display === "none",
+        ),
+      ),
+  ).toBe(true);
   await expect
     .poll(async () =>
       Number(

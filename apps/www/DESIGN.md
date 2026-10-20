@@ -228,8 +228,11 @@ inspector and source workflow.
 The homepage uses the actual Lightsaber stage. Its existing analyser supplies the
 hero waveform and output level, while stage extension and movement supply the
 remaining visual state. One engine and analyser serve that stage and hero.
-Reset and disposal clear hero presentation state. At rest the hero waveform is
-flat. Reduced motion keeps it flat and removes headline skew and hero lighting.
+The blade's swept path briefly splits crossed headline letters into bright and
+violet edges that cool back to the original type. Letter bounds are cached on
+resize; the existing stage frame drives the effect. Reset and disposal clear
+hero presentation state. At rest the hero waveform is flat. Reduced motion keeps
+it flat and disables letter effects and hero lighting.
 
 `OutputScope` uses real output samples and a still mark at rest. Its measured
 workbench form includes a segmented LED meter; reduced motion keeps the scope

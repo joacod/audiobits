@@ -7,10 +7,24 @@ export function LightsaberHero() {
   return (
     <section className="lightsaber-hero" aria-label="Lightsaber hero">
       <div className="lightsaber-intro">
-        <h1>
-          <span>Sound that </span>
-          <span>
-            reacts<span className="hero-period">.</span>
+        <h1 aria-label="Sound that reacts.">
+          <span aria-hidden="true">
+            {Array.from("Sound that ").map((letter, index) => (
+              <span className="hero-letter" data-letter={letter} key={index}>
+                {letter}
+              </span>
+            ))}
+          </span>
+          <span aria-hidden="true">
+            {Array.from("reacts.").map((letter, index) => (
+              <span
+                className={`hero-letter${letter === "." ? " hero-period" : ""}`}
+                data-letter={letter}
+                key={index}
+              >
+                {letter}
+              </span>
+            ))}
           </span>
         </h1>
       </div>
