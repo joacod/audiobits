@@ -306,6 +306,14 @@ test("experience cards stay silent and full interactions clean up on return", as
       const box = (await stage.boundingBox())!;
       await page.mouse.move(box.x + box.width / 2, box.y + box.height * 0.8);
       await page.mouse.down();
+    } else if (entry.slug === "echo-vision") {
+      const stage = page.getByRole("group", {
+        name: "Echo Vision stage",
+        exact: true,
+      });
+      await expect(stage).toHaveAttribute("data-ready", "true");
+      await stage.click();
+      await expect(stage).toHaveAttribute("data-state", "listening");
     } else if (entry.slug === "echo-probe") {
       const stage = page.getByRole("group", {
         name: "Echo Probe stage",

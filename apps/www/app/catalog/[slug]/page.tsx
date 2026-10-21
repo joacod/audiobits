@@ -82,6 +82,18 @@ const RiffReactorDetail = dynamic(
   },
 );
 
+const EchoVisionDetail = dynamic(
+  () =>
+    import("../../echo-vision-detail").then(
+      (module) => module.EchoVisionDetail,
+    ),
+  {
+    loading: () => (
+      <div className="catalog-stage" aria-label="Loading Echo Vision" />
+    ),
+  },
+);
+
 export function generateStaticParams() {
   return catalogEntries.map((entry) => ({ slug: entry.slug }));
 }
@@ -125,11 +137,13 @@ export default async function CatalogEntryPage({
   }
   const experience = experienceCatalogEntry(slug);
   if (!experience) notFound();
-  const code = experienceUsage(experience.slug);
+  const code = experienceUsage(experience.source.item);
   const tokens = await highlightCode(code, "typescript");
   return (
     <CatalogDetail entry={experience}>
-      {experience.slug === "riff-reactor" ? (
+      {experience.slug === "echo-vision" ? (
+        <EchoVisionDetail />
+      ) : experience.slug === "riff-reactor" ? (
         <RiffReactorDetail />
       ) : experience.slug === "the-rift" ? (
         <RiftDetail />
@@ -142,7 +156,7 @@ export default async function CatalogEntryPage({
       ) : (
         <ThrusterDetail />
       )}
-      <CatalogInstall slug={experience.slug}>
+      <CatalogInstall slug={experience.source.item}>
         <UsageCode slug={experience.slug} code={code}>
           <CodeBlock code={code} tokens={tokens} />
         </UsageCode>
@@ -155,7 +169,11 @@ export default async function CatalogEntryPage({
           and visuals.
         </p>
         <a
-          href={`https://github.com/joacod/audiobits/tree/main/catalog/experiences/${experience.slug}`}
+          href={
+            experience.slug === "echo-vision"
+              ? "https://github.com/joacod/audiobits/blob/main/apps/www/app/echo-vision-stage.ts"
+              : `https://github.com/joacod/audiobits/tree/main/catalog/experiences/${experience.source.item}`
+          }
           target="_blank"
           rel="noopener noreferrer"
         >

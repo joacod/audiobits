@@ -1,12 +1,18 @@
-import { createAudio } from "audiobits";
+import { createAudio, type AudioEngine } from "audiobits";
 import { createEchoProbe, type ProbeReflection } from "./controller";
 
+export function createEchoProbeAudio() {
+  return createAudio({ maxVoices: 32, maxVoicesPerSound: 16 });
+}
+
 /** Browser activation and lifecycle. Reflection data belongs to the application. */
-export function mountEchoProbe(feedback: {
-  state(value: "starting" | "running" | "stopped"): void;
-  error(cause: unknown): void;
-}) {
-  const audio = createAudio({ maxVoices: 32, maxVoicesPerSound: 16 });
+export function mountEchoProbe(
+  feedback: {
+    state(value: "starting" | "running" | "stopped"): void;
+    error(cause: unknown): void;
+  },
+  audio: AudioEngine = createEchoProbeAudio(),
+) {
   const probe = createEchoProbe(audio);
   const listeners = new AbortController();
   let generation = 0;

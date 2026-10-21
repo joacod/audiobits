@@ -1,3 +1,4 @@
+import { registryItem } from "../../apps/www/lib/registry";
 import { expect, test } from "@playwright/test";
 import { readFileSync, readdirSync } from "node:fs";
 import {
@@ -120,13 +121,15 @@ test("public pages expose unique metadata and content without JavaScript", async
         const entry = catalogEntries.find(
           (entry) => entry.href === route.path,
         )!;
+        const source =
+          entry.category === "experience" ? entry.source.item : entry.slug;
         const adoption = page.getByRole("region", { name: "Add to project" });
         await expect(adoption.locator(".landing-command pre")).toHaveText(
-          `npx shadcn@latest add joacod/audiobits/${entry.slug}`,
+          `npx shadcn@latest add joacod/audiobits/${source}`,
         );
         await expect(
           adoption.getByRole("button", {
-            name: `Copy ${entry.title} command`,
+            name: `Copy ${registryItem(source).title} command`,
             exact: true,
           }),
         ).toBeVisible();
