@@ -73,6 +73,15 @@ const RiftDetail = dynamic(
   },
 );
 
+const RiffReactorDetail = dynamic(
+  () => import("../../riff-detail").then((module) => module.RiffReactorDetail),
+  {
+    loading: () => (
+      <div className="catalog-stage" aria-label="Loading Riff Reactor" />
+    ),
+  },
+);
+
 export function generateStaticParams() {
   return catalogEntries.map((entry) => ({ slug: entry.slug }));
 }
@@ -120,7 +129,9 @@ export default async function CatalogEntryPage({
   const tokens = await highlightCode(code, "typescript");
   return (
     <CatalogDetail entry={experience}>
-      {experience.slug === "the-rift" ? (
+      {experience.slug === "riff-reactor" ? (
+        <RiffReactorDetail />
+      ) : experience.slug === "the-rift" ? (
         <RiftDetail />
       ) : experience.slug === "echo-probe" ? (
         <EchoProbeDetail />
