@@ -48,9 +48,11 @@ const previews = previewSlugs.map((slug) => {
   }
   return entry;
 });
-const experiences = catalogEntriesByCategory("experience").filter(
-  (entry) => entry.slug !== "lightsaber",
-);
+// Keep this aligned with the featured hero when changing its experience.
+const heroExperienceSlug = "lightsaber";
+const experiences = catalogEntriesByCategory("experience")
+  .filter((entry) => entry.slug !== heroExperienceSlug)
+  .slice(0, 6);
 const lightsaberInstall = `npx shadcn@latest add joacod/audiobits/${registryItem("lightsaber").name}`;
 
 export default function Home() {
@@ -97,6 +99,7 @@ export default function Home() {
           ))}
         </div>
         <div className="landing-sound-list">
+          <h3 className="landing-sounds-label">Simple sounds</h3>
           {previews.map((entry) => (
             <Link
               key={entry.slug}

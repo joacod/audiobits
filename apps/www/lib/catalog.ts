@@ -51,21 +51,21 @@ export type CatalogCategory = CatalogEntry["category"];
 const experienceEntries = [
   { slug: "lightsaber", preview: "blade", experience: lightsaberExperience },
   {
+    slug: "riff-reactor",
+    preview: "riff",
+    experience: riffReactorExperience,
+  },
+  { slug: "the-rift", preview: "rift", experience: riftExperience },
+  {
     slug: "reactive-thruster",
     preview: "thruster",
     experience: reactiveThrusterExperience,
   },
-  { slug: "the-rift", preview: "rift", experience: riftExperience },
   { slug: "echo-probe", preview: "pulse", experience: echoProbeExperience },
   {
     slug: "energy-charge",
     preview: "charge",
     experience: energyChargeExperience,
-  },
-  {
-    slug: "riff-reactor",
-    preview: "riff",
-    experience: riffReactorExperience,
   },
 ] as const;
 

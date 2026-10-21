@@ -82,9 +82,9 @@ for (const [width, height] of [
     await expect(
       page.locator(".landing-experience").filter({ hasText: "Energy Charge" }),
     ).toHaveAttribute("href", "/catalog/energy-charge");
-    const experiences = catalogEntriesByCategory("experience").filter(
-      (entry) => entry.slug !== "lightsaber",
-    );
+    const experiences = catalogEntriesByCategory("experience")
+      .filter((entry) => entry.slug !== "lightsaber")
+      .slice(0, 6);
     await expect(page.locator(".landing-experience")).toHaveCount(
       experiences.length,
     );
@@ -127,6 +127,9 @@ for (const [width, height] of [
       fullPage: true,
     });
     const previews = page.locator(".landing-sound-entry");
+    await expect(
+      page.getByRole("heading", { name: "Simple sounds", level: 3 }),
+    ).toBeVisible();
     const structures: string[] = [];
     for (const [kind, family, shape, count] of [
       ["impact", "pulse", "ellipse", 4],
