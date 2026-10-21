@@ -36,6 +36,14 @@
 }
 
 @layer components {
+  .foundation .copy-feedback-label {
+    display: inline-grid;
+    vertical-align: middle;
+  }
+  .foundation .copy-feedback-label > span {
+    grid-area: 1 / 1;
+  }
+
   .foundation {
     --gutter: max(1.5rem, calc((100vw - 76rem) / 2));
     --gap: 1.5rem;

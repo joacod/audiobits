@@ -1,8 +1,6 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
-
-const subscribeHydration = () => () => {};
+import { CopyFeedbackLabel, useCopyFeedback } from "./copy-feedback";
 
 export function LandingCommand({
   command,
@@ -11,22 +9,7 @@ export function LandingCommand({
   command: string;
   label: string;
 }) {
-  const [status, setStatus] = useState("");
-  const ready = useSyncExternalStore(
-    subscribeHydration,
-    () => true,
-    () => false,
-  );
-
-  async function copy() {
-    setStatus("Copying…");
-    try {
-      await navigator.clipboard.writeText(command);
-      setStatus("Copied.");
-    } catch {
-      setStatus("Copy unavailable. Select and copy the command above.");
-    }
-  }
+  const { copy, status, ready, copying, copied } = useCopyFeedback();
 
   return (
     <div className="landing-command">
@@ -37,14 +20,21 @@ export function LandingCommand({
         <button
           type="button"
           aria-label={`Copy ${label} command`}
-          disabled={!ready || status === "Copying…"}
-          onClick={copy}
+          disabled={!ready || copying}
+          onClick={() =>
+            void copy(
+              command,
+              "Copy unavailable. Select and copy the command above.",
+            )
+          }
         >
-          Copy
+          <CopyFeedbackLabel label="Copy" copied={copied} />
         </button>
       </div>
       <p className="landing-copy-status" role="status">
-        {status}
+        <span className={copied || copying ? "sr-only" : undefined}>
+          {status}
+        </span>
       </p>
     </div>
   );

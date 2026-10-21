@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { CopyFeedbackLabel, useCopyFeedback } from "./copy-feedback";
 
 /** Keep the last failure selectable even when releasing the hold resumes audio. */
 export function AudioActivationReport({
@@ -14,17 +15,16 @@ export function AudioActivationReport({
   onRefresh?: () => void;
   className?: string;
 }) {
+  const [feedbackReport, setFeedbackReport] = useState("");
+  const currentFeedback = feedbackReport === report;
   const field = useRef<HTMLTextAreaElement>(null);
-  const [feedback, setFeedback] = useState({ report: "", message: "" });
-  async function copyReport() {
-    try {
-      await navigator.clipboard.writeText(report);
-      setFeedback({ report, message: "Report copied." });
-    } catch {
+  const { copy, status, ready, copying, copied } = useCopyFeedback();
+  function copyReport() {
+    setFeedbackReport(report);
+    void copy(report, "Select the report text to copy.", () => {
       field.current?.focus();
       field.current?.select();
-      setFeedback({ report, message: "Select the report text to copy." });
-    }
+    });
   }
   if (!error && !report) return null;
   return (
@@ -47,17 +47,28 @@ export function AudioActivationReport({
               onFocus={(event) => event.currentTarget.select()}
             />
           </label>
-          <button type="button" onClick={copyReport}>
-            Copy report
+          <button
+            type="button"
+            aria-label="Copy report"
+            disabled={!ready || copying}
+            onClick={copyReport}
+          >
+            <CopyFeedbackLabel
+              label="Copy report"
+              copied={copied && currentFeedback}
+            />
           </button>
           {onRefresh ? (
             <button type="button" onClick={onRefresh}>
               Refresh report after retry
             </button>
           ) : null}
-          {feedback.report === report && feedback.message ? (
-            <p role="status">{feedback.message}</p>
-          ) : null}
+          <p
+            className={copied || copying ? "sr-only" : undefined}
+            role="status"
+          >
+            {currentFeedback ? status : ""}
+          </p>
         </>
       ) : null}
     </div>

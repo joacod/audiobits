@@ -1,6 +1,7 @@
 "use client";
 
-import { memo, useState, useSyncExternalStore } from "react";
+import { memo, useState } from "react";
+import { CopyFeedbackLabel, useCopyFeedback } from "./copy-feedback";
 import { Button } from "@base-ui/react/button";
 import { CatalogInstall } from "./catalog-install";
 import { UsageCode } from "./usage-code";
@@ -9,8 +10,6 @@ import { validateRecipe } from "audiobits";
 import type { Recipe } from "audiobits";
 import { sounds, quickExample } from "../lib/gallery";
 import type { SoundKind } from "../lib/gallery";
-
-const subscribeHydration = () => () => {};
 
 export const RecipeTools = memo(function RecipeTools({
   kind,
@@ -31,11 +30,7 @@ export const RecipeTools = memo(function RecipeTools({
   const [editing, setEditing] = useState(false);
   const [issues, setIssues] = useState<string[]>([]);
   const [copyState, setCopyState] = useState("");
-  const ready = useSyncExternalStore(
-    subscribeHydration,
-    () => true,
-    () => false,
-  );
+  const { copy, status, ready, copying, copied } = useCopyFeedback();
   const example = quickExample(kind, controls, seed ?? 42, recipe);
   function apply() {
     if (new TextEncoder().encode(draft).byteLength > 32768) {
@@ -74,16 +69,6 @@ export const RecipeTools = memo(function RecipeTools({
     setIssues([]);
     setCopyState("Catalog recipe and defaults restored.");
   }
-  async function copy(text: string) {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopyState("Copied.");
-    } catch {
-      setCopyState(
-        "Clipboard unavailable. Select the displayed code and copy it manually.",
-      );
-    }
-  }
   return (
     <>
       <CatalogInstall slug={kind}>
@@ -99,10 +84,19 @@ export const RecipeTools = memo(function RecipeTools({
           </p>
           <div className="audio-controls">
             <Button
-              disabled={!ready}
-              onClick={() => void copy(JSON.stringify(recipe, null, 2))}
+              disabled={!ready || copying}
+              aria-label={`Copy ${kind} recipe`}
+              onClick={() =>
+                void copy(
+                  JSON.stringify(recipe, null, 2),
+                  "Clipboard unavailable. Select the displayed code and copy it manually.",
+                )
+              }
             >
-              Copy {kind} recipe
+              <CopyFeedbackLabel
+                label={`Copy ${kind} recipe`}
+                copied={copied}
+              />
             </Button>
             <Button
               disabled={!ready}
@@ -115,6 +109,12 @@ export const RecipeTools = memo(function RecipeTools({
               Restore {kind} recipe
             </Button>
           </div>
+          <p
+            className={copied || copying ? "sr-only" : undefined}
+            role="status"
+          >
+            {status}
+          </p>
           {editing ? (
             <>
               <label>

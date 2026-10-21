@@ -173,8 +173,16 @@ test("landing install commands copy exactly and documentation destinations resol
   ]) {
     const copy = page.getByRole("button", { name: `Copy ${label} command` });
     await expect(copy).toBeEnabled();
+    const width = await copy.evaluate(
+      (button) => button.getBoundingClientRect().width,
+    );
     await copy.focus();
     await page.keyboard.press("Enter");
+    await expect(copy.getByText("✓ Copied", { exact: true })).toBeVisible();
+    await expect(copy).toBeFocused();
+    expect(
+      await copy.evaluate((button) => button.getBoundingClientRect().width),
+    ).toBe(width);
     await expect(
       page
         .locator(".landing-command")
@@ -184,6 +192,7 @@ test("landing install commands copy exactly and documentation destinations resol
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
       command,
     );
+    await expect(copy.getByText("Copy", { exact: true })).toBeVisible();
   }
   for (const [name, href, heading] of [
     ["Install editable source", "/docs/catalog", "Catalog and editable source"],
