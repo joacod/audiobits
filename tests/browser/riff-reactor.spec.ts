@@ -74,7 +74,7 @@ function perform(page: Page, notes: { beat: number; lane: number }[]) {
       const context = (
         globalThis as unknown as { thrusterProbe: { contexts: AudioContext[] } }
       ).thrusterProbe.contexts.at(-1)!;
-      const latency = context.outputLatency || context.baseLatency || 0;
+      const latency = (context.baseLatency || 0) + (context.outputLatency || 0);
       const zero = Number(stage.dataset.origin);
       for (const [index, note] of notes.entries()) {
         const due = zero + note.beat * secondsPerBeat + latency;
@@ -131,7 +131,8 @@ test("perform, miss, lift on a bar line, stop, replay, hide and leave cleanly @s
       globalThis as unknown as { thrusterProbe: { contexts: AudioContext[] } }
     ).thrusterProbe.contexts.at(-1)!;
     return (
-      context.currentTime - (context.outputLatency || context.baseLatency || 0)
+      context.currentTime -
+      ((context.baseLatency || 0) + (context.outputLatency || 0))
     );
   });
   // The audible lift lands on a downbeat, within a frame or two.

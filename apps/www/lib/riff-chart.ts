@@ -20,6 +20,26 @@ export const hitWindow = 0.1;
 /** Seconds either side that count as perfect. */
 export const perfectWindow = 0.04;
 
+/** Longest main-thread wait credited back to a press, in seconds. */
+export const maxInputDelay = 0.25;
+
+/**
+ * Audio-clock time of an input. `contextTime` and `handledAt`
+ * (performance.now()) are read together while handling the event, and
+ * `stamp` is the event's timeStamp, so time the event spent waiting on a busy
+ * main thread is not judged as a late press. Implausible stamps are ignored.
+ */
+export function inputTime(
+  contextTime: number,
+  handledAt: number,
+  stamp: number,
+) {
+  const waited = (handledAt - stamp) / 1000;
+  return Number.isFinite(waited) && waited > 0 && waited <= maxInputDelay
+    ? contextTime - waited
+    : contextTime;
+}
+
 /** Lanes follow melodic contour: up moves right, down moves left. */
 export function buildChart(song: RiffSong): readonly ChartNote[] {
   let lane: Lane = 1;

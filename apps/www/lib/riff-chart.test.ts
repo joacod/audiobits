@@ -5,6 +5,8 @@ import {
   buildChart,
   createPerformance,
   hitWindow,
+  inputTime,
+  maxInputDelay,
   perfectWindow,
   tierForStreak,
   tierStreaks,
@@ -55,6 +57,28 @@ test("presses at the edges of the hit window on the audio clock hit, outside mis
     heardBeat(pressedAt(first.beat, perfectWindow - 1e-6)),
   );
   expect(perfect).toMatchObject({ kind: "hit", grade: "perfect" });
+  // A press handled late on a busy main thread is judged at its event stamp.
+  const stamp = 5000;
+  const busy = createPerformance(chart, transport.secondsPerBeat);
+  const handled = inputTime(
+    pressedAt(first.beat, 0.02) + 0.15,
+    stamp + 150,
+    stamp,
+  );
+  const credited = busy.press(first.lane, heardBeat(handled));
+  expect(credited).toMatchObject({ kind: "hit", grade: "perfect" });
+  if (credited.kind === "hit") expect(credited.offset).toBeCloseTo(0.02, 9);
+  // Without the stamp the same press would be a stray.
+  expect(
+    createPerformance(chart, transport.secondsPerBeat).press(
+      first.lane,
+      heardBeat(pressedAt(first.beat, 0.02) + 0.15),
+    ).kind,
+  ).toBe("stray");
+  // Implausible stamps (future, or older than the limit) credit nothing.
+  expect(inputTime(10, stamp, stamp + 5)).toBe(10);
+  expect(inputTime(10, stamp + maxInputDelay * 1000 + 1, stamp)).toBe(10);
+  expect(inputTime(10, stamp, Number.NaN)).toBe(10);
   // The wrong lane at the right time is not a hit.
   const wrong = createPerformance(chart, transport.secondsPerBeat);
   expect(

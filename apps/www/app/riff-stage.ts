@@ -8,6 +8,7 @@ import { bindAudioGestures } from "../lib/audio-gestures";
 import {
   buildChart,
   createPerformance,
+  inputTime,
   type ChartNote,
   type Lane,
   type Performance,
@@ -141,9 +142,13 @@ export function mountRiffStage(
     const context = host.audio.native.context;
     return context.currentTime - host.control.latency;
   }
-  function press(lane: Lane) {
+  function press(lane: Lane, stamp: number) {
     if (host.control.phase !== "playing" || !performance || !transport) return;
-    const time = heard();
+    // Both clocks are read together; the event's stamp removes main-thread delay.
+    const context = host.audio.native.context;
+    const time =
+      inputTime(context.currentTime, globalThis.performance.now(), stamp) -
+      host.control.latency;
     pressed[lane] = time;
     const judgement = performance.press(lane, transport.beatAt(time));
     if (judgement.kind === "hit") {
@@ -174,7 +179,7 @@ export function mountRiffStage(
         Math.min(2, Math.floor(((event.clientX - box.left) / box.width) * 3)),
       ) as Lane;
       event.preventDefault();
-      press(lane);
+      press(lane, event.timeStamp);
     },
     { signal: listeners.signal },
   );
@@ -201,7 +206,7 @@ export function mountRiffStage(
         keys[event.key.length === 1 ? event.key.toLowerCase() : event.key];
       if (lane === undefined) return;
       event.preventDefault();
-      press(lane);
+      press(lane, event.timeStamp);
     },
     { signal: listeners.signal },
   );
