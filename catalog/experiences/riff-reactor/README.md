@@ -64,9 +64,10 @@ export async function dispose() {
 is the same conversion. The band is scheduled on that clock in 150 ms
 lookahead batches refilled every 25 ms, so tempo never drifts with frame rate
 or timers. Judge input and draw notes against the same transport. Read the
-context time once when an input arrives and subtract `riff.latency`
-(`outputLatency`, else `baseLatency`) so judging matches what the player
-hears: `riff.beatAt(context.currentTime - riff.latency)`.
+context time once when an input arrives and subtract `riff.latency`, the total
+output latency (`baseLatency` plus `outputLatency`, either may be missing), so
+judging matches what the player hears:
+`riff.beatAt(context.currentTime - riff.latency)`.
 
 ### Song and tiers
 
@@ -86,6 +87,12 @@ until its charted end; it is never quantized. The lead is monophonic: a new hit
 stops the previous note. A missed note is a gap in the lead while the band keeps
 its level; `choke()` adds a short muted thunk for stray inputs.
 
+A performed note ends within about 12 ms of its charted end, not exactly on
+it: the stop runs on the 25 ms refill tick, which is a main-thread timer, so a
+busy main thread can also hold the note late. The release masks small errors.
+An exact end would need a scheduled stop such as `voice.stop({ at })` in the
+AudioBits core.
+
 ### Lifecycle and budget
 
 The controller routes every voice through one bus per instrument group under a
@@ -95,8 +102,10 @@ Stale refills and voice endings from an earlier session change nothing.
 Background tabs throttle timers, so stop or suspend on hiding. At the top tier
 with every lead note hit, booked voices included, the sum of per-sound peaks is
 34 voices, so `maxVoices: 48` never steals across sounds. Only the lead's echo
-tails reach the per-sound limit of 8, which retires that sound's oldest tail. The full mix peaks near
--6 dBFS with `masterGainDb: -8`.
+tails reach the per-sound limit of 8, which retires that sound's oldest tail.
+With `masterGainDb: -8`, the full mix (top tier, every lead note hit) peaked at
+-6.36 dBFS in one offline render. That figure was measured once and is not
+covered by an automated test.
 
 When sharing an engine, dispose only this controller on removal; the
 application owns engine suspension and final disposal. Returning requires a

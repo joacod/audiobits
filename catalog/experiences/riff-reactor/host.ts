@@ -10,11 +10,12 @@ import { riffReactorSong } from "./song";
 
 /** Global voice limit, sized above the top-tier budget so stealing never fires. */
 export const riffVoiceLimit = 48;
+export const riffVoicesPerSound = 8;
 
 export function createRiffAudio() {
   return createAudio({
     maxVoices: riffVoiceLimit,
-    maxVoicesPerSound: 8,
+    maxVoicesPerSound: riffVoicesPerSound,
     masterGainDb: -8,
   });
 }

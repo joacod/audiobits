@@ -186,6 +186,21 @@ const clock = globalThis as unknown as {
 let instances = 0;
 
 /**
+ * Total output latency of a context: its processing latency (`baseLatency`)
+ * plus the device path (`outputLatency`). Either may be missing or zero.
+ */
+export function totalLatency(context: {
+  outputLatency?: number;
+  baseLatency?: number;
+}) {
+  const part = (value: number | undefined) =>
+    typeof value === "number" && Number.isFinite(value) && value > 0
+      ? value
+      : 0;
+  return part(context.baseLatency) + part(context.outputLatency);
+}
+
+/**
  * Sound only. Plays the backing band of a song on the audio clock in short
  * lookahead windows and performs lead notes on request. The application owns
  * activation, input, judging, scoring and visuals, and maps its performance to
@@ -467,12 +482,7 @@ export function createRiff(
     /** Output latency of the context, for judging and visuals. */
     get latency() {
       if (disposed || audio.state !== "running") return 0;
-      const context = audio.native.context as {
-        outputLatency?: number;
-        baseLatency?: number;
-      };
-      const value = context.outputLatency || context.baseLatency || 0;
-      return Number.isFinite(value) && value > 0 ? value : 0;
+      return totalLatency(audio.native.context);
     },
     onPhase(listener: (value: RiffPhase) => void) {
       if (disposed) return () => {};

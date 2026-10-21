@@ -12,11 +12,15 @@ import {
   midiToHz,
   preroll,
   refillPeriod,
+  totalLatency,
   type BandEvent,
   type RiffTier,
 } from "../catalog/experiences/riff-reactor/controller";
 import { riffReactorSong as song } from "../catalog/experiences/riff-reactor/song";
-import { riffVoiceLimit } from "../catalog/experiences/riff-reactor/host";
+import {
+  riffVoiceLimit,
+  riffVoicesPerSound,
+} from "../catalog/experiences/riff-reactor/host";
 import {
   compile,
   effectTail,
@@ -398,6 +402,8 @@ test("a stale refill or voice ending after a replay changes nothing", async () =
     due(s.clock.currentTime + lookahead),
   );
   for (const bus of fresh) expect(bus.dispose).not.toHaveBeenCalled();
+  // The stale timer fired and did not re-arm: one refill chain remains.
+  expect(vi.getTimerCount()).toBe(1);
   s.riff.dispose();
 });
 
@@ -438,8 +444,21 @@ test("interruption stops the song; start requires a running engine", async () =>
   expect(s.riff.start()).toBeUndefined();
   expect(s.riff.latency).toBe(0);
   s.audio.state = "running";
-  expect(s.riff.latency).toBe(0.02);
+  expect(s.riff.latency).toBeCloseTo(0.03, 12);
   s.riff.dispose();
+});
+
+test("latency is base plus output latency, either missing or zero", () => {
+  expect(totalLatency({ baseLatency: 0.01, outputLatency: 0.02 })).toBeCloseTo(
+    0.03,
+    12,
+  );
+  expect(totalLatency({ baseLatency: 0.01 })).toBe(0.01);
+  expect(totalLatency({ outputLatency: 0.02 })).toBe(0.02);
+  expect(totalLatency({ baseLatency: 0.01, outputLatency: 0 })).toBe(0.01);
+  expect(totalLatency({ baseLatency: 0, outputLatency: 0.02 })).toBe(0.02);
+  expect(totalLatency({})).toBe(0);
+  expect(totalLatency({ baseLatency: Number.NaN, outputLatency: -1 })).toBe(0);
 });
 
 test("peak density never reaches the global voice limit", () => {
@@ -469,7 +488,7 @@ test("peak density never reaches the global voice limit", () => {
     add("lead", at, transport.timeAt(note.beat + note.length) + leadTail);
     add("choke", at, at + choke);
   }
-  const perSound = 8;
+  const perSound = riffVoicesPerSound;
   const concurrent = (list: [number, number][], t: number) =>
     list.filter(([start, end]) => start <= t && t < end).length;
   const times = [...spans.values()].flat().map(([start]) => start);
