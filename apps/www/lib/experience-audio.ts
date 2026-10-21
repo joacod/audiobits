@@ -6,7 +6,10 @@ import { createRiftAudio } from "../../../catalog/experiences/the-rift/host";
 import { createRiffAudio } from "../../../catalog/experiences/riff-reactor/host";
 import { prepareAudioPlayback } from "./audio-gestures";
 
+import { createEchoProbeAudio } from "../../../catalog/experiences/echo-probe/host";
+
 const factories = {
+  "echo-vision": createEchoProbeAudio,
   lightsaber: createLightsaberAudio,
   "reactive-thruster": createThrusterAudio,
   "energy-charge": createEnergyChargeAudio,

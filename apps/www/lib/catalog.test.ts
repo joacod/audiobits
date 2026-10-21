@@ -14,8 +14,12 @@ test("sound-only installation keeps complete showcase sources available", () => 
   for (const entry of catalogEntries.filter(
     (item) => item.category === "experience",
   )) {
-    const item = registry.items.find((item) => item.name === entry.slug)!;
-    expect(experienceSourceFiles(entry.slug).map((file) => file.path)).toEqual(
+    const item = registry.items.find(
+      (item) => item.name === entry.source.item,
+    )!;
+    expect(
+      experienceSourceFiles(entry.source.item).map((file) => file.path),
+    ).toEqual(
       item.files
         .filter((file) => file.path.endsWith(".ts"))
         .map((file) => file.path),
@@ -24,7 +28,7 @@ test("sound-only installation keeps complete showcase sources available", () => 
     expect(entry.source.files).toContain("index.html");
     for (const file of entry.source.files)
       expect(
-        readFileSync(`catalog/experiences/${entry.slug}/${file}`, "utf8")
+        readFileSync(`catalog/experiences/${entry.source.item}/${file}`, "utf8")
           .length,
       ).toBeGreaterThan(0);
   }
@@ -36,15 +40,16 @@ test("catalog index discovers every registry entry once and groups collections",
     ["bundled", "Catalog sounds"],
   ]);
   expect(catalogEntries.map((entry) => entry.category)).toEqual(
-    catalogGroups.flatMap((group) =>
-      registry.items
+    catalogGroups.flatMap((group) => [
+      ...registry.items
         .filter(
           (item) =>
             item.meta.classification ===
             (group.category === "bundled" ? "recipe" : "experience"),
         )
         .map(() => group.category),
-    ),
+      ...(group.category === "experience" ? ["experience"] : []),
+    ]),
   );
   expect(catalogEntries.map((entry) => entry.slug)).toEqual([
     "lightsaber",
@@ -53,6 +58,7 @@ test("catalog index discovers every registry entry once and groups collections",
     "reactive-thruster",
     "echo-probe",
     "energy-charge",
+    "echo-vision",
     ...registry.items
       .filter((item) => item.meta.classification === "recipe")
       .map((item) => item.name),
@@ -70,7 +76,7 @@ test("catalog index discovers every registry entry once and groups collections",
       .sort(),
   );
   expect(catalogEntries.map((item) => item.slug).sort()).toEqual(
-    registry.items.map((item) => item.name).sort(),
+    [...registry.items.map((item) => item.name), "echo-vision"].sort(),
   );
 });
 
@@ -184,4 +190,12 @@ test("a future recipe with presentation setup uses registry metadata without inv
   } finally {
     delete presentation[future.name];
   }
+});
+
+test("Echo Vision installs the existing Echo Probe sound source", () => {
+  const entry = catalogEntries.find((item) => item.slug === "echo-vision");
+  expect(entry).toMatchObject({ source: { item: "echo-probe" } });
+  expect(registry.items.some((item) => item.name === "echo-vision")).toBe(
+    false,
+  );
 });

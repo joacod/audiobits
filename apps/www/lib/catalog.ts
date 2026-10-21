@@ -33,7 +33,7 @@ export type ExperienceCatalogEntry = CatalogEntryBase & {
   preview: {
     family: "charge" | "thruster" | "blade" | "pulse" | "rift" | "riff";
   };
-  source: { files: readonly string[] };
+  source: { item: string; files: readonly string[] };
 };
 
 export type BundledCatalogEntry = CatalogEntryBase & {
@@ -121,9 +121,27 @@ export function createCatalogEntries(
           href: `/catalog/${entry.name}`,
           controls: item.experience.controls,
           preview: { family: item.preview },
-          source: { files: item.experience.sourceFiles },
+          source: { item: entry.name, files: item.experience.sourceFiles },
         };
       }),
+    ...(items.some((item) => item.name === "echo-probe")
+      ? [
+          {
+            slug: "echo-vision",
+            title: "Echo Vision",
+            description:
+              "See a dark room through sound. Aim and send a pulse, then watch wood, metal and glass appear as their echoes return.",
+            category: "experience" as const,
+            href: "/catalog/echo-vision",
+            controls: ["Aim", "Pulse", "Listen", "Reveal"],
+            preview: { family: "pulse" as const },
+            source: {
+              item: "echo-probe",
+              files: echoProbeExperience.sourceFiles,
+            },
+          },
+        ]
+      : []),
     ...items
       .filter((item) => item.meta.classification === "recipe")
       .map((item): BundledCatalogEntry => {
