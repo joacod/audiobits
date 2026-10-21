@@ -91,8 +91,10 @@ export function mountRift(
       .start()
       .then(() => {
         if (disposed || document.hidden || token !== generation) return;
-        clearPending();
         control.open();
+        // Publish the opening before clearing activation so a released drag
+        // keeps its geometry instead of appearing idle during the handoff.
+        clearPending();
         if (intent.settle) control.settle();
       })
       .catch((cause: unknown) => {

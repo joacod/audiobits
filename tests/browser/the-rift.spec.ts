@@ -10,6 +10,42 @@ async function owned(page: Page) {
 const peak = async (stage: Locator) =>
   Number(await stage.locator("canvas.rift-overlay").getAttribute("data-peak"));
 
+test("a tear released before activation remains visible and can be sealed", async ({
+  page,
+}) => {
+  await instrument(page, "held", "the-rift");
+  const stage = page.getByRole("group", stageName);
+  await expect(stage).toHaveAttribute("data-ready", "true");
+  await stage.scrollIntoViewIfNeeded();
+  const box = (await stage.boundingBox())!;
+  const at = (x: number, y: number) =>
+    [box.x + box.width * x, box.y + box.height * y] as const;
+  await page.mouse.move(...at(0.5, 0.2));
+  await page.mouse.down();
+  await page.mouse.move(...at(0.5, 0.75), { steps: 6 });
+  await page.mouse.up();
+  await expect(stage).toHaveAttribute("data-starting", "true");
+  await page.evaluate(() => {
+    const p = (
+      globalThis as unknown as {
+        thrusterProbe: { releaseActivation(): void };
+      }
+    ).thrusterProbe;
+    p.releaseActivation();
+  });
+  await expect(stage).toHaveAttribute("data-phase", "active");
+  await expect.poll(() => peak(stage)).toBeGreaterThan(0);
+  // Sealing requires the original geometry to survive the activation handoff.
+  await page.mouse.move(...at(0.6, 0.47));
+  await page.mouse.down();
+  await page.mouse.move(...at(0.4, 0.47), { steps: 6 });
+  await expect(stage).toHaveAttribute("data-sealing", "true");
+  await page.mouse.up();
+  await expect(stage).toHaveAttribute("data-phase", "collapsing");
+  await expect(stage).toHaveAttribute("data-phase", "idle", { timeout: 8000 });
+  await expect.poll(() => owned(page)).toBe(0);
+});
+
 test("tear, persist without input, shape, interrupted seal, collapse, keyboard and navigation clean up @smoke", async ({
   page,
 }) => {
