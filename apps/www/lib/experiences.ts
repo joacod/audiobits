@@ -27,6 +27,18 @@ export const experienceSourcePurpose = {
     "index.html":
       "Standalone acoustic bench with Open, Collapse, Stop and shape sliders.",
   },
+  "riff-reactor": {
+    "recipe.ts":
+      "Kick, snare, hats, bass, pad, arpeggio, chugs, riser, crash, a sustained lead and a choke as schema-1 data.",
+    "song.ts":
+      "Reactor Core: tempo, bars and every band and lead note in beats, each band event tagged with an intensity tier.",
+    "controller.ts":
+      "One audio-clock transport, lookahead band scheduling, bar-line intensity, monophonic lead performance and owned cleanup.",
+    "host.ts":
+      "Gesture activation, restart, hide, pagehide, Stop, and disposal.",
+    "index.html":
+      "Standalone band bench with Play, Stop, Perform, Choke and intensity.",
+  },
   lightsaber: {
     "recipe.ts":
       "Five original schema-1 recipes: hum, ignition, swing, clash, and retraction.",
@@ -110,6 +122,16 @@ export const riftExperience = {
   description: registryItem("the-rift").description,
   controls: ["Tear open", "Aperture", "Tension", "Instability", "Seal"],
   sourceFiles: experienceDemoSourceFiles("the-rift").map((file) => file.name),
+} as const;
+
+export const riffReactorExperience = {
+  title: registryItem("riff-reactor").title,
+  href: "/catalog/riff-reactor",
+  description: registryItem("riff-reactor").description,
+  controls: ["Play", "Three lanes", "Streak", "Intensity", "Stop"],
+  sourceFiles: experienceDemoSourceFiles("riff-reactor").map(
+    (file) => file.name,
+  ),
 } as const;
 
 export const echoProbeExperience = {

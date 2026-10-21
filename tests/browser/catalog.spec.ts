@@ -326,6 +326,17 @@ test("experience cards stay silent and full interactions clean up on return", as
       await page.mouse.move(box.x + box.width / 2, box.y + box.height * 0.7, {
         steps: 6,
       });
+    } else if (entry.slug === "riff-reactor") {
+      const stage = page.getByRole("group", {
+        name: "Riff Reactor stage",
+        exact: true,
+      });
+      await expect(stage).toHaveAttribute("data-ready", "true");
+      await stage.scrollIntoViewIfNeeded();
+      const box = (await stage.boundingBox())!;
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+      await page.mouse.down();
+      await expect(stage).toHaveAttribute("data-phase", "playing");
     } else await dragThruster(page);
     await expect
       .poll(

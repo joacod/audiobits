@@ -3,6 +3,7 @@ import { createLightsaberAudio } from "../../../catalog/experiences/lightsaber/h
 import { createThrusterAudio } from "../../../catalog/experiences/reactive-thruster/host";
 import { createEnergyChargeAudio } from "../../../catalog/experiences/energy-charge/host";
 import { createRiftAudio } from "../../../catalog/experiences/the-rift/host";
+import { createRiffAudio } from "../../../catalog/experiences/riff-reactor/host";
 import { prepareAudioPlayback } from "./audio-gestures";
 
 const factories = {
@@ -10,6 +11,7 @@ const factories = {
   "reactive-thruster": createThrusterAudio,
   "energy-charge": createEnergyChargeAudio,
   "the-rift": createRiftAudio,
+  "riff-reactor": createRiffAudio,
 };
 export type ExperienceId = keyof typeof factories;
 

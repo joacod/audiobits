@@ -50,6 +50,15 @@ evolves the field and schedules bounded disturbances on the audio clock.
 `collapse()` is a deliberate finale that returns to `idle`; `nextPhase` is the
 complete transition table, observable through `rift.phase` and `onPhase()`.
 
+Riff Reactor's `createRiff(audio, song)` plays the band of a `RiffSong` from
+`start()`, which returns the audio-clock transport (`beatAt`, `timeAt`). It
+schedules band events in 150 ms lookahead batches and never plays the lead on
+its own: `performLead(index)` plays a charted note immediately until its end,
+monophonically, and `choke()` marks a stray input. `setIntensity(0 | 1 | 2)`
+lands on the next unscheduled bar line. Judge input against
+`beatAt(context.currentTime - riff.latency)`; scoring and charts stay in the
+application.
+
 The installed guide defines each controller's bounded inputs and lifecycle.
 Activate the application-owned engine before starting a controller, then own
 input mapping, suspension and engine disposal. Controllers dispose only their

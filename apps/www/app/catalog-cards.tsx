@@ -141,6 +141,7 @@ function CatalogPreview({
   if (entry.preview.family === "pulse")
     return <SoundMark family="pulse" index={3} />;
   if (entry.preview.family === "rift") return <ExperienceMark kind="rift" />;
+  if (entry.preview.family === "riff") return <ExperienceMark kind="riff" />;
   if (entry.preview.family === "charge")
     return (
       <div

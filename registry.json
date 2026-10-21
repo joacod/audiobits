@@ -619,6 +619,68 @@
         }
       ],
       "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/main/catalog/README.md for integration and update guidance."
+    },
+    {
+      "name": "riff-reactor",
+      "type": "registry:item",
+      "title": "Riff Reactor",
+      "description": "Perform the lead of an original synth-rock track. Every hit plays; streaks make the band hit harder.",
+      "dependencies": ["audiobits@^0.3.0"],
+      "categories": ["experience"],
+      "meta": {
+        "classification": "experience",
+        "tags": ["music", "rhythm", "band", "lookahead", "performance"],
+        "schemaVersion": 1,
+        "compatibility": {
+          "runtime": "audiobits >=0.3.0 with native recipe delay",
+          "language": "TypeScript",
+          "moduleResolution": "Bundler",
+          "browser": "Web Audio; automated verification in Chromium",
+          "framework": "none"
+        },
+        "exportName": "riffLead",
+        "requiredCapabilities": {
+          "sources": ["noise", "oscillator"],
+          "filters": ["bandpass", "highpass", "lowpass"],
+          "effects": ["delay", "filter"],
+          "parameterModes": ["play"],
+          "kinds": ["one-shot", "sustained"],
+          "waveforms": ["sawtooth", "sine", "square", "triangle"],
+          "noiseColors": ["white"],
+          "mappingScales": ["linear"],
+          "automationCurves": ["exponential"],
+          "runtime": [
+            "gesture-start",
+            "bounded-voices",
+            "buses",
+            "suspend",
+            "dispose"
+          ]
+        }
+      },
+      "files": [
+        {
+          "path": "catalog/experiences/riff-reactor/recipe.ts",
+          "type": "registry:file",
+          "target": "~/src/sounds/experiences/riff-reactor/recipe.ts"
+        },
+        {
+          "path": "catalog/experiences/riff-reactor/song.ts",
+          "type": "registry:file",
+          "target": "~/src/sounds/experiences/riff-reactor/song.ts"
+        },
+        {
+          "path": "catalog/experiences/riff-reactor/controller.ts",
+          "type": "registry:file",
+          "target": "~/src/sounds/experiences/riff-reactor/controller.ts"
+        },
+        {
+          "path": "catalog/experiences/riff-reactor/README.md",
+          "type": "registry:file",
+          "target": "~/src/sounds/experiences/riff-reactor/README.md"
+        }
+      ],
+      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/main/catalog/README.md for integration and update guidance."
     }
   ]
 }

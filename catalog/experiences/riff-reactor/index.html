@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Riff Reactor band bench</title>
+  <h1>Riff Reactor band bench</h1>
+  <p>
+    Play starts the band from the top. Perform plays the lead note closest to
+    now; Choke is a miss. Intensity lands on the next bar line.
+  </p>
+  <button id="play">Play</button>
+  <button id="stop">Stop</button>
+  <button id="perform">Perform (Space)</button>
+  <button id="choke">Choke</button>
+  <label
+    >Intensity
+    <select id="tier">
+      <option value="0">0 base</option>
+      <option value="1">1 harmony</option>
+      <option value="2">2 thick</option>
+    </select></label
+  >
+  <p id="status" role="status">idle</p>
+  <p id="error" role="alert"></p>
+  <script type="module">
+    import { mountRiff } from "./host.ts";
+    const error = document.querySelector("#error");
+    const host = mountRiff({
+      phase(value) {
+        document.querySelector("#status").textContent = value;
+      },
+      starting(value) {
+        if (value) error.textContent = "";
+      },
+      error(cause) {
+        error.textContent = `${String(cause)}. Try Play again.`;
+      },
+    });
+    function perform() {
+      const context = host.audio.native.context;
+      const beat = host.control.beatAt(
+        context.currentTime - host.control.latency,
+      );
+      let best = -1;
+      host.song.lead.forEach((note, index) => {
+        if (
+          best < 0 ||
+          Math.abs(note.beat - beat) <
+            Math.abs(host.song.lead[best].beat - beat)
+        )
+          best = index;
+      });
+      if (best >= 0) host.control.performLead(best);
+    }
+    document.querySelector("#play").onclick = host.play;
+    document.querySelector("#stop").onclick = host.stop;
+    document.querySelector("#perform").onclick = perform;
+    document.querySelector("#choke").onclick = host.control.choke;
+    document.querySelector("#tier").onchange = (event) =>
+      host.control.setIntensity(Number(event.target.value));
+    document.addEventListener("keydown", (event) => {
+      if (event.key === " " && host.control.phase === "playing") {
+        event.preventDefault();
+        perform();
+      }
+    });
+    // In an SPA, call await host.dispose() when removing the view.
+  </script>
+</html>
