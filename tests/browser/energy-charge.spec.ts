@@ -137,7 +137,9 @@ for (const mode of ["held", "failed", "friendly"] as const) {
         .getByRole("button", { name: "Copy report", exact: true })
         .click();
       await expect(
-        page.getByText("Report copied.", { exact: true }),
+        page
+          .getByRole("button", { name: "Copy report", exact: true })
+          .getByText("✓ Copied", { exact: true }),
       ).toBeVisible();
       expect(
         await page.evaluate(

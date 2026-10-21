@@ -180,6 +180,11 @@ test("impact copies current parameters and applied edits, validates JSON, and re
   await page
     .getByRole("button", { name: "Copy impact recipe", exact: true })
     .click();
+  await expect(
+    page
+      .getByRole("button", { name: "Copy impact recipe", exact: true })
+      .getByText("✓ Copied", { exact: true }),
+  ).toBeVisible();
   expect(JSON.parse(await copied(page)).layers[0].gainDb.range).toEqual([
     -30, -20,
   ]);
@@ -583,6 +588,7 @@ test("every catalog item copies its registry command and links to installation d
     await expect(
       adoption.locator(".landing-command").getByRole("status"),
     ).toHaveText("Copied.");
+    await expect(copy.getByText("✓ Copied", { exact: true })).toBeVisible();
     expect(await copied(page)).toBe(command);
     const usage = adoption.locator(".catalog-usage");
     await expect(
@@ -592,6 +598,9 @@ test("every catalog item copies its registry command and links to installation d
       .getByRole("button", { name: `Copy ${entry.slug} code`, exact: true })
       .click();
     await expect(usage.getByRole("status")).toHaveText("Copied.");
+    await expect(
+      usage.getByRole("button").getByText("✓ Copied", { exact: true }),
+    ).toBeVisible();
     await expect(usage.locator("pre span[style]").first()).toBeAttached();
     expect(await copied(page)).toBe(await usage.locator("pre").innerText());
     expect(await copied(page)).toContain('from "audiobits"');

@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useSyncExternalStore, type ReactNode } from "react";
+import { type ReactNode } from "react";
+import { CopyFeedbackLabel, useCopyFeedback } from "./copy-feedback";
 import { LiveCodeBlock } from "./live-code-block";
-
-const subscribeHydration = () => () => {};
 
 export function UsageCode({
   slug,
@@ -17,23 +16,7 @@ export function UsageCode({
   disabled?: boolean;
   children?: ReactNode;
 }) {
-  const [status, setStatus] = useState("");
-  const ready = useSyncExternalStore(
-    subscribeHydration,
-    () => true,
-    () => false,
-  );
-  async function copy() {
-    setStatus("Copying…");
-    try {
-      await navigator.clipboard.writeText(code);
-      setStatus("Copied.");
-    } catch {
-      setStatus(
-        "Clipboard unavailable. Select the displayed code and copy it manually.",
-      );
-    }
-  }
+  const { copy, status, ready, copying, copied } = useCopyFeedback();
   return (
     <div className="catalog-usage">
       <h3>Use this sound</h3>
@@ -46,13 +29,20 @@ export function UsageCode({
       <button
         type="button"
         aria-label={`Copy ${slug} code`}
-        disabled={!ready || disabled || status === "Copying…"}
-        onClick={() => void copy()}
+        disabled={!ready || disabled || copying}
+        onClick={() =>
+          void copy(
+            code,
+            "Clipboard unavailable. Select the displayed code and copy it manually.",
+          )
+        }
       >
-        Copy usage
+        <CopyFeedbackLabel label="Copy usage" copied={copied} />
       </button>
+      <p className={copied || copying ? "sr-only" : undefined} role="status">
+        {status}
+      </p>
       {children ?? <LiveCodeBlock code={code} />}
-      <p role="status">{status}</p>
       <Link href="/docs/lifecycle">Production lifecycle</Link>
     </div>
   );
