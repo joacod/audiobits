@@ -3,6 +3,7 @@ import {
   energyChargeExperience,
   echoProbeExperience,
   riftExperience,
+  riffReactorExperience,
   lightsaberExperience,
   reactiveThrusterExperience,
 } from "./experiences";
@@ -10,7 +11,14 @@ import { demos, type SoundKind } from "./gallery";
 
 // Navigation metadata only. Recipes stay in the gallery module.
 export type CatalogFamily =
-  "charge" | "thruster" | "blade" | "pulse" | "rift" | "harmonic" | "flow";
+  | "charge"
+  | "thruster"
+  | "blade"
+  | "pulse"
+  | "rift"
+  | "riff"
+  | "harmonic"
+  | "flow";
 
 type CatalogEntryBase = {
   slug: string;
@@ -22,7 +30,9 @@ type CatalogEntryBase = {
 export type ExperienceCatalogEntry = CatalogEntryBase & {
   category: "experience";
   controls: readonly string[];
-  preview: { family: "charge" | "thruster" | "blade" | "pulse" | "rift" };
+  preview: {
+    family: "charge" | "thruster" | "blade" | "pulse" | "rift" | "riff";
+  };
   source: { files: readonly string[] };
 };
 
@@ -51,6 +61,11 @@ const experienceEntries = [
     slug: "energy-charge",
     preview: "charge",
     experience: energyChargeExperience,
+  },
+  {
+    slug: "riff-reactor",
+    preview: "riff",
+    experience: riffReactorExperience,
   },
 ] as const;
 
