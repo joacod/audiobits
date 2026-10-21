@@ -10,6 +10,43 @@ async function owned(page: Page) {
 const peak = async (stage: Locator) =>
   Number(await stage.locator("canvas.rift-overlay").getAttribute("data-peak"));
 
+test("a fast opening uses the release position when movement delivery lags", async ({
+  page,
+}) => {
+  await instrument(page, "normal", "the-rift");
+  const stage = page.getByRole("group", stageName);
+  await expect(stage).toHaveAttribute("data-ready", "true");
+  await stage.scrollIntoViewIfNeeded();
+  const box = (await stage.boundingBox())!;
+  const x = box.x + box.width / 2;
+  const startY = box.y + box.height * 0.2;
+  const endY = box.y + box.height * 0.75;
+  await page.mouse.move(x, startY);
+  await page.mouse.down();
+  await page.mouse.move(x, startY + 10);
+  // The release can arrive farther along than the last delivered move.
+  await stage.dispatchEvent("pointerup", {
+    pointerId: 1,
+    pointerType: "mouse",
+    isPrimary: true,
+    button: 0,
+    buttons: 0,
+    clientX: x,
+    clientY: endY,
+  });
+  await page.mouse.up();
+  await expect(stage).toHaveAttribute("data-phase", "active");
+  await expect.poll(() => peak(stage)).toBeGreaterThan(0);
+  // Its geometry must also match that final position, so it can be sealed.
+  await page.mouse.move(x + box.width * 0.1, (startY + endY) / 2);
+  await page.mouse.down();
+  await page.mouse.move(x - box.width * 0.1, (startY + endY) / 2);
+  await expect(stage).toHaveAttribute("data-sealing", "true");
+  await page.mouse.up();
+  await expect(stage).toHaveAttribute("data-phase", "idle", { timeout: 8000 });
+  await expect.poll(() => owned(page)).toBe(0);
+});
+
 test("a tear released before activation remains visible and can be sealed", async ({
   page,
 }) => {
