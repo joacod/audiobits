@@ -17,7 +17,7 @@ import { compile } from "../packages/audiobits/src/compiler/plan";
 import { controlsFor } from "../packages/audiobits/src/compiler/values";
 
 // Experiences whose recipes use native delay, which needs the 0.3 runtime line.
-const delayExperiences = ["echo-probe", "the-rift"];
+const delayExperiences = ["echo-probe", "the-rift", "riff-reactor"];
 
 test("canonical gallery imports resolve in native Node tooling", () => {
   execFileSync(process.execPath, [
