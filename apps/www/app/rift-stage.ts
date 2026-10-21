@@ -252,63 +252,63 @@ export function mountRiftStage(
     },
     { signal: listeners.signal },
   );
-  surface.addEventListener(
-    "pointermove",
-    (event) => {
-      if (!gesture || event.pointerId !== gesture.id || !tear) return;
-      const point = local(event);
-      moveSpeed(point, performance.now());
-      if (gesture.mode === "open") {
-        const dx = point.x - gesture.x,
-          dy = point.y - gesture.y;
-        const length = Math.hypot(dx, dy);
-        if (length > 4) {
-          tear.angle = Math.atan2(dy, dx);
-          tear.x = gesture.x + dx / 2;
-          tear.y = gesture.y + dy / 2;
-        }
-        tear.length = Math.max(1, length);
-        send({
-          aperture: clamp(length / (span() * 0.6), 0.05, 1),
-          instability: clamp(0.15 + kinetic * 0.6),
-        });
-      } else {
-        const { u, n } = axes();
-        const dx = point.x - tear.x,
-          dy = point.y - tear.y;
-        const perpendicular = dx * n.x + dy * n.y;
-        const along = dx * u.x + dy * u.y;
-        const within = Math.abs(along) < tear.length * 0.55;
-        // Pushing one edge through the other arms the seal; release completes it.
-        const sealing =
-          within &&
-          Math.sign(perpendicular) === -gesture.side &&
-          Math.abs(perpendicular) > 8;
-        gesture.sealing = sealing;
-        surface.dataset.sealing = String(sealing);
-        const pull =
-          ((point.x - gesture.x) * u.x + (point.y - gesture.y) * u.y) *
-          gesture.outward;
-        send({
-          aperture: sealing
-            ? 0.02
-            : clamp(
-                gesture.aperture +
-                  (Math.abs(perpendicular) - gesture.perpendicular) /
-                    (span() * 0.35),
-                0.04,
-                1,
-              ),
-          tension: clamp(gesture.tension + pull / (span() * 0.45)),
-          instability: clamp(0.15 + kinetic * 0.85),
-        });
+  function move(event: PointerEvent) {
+    if (!gesture || event.pointerId !== gesture.id || !tear) return;
+    const point = local(event);
+    moveSpeed(point, performance.now());
+    if (gesture.mode === "open") {
+      const dx = point.x - gesture.x,
+        dy = point.y - gesture.y;
+      const length = Math.hypot(dx, dy);
+      if (length > 4) {
+        tear.angle = Math.atan2(dy, dx);
+        tear.x = gesture.x + dx / 2;
+        tear.y = gesture.y + dy / 2;
       }
-      wake();
-    },
-    { signal: listeners.signal },
-  );
+      tear.length = Math.max(1, length);
+      send({
+        aperture: clamp(length / (span() * 0.6), 0.05, 1),
+        instability: clamp(0.15 + kinetic * 0.6),
+      });
+    } else {
+      const { u, n } = axes();
+      const dx = point.x - tear.x,
+        dy = point.y - tear.y;
+      const perpendicular = dx * n.x + dy * n.y;
+      const along = dx * u.x + dy * u.y;
+      const within = Math.abs(along) < tear.length * 0.55;
+      // Pushing one edge through the other arms the seal; release completes it.
+      const sealing =
+        within &&
+        Math.sign(perpendicular) === -gesture.side &&
+        Math.abs(perpendicular) > 8;
+      gesture.sealing = sealing;
+      surface.dataset.sealing = String(sealing);
+      const pull =
+        ((point.x - gesture.x) * u.x + (point.y - gesture.y) * u.y) *
+        gesture.outward;
+      send({
+        aperture: sealing
+          ? 0.02
+          : clamp(
+              gesture.aperture +
+                (Math.abs(perpendicular) - gesture.perpendicular) /
+                  (span() * 0.35),
+              0.04,
+              1,
+            ),
+        tension: clamp(gesture.tension + pull / (span() * 0.45)),
+        instability: clamp(0.15 + kinetic * 0.85),
+      });
+    }
+    wake();
+  }
+  surface.addEventListener("pointermove", move, { signal: listeners.signal });
   function end(event: PointerEvent, cancelled: boolean) {
     if (!gesture || event.pointerId !== gesture.id) return;
+    // Fast drags can release beyond the last delivered move. Finalize the tear
+    // from the release position before deciding whether the opening is valid.
+    if (!cancelled && gesture.mode === "open") move(event);
     const current = gesture;
     gesture = undefined;
     surface.dataset.sealing = "false";
