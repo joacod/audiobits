@@ -440,7 +440,7 @@ the full license text.
 
 ---
 
-zod@4.6.5
+zod@4.6.7
 MIT License
 
 Copyright (c) 2025 Colin McDonnell

@@ -50,13 +50,13 @@
     "audiobits": "workspace:*",
     "esbuild": "0.28.2",
     "eslint": "9.39.5",
-    "eslint-config-next": "16.3.8",
-    "prettier": "3.9.9",
+    "eslint-config-next": "16.4.2",
+    "prettier": "3.9.10",
     "publint": "0.3.25",
     "shadcn": "4.21.4",
     "typescript": "6.0.3",
-    "typescript-eslint": "8.71.0",
-    "vitest": "5.0.3",
-    "zod": "4.6.5"
+    "typescript-eslint": "8.72.0",
+    "vitest": "5.0.5",
+    "zod": "4.6.7"
   }
 }

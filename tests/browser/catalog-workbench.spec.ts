@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { catalogEntries } from "../../apps/www/lib/catalog";
+import { registryItem } from "../../apps/www/lib/registry";
 
 const home = "http://127.0.0.1:3100";
 
@@ -574,12 +575,14 @@ test("every catalog item copies its registry command and links to installation d
   for (const entry of catalogEntries) {
     await page.goto(`${home}${entry.href}`);
     const adoption = page.getByRole("region", { name: "Add to project" });
-    const command = `npx shadcn@latest add joacod/audiobits/${entry.slug}`;
+    const sourceItem =
+      entry.category === "experience" ? entry.source.item : entry.slug;
+    const command = `npx shadcn@latest add joacod/audiobits/${sourceItem}`;
     await expect(adoption.locator(".landing-command pre")).toHaveText(command);
     await expect(adoption).toContainText("audiobits runtime dependency");
     await expect(adoption).toContainText("Installs the catalog defaults");
     const copy = adoption.getByRole("button", {
-      name: `Copy ${entry.title} command`,
+      name: `Copy ${registryItem(sourceItem).title} command`,
       exact: true,
     });
     await expect(copy).toBeEnabled();
@@ -605,7 +608,7 @@ test("every catalog item copies its registry command and links to installation d
     expect(await copied(page)).toBe(await usage.locator("pre").innerText());
     expect(await copied(page)).toContain('from "audiobits"');
     expect(await copied(page)).toContain(
-      `./sounds/${entry.category === "bundled" ? "recipes" : "experiences"}/${entry.slug}/`,
+      `./sounds/${entry.category === "bundled" ? "recipes" : "experiences"}/${sourceItem}/`,
     );
     expect(await copied(page)).toContain("await audio.start()");
     expect(await copied(page)).toContain("await audio.dispose()");
@@ -624,7 +627,9 @@ test("every catalog item copies its registry command and links to installation d
         page.getByRole("link", { name: "View complete public source" }),
       ).toHaveAttribute(
         "href",
-        `https://github.com/joacod/audiobits/tree/main/catalog/experiences/${entry.slug}`,
+        entry.slug === "echo-vision"
+          ? "https://github.com/joacod/audiobits/blob/main/apps/www/app/echo-vision-stage.ts"
+          : `https://github.com/joacod/audiobits/tree/main/catalog/experiences/${sourceItem}`,
       );
     }
     expect(await contexts(page)).toEqual([]);

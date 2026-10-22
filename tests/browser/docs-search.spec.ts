@@ -182,11 +182,13 @@ test("empty and unmatched queries return empty results and the dialog recovers",
   await page.keyboard.press("Control+k");
   const dialog = page.getByRole("dialog", { name: "Search", exact: true });
   const input = dialog.getByRole("combobox", { name: "Search", exact: true });
+  // Fumadocs keeps an empty error status mounted, even without a query.
+  const messages = dialog.getByRole("status").filter({ hasText: /\S/ });
   await expect(input).toHaveValue("");
   await expect(dialog.getByRole("option")).toHaveCount(0);
-  await expect(dialog.getByRole("status")).toHaveCount(0);
+  await expect(messages).toHaveCount(0);
   await input.fill(unmatched);
-  await expect(dialog.getByRole("status")).toHaveText("No results found");
+  await expect(messages).toHaveText("No results found");
   await expect(dialog.getByRole("option")).toHaveCount(0);
   await input.fill("lifecycle");
   await expect(
@@ -196,7 +198,7 @@ test("empty and unmatched queries return empty results and the dialog recovers",
   ).toBeVisible();
   await input.fill("");
   await expect(dialog.getByRole("option")).toHaveCount(0);
-  await expect(dialog.getByRole("status")).toHaveCount(0);
+  await expect(messages).toHaveCount(0);
   await expect(input).toBeFocused();
 });
 
