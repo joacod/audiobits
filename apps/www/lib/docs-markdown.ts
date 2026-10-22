@@ -34,9 +34,12 @@ export const markdownComponents = {
     asMarkdown();
     return md`**${value}**\n\n${children}\n\n`;
   },
-  Callout({ title, children }: { title?: string; children?: ReactNode }) {
+  async Callout({ title, children }: { title?: string; children?: ReactNode }) {
     asMarkdown();
-    return md.linePrefix("> ")`${title ? `**${title}**\n\n` : ""}${children}`;
+    const content = await md`${children}`;
+    return md.linePrefix(
+      "> ",
+    )`${title ? `**${title}**\n\n` : ""}${content.trim()}`;
   },
   async Folder({ name, children }: { name: string; children?: ReactNode }) {
     asMarkdown();
