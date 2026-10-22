@@ -1,5 +1,11 @@
 # audiobits
 
+## 0.3.6
+
+### Patch Changes
+
+- 3a391b9: Add author and issue tracker metadata and normalize the repository URL.
+
 ## 0.3.5
 
 ### Patch Changes
