@@ -50,7 +50,8 @@ export function AudioActivationReport({
           <button
             type="button"
             aria-label="Copy report"
-            disabled={!ready || copying}
+            disabled={!ready}
+            aria-disabled={copying}
             onClick={copyReport}
           >
             <CopyFeedbackLabel

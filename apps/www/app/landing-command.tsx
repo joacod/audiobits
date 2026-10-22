@@ -20,7 +20,8 @@ export function LandingCommand({
         <button
           type="button"
           aria-label={`Copy ${label} command`}
-          disabled={!ready || copying}
+          disabled={!ready}
+          aria-disabled={copying}
           onClick={() =>
             void copy(
               command,

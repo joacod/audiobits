@@ -84,7 +84,8 @@ export const RecipeTools = memo(function RecipeTools({
           </p>
           <div className="audio-controls">
             <Button
-              disabled={!ready || copying}
+              disabled={!ready}
+              aria-disabled={copying}
               aria-label={`Copy ${kind} recipe`}
               onClick={() =>
                 void copy(

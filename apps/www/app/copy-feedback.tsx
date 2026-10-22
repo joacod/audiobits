@@ -7,6 +7,7 @@ const subscribeHydration = () => () => {};
 export function useCopyFeedback() {
   const [status, setStatus] = useState("");
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pending = useRef(false);
   const ready = useSyncExternalStore(
     subscribeHydration,
     () => true,
@@ -20,6 +21,8 @@ export function useCopyFeedback() {
   );
 
   async function copy(text: string, failure: string, onError?: () => void) {
+    if (pending.current) return;
+    pending.current = true;
     if (timer.current !== null) clearTimeout(timer.current);
     setStatus("Copying…");
     try {
@@ -29,6 +32,8 @@ export function useCopyFeedback() {
     } catch {
       setStatus(failure);
       onError?.();
+    } finally {
+      pending.current = false;
     }
   }
 

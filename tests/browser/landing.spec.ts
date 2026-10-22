@@ -167,6 +167,16 @@ test("landing install commands copy exactly and documentation destinations resol
 }) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   await page.goto(home);
+  await page.evaluate(() => {
+    const write = navigator.clipboard.writeText.bind(navigator.clipboard);
+    navigator.clipboard.writeText = async (text) => {
+      const completion = new Promise<void>((resolve) => {
+        Object.assign(globalThis, { finishCopy: resolve });
+      });
+      await write(text);
+      await completion;
+    };
+  });
   for (const [label, command] of [
     ["lightsaber install", "npx shadcn@latest add joacod/audiobits/lightsaber"],
     ["Skill install", "npx skills add joacod/audiobits --skill audiobits"],
@@ -178,17 +188,21 @@ test("landing install commands copy exactly and documentation destinations resol
     );
     await copy.focus();
     await page.keyboard.press("Enter");
+    const status = page
+      .locator(".landing-command")
+      .filter({ has: copy })
+      .getByRole("status");
+    await expect(status).toHaveText("Copying…");
+    await expect(copy).toBeFocused();
+    await page.evaluate(() => {
+      (globalThis as unknown as { finishCopy(): void }).finishCopy();
+    });
     await expect(copy.getByText("✓ Copied", { exact: true })).toBeVisible();
     await expect(copy).toBeFocused();
     expect(
       await copy.evaluate((button) => button.getBoundingClientRect().width),
     ).toBe(width);
-    await expect(
-      page
-        .locator(".landing-command")
-        .filter({ has: copy })
-        .getByRole("status"),
-    ).toHaveText("Copied.");
+    await expect(status).toHaveText("Copied.");
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
       command,
     );
@@ -264,79 +278,73 @@ test("landing stays silent until holding, measures real output and disposes on n
     "data-audio-entry",
     "stage",
   );
-  expect((await probe(page)).contexts).toEqual([]);
-  expect((await probe(page)).sources).toBe(0);
+  const initial = await probe(page);
+  expect(initial.contexts).toEqual([]);
+  expect(initial.sources).toBe(0);
   await expect(page.locator(".lightsaber-intro h1")).toHaveAccessibleName(
     "Sound that reacts.",
   );
   await expect(page.locator(".lightsaber-activation")).toHaveCount(0);
-  await holdLightsaber(page);
-  await expect(page.locator(".lightsaber-canvas")).toHaveAttribute(
-    "data-state",
-    "running",
-  );
-  await expect
-    .poll(async () =>
-      Number(
-        await page.locator(".lightsaber-canvas").getAttribute("data-peak"),
-      ),
-    )
-    .toBeGreaterThan(0);
-  await expect(page.locator(".hero-wave")).not.toHaveAttribute(
-    "d",
-    "M0 30H600",
-  );
-  await expect
-    .poll(async () =>
-      page
-        .locator(".lightsaber-hero")
-        .evaluate((element) =>
-          Number(getComputedStyle(element).getPropertyValue("--hero-level")),
-        ),
-    )
-    .toBeGreaterThan(0);
-  const surface = page.locator(".lightsaber-canvas");
-  await expect(surface).toHaveAttribute("data-extension", "1.000");
-  const box = (await surface.boundingBox())!;
-  await page.mouse.move(box.x + box.width * 0.28, box.y + box.height * 0.65, {
-    steps: 6,
-  });
-  const letterHeat = () =>
-    page
-      .locator(".hero-letter")
-      .evaluateAll((letters) =>
-        letters.map((letter) =>
-          Number(getComputedStyle(letter).getPropertyValue("--letter-heat")),
-        ),
+  // Read one visual frame per poll instead of making each assertion wait for a
+  // separate render/automation round trip on software-rendered Chromium.
+  const feedback = () =>
+    page.locator(".lightsaber-hero").evaluate((hero) => {
+      const stage = hero.querySelector<HTMLElement>(".lightsaber-canvas")!;
+      const heat = Array.from(hero.querySelectorAll(".hero-letter"), (letter) =>
+        Number(getComputedStyle(letter).getPropertyValue("--letter-heat")),
       );
-  await expect.poll(async () => Math.max(...(await letterHeat()))).toBe(1);
-  expect((await letterHeat()).some((heat) => heat === 0)).toBe(true);
+      return {
+        state: stage.dataset.state,
+        peak: Number(stage.dataset.peak),
+        extension: stage.dataset.extension,
+        level: Number(getComputedStyle(hero).getPropertyValue("--hero-level")),
+        wave: hero.querySelector(".hero-wave")!.getAttribute("d"),
+        maximumHeat: Math.max(...heat),
+        minimumHeat: Math.min(...heat),
+      };
+    });
+  await holdLightsaber(page);
+  await expect
+    .poll(async () => {
+      const value = await feedback();
+      return {
+        state: value.state,
+        output: value.peak > 0,
+        wave: value.wave !== "M0 30H600",
+        level: value.level > 0,
+        extension: value.extension,
+      };
+    })
+    .toEqual({
+      state: "running",
+      output: true,
+      wave: true,
+      level: true,
+      extension: "1.000",
+    });
+  const surface = page.locator(".lightsaber-canvas");
+  const box = (await surface.boundingBox())!;
+  await page.mouse.move(box.x + box.width * 0.28, box.y + box.height * 0.65);
+  await expect
+    .poll(async () => {
+      const value = await feedback();
+      return { maximum: value.maximumHeat, minimum: value.minimumHeat };
+    })
+    .toEqual({ maximum: 1, minimum: 0 });
   await page.mouse.up();
-  await expect(page.locator(".lightsaber-canvas")).toHaveAttribute(
-    "data-state",
-    "stopped",
-  );
   await expect
     .poll(async () => {
       const p = await probe(page);
       return p.ended === p.sources;
     })
     .toBe(true);
-  await expect(page.locator(".lightsaber-canvas")).toHaveAttribute(
-    "data-peak",
-    "0",
-  );
-  await expect(page.locator(".hero-wave")).toHaveAttribute("d", "M0 30H600");
-  await expect.poll(async () => Math.max(...(await letterHeat()))).toBe(0);
-  await expect
-    .poll(async () =>
-      page
-        .locator(".lightsaber-hero")
-        .evaluate((element) =>
-          Number(getComputedStyle(element).getPropertyValue("--hero-level")),
-        ),
-    )
-    .toBe(0);
+  await expect.poll(feedback).toMatchObject({
+    state: "stopped",
+    peak: 0,
+    wave: "M0 30H600",
+    maximumHeat: 0,
+    level: 0,
+  });
   await holdLightsaber(page);
   await page
     .getByRole("navigation", { name: "Main navigation" })

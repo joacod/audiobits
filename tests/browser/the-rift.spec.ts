@@ -59,17 +59,31 @@ test("a tear released before activation remains visible and can be sealed", asyn
     [box.x + box.width * x, box.y + box.height * y] as const;
   await page.mouse.move(...at(0.5, 0.2));
   await page.mouse.down();
-  await page.mouse.move(...at(0.5, 0.75), { steps: 6 });
-  await page.mouse.up();
-  await expect(stage).toHaveAttribute("data-starting", "true");
-  await page.evaluate(() => {
+  // Release the tear and resolve held activation in one browser task. Rendering
+  // between interpolated mouse moves must not consume the activation deadline.
+  const releasedWhileStarting = await stage.evaluate((surface) => {
+    const box = surface.getBoundingClientRect();
+    surface.dispatchEvent(
+      new PointerEvent("pointerup", {
+        pointerId: 1,
+        pointerType: "mouse",
+        isPrimary: true,
+        button: 0,
+        clientX: box.x + box.width * 0.5,
+        clientY: box.y + box.height * 0.75,
+      }),
+    );
+    const starting = surface.dataset.starting === "true";
     const p = (
       globalThis as unknown as {
         thrusterProbe: { releaseActivation(): void };
       }
     ).thrusterProbe;
     p.releaseActivation();
+    return starting;
   });
+  await page.mouse.up();
+  expect(releasedWhileStarting).toBe(true);
   await expect(stage).toHaveAttribute("data-phase", "active");
   await expect.poll(() => peak(stage)).toBeGreaterThan(0);
   // Sealing requires the original geometry to survive the activation handoff.
