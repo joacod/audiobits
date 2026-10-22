@@ -3,7 +3,14 @@
   "version": "0.3.5",
   "description": "Browser audio engine and recipe language. Copy sounds from the AudioBits catalog and own them.",
   "license": "MIT",
+  "author": {
+    "name": "joacod",
+    "url": "https://github.com/joacod"
+  },
   "homepage": "https://www.audiobits.dev/",
+  "bugs": {
+    "url": "https://github.com/joacod/audiobits/issues"
+  },
   "keywords": [
     "web-audio",
     "procedural-audio",
@@ -16,7 +23,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/joacod/audiobits.git",
+    "url": "git+https://github.com/joacod/audiobits.git",
     "directory": "packages/audiobits"
   },
   "type": "module",
