@@ -34,7 +34,10 @@ pnpm release:prepare
 
 On Linux, run [centralized audio setup](../scripts/ci/setup-linux-audio.sh) before
 browser verification. The gate runs lint, typechecking, units, production builds,
-full Chromium integration and `test:package`. The package rehearsal includes strict
+full Chromium integration and `test:package`. Unit tests and release Chromium
+checks stop after their first failure so a blocked release does not run the
+remaining tests.
+The package rehearsal includes strict
 publint, archive inventory, a clean offline consumer install, SSR-safe imports,
 TypeScript examples, tree-shaking and packed Chromium host checks.
 

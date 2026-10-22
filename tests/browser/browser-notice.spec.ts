@@ -2,6 +2,15 @@ import { expect, test, type Page } from "@playwright/test";
 import { holdLightsaber, instrument, probe } from "./experience-probe";
 
 const home = "http://127.0.0.1:3100";
+
+test.beforeEach(async ({ page }) => {
+  // Local Next.js does not serve Vercel's analytics endpoint. Keep this
+  // third-party dependency outside the hydration and layout assertions.
+  await page.route(`${home}/_vercel/insights/script.js`, (route) =>
+    route.fulfill({ contentType: "application/javascript", body: "" }),
+  );
+});
+
 const copy =
   "AudioBits is currently tested in Chromium-based browsers. Other browsers are not yet verified.";
 const chromeUA =

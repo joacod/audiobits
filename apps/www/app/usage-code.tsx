@@ -29,7 +29,8 @@ export function UsageCode({
       <button
         type="button"
         aria-label={`Copy ${slug} code`}
-        disabled={!ready || disabled || copying}
+        disabled={!ready || disabled}
+        aria-disabled={copying}
         onClick={() =>
           void copy(
             code,

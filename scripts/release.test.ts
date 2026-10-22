@@ -102,7 +102,7 @@ test("routine CI preserves quality, packed consumers and fail-fast Chromium smok
   const releaseGate = scripts["release:prepare"].split(" && ");
   expect(releaseGate[0]).toBe("pnpm verify:core");
   expect(releaseGate.indexOf("pnpm build:prepared")).toBeLessThan(
-    releaseGate.indexOf("pnpm test:browser:full:prepared"),
+    releaseGate.indexOf("pnpm test:browser:full:prepared --max-failures=1"),
   );
   expect(releaseGate.at(-1)).toBe("pnpm test:package:prepared");
   const chromium = ci.jobs["chromium-integration"];
@@ -119,11 +119,12 @@ test("routine CI preserves quality, packed consumers and fail-fast Chromium smok
   );
   expect(scripts["test:browser:smoke:prepared"]).toContain("--grep @smoke");
   expect(scripts["test:browser:smoke:prepared"]).toContain("--max-failures=1");
+  expect(scripts["test"]).toContain("vitest run --bail=1");
   expect(scripts["test:package:prepared"]).toBe(
     "node scripts/test-package.mjs",
   );
   expect(scripts["release:prepare"]).toContain(
-    "pnpm test:browser:full:prepared",
+    "pnpm test:browser:full:prepared --max-failures=1",
   );
   expect(scripts["release:prepare"]).toContain("pnpm test:package:prepared");
   expect(scripts["test:browser:full:prepared"]).toBe("playwright test");
