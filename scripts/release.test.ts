@@ -332,7 +332,7 @@ test("published package identifies the GitHub repository and monorepo directory"
   );
   expect(manifest.repository).toEqual({
     type: "git",
-    url: "https://github.com/joacod/audiobits.git",
+    url: "git+https://github.com/joacod/audiobits.git",
     directory: "packages/audiobits",
   });
 });
