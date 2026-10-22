@@ -114,6 +114,24 @@ test("perform, miss, lift on a bar line, stop, replay, hide and leave cleanly @s
   await expect(stage).toHaveAttribute("data-ready", "true");
   await expect(stage).toHaveAttribute("data-phase", "idle");
   expect((await probe(page)).contexts).toEqual([]);
+  // Timestamp the audible tier change in the browser task that publishes it.
+  // A later Playwright poll may observe that frame well after the bar line.
+  await stage.evaluate((surface) => {
+    const changes: { tier: string; at: number }[] = [];
+    Object.assign(globalThis, { riffTierChanges: changes });
+    new MutationObserver(() => {
+      const context = (
+        globalThis as unknown as { thrusterProbe: { contexts: AudioContext[] } }
+      ).thrusterProbe.contexts.at(-1);
+      if (!context) return;
+      changes.push({
+        tier: surface.dataset.tier!,
+        at:
+          context.currentTime -
+          ((context.baseLatency || 0) + (context.outputLatency || 0)),
+      });
+    }).observe(surface, { attributes: true, attributeFilter: ["data-tier"] });
+  });
   await stage.focus();
   await stage.press("Enter");
   await expect(stage).toHaveAttribute("data-phase", "playing");
@@ -127,13 +145,12 @@ test("perform, miss, lift on a bar line, stop, replay, hide and leave cleanly @s
   await expect(stage).toHaveAttribute("data-misses", "0");
   await expect(stage).toHaveAttribute("data-tier", "1", { timeout: 4000 });
   const lifted = await page.evaluate(() => {
-    const context = (
-      globalThis as unknown as { thrusterProbe: { contexts: AudioContext[] } }
-    ).thrusterProbe.contexts.at(-1)!;
-    return (
-      context.currentTime -
-      ((context.baseLatency || 0) + (context.outputLatency || 0))
-    );
+    const changes = (
+      globalThis as unknown as {
+        riffTierChanges: { tier: string; at: number }[];
+      }
+    ).riffTierChanges;
+    return changes.find((change) => change.tier === "1")!.at;
   });
   // The audible lift lands on a downbeat, within a frame or two.
   const beat = (lifted - first) / secondsPerBeat;
