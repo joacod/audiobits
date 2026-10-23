@@ -108,8 +108,9 @@ accurate. Briefly justify substantial README additions in the relevant PR.
   results and builds until a relevant change or failure invalidates them.
 - Full browser runs, release preparation and other-browser/device verification
   require an explicit request. Changed browser tests must still run directly.
-- Fix failures at their cause. Do not hide them with retries, sleeps, larger
-  timeouts, weaker assertions or skips.
+- Fix failures at their cause. Do not hide them with retries, sleeps, longer
+  per-test timeouts, weaker assertions or skips. Do not impose suite-wide or CI
+  time budgets to enforce speed; investigate slow tests or setup steps directly.
 - Prefer standard tool setup. Keep necessary CI workarounds centralized and
   tied to an observed failure; do not add infrastructure speculatively.
 

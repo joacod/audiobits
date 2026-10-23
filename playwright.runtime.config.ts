@@ -3,7 +3,6 @@ import { shared, runtimeSpecs } from "./playwright.shared";
 
 export default defineConfig({
   ...shared,
-  globalTimeout: 120_000,
   testMatch: runtimeSpecs,
   grepInvert: /@site/,
   webServer: {

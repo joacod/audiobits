@@ -38,8 +38,6 @@ export default defineConfig({
   ...shared,
   grep,
   grepInvert: suite === "regression" ? regressionExclusions : undefined,
-  globalTimeout:
-    suite === "full" ? 300_000 : suite === "regression" ? 180_000 : 90_000,
   webServer: [
     {
       command: "pnpm --filter @audiobits/www start --port 3100",

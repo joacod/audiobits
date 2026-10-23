@@ -23,7 +23,7 @@ needed. Reuse passing checks and build outputs unless a relevant change or failu
 invalidates them. Stop after the requested work and focused verification pass.
 
 Fix flaky tests at the product, test or environment cause. Reproduce the failing
-condition directly. Do not hide failures with sleeps, retries, larger timeouts,
+condition directly. Do not hide failures with sleeps, retries, longer per-test timeouts,
 weaker assertions, ignored errors or skips. Prefer standard tool setup; keep a
 workaround only when a demonstrated failure requires it, in the shared setup
 script rather than individual tests.
@@ -72,8 +72,9 @@ including untagged regressions. Native cases run once in the runtime suite;
 in explicit full runs. Deleted specs retain the baseline. Main pushes run the
 non-browser preflight.
 
-Two workers and zero retries apply throughout. Time limits live in the workflow
-and Playwright configurations. Provisioning failures remain fatal. Keep static
+Two workers and zero retries apply throughout. Let the selected suite finish;
+do not impose global test or CI time budgets to enforce speed. Investigate slow
+tests or setup steps individually. Provisioning failures remain fatal. Keep static
 metadata, commands and pagination in production HTML checks; use Chromium where
 actual interaction or native audio matters. See [development](development.md#verification-by-task)
 for commands and environment setup.

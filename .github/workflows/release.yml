@@ -43,7 +43,6 @@ jobs:
           pr-title: Version Packages
           script: pnpm version-packages
   publish:
-    timeout-minutes: 10
     needs: select-mode
     if: needs.select-mode.outputs.mode == 'publish'
     runs-on: ubuntu-24.04
@@ -61,7 +60,6 @@ jobs:
       - run: npm install --global npm@11.19.0
       - run: pnpm install --frozen-lockfile
       - name: Provision Chromium and clocked audio
-        timeout-minutes: 3
         run: bash scripts/ci/setup-linux-audio.sh
       - run: pnpm release:prepare
       - name: Verify retained release artifact

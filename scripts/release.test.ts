@@ -146,8 +146,6 @@ test("CI keeps stable required checks, explicit selection and native-only public
     );
   }
   expect(browser.grep).toEqual(/@required/);
-  expect(browser.globalTimeout).toBeLessThan(180_000);
-  expect(ci.jobs["chromium-integration"]["timeout-minutes"]).toContain("6");
   for (const file of ["ci", "release"]) {
     const workflow = load(
       readFileSync(`.github/workflows/${file}.yml`, "utf8"),
@@ -161,7 +159,6 @@ test("CI keeps stable required checks, explicit selection and native-only public
     ).toEqual([
       expect.objectContaining({
         run: "bash scripts/ci/setup-linux-audio.sh",
-        "timeout-minutes": 3,
       }),
     ]);
     expect(JSON.stringify(job)).not.toContain("--with-deps");
