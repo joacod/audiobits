@@ -268,7 +268,7 @@ test("landing copy failure keeps the command available for manual copying", asyn
   ).toBe(true);
 });
 
-test("landing stays silent until holding, measures real output and disposes on navigation", async ({
+test("landing stays silent until holding and resets audio-reactive feedback on release", async ({
   page,
 }) => {
   const errors: string[] = [];
@@ -345,7 +345,25 @@ test("landing stays silent until holding, measures real output and disposes on n
     maximumHeat: 0,
     level: 0,
   });
+  expect(errors).toEqual([]);
+});
+
+// Navigation cleanup is independent of the full visual feedback/release cycle.
+// Keep it in a fresh page so their combined render cost cannot exhaust one test.
+test("keyboard navigation while holding closes landing audio and disconnects nodes", async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on("pageerror", (cause) => errors.push(cause.message));
+  await instrument(page, "normal", "/");
   await holdLightsaber(page);
+  await expect
+    .poll(async () =>
+      Number(
+        await page.locator(".lightsaber-canvas").getAttribute("data-peak"),
+      ),
+    )
+    .toBeGreaterThan(0);
   await page
     .getByRole("navigation", { name: "Main navigation" })
     .getByRole("link", { name: "Docs", exact: true })
