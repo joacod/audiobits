@@ -1,6 +1,6 @@
 {
   "repository": "https://github.com/joacod/audiobits",
-  "revision": "4949760175901e6cd50a508c4eb5f853c315d827",
+  "revision": "4e3ed90e8d4784e0fddd07ee4411c567e19fe5ed",
   "items": [
     {
       "name": "confirmation",
@@ -42,7 +42,7 @@
           "sha256": "c5beb8e75c60d9096c51af98d608d538c5503c68a8e88de7db2af97128a80bc1"
         }
       ],
-      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/4949760175901e6cd50a508c4eb5f853c315d827/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/4e3ed90e8d4784e0fddd07ee4411c567e19fe5ed/catalog/README.md for integration and update guidance."
     },
     {
       "name": "echo-probe",
@@ -112,7 +112,7 @@
           "sha256": "b6b9cc6943797a4cc173c5ffeddc08c1041af85b693fcf9bb2e26ec89d3489e5"
         }
       ],
-      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/4949760175901e6cd50a508c4eb5f853c315d827/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/4e3ed90e8d4784e0fddd07ee4411c567e19fe5ed/catalog/README.md for integration and update guidance."
     },
     {
       "name": "energy-charge",
@@ -175,7 +175,7 @@
           "sha256": "201bd9a384a12b2d7aae89080adfc088b526650ed65acf157afb64718052b241"
         }
       ],
-      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/4949760175901e6cd50a508c4eb5f853c315d827/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/4e3ed90e8d4784e0fddd07ee4411c567e19fe5ed/catalog/README.md for integration and update guidance."
     },
     {
       "name": "gentle-rejection",
@@ -217,7 +217,7 @@
           "sha256": "f939d15effe7d65e5b41ed95b67ecd60ab6b6a3f7593573d5d940ad332565637"
         }
       ],
-      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/4949760175901e6cd50a508c4eb5f853c315d827/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/4e3ed90e8d4784e0fddd07ee4411c567e19fe5ed/catalog/README.md for integration and update guidance."
     },
     {
       "name": "glass-notification",
@@ -259,7 +259,7 @@
           "sha256": "932b43c2d6bbd659a866a828166c033589222cfd7d5b27610769543aeea04412"
         }
       ],
-      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/4949760175901e6cd50a508c4eb5f853c315d827/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/4e3ed90e8d4784e0fddd07ee4411c567e19fe5ed/catalog/README.md for integration and update guidance."
     },
     {
       "name": "impact",
@@ -301,7 +301,7 @@
           "sha256": "ea7aa0c269286becd7dc0414263d2d3af08106de80269b6dc71a6e1bf6b36f1b"
         }
       ],
-      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/4949760175901e6cd50a508c4eb5f853c315d827/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/4e3ed90e8d4784e0fddd07ee4411c567e19fe5ed/catalog/README.md for integration and update guidance."
     },
     {
       "name": "lightsaber",
@@ -364,7 +364,7 @@
           "sha256": "a17fe29dadc24b0cb649373dc48f4e6fd5f3b521908d091db5f3f87ac468baed"
         }
       ],
-      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/4949760175901e6cd50a508c4eb5f853c315d827/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/4e3ed90e8d4784e0fddd07ee4411c567e19fe5ed/catalog/README.md for integration and update guidance."
     },
     {
       "name": "power-up",
@@ -406,7 +406,7 @@
           "sha256": "03c025d4b143d7b7ce1c58266b8b1048b4f186e6b60457fcccf0fbf8bb6ed8cb"
         }
       ],
-      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/4949760175901e6cd50a508c4eb5f853c315d827/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/4e3ed90e8d4784e0fddd07ee4411c567e19fe5ed/catalog/README.md for integration and update guidance."
     },
     {
       "name": "reactive-thruster",
@@ -469,7 +469,7 @@
           "sha256": "44576ecd2ad32f5591a350070293414f10c4db49e0af11b293e5bca642108512"
         }
       ],
-      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/4949760175901e6cd50a508c4eb5f853c315d827/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/4e3ed90e8d4784e0fddd07ee4411c567e19fe5ed/catalog/README.md for integration and update guidance."
     },
     {
       "name": "riff-reactor",
@@ -521,25 +521,46 @@
           "path": "catalog/experiences/riff-reactor/song.ts",
           "type": "registry:file",
           "target": "~/src/sounds/experiences/riff-reactor/song.ts",
-          "bytes": 8621,
-          "sha256": "9cb50986f8bb833a2f0411318ada8545f6e1cd28331e38919db7d79a914006b8"
+          "bytes": 9194,
+          "sha256": "0c6963328802d04aa71e74517ea2f4cf3d0a8ebffb2a49049d3200d16e34c780"
         },
         {
           "path": "catalog/experiences/riff-reactor/controller.ts",
           "type": "registry:file",
           "target": "~/src/sounds/experiences/riff-reactor/controller.ts",
-          "bytes": 15024,
-          "sha256": "ba28cecfc139cfb966882e51310f3c012be0bd8f480ff8893202f7f683526dca"
+          "bytes": 14496,
+          "sha256": "f0383c90f00bfb80a2a8631f9c267737c0d9c6e8cd8d50aa95cb13fd620d59f0"
+        },
+        {
+          "path": "catalog/experiences/riff-reactor/music.ts",
+          "type": "registry:file",
+          "target": "~/src/sounds/experiences/riff-reactor/music.ts",
+          "bytes": 3268,
+          "sha256": "3335f09073f2d1562fff550461b94af8b58ef9f8f9589cadbddb5e1c0f647831"
+        },
+        {
+          "path": "catalog/experiences/riff-reactor/instrument.ts",
+          "type": "registry:file",
+          "target": "~/src/sounds/experiences/riff-reactor/instrument.ts",
+          "bytes": 1402,
+          "sha256": "968ce1d8ba41951665e3d2ad7b6c478a691c64f5ebd7fdc8b8737ed256bf9862"
+        },
+        {
+          "path": "catalog/experiences/riff-reactor/instruments.ts",
+          "type": "registry:file",
+          "target": "~/src/sounds/experiences/riff-reactor/instruments.ts",
+          "bytes": 540,
+          "sha256": "866c1eb1682919ee3d683cd4c3fdbb1fe312dc537cf8b9bba111e4b0a30e3be3"
         },
         {
           "path": "catalog/experiences/riff-reactor/README.md",
           "type": "registry:file",
           "target": "~/src/sounds/experiences/riff-reactor/README.md",
-          "bytes": 5554,
-          "sha256": "30c01e2dc4b3eb2da230bc2a7801f9a15af9c667a70a860aba74229643c41551"
+          "bytes": 8643,
+          "sha256": "5edbe47cde49f762cff6de7fc147205be518c896c5b70de78ff1d1f2e73ee1ab"
         }
       ],
-      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/4949760175901e6cd50a508c4eb5f853c315d827/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/4e3ed90e8d4784e0fddd07ee4411c567e19fe5ed/catalog/README.md for integration and update guidance."
     },
     {
       "name": "tactile-click",
@@ -581,7 +602,7 @@
           "sha256": "edd22c158c223e275e5d7d11edc22a0748823bc5ddb6f97b7f511653ee607479"
         }
       ],
-      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/4949760175901e6cd50a508c4eb5f853c315d827/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/4e3ed90e8d4784e0fddd07ee4411c567e19fe5ed/catalog/README.md for integration and update guidance."
     },
     {
       "name": "the-rift",
@@ -646,7 +667,7 @@
           "sha256": "dedc94c16bbd17d9e3b0a73c6eead04cdb020485dae239b0f61e2381161f45fa"
         }
       ],
-      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/4949760175901e6cd50a508c4eb5f853c315d827/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/4e3ed90e8d4784e0fddd07ee4411c567e19fe5ed/catalog/README.md for integration and update guidance."
     },
     {
       "name": "thruster",
@@ -693,7 +714,7 @@
           "sha256": "6531d046a375451d7f25afff12a239aacae3d9bebfdf14d20801202013a13a7e"
         }
       ],
-      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/4949760175901e6cd50a508c4eb5f853c315d827/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/4e3ed90e8d4784e0fddd07ee4411c567e19fe5ed/catalog/README.md for integration and update guidance."
     },
     {
       "name": "whoosh",
@@ -735,7 +756,7 @@
           "sha256": "ae1552191f4ff969833ea0bad24701c920f6b7defaa5902d38bbf46a0321c7e6"
         }
       ],
-      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/4949760175901e6cd50a508c4eb5f853c315d827/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/4e3ed90e8d4784e0fddd07ee4411c567e19fe5ed/catalog/README.md for integration and update guidance."
     }
   ]
 }
