@@ -213,6 +213,30 @@ test("every composed note is inside its recipe's parameter range", () => {
   // About 60 seconds: 32 bars of 4/4 at 128 BPM, then a closing downbeat.
   expect((song.bars * song.beatsPerBar * 60) / song.bpm).toBe(60);
   expect(song.lead.length).toBeGreaterThan(100);
+  for (let i = 0; i < song.lead.length - 1; i++) {
+    const note = song.lead[i];
+    expect(note.length).toBeGreaterThan(0);
+    expect(note.beat + note.length).toBeLessThanOrEqual(song.lead[i + 1].beat);
+  }
+});
+
+test("the opening accompaniment leaves room for the lead even at top intensity", () => {
+  const events = bandEvents(song);
+  const opening = events.filter(({ beat }) => beat >= 16 && beat < 32);
+  expect(new Set(opening.map(({ track }) => track))).toEqual(
+    new Set(["kick", "snare", "hat", "bass", "pad", "crash"]),
+  );
+  expect(opening.every(({ tier }) => tier === 0)).toBe(true);
+  expect(
+    opening
+      .filter(({ track }) => track === "bass")
+      .every(({ beat }) => Number.isInteger(beat)),
+  ).toBe(true);
+  expect(
+    events.some(
+      ({ beat, track }) => beat >= 32 && beat < 48 && track === "arp",
+    ),
+  ).toBe(true);
 });
 
 test("sound source imports only the runtime and its own sound files", () => {
@@ -289,16 +313,16 @@ test("the band plays every event once on its exact audio-clock time, booked only
 test("intensity changes only at bar starts", async () => {
   const s = setup();
   const transport = s.riff.start()!;
-  // Mid-bar in the verse (bar 5, beat 2.6).
-  await s.advance(transport.timeAt(18.6) - s.clock.currentTime);
+  // Mid-bar in the developed verse (bar 9, beat 2.6).
+  await s.advance(transport.timeAt(34.6) - s.clock.currentTime);
   s.riff.setIntensity(2);
-  expect(s.intensities.at(-1)).toEqual([2, transport.timeAt(20)]);
+  expect(s.intensities.at(-1)).toEqual([2, transport.timeAt(36)]);
   expect(s.riff.intensity).toEqual({ current: 0, pending: 2 });
-  await s.advance(transport.timeAt(21.3) - s.clock.currentTime);
+  await s.advance(transport.timeAt(37.3) - s.clock.currentTime);
   expect(s.riff.intensity).toEqual({ current: 2, pending: undefined });
   s.riff.setIntensity(0);
-  expect(s.intensities.at(-1)).toEqual([0, transport.timeAt(24)]);
-  await s.advance(transport.timeAt(40) - s.clock.currentTime);
+  expect(s.intensities.at(-1)).toEqual([0, transport.timeAt(40)]);
+  await s.advance(transport.timeAt(48) - s.clock.currentTime);
   const tierOf = (voice: {
     track: BandEvent["track"];
     options: { at?: number };
@@ -314,13 +338,13 @@ test("intensity changes only at bar starts", async () => {
     .filter((event) => event.tier > 0);
   expect(lifted.length).toBeGreaterThan(0);
   for (const event of lifted) {
-    expect(event.beat).toBeGreaterThanOrEqual(20);
-    expect(event.beat).toBeLessThan(24);
+    expect(event.beat).toBeGreaterThanOrEqual(36);
+    expect(event.beat).toBeLessThan(40);
   }
   // Every top-tier event of the lifted bar played.
   expect(lifted.length).toBe(
     bandEvents(song).filter(
-      (event) => event.tier > 0 && event.beat >= 20 && event.beat < 24,
+      (event) => event.tier > 0 && event.beat >= 36 && event.beat < 40,
     ).length,
   );
   s.riff.dispose();

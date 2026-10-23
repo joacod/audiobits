@@ -73,7 +73,10 @@ judging matches what the player hears:
 
 `song.ts` holds _Reactor Core_, an original 60-second track in E minor at
 128 BPM: intro, verse, chorus, break and final chorus over 32 bars, then a
-closing downbeat. Every band event carries a minimum intensity tier. Tier 0 is
+closing downbeat. The verse opens with a repeated two-note motif and sparse
+backing at every tier, then adds quicker notes and the full rhythm section.
+The chorus develops that motif in a higher register, with extra runs saved for
+the final repeat. Every band event carries a minimum intensity tier. Tier 0 is
 drums, bass, pad and chorus chugs; tier 1 adds the arpeggio, open hats, ghost
 notes, bass octaves and verse chugs; tier 2 adds sixteenth hats, extra kicks,
 fills and pushes. `setIntensity()` lands on the next bar line that has not been

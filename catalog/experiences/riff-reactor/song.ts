@@ -74,6 +74,21 @@ for (let bar = 0; bar < roots.length; bar++) {
     if (bar === 3) hit(riser, at, 1, 0);
     continue;
   }
+  // Give the opening motif space at every intensity. The full rhythm section
+  // joins in the second half of the verse, after the repeated lead phrase.
+  if (section === "verse" && bar < 8) {
+    if (bar === 4) hit(crash, at, 0.65);
+    for (let beat = 0; beat < 4; beat++) {
+      hit(kick, at + beat, beat ? 0.8 : 0.9);
+      hit(hat, at + beat, 0.55);
+      hit(bass, at + beat, beat ? 0.75 : 0.9, 0, root);
+      if (bar >= 6) hit(hat, at + beat + 0.5, 0.35);
+    }
+    hit(snare, at + 1, 0.8);
+    hit(snare, at + 3, 0.85);
+    hit(pad, at, 0.55, 0, root, 4);
+    continue;
+  }
   if (section === "break") {
     hit(kick, at, 1);
     hit(kick, at + 2.5, 0.8);
@@ -93,7 +108,7 @@ for (let bar = 0; bar < roots.length; bar++) {
     continue;
   }
   const chorus = section === "chorus";
-  if (bar === 12 || bar === 24 || bar === 4) hit(crash, at, 0.9);
+  if (bar === 12 || bar === 24) hit(crash, at, 0.9);
   if (bar === 16 || bar === 28) hit(crash, at, 0.75, 1);
   for (let beat = 0; beat < 4; beat++) hit(kick, at + beat, beat ? 0.85 : 1);
   hit(kick, at + 2.5, 0.6, 2);
@@ -137,38 +152,46 @@ hit(stab, 128, 0.85, 0, E + 12);
 
 /** Lead phrases as [beat within the bar, length in beats, MIDI note]. */
 type Phrase = readonly (readonly [number, number, number])[];
+// Introduce the chorus's G-E shape in a lower register, repeat it, then add
+// quarter notes. The opening stays on the beat before introducing syncopation.
+const openingMotif: Phrase = [
+  [0, 2, 67],
+  [2, 2, 64],
+];
+const opening: Phrase[] = [
+  openingMotif,
+  openingMotif,
+  [
+    [0, 2, 67],
+    [2, 1, 64],
+    [3, 1, 67],
+  ],
+  [
+    [0, 2, 69],
+    [2, 1, 66],
+    [3, 1, 69],
+  ],
+];
+// Develop the same hook before its octave lift into the chorus.
 const verse: Phrase[] = [
   [
-    [0, 0.5, 64],
-    [0.5, 0.5, 67],
-    [1, 0.5, 69],
-    [1.5, 1, 71],
-    [2.5, 0.5, 69],
-    [3, 0.5, 67],
-    [3.5, 0.5, 69],
+    [0, 1.5, 67],
+    [1.5, 0.5, 64],
+    [2, 1, 67],
+    [3, 1, 69],
   ],
   [
     [0, 1.5, 71],
-    [1.5, 0.5, 74],
-    [2, 1, 71],
-    [3, 0.5, 69],
-    [3.5, 0.5, 67],
-  ],
-  [
-    [0, 0.5, 64],
-    [0.5, 0.5, 67],
-    [1, 1, 72],
-    [2, 0.5, 71],
-    [2.5, 0.5, 67],
+    [1.5, 0.5, 69],
+    [2, 1, 67],
     [3, 1, 64],
   ],
   [
-    [0, 0.5, 66],
-    [0.5, 0.5, 69],
-    [1, 1, 74],
-    [2, 0.5, 72],
-    [2.5, 0.5, 71],
-    [3, 1, 69],
+    [0, 1, 67],
+    [1, 1, 72],
+    [2, 0.5, 71],
+    [2.5, 0.5, 69],
+    [3, 1, 67],
   ],
 ];
 const verseLift: Phrase = [
@@ -211,6 +234,32 @@ const chorusTurn: Phrase = [
   [1.5, 0.5, 78],
   [2, 2, 76],
 ];
+// Save the extra runs for the last repeat, keeping the chorus's main accents.
+const finalChorus: Phrase[] = [
+  [
+    [0, 1.5, 79],
+    [1.5, 0.5, 76],
+    [2, 1, 79],
+    [3, 0.5, 81],
+    [3.5, 0.5, 79],
+  ],
+  [
+    [0, 1.5, 83],
+    [1.5, 0.5, 81],
+    [2, 0.5, 79],
+    [2.5, 0.5, 78],
+    [3, 0.5, 76],
+    [3.5, 0.5, 74],
+  ],
+  [
+    [0, 1, 78],
+    [1, 0.5, 81],
+    [1.5, 0.5, 79],
+    [2, 0.5, 78],
+    [2.5, 0.5, 76],
+    [3, 1, 74],
+  ],
+];
 const finalTurn: Phrase = [
   [0, 1, 79],
   [1, 1, 81],
@@ -237,15 +286,15 @@ const breakdown: Phrase[] = [
   ],
 ];
 const leadBars: Phrase[] = [
+  ...opening,
   ...verse,
-  ...verse.slice(0, 3),
   verseLift,
   ...chorus,
   ...chorus.slice(0, 3),
   chorusTurn,
   ...breakdown,
   ...chorus,
-  ...chorus.slice(0, 3),
+  ...finalChorus,
   finalTurn,
 ];
 const lead: RiffNote[] = leadBars.flatMap((phrase, index) =>

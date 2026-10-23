@@ -31,6 +31,26 @@ test("lanes follow melodic contour and every lead note is charted once", () => {
   expect(new Set(chart.map((note) => note.lane))).toEqual(new Set([0, 1, 2]));
 });
 
+test("the opening teaches a repeatable lane pattern before the faster phrases", () => {
+  const bars = Array.from({ length: song.bars }, (_, bar) =>
+    chart.filter((note) => note.beat >= bar * 4 && note.beat < (bar + 1) * 4),
+  );
+  const pattern = (bar: number) =>
+    bars[bar].map(({ beat, lane }) => [beat - bar * 4, lane]);
+  // Two unhurried passes through the same input pattern, then quarter notes.
+  expect(bars[4]).toHaveLength(2);
+  expect(pattern(5)).toEqual(pattern(4));
+  for (const bar of bars.slice(4, 8)) {
+    expect(bar.length).toBeLessThanOrEqual(3);
+    for (let i = 1; i < bar.length; i++)
+      expect(bar[i].beat - bar[i - 1].beat).toBeGreaterThanOrEqual(1);
+  }
+  const density = (from: number, to: number) =>
+    bars.slice(from, to).flat().length;
+  expect(density(8, 12)).toBeGreaterThan(density(4, 8));
+  expect(density(28, 32)).toBeGreaterThan(density(12, 16));
+});
+
 test("presses at the edges of the hit window on the audio clock hit, outside miss", () => {
   const first = chart[0];
   for (const [offset, kind] of [
