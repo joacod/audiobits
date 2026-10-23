@@ -50,6 +50,7 @@ jobs:
   chromium-integration:
     needs: select-scope
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
     env:
       CHECK_SCOPE: ${{ needs.select-scope.outputs.scope }}
     steps:
@@ -69,10 +70,14 @@ jobs:
           key: ${{ runner.os }}-${{ runner.arch }}-next-${{ hashFiles('.node-version', 'pnpm-lock.yaml') }}-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-${{ runner.arch }}-next-${{ hashFiles('.node-version', 'pnpm-lock.yaml') }}-
-      - if: fromJSON(env.CHECK_SCOPE).package || fromJSON(env.CHECK_SCOPE).consumers || fromJSON(env.CHECK_SCOPE).site
-        run: pnpm exec playwright install --with-deps --only-shell chromium
-      - if: fromJSON(env.CHECK_SCOPE).package || fromJSON(env.CHECK_SCOPE).consumers || fromJSON(env.CHECK_SCOPE).site
+      - name: Configure Linux audio and package mirror
+        if: fromJSON(env.CHECK_SCOPE).package || fromJSON(env.CHECK_SCOPE).consumers || fromJSON(env.CHECK_SCOPE).site
+        timeout-minutes: 3
         run: bash scripts/ci/setup-linux-audio.sh
+      - name: Install Chromium and system dependencies
+        if: fromJSON(env.CHECK_SCOPE).package || fromJSON(env.CHECK_SCOPE).consumers || fromJSON(env.CHECK_SCOPE).site
+        timeout-minutes: 5
+        run: pnpm exec playwright install --with-deps --only-shell chromium
       - run: node scripts/ci/run-checks.mjs browser
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: failure()

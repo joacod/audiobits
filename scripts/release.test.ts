@@ -105,6 +105,20 @@ test("CI keeps stable required checks, explicit selection and native-only public
   expect(selectorNode.with["package-manager-cache"]).toBe(false);
   expect(selectorNode.with.cache).toBeUndefined();
   expect(ci.jobs.checks.if).toBe("always()");
+  expect(ci.jobs["chromium-integration"]["timeout-minutes"]).toBe(15);
+  const browserSteps = ci.jobs["chromium-integration"].steps;
+  const audioSetup = browserSteps.findIndex(
+    ({ run }: { run?: string }) =>
+      run === "bash scripts/ci/setup-linux-audio.sh",
+  );
+  const browserSetup = browserSteps.findIndex(
+    ({ run }: { run?: string }) =>
+      run === "pnpm exec playwright install --with-deps --only-shell chromium",
+  );
+  expect(audioSetup).toBeGreaterThan(-1);
+  expect(browserSetup).toBeGreaterThan(audioSetup);
+  expect(browserSteps[audioSetup]["timeout-minutes"]).toBe(3);
+  expect(browserSteps[browserSetup]["timeout-minutes"]).toBe(5);
   expect(ci.jobs.checks.needs).toEqual(
     expect.arrayContaining(["select-scope", "quality", "chromium-integration"]),
   );
@@ -257,6 +271,24 @@ test("production release isolates direct npm publication from GitHub finalizatio
     expect(runs.indexOf(setup)).toBeGreaterThan(-1);
     expect(runs.indexOf(setup)).toBeLessThan(gate);
   }
+  expect(runs.indexOf("bash scripts/ci/setup-linux-audio.sh")).toBeLessThan(
+    runs.indexOf(
+      "pnpm exec playwright install --with-deps --only-shell chromium",
+    ),
+  );
+  expect(
+    steps.find(
+      ({ run }: { run?: string }) =>
+        run === "bash scripts/ci/setup-linux-audio.sh",
+    )["timeout-minutes"],
+  ).toBe(3);
+  expect(
+    steps.find(
+      ({ run }: { run?: string }) =>
+        run ===
+        "pnpm exec playwright install --with-deps --only-shell chromium",
+    )["timeout-minutes"],
+  ).toBe(5);
   expect(
     steps.find(({ uses }: { uses?: string }) =>
       uses?.startsWith("actions/setup-node@"),
