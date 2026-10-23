@@ -557,8 +557,20 @@ test("simple catalog entry avoids immersive renderer requests while immersive en
       };
       page.on("response", record);
       await page.goto(`${home}/catalog/${slug}`);
-      await expect(page.locator(".catalog-stage")).toBeVisible();
       await page.waitForLoadState("networkidle");
+      // Immersive routes replace the loading placeholder with a named stage.
+      // Assert the loaded UI so fast hydration cannot make this check miss it.
+      const stage =
+        slug === "confirmation"
+          ? page.locator(".catalog-stage")
+          : page.getByRole("group", {
+              name:
+                slug === "echo-vision"
+                  ? "Echo Vision stage"
+                  : "Lightsaber stage",
+              exact: true,
+            });
+      await expect(stage).toBeVisible();
       page.off("response", record);
       const code = (
         await Promise.all(scripts.map((response) => response.text()))
