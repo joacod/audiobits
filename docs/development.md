@@ -92,8 +92,9 @@ pnpm --filter @audiobits/vanilla dev
 | `pnpm test:site-output`  | Existing production HTML metadata, commands and pagination contracts               |
 | `pnpm test:mcp`          | Offline MCP units and stdio protocol with packed external runtime                  |
 | `pnpm test:mcp:github`   | Explicit live GitHub source retrieval through the MCP protocol                     |
-| `pnpm verify:local`      | Shared non-browser CI preflight, including library build                           |
-| `pnpm hooks:install`     | One-time local staged formatting/lint hook installation                            |
+| `pnpm verify:push`       | Local lint, formatting, links, library build and workspace types                   |
+| `pnpm verify:local`      | Push checks plus units/contracts, Skill consistency and MCP tests                  |
+| `pnpm hooks:install`     | Install or repair the local pre-commit and pre-push hooks                          |
 | `pnpm test:browser:full` | Build and run all retained Chromium regressions                                    |
 | `pnpm test:browser`      | Build and run native runtime plus the bounded required website suite               |
 | `pnpm release:prepare`   | Explicit candidate verification: package units/types, native Chromium and artifact |
@@ -111,19 +112,32 @@ pnpm test:browser
 
 ## Local hooks and preflight
 
-Run `pnpm hooks:install` once per clone with the supported Node and pnpm on PATH.
-The repository-local pre-commit hook uses Git, Node, ESLint and Prettier, without
+`pnpm install` installs the repository hooks through the root `prepare` script;
+CI and source archives without `.git` skip hook installation. If install scripts
+were disabled, run `pnpm hooks:install` explicitly. Keep the supported Node and
+pnpm on PATH. The pre-commit hook uses Git, Node, ESLint and Prettier, without
 an extra framework. It checks relevant staged contents, including partially
 staged files, without rewriting or staging edits. Deleted and ignored files are
 excluded. Format/lint failures require fixing and staging the intended changes.
-An existing custom `core.hooksPath` is preserved; integrate
-`node scripts/check-staged.mjs` there instead. Uninstall with
+The pre-push hook runs `pnpm verify:push` once for the push and stops on failure.
+It requires a clean checkout, including non-ignored untracked files, and verifies
+that every pushed commit is the checked-out HEAD. Commit or stash edits and check
+out the branch being pushed first. Branch/tag deletions need no checks. It also
+rejects changes to HEAD or source files made during verification. No cached pass
+or automatic stashing is used.
+
+An existing custom `core.hooksPath`, pre-commit or pre-push hook is preserved;
+installation reports the conflict. Integrate the repository hook entrypoints
+there, preserving pre-push stdin. Uninstall with
 `git config --local --unset core.hooksPath` if it points to `.githooks`.
 The hook uses a POSIX shell (macOS/Linux or Git's shell); other environments have
-not been verified. No slow pre-push hook is installed.
+not been verified. Local hooks can be bypassed and do not run for GitHub web
+edits or automated PRs; they are local enforcement, not a hosted attestation.
 
-Before code PRs, run `pnpm verify:local` and affected browser/package checks.
-CI uses the same preflight. For prepared, unchanged outputs, `:prepared` commands
+Keep PRs in draft while working, run focused tests for the affected behavior,
+then mark ready to start CI. `pnpm verify:local` remains available for a complete
+non-browser preflight. CI runs scoped tests and builds without repeating
+standalone lint or workspace typechecking. For prepared, unchanged outputs, `:prepared` commands
 avoid rebuilding: run `pnpm prepare:browser` once, then
 `pnpm test:browser:prepared`, `pnpm test:browser:full:prepared` or a focused
 `AUDIOBITS_BROWSER_SUITE=regression pnpm exec playwright test <file> --grep='test title'`. `pnpm test:package:prepared` requires a current

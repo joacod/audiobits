@@ -195,11 +195,8 @@ test("new and modified regression files are explicit without requiring a baselin
 });
 
 test("only explicit manual runs select extended browser evidence", () => {
-  expect(scopeForEvent("push")).toMatchObject({
-    kind: "main",
-    site: false,
-    extended: false,
-  });
+  expect(() => scopeForEvent("push")).toThrow("Unsupported CI event");
+  expect(() => scopeForEvent(undefined)).toThrow("Unsupported CI event");
   expect(scopeForEvent("workflow_dispatch")).toMatchObject({
     package: true,
     consumers: true,
@@ -390,6 +387,82 @@ test("the CI runner executes untagged regression files and propagates command fa
     const failed = run("build:lib");
     expect(failed.status).toBe(9);
     expect(readFileSync(record, "utf8").trim().split("\n")).toHaveLength(1);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test("CI keeps unit and distribution evidence without repeating local preflight or package units", () => {
+  const directory = mkdtempSync(join(tmpdir(), "audiobits-ci-phases-"));
+  const record = join(directory, "commands.jsonl");
+  writeFileSync(
+    join(directory, "pnpm"),
+    `#!${process.execPath}
+require('node:fs').appendFileSync(process.env.RECORD, JSON.stringify(process.argv.slice(2)) + '\\n');
+if (process.env.FAIL_COMMAND === process.argv[2]) process.exit(9);
+`,
+    { mode: 0o755 },
+  );
+  const run = (
+    scope: ReturnType<typeof selectScope>,
+    phase: string,
+    fail = "",
+  ) => {
+    writeFileSync(record, "");
+    const result = spawnSync(
+      process.execPath,
+      [resolve("scripts/ci/run-checks.mjs"), phase],
+      {
+        encoding: "utf8",
+        env: {
+          ...process.env,
+          PATH: `${directory}:${process.env.PATH}`,
+          CHECK_SCOPE: JSON.stringify(scope),
+          RECORD: record,
+          FAIL_COMMAND: fail,
+        },
+      },
+    );
+    const commands = readFileSync(record, "utf8")
+      .trim()
+      .split("\n")
+      .filter(Boolean)
+      .map((line) => JSON.parse(line) as string[]);
+    return { result, commands };
+  };
+  try {
+    const baseline = select("package.json");
+    const quality = run(baseline, "quality");
+    expect(quality.result.status, quality.result.stderr).toBe(0);
+    expect(quality.commands).toEqual([
+      ["build:lib"],
+      ["test"],
+      ["check:skill"],
+      ["test:mcp:prepared"],
+    ]);
+    const browser = run(baseline, "browser");
+    expect(browser.result.status, browser.result.stderr).toBe(0);
+    expect(browser.commands).toContainEqual(["test:package:prepared"]);
+    expect(browser.commands).toContainEqual(["test:consumers:prepared"]);
+    expect(browser.commands).toContainEqual(["build:prepared"]);
+    expect(browser.commands.flat()).not.toContain("verify:package:prepared");
+    const docs = run(select("README.md"), "quality");
+    expect(docs.result.status, docs.result.stderr).toBe(0);
+    expect(docs.commands).toEqual([
+      ["exec", "node", "scripts/check-doc-links.mjs"],
+    ]);
+    const artifact = run(select("packages/audiobits/README.md"), "quality");
+    expect(artifact.result.status, artifact.result.stderr).toBe(0);
+    expect(artifact.commands).toContainEqual([
+      "exec",
+      "vitest",
+      "run",
+      "packages/audiobits/tests",
+      "--bail=1",
+    ]);
+    const failed = run(baseline, "quality", "test");
+    expect(failed.result.status).toBe(9);
+    expect(failed.commands).toEqual([["build:lib"], ["test"]]);
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }

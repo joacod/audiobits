@@ -31,12 +31,20 @@ script rather than individual tests.
 ## Verification tiers
 
 - **Focused local checks:** run affected units, types or Chromium tests. Reuse
-  valid build outputs. `pnpm verify:local` shares CI's non-browser lint, formatting,
-  links, type, unit/contract, Skill and MCP checks. Run it before code PRs;
-  documentation-only edits can use focused static checks.
-- **Routine CI:** select affected boundaries from the PR merge base, including
-  renames and deletions. Require the aggregate `checks` status: scope selection,
-  `quality` and `chromium-integration` must all succeed.
+  valid build outputs. The pre-push hook runs `pnpm verify:push`: lint, formatting,
+  links, library build and workspace types against a clean checkout of the pushed
+  commit. `pnpm verify:local` additionally runs units/contracts, Skill consistency
+  and MCP checks when a full non-browser preflight is useful. Hooks do not replace
+  affected browser/package checks. Changed browser tests must run directly.
+- **Routine CI:** draft PRs do not run checks. Opening or updating a ready PR,
+  reopening it, or marking it ready selects affected boundaries from the PR merge
+  base, including renames and deletions. Returning to draft cancels an older run.
+  Require the aggregate `checks` status: scope selection, `quality` (units and
+  generated contracts) and `chromium-integration` (builds and integration) must all
+  succeed. Standalone lint and workspace typechecking run locally; builds and
+  installed-consumer contracts still compile types where required. Web edits and
+  automated PRs do not run local hooks, so CI does not certify their lint or full
+  workspace types. There is no duplicate Repository checks run after merging.
 - **Required browser baseline:** `pnpm test:browser` builds once and runs the
   existing native-runtime suite plus a bounded set of representative website
   journeys tagged `@required`. Keep this baseline small as the catalog grows.
@@ -56,21 +64,21 @@ without a per-experience browser ownership map. Shared, CI, dependency and unkno
 changes select the bounded baseline plus package, consumer and build checks.
 Mixed changes combine their checks; adding prose does not broaden browser coverage.
 
-| Changed boundary                   | Required evidence                                                                                    |
-| ---------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| README/contributor prose           | Formatting, lint and links; changed executable fences select the baseline and distribution checks    |
-| Package README or metadata only    | Package types/units and packed artifact, including the shipped README in Chromium                    |
-| Runtime/compiler/schema/API/build  | Package artifact, installed catalog/Skill consumers, native suite and website baseline               |
-| Catalog recipe/controller/registry | Contracts, installed consumers, production HTML, native suite and website baseline                   |
-| Website presentation/behavior      | Website types/build, production HTML, native suite and website baseline; no installed consumer sweep |
-| Skill/MCP                          | Generated consistency, protocol, installed examples, native suite and website baseline               |
-| Shared/CI/dependencies/unknown     | Local preflight, package artifact, consumers, production HTML and bounded browser baseline           |
+| Changed boundary                   | Required evidence                                                                                       |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| README/contributor prose           | Local formatting/lint/types and CI links; changed executable fences select baseline/distribution checks |
+| Package README or metadata only    | Package units and packed artifact, including the shipped README in Chromium                             |
+| Runtime/compiler/schema/API/build  | Package artifact, installed catalog/Skill consumers, native suite and website baseline                  |
+| Catalog recipe/controller/registry | Contracts, installed consumers, production HTML, native suite and website baseline                      |
+| Website presentation/behavior      | Website types/build, production HTML, native suite and website baseline; no installed consumer sweep    |
+| Skill/MCP                          | Generated consistency, protocol, installed examples, native suite and website baseline                  |
+| Shared/CI/dependencies/unknown     | Units/contracts, package artifact, consumers, production HTML and bounded browser baseline              |
 
 New or modified browser specs join the website baseline in one execution,
 including untagged regressions. Native cases run once in the runtime suite;
 `@site` cases in mixed files stay in the website run. `@extended` cases run only
-in explicit full runs. Deleted specs retain the baseline. Main pushes run the
-non-browser preflight.
+in explicit full runs. Deleted specs retain the baseline. Publication retains
+its independent main-branch workflow and complete candidate checks.
 
 Two workers and zero retries apply throughout. Let the selected suite finish;
 do not impose global test or CI time budgets to enforce speed. Investigate slow

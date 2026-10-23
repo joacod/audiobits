@@ -1,8 +1,7 @@
 name: Repository checks
 on:
-  push:
-    branches: [main]
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
   workflow_dispatch:
 permissions:
   contents: read
@@ -13,6 +12,7 @@ env:
   NEXT_TELEMETRY_DISABLED: "1"
 jobs:
   select-scope:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     runs-on: ubuntu-24.04
     outputs:
       scope: ${{ steps.scope.outputs.scope }}
@@ -35,14 +35,17 @@ jobs:
     runs-on: ubuntu-24.04
     env:
       CHECK_SCOPE: ${{ needs.select-scope.outputs.scope }}
+      PNPM_CACHE: ${{ fromJSON(needs.select-scope.outputs.scope).kind != 'docs' && 'pnpm' || '' }}
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
       - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version-file: .node-version
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+          cache: ${{ env.PNPM_CACHE }}
+          package-manager-cache: ${{ env.PNPM_CACHE == 'pnpm' }}
+      - if: fromJSON(env.CHECK_SCOPE).kind != 'docs'
+        run: pnpm install --frozen-lockfile
       # The snapshot check reads its pinned catalog commit, absent in depth-1 checkout.
       - if: fromJSON(env.CHECK_SCOPE).kind != 'docs' && fromJSON(env.CHECK_SCOPE).kind != 'artifact'
         run: git fetch --depth=1 origin "$(jq -r .revision tools/mcp/snapshot.json)"
@@ -82,7 +85,7 @@ jobs:
           path: test-results/
           retention-days: 7
   checks:
-    if: always()
+    if: always() && (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
     needs: [select-scope, quality, chromium-integration]
     runs-on: ubuntu-24.04
     steps:

@@ -83,6 +83,17 @@ test("CI keeps stable required checks, explicit selection and native-only public
   const scripts = JSON.parse(readFileSync("package.json", "utf8")).scripts;
   expect(ci.on).toHaveProperty("pull_request");
   expect(ci.on).toHaveProperty("workflow_dispatch");
+  expect(ci.on).not.toHaveProperty("push");
+  expect(ci.on.pull_request.types).toEqual([
+    "opened",
+    "synchronize",
+    "reopened",
+    "ready_for_review",
+    "converted_to_draft",
+  ]);
+  expect(ci.jobs["select-scope"].if).toBe(
+    "github.event_name != 'pull_request' || github.event.pull_request.draft == false",
+  );
   expect(ci.on.pull_request?.paths).toBeUndefined();
   expect(ci.on.pull_request?.["paths-ignore"]).toBeUndefined();
   for (const job of ["quality", "chromium-integration"]) {
@@ -104,7 +115,9 @@ test("CI keeps stable required checks, explicit selection and native-only public
   );
   expect(selectorNode.with["package-manager-cache"]).toBe(false);
   expect(selectorNode.with.cache).toBeUndefined();
-  expect(ci.jobs.checks.if).toBe("always()");
+  expect(ci.jobs.checks.if).toBe(
+    "always() && (github.event_name != 'pull_request' || github.event.pull_request.draft == false)",
+  );
   expect(ci.jobs.checks.needs).toEqual(
     expect.arrayContaining(["select-scope", "quality", "chromium-integration"]),
   );
