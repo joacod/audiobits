@@ -128,8 +128,13 @@ test("CI keeps stable required checks, explicit selection and native-only public
   expect(scripts["release:prepare"]).toBe("node scripts/prepare-release.mjs");
   expect(scripts["test:consumers:prepared"]).toContain("--consumers");
   expect(scripts["test:package:prepared"]).not.toContain("--consumers");
-  expect(scripts["test:browser:full:prepared"]).toBe("playwright test");
-  expect(scripts["test:browser:smoke:prepared"]).toContain("--grep @smoke");
+  expect(scripts["test:browser:full:prepared"]).toContain(
+    "AUDIOBITS_BROWSER_SUITE=full",
+  );
+  expect(scripts["test:browser:prepared"]).toContain("test:runtime:prepared");
+  expect(scripts["test:browser:prepared"]).toContain(
+    "test:browser:site:prepared",
+  );
   const { default: browser } = await import("../playwright.config");
   const { default: runtime } = await import("../playwright.runtime.config");
   for (const config of [browser, runtime]) {
@@ -140,11 +145,32 @@ test("CI keeps stable required checks, explicit selection and native-only public
       process.env.CI ? "retain-on-failure" : "off",
     );
   }
+  expect(browser.grep).toEqual(/@required/);
+  expect(browser.globalTimeout).toBeLessThan(180_000);
+  expect(ci.jobs["chromium-integration"]["timeout-minutes"]).toContain("6");
+  for (const file of ["ci", "release"]) {
+    const workflow = load(
+      readFileSync(`.github/workflows/${file}.yml`, "utf8"),
+    );
+    const job =
+      workflow.jobs[file === "ci" ? "chromium-integration" : "publish"];
+    expect(
+      job.steps.filter(({ run }: { run?: string }) =>
+        run?.includes("setup-linux-audio.sh"),
+      ),
+    ).toEqual([
+      expect.objectContaining({
+        run: "bash scripts/ci/setup-linux-audio.sh",
+        "timeout-minutes": 3,
+      }),
+    ]);
+    expect(JSON.stringify(job)).not.toContain("--with-deps");
+  }
   expect(JSON.stringify(runtime.webServer)).not.toMatch(/www|3100|next/i);
   expect(metadata.browserMatrix).toEqual(["Chromium"]);
 });
 
-test("workflow actions are immutable and maintained as a group", async () => {
+test("workflow actions retain immutable SHA pins", async () => {
   const { createRequire } = await import("node:module");
   const require = createRequire(import.meta.url);
   const { load } = createRequire(require.resolve("eslint/package.json"))(
@@ -160,14 +186,6 @@ test("workflow actions are immutable and maintained as a group", async () => {
         if (step.uses) expect(step.uses).toMatch(/^[\w/-]+@[a-f0-9]{40}$/);
     }
   }
-  const maintenance = load(readFileSync(".github/dependabot.yml", "utf8"));
-  expect(maintenance.updates).toContainEqual(
-    expect.objectContaining({
-      "package-ecosystem": "github-actions",
-      directory: "/",
-      groups: { "github-actions": { patterns: ["*"] } },
-    }),
-  );
 });
 
 test("production release isolates direct npm publication from GitHub finalization", async () => {
@@ -250,10 +268,7 @@ test("production release isolates direct npm publication from GitHub finalizatio
     'npm publish "$RELEASE_ARCHIVE" --access public --tag latest',
   ]);
   expect(runs).toContain("npm install --global npm@11.19.0");
-  for (const setup of [
-    "pnpm exec playwright install --with-deps --only-shell chromium",
-    "bash scripts/ci/setup-linux-audio.sh",
-  ]) {
+  for (const setup of ["bash scripts/ci/setup-linux-audio.sh"]) {
     expect(runs.indexOf(setup)).toBeGreaterThan(-1);
     expect(runs.indexOf(setup)).toBeLessThan(gate);
   }

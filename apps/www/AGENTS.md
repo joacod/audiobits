@@ -106,7 +106,9 @@ because their human purposes differ.
 - Changed website interaction: run the affected Chromium Playwright test(s).
 - Follow the root [testing policy](../../docs/validation.md#test-selection).
   When controls or gestures change, search browser tests for stale references
-  and run affected tests. Use the full suite for broad impact or explicit requests.
+  and run affected tests with `AUDIOBITS_BROWSER_SUITE=regression` to include untagged cases.
+  Shared changes keep the bounded baseline; use the full suite only explicitly.
+  Adding catalog items normally adds no routine website browser cases.
   Reproduce timing-sensitive graphics regressions at their committed viewport;
   preserve meaningful assertions without increasing timeouts or adding retries.
 - Preserve client loading boundaries for immersive renderers. Audio activation

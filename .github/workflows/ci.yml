@@ -48,6 +48,7 @@ jobs:
         run: git fetch --depth=1 origin "$(jq -r .revision tools/mcp/snapshot.json)"
       - run: node scripts/ci/run-checks.mjs quality
   chromium-integration:
+    timeout-minutes: ${{ github.event_name == 'workflow_dispatch' && 12 || 6 }}
     needs: select-scope
     runs-on: ubuntu-24.04
     env:
@@ -69,9 +70,9 @@ jobs:
           key: ${{ runner.os }}-${{ runner.arch }}-next-${{ hashFiles('.node-version', 'pnpm-lock.yaml') }}-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-${{ runner.arch }}-next-${{ hashFiles('.node-version', 'pnpm-lock.yaml') }}-
-      - if: fromJSON(env.CHECK_SCOPE).package || fromJSON(env.CHECK_SCOPE).consumers || fromJSON(env.CHECK_SCOPE).site
-        run: pnpm exec playwright install --with-deps --only-shell chromium
-      - if: fromJSON(env.CHECK_SCOPE).package || fromJSON(env.CHECK_SCOPE).consumers || fromJSON(env.CHECK_SCOPE).site
+      - name: Provision Chromium and clocked audio
+        if: fromJSON(env.CHECK_SCOPE).package || fromJSON(env.CHECK_SCOPE).consumers || fromJSON(env.CHECK_SCOPE).site
+        timeout-minutes: 3
         run: bash scripts/ci/setup-linux-audio.sh
       - run: node scripts/ci/run-checks.mjs browser
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

@@ -95,7 +95,7 @@ test("1000 scheduled voices cancel without retained ownership or touching shared
   });
 });
 
-test("tap, repeated emission, measured output, Escape, interruption and navigation clean up @smoke", async ({
+test("tap, repeated emission, measured output, Escape, interruption and navigation clean up", async ({
   page,
 }) => {
   // Natural completion waits for metal's late echo (about 6 s per emission).
@@ -310,7 +310,7 @@ test("materials have distinct signatures, the surface fallback matches, and cont
 for (const count of [8, 40])
   test(
     `rapid interaction admits ${count} pulses with bounded native sources and cleanup`,
-    { tag: count === 8 ? "@smoke" : "@extended" },
+    { tag: count === 8 ? [] : "@extended" },
     async ({ page }) => {
       await instrument(page, "normal", "echo-probe");
       await page.addScriptTag({ path: harness });
@@ -560,7 +560,7 @@ test("retirement removes cancelled paths and highlights while sounded returns fi
   expect(framesAfterDisposal.after).toBe(framesAfterDisposal.before);
 });
 
-test("a new emission cuts sounding native late repeats and preserves shared audio @smoke", async ({
+test("a new emission cuts sounding native late repeats and preserves shared audio", async ({
   page,
 }) => {
   await page.goto("http://127.0.0.1:3100");
@@ -595,7 +595,7 @@ test("a new emission cuts sounding native late repeats and preserves shared audi
   });
 });
 
-test("native late echoes are the material voice plus its own feedback repeats @smoke", async ({
+test("native late echoes are the material voice plus its own feedback repeats", async ({
   page,
 }) => {
   await page.goto("http://127.0.0.1:3100");

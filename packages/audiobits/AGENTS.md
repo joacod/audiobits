@@ -62,7 +62,8 @@ Follow the authoritative [testing policy](../../docs/validation.md#test-selectio
 - Run focused unit/type tests for internal changes.
 - Run affected Chromium integration tests when browser/runtime behavior changes.
 - Runtime/compiler/schema/API/build changes require packed artifact checks,
-  native runtime Chromium and installed catalog/Skill compatibility. Use
+  the existing native runtime suite and installed catalog/Skill compatibility.
+  Routine website evidence stays bounded as the catalog grows. Use
   `test:package`, `test:runtime` and `test:consumers` for those distinct boundaries.
 - Every publication candidate runs the complete package gate without Next.js;
   do not infer its safety from the version-bump diff.

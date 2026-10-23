@@ -15,7 +15,7 @@ test.beforeEach(async ({ page }) => {
   });
 });
 for (const rate of [44100, 48000])
-  test(`delay timing, mixing, feedback and layer isolation at ${rate} Hz @smoke`, async ({
+  test(`delay timing, mixing, feedback and layer isolation at ${rate} Hz`, async ({
     page,
   }) => {
     const result = await page.evaluate(
@@ -25,7 +25,7 @@ for (const rate of [44100, 48000])
     expect(result).toHaveLength(9);
     console.log(JSON.stringify({ rate, result }));
   });
-test("delay release, explicit cutting, cancellation and Stop during a tail @smoke", async ({
+test("delay release, explicit cutting, cancellation and Stop during a tail", async ({
   page,
 }) => {
   await requireOfflineCheckpoints(page);
@@ -33,7 +33,7 @@ test("delay release, explicit cutting, cancellation and Stop during a tail @smok
     JSON.stringify(await page.evaluate(() => globalThis.delayChecks.release())),
   );
 });
-test("delay/filter ordering matches an independent native reference @smoke", async ({
+test("delay/filter ordering matches an independent native reference", async ({
   page,
 }) => {
   console.log(
@@ -42,7 +42,7 @@ test("delay/filter ordering matches an independent native reference @smoke", asy
     ),
   );
 });
-test("delay tails own bounded resources through natural completion, stealing, suspension and disposal @smoke", async ({
+test("delay tails own bounded resources through natural completion, stealing, suspension and disposal", async ({
   page,
   browser,
 }) => {

@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { instrument, probe } from "./experience-probe";
 import { requireOfflineCheckpoints } from "./offline-capabilities";
 
-test("holding grows charge on one voice, releases and tears down @smoke", async ({
+test("holding grows charge on one voice, releases and tears down", async ({
   page,
 }) => {
   await instrument(page, "normal", "energy-charge");
@@ -258,7 +258,7 @@ test("controller usage copying, clipboard denial, narrow touch and reduced motio
   ).toBeVisible();
 });
 
-test("Chromium signal bounds, smooth retargeting, partial/full release and intensity @smoke", async ({
+test("Chromium signal bounds, smooth retargeting, partial/full release and intensity", async ({
   page,
 }) => {
   await page.goto("http://127.0.0.1:4173");

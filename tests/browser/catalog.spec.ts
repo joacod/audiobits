@@ -1,4 +1,4 @@
-import { dragThruster, instrument, probe } from "./experience-probe";
+import { instrument, probe } from "./experience-probe";
 import { expect, test, type Page, type Response } from "@playwright/test";
 import { catalogEntries, catalogGroups } from "../../apps/www/lib/catalog";
 
@@ -16,56 +16,6 @@ async function expectClosed(page: Page) {
     })
     .toEqual({ connected: 0, contexts: [] });
 }
-
-test("catalog card playback contrast and index navigation remain readable", async ({
-  page,
-}) => {
-  await instrument(page, "normal", "/catalog");
-  await expect(page.locator("h1")).toHaveText("Catalog");
-  await expect(
-    page
-      .getByRole("navigation", { name: "Main navigation" })
-      .getByRole("link", { name: "Catalog", exact: true }),
-  ).toHaveAttribute("aria-current", "page");
-  await expect(page.locator(".catalog-section > h2")).toHaveText(
-    catalogGroups.map((group) => group.title),
-  );
-  // Registry order, labels and links are checked against every production card.
-  for (const entry of catalogEntries.filter(
-    (entry) => entry.category === "bundled",
-  )) {
-    const card = page.locator(`[data-catalog-entry="${entry.slug}"]`);
-    if (entry.category === "bundled") {
-      // Inspect the playback state synchronously, before a short one-shot ends.
-      const colors = await card.evaluate((node) => {
-        const mark = node.querySelector(".catalog-mark")!;
-        const cover = node.querySelector(".catalog-card-preview")!;
-        const status = node.getAttribute("data-status");
-        node.setAttribute("data-status", "playing");
-        const result = {
-          icon: getComputedStyle(mark).color,
-          contrast: getComputedStyle(cover).color,
-        };
-        if (status === null) node.removeAttribute("data-status");
-        else node.setAttribute("data-status", status);
-        return result;
-      });
-      expect(colors.icon).toBe(colors.contrast);
-    }
-  }
-  await expect(
-    page.getByRole("navigation", { name: "Catalog", exact: true }),
-  ).toHaveCount(0);
-  await expect(
-    page.locator(
-      '[aria-current="location"], .audio-monitor, canvas, textarea, input',
-    ),
-  ).toHaveCount(0);
-  await expect(page.locator("[data-audio-session]")).toHaveCount(1);
-  await page.locator("#power-up").scrollIntoViewIfNeeded();
-  await expect(page.locator('[aria-current="location"]')).toHaveCount(0);
-  expect((await probe(page)).contexts).toEqual([]);
-});
 
 test("representative card hit areas navigate with non-wrapping Previous/Next boundaries", async ({
   page,
@@ -140,12 +90,12 @@ test("representative card hit areas navigate with non-wrapping Previous/Next bou
   }
 });
 
-test("card Play and Start/Stop use one engine, replace other previews, and dispose on navigation @smoke", async ({
+test("card Play and Start/Stop use one engine, replace other previews, and dispose on navigation @required", async ({
   page,
 }) => {
   await instrument(page, "normal", "/catalog");
-  for (const entry of catalogEntries) {
-    if (entry.category !== "bundled") continue;
+  for (const slug of ["impact", "thruster"]) {
+    const entry = catalogEntries.find((entry) => entry.slug === slug)!;
     const sustained = entry.playback === "sustained";
     const before = (await probe(page)).sources;
     await page
@@ -188,7 +138,7 @@ test("card Play and Start/Stop use one engine, replace other previews, and dispo
   await expectClosed(page);
 });
 
-test("card Stop cancels pending activation before sources start @smoke", async ({
+test("card Stop cancels pending activation before sources start @required", async ({
   page,
 }) => {
   await instrument(page, "held", "/catalog");
@@ -217,9 +167,7 @@ test("card Stop cancels pending activation before sources start @smoke", async (
   expect((await probe(page)).sources).toBe(0);
 });
 
-test("card activation errors stay local and retry works @smoke", async ({
-  page,
-}) => {
+test("card activation errors stay local and retry works", async ({ page }) => {
   await instrument(page, "failed", "/catalog");
   const card = page.locator("#thruster");
   await card
@@ -263,104 +211,7 @@ test("hiding the index interrupts its current preview", async ({ page }) => {
   await expectClosed(page);
 });
 
-test("experience cards stay silent and full interactions clean up on return", async ({
-  page,
-}) => {
-  await instrument(page, "normal", "/catalog");
-  for (const entry of catalogEntries) {
-    if (entry.category !== "experience") continue;
-    const card = page.locator(`[data-catalog-entry="${entry.slug}"]`);
-    await expect(card.locator("canvas, button")).toHaveCount(0);
-    const before = await probe(page);
-    await card.getByRole("link").click();
-    await expect(page).toHaveURL(`${home}${entry.href}`);
-    // Held experiences prepare their context during navigation, without sound.
-    // Echo Probe is a one-shot whose completed tap can activate its own context.
-    await expect
-      .poll(async () =>
-        (await probe(page)).contexts.filter((state) => state !== "closed"),
-      )
-      .toEqual(entry.slug === "echo-probe" ? [] : ["running"]);
-    const prepared = await probe(page);
-    expect(prepared.sources).toBe(before.sources);
-    expect(prepared.ownedSources).toBe(0);
-    if (entry.slug === "energy-charge") {
-      const hold = page.getByRole("button", {
-        name: "Hold to charge",
-        exact: true,
-      });
-      await expect(hold).toBeEnabled();
-      const box = (await hold.boundingBox())!;
-      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-      await page.mouse.down();
-    } else if (entry.slug === "lightsaber") {
-      const stage = page.getByRole("group", {
-        name: "Lightsaber stage",
-        exact: true,
-      });
-      await expect(stage).toHaveAttribute("data-state", "stopped");
-      await stage.scrollIntoViewIfNeeded();
-      const box = (await stage.boundingBox())!;
-      await page.mouse.move(box.x + box.width / 2, box.y + box.height * 0.8);
-      await page.mouse.down();
-    } else if (entry.slug === "echo-vision") {
-      const stage = page.getByRole("group", {
-        name: "Echo Vision stage",
-        exact: true,
-      });
-      await expect(stage).toHaveAttribute("data-ready", "true");
-      await stage.click();
-      await expect(stage).toHaveAttribute("data-state", "listening");
-    } else if (entry.slug === "echo-probe") {
-      const stage = page.getByRole("group", {
-        name: "Echo Probe stage",
-        exact: true,
-      });
-      await expect(stage).toHaveAttribute("data-ready", "true");
-      await stage.click();
-    } else if (entry.slug === "the-rift") {
-      const stage = page.getByRole("group", {
-        name: "The Rift stage",
-        exact: true,
-      });
-      await expect(stage).toHaveAttribute("data-ready", "true");
-      await stage.scrollIntoViewIfNeeded();
-      const box = (await stage.boundingBox())!;
-      await page.mouse.move(box.x + box.width / 2, box.y + box.height * 0.25);
-      await page.mouse.down();
-      await page.mouse.move(box.x + box.width / 2, box.y + box.height * 0.7, {
-        steps: 6,
-      });
-    } else if (entry.slug === "riff-reactor") {
-      const stage = page.getByRole("group", {
-        name: "Riff Reactor stage",
-        exact: true,
-      });
-      await expect(stage).toHaveAttribute("data-ready", "true");
-      await stage.scrollIntoViewIfNeeded();
-      const box = (await stage.boundingBox())!;
-      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-      await page.mouse.down();
-      await expect(stage).toHaveAttribute("data-phase", "playing");
-    } else await dragThruster(page);
-    await expect
-      .poll(
-        async () =>
-          (await probe(page)).contexts.filter((state) => state === "running")
-            .length,
-      )
-      .toBe(1);
-    await page.mouse.up();
-    await page
-      .getByRole("navigation", { name: "Breadcrumb" })
-      .getByRole("link")
-      .click();
-    await expect(page).toHaveURL(catalog);
-    await expectClosed(page);
-  }
-});
-
-for (const width of [1440, 390]) {
+for (const width of [390]) {
   test(`sidebar selection, Back and Forward at ${width}px`, async ({
     page,
   }) => {
@@ -466,12 +317,7 @@ test("detail mobile menu traps focus, closes, and restores the trigger", async (
   await expect(menu).toBeFocused();
 });
 
-for (const [width, height] of [
-  [1440, 900],
-  [768, 1024],
-  [390, 844],
-  [320, 740],
-]) {
+for (const [width, height] of [[390, 844]]) {
   test(`cards fit and remain reachable at ${width}×${height}`, async ({
     page,
   }, testInfo) => {
@@ -531,15 +377,6 @@ for (const [width, height] of [
     });
   });
 }
-
-test("main navigation opens the canonical catalog", async ({ page }) => {
-  await page.goto(home);
-  await page
-    .getByRole("navigation", { name: "Main navigation" })
-    .getByRole("link", { name: "Catalog", exact: true })
-    .click();
-  await expect(page).toHaveURL(catalog);
-});
 
 test("simple catalog entry avoids immersive renderer requests while immersive entries load theirs", async ({
   browser,

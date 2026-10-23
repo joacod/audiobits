@@ -31,12 +31,20 @@ detection merely to make checks pass.
   selection and both jobs to succeed, rejecting failure, cancellation, missing
   results and unexpected skips. Require `checks` in branch protection; existing
   required job names remain available. Workflows have no whole-workflow path filters.
-- **Full regression:** `pnpm test:browser:full` (also `pnpm test:browser`) or the
-  Repository checks workflow's manual run executes all retained Chromium tests.
-  Full regression includes native stress, graphics, acoustic comparisons,
-  documentation and layout checks. Untagged extended tests run on their owning
-  PRs, including the complete Riff Reactor song. The short playback test and
-  deterministic complete-song controller test remain separate evidence.
+- **Required browser baseline:** `pnpm test:browser` builds once and runs the
+  existing native-runtime suite plus a bounded set of representative website
+  journeys. The website budget is approximately 8–12 meaningful cases, covering
+  gesture playback, activation recovery, cancellation, prepared navigation,
+  preview replacement/Stop/disposal, workbench settings and copy fidelity, and
+  docs navigation/search/mobile menus. Adding a sound normally adds no routine
+  website case. Protect item-specific contracts with unit and installed consumer
+  checks instead.
+- **Explicit full regression:** `pnpm test:browser:full` or the Repository checks
+  workflow's manual run executes all retained Chromium tests with a five-minute
+  Playwright limit. Distinct graphics, acoustic, stress and long-form evidence
+  remains here. Riff Reactor's whole-song native playback is `@extended` evidence;
+  deterministic complete-song controller tests and short native playback protect
+  routine changes.
 - **Publishing:** every candidate runs package compilation, types, units,
   schema/capability consistency, native runtime Chromium and packed-artifact
   verification. It needs no Next.js build or server and never selects safety
@@ -45,24 +53,35 @@ detection merely to make checks pass.
 
 ### PR scope selection
 
-[The selector](../scripts/ci/select-scope.mjs) is the explicit ownership mapping.
-Unknown paths, shared activation/global layout, dependency/toolchain/CI changes,
-new catalog ownership and mixed boundaries select the broad checks.
+[The selector](../scripts/ci/select-scope.mjs) combines distribution boundaries
+without a per-experience browser ownership map. Shared, CI, dependency and unknown
+changes select the bounded baseline plus package, consumer and build checks.
+Mixed changes combine their checks; adding prose does not broaden browser coverage.
 
-| Changed boundary                                       | Required evidence                                                                                                         |
-| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
-| README/contributor prose                               | Formatting, lint and links; changed executable fences broaden verification                                                |
-| Package README or metadata-only changes                | Package types/units and packed artifact, including the exact shipped README in Chromium                                   |
-| Runtime, compiler, schema, public API or package build | Package artifact, all catalog/Skill consumers and full native/website regressions                                         |
-| Catalog recipe/controller                              | Existing contracts, actual shadcn-installed consumers and complete owning experience test files                           |
-| Owned website behavior                                 | Website types/build, production HTML contracts and complete affected interaction files                                    |
-| Skill/MCP                                              | Generated consistency, protocol and executable installed examples, generic host lifecycle and relevant browser host tests |
-| Shared, mixed or unknown                               | Full local preflight, package artifact, consumers, production HTML and complete Chromium suite                            |
+| Changed boundary                   | Required evidence                                                                                    |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| README/contributor prose           | Formatting, lint and links; changed executable fences select the baseline and distribution checks    |
+| Package README or metadata only    | Package types/units and packed artifact, including the shipped README in Chromium                    |
+| Runtime/compiler/schema/API/build  | Package artifact, installed catalog/Skill consumers, native suite and website baseline               |
+| Catalog recipe/controller/registry | Contracts, installed consumers, production HTML, native suite and website baseline                   |
+| Website presentation/behavior      | Website types/build, production HTML, native suite and website baseline; no installed consumer sweep |
+| Skill/MCP                          | Generated consistency, protocol, installed examples, native suite and website baseline               |
+| Shared/CI/dependencies/unknown     | Local preflight, package artifact, consumers, production HTML and bounded browser baseline           |
 
-New/modified browser specs run as complete files without smoke filtering, even
-when they contain no `@smoke` tests. Deleted specs broaden selection. Main pushes
-run the non-browser preflight without repeating the PR browser suite. Local
-`test:browser:smoke` remains available for a deliberate short check.
+New or modified browser specs are also selected explicitly, overriding the
+baseline tag so untagged regressions execute. `@extended` deliberately marks
+long-form or specialized evidence for explicit full runs, never ordinary owner
+selection. To run an affected untagged case locally, override the baseline filter:
+`AUDIOBITS_BROWSER_SUITE=regression pnpm exec playwright test <file> --grep='test title'`. Deleted specs retain the
+baseline. Main pushes run the non-browser preflight; manual runs request full
+regression. Two workers and zero retries apply throughout.
+
+The routine Chromium job has a six-minute limit, with three minutes maximum for
+provisioning. Native execution has a two-minute global limit and the website
+baseline has 90 seconds, leaving time for failure reports. Explicit changed-file
+regressions have three minutes; manual full jobs have twelve minutes overall.
+Provisioning failures remain fatal. The centralized setup records OS installation,
+headless-shell download and verified clocked audio startup separately.
 
 Production HTML checks cover every route's metadata, catalog command and ordered
 pagination. Browser checks retain real clipboard bytes, accepted settings, focus
@@ -149,49 +168,3 @@ claims. Check relative Markdown links. Preserve the license.
 
 Record the scope of review accurately: a local content review does not establish
 that remote Git history, hosted previews, or registry artifacts were inspected.
-
-## Local audit measurements (2026-10-22)
-
-Single local runs used the same machine, Node 24.22.1, pnpm 12.9.1 and two
-Chromium workers. Build caches were retained; these observations are not a
-controlled cache benchmark, timing budgets or field Core Web Vitals.
-
-| Phase/check                               | Before        | After                            | Evidence boundary                                                                                                   |
-| ----------------------------------------- | ------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `verify:local`                            | 39.6 s        | 32.9 s                           | Preflight plus scope/security checks; one-run variation is not a coverage reduction                                 |
-| Production site/vanilla builds            | 13.2 s        | 15.8 s                           | Both builds retained for website changes                                                                            |
-| Combined packed-artifact/consumer checker | 49.4 s        | 3.2 s artifact; 47.6 s consumers | Separate commands reuse packing/install checks; real installs remain mandatory for relevant PRs                     |
-| Card hit areas and pagination             | 9.9 s         | 2.8 s                            | Every static route/link checked in production HTML; representative clicks and both boundaries retained              |
-| Install/usage clipboard test              | 5.2 s         | 2.8 s                            | Every command checked in production HTML; real recipe, experience and shared-source clipboard interactions retained |
-| Desktop/mobile sidebar navigation         | 3.6 / 4.5 s   | 0.6 / 0.9 s                      | Representative route categories, selection and Back/Forward retained                                                |
-| Complete Riff song                        | About 1.1 min | About 1.1 min                    | Extended native end-to-end integration retained on relevant PRs                                                     |
-
-The independent publication gate completed in 14.0 s with Next.js production
-output temporarily unavailable: 2.4 s package build/types/units, 0.7 s native
-preparation, 7.3 s native Chromium and 3.3 s artifact verification. The complete
-repository browser run took 227.5 s, separately from publication. Production HTML
-checks took 0.5 s. The final automation split also passed its three focused cases
-and the native gate; no assertions were discarded.
-
-Cold production script requests, including automatic prefetch until network
-idle, were measured with fresh Chromium contexts. Raw and gzip sizes below use
-decimal kB and sum requested script bodies, not field transfer timings.
-
-| Route                   | Before raw / gzip  | After raw / gzip   |
-| ----------------------- | ------------------ | ------------------ |
-| `/catalog/confirmation` | 1,986.3 / 547.4 kB | 1,309.0 / 369.2 kB |
-| `/catalog/echo-vision`  | 1,623.8 / 477.2 kB | 1,528.9 / 445.9 kB |
-| `/catalog/lightsaber`   | 1,623.8 / 477.2 kB | 1,262.6 / 352.0 kB |
-
-The client boundary removes eager immersive dependencies. Disabling automatic
-prefetch on audio-prepared navigation links also prevents visible links from
-fetching those renderers. Confirmation requested no Three.js renderer scripts;
-Echo Vision and Lightsaber requested their renderers. The existing synchronous
-navigation activation, engine handoff and touch/lifecycle tests passed.
-
-The refreshed production dependency audit was clean. The full audit still
-reported development-only `braces` exposure through ESLint/shadcn tooling for
-[GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm), with no
-patched release listed. It remains deferred without an override or suppression.
-Hosted Linux CI, branch-protection configuration and OIDC publication have not
-been exercised by these local checks.

@@ -113,8 +113,10 @@ accurate. Briefly justify substantial README additions in the relevant PR.
 - Do not perform Firefox, WebKit, Safari, device, OS, or compatibility work
   unless explicitly requested.
 - Relevant PRs must retain packed catalog/Skill compatibility for runtime,
-  catalog and Skill contracts. Modified browser specs run as full files, including
-  extended tests. Follow the explicit CI scope map and its broad fallback.
+  catalog and Skill contracts. Use the bounded native/website baseline for shared
+  and unknown changes. Explicitly run new or modified regression tests even when
+  untagged; reserve `@extended` evidence for explicit full runs. Catalog growth
+  normally adds no routine website browser cases.
 - Keep publication verification package-specific and independent of Next.js;
   every candidate must pass it, regardless of the version-bump diff.
 - Do not run `release:prepare` or equivalent release gates unless explicitly

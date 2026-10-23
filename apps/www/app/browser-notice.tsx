@@ -4,7 +4,7 @@ import { useSyncExternalStore } from "react";
 
 const subscribe = () => () => {};
 
-function isRecognizedChromium() {
+export function isRecognizedChromium() {
   // Informational only: browser identification cannot establish support.
   try {
     const browser = navigator as Navigator & {
