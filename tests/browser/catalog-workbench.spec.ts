@@ -567,12 +567,16 @@ test("current catalog entries work and unknown slugs stay 404", async ({
   ).toBe(200);
 });
 
-test("every catalog item copies its registry command and links to installation docs", async ({
+test("recipe, experience and shared-source entry copy exact command and usage bytes with feedback", async ({
   page,
   request,
 }) => {
   await instrument(page);
-  for (const entry of catalogEntries) {
+  // Exhaustive static commands and links are covered by production-output
+  // checks. Browser evidence covers clipboard bytes, focus and feedback.
+  for (const entry of catalogEntries.filter((entry) =>
+    ["confirmation", "lightsaber", "echo-vision"].includes(entry.slug),
+  )) {
     await page.goto(`${home}${entry.href}`);
     const adoption = page.getByRole("region", { name: "Add to project" });
     const sourceItem =
@@ -593,6 +597,7 @@ test("every catalog item copies its registry command and links to installation d
     ).toHaveText("Copied.");
     await expect(copy.getByText("✓ Copied", { exact: true })).toBeVisible();
     expect(await copied(page)).toBe(command);
+    await expect(copy).toBeFocused();
     const usage = adoption.locator(".catalog-usage");
     await expect(
       usage.getByRole("heading", { name: "Use this sound" }),

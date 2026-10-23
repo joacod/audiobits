@@ -1,15 +1,8 @@
-import { defineConfig, devices } from "@playwright/test";
+import { defineConfig } from "@playwright/test";
+import { shared } from "./playwright.shared";
 
 export default defineConfig({
-  testDir: "./tests/browser",
-  fullyParallel: true,
-  forbidOnly: !!process.env.CI,
-  retries: 0,
-  workers: 2,
-  failOnFlakyTests: !!process.env.CI,
-  use: { trace: process.env.CI ? "retain-on-failure" : "off" },
-  reporter: "list",
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  ...shared,
   webServer: [
     {
       command: "pnpm --filter @audiobits/www start --port 3100",

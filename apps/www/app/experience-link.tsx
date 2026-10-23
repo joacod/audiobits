@@ -9,6 +9,9 @@ export function ExperienceLink(
 ) {
   return (
     <Link
+      // Visible catalog/navigation links must not fetch unrelated renderers.
+      // The accepted navigation gesture still prepares audio synchronously.
+      prefetch={false}
       {...props}
       // Next calls this only for navigation in this tab, excluding downloads
       // and modified clicks. The engine must start before the route transition.

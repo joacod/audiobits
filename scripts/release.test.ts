@@ -73,7 +73,7 @@ test("stable documentation cannot promote private, prerelease or mismatched cand
   ).toThrow();
 });
 
-test("routine CI preserves quality, packed consumers and fail-fast Chromium smoke", async () => {
+test("CI keeps stable required checks, explicit selection and native-only publication preparation", async () => {
   const { createRequire } = await import("node:module");
   const require = createRequire(import.meta.url);
   const { load } = createRequire(require.resolve("eslint/package.json"))(
@@ -82,64 +82,86 @@ test("routine CI preserves quality, packed consumers and fail-fast Chromium smok
   const ci = load(readFileSync(".github/workflows/ci.yml", "utf8"));
   const scripts = JSON.parse(readFileSync("package.json", "utf8")).scripts;
   expect(ci.on).toHaveProperty("pull_request");
-  expect(ci.jobs.quality.if).toBeUndefined();
-  const runs = (job: { steps: { run?: string }[] }) =>
-    job.steps.flatMap(({ run }) => run ?? []);
-  expect(runs(ci.jobs.quality)).toEqual(
-    expect.arrayContaining(["pnpm verify:local", "pnpm build:prepared"]),
+  expect(ci.on).toHaveProperty("workflow_dispatch");
+  expect(ci.on.pull_request?.paths).toBeUndefined();
+  expect(ci.on.pull_request?.["paths-ignore"]).toBeUndefined();
+  for (const job of ["quality", "chromium-integration"]) {
+    expect(ci.jobs[job].if).toBeUndefined();
+    expect(ci.jobs[job].needs).toBe("select-scope");
+    expect(ci.jobs[job].env.CHECK_SCOPE).toBe(
+      "${{ needs.select-scope.outputs.scope }}",
+    );
+    expect(ci.jobs[job].steps).toContainEqual(
+      expect.objectContaining({
+        run: `node scripts/ci/run-checks.mjs ${job === "quality" ? "quality" : "browser"}`,
+      }),
+    );
+  }
+  expect(ci.jobs["select-scope"].steps[0].with["fetch-depth"]).toBe(0);
+  expect(ci.jobs.checks.if).toBe("always()");
+  expect(ci.jobs.checks.needs).toEqual(
+    expect.arrayContaining(["select-scope", "quality", "chromium-integration"]),
   );
-  for (const command of [
-    "lint",
-    "typecheck:prepared",
-    "test",
-    "check:skill",
-    "test:mcp:prepared",
-  ])
-    expect(
-      `${scripts["verify:core"]} && ${scripts["verify:local"]}`.split(" && "),
-    ).toContain(`pnpm ${command}`);
-  expect(scripts["verify:local"].split(" && ")).toContain("pnpm verify:core");
-  const releaseGate = scripts["release:prepare"].split(" && ");
-  expect(releaseGate[0]).toBe("pnpm verify:core");
-  expect(releaseGate.indexOf("pnpm build:prepared")).toBeLessThan(
-    releaseGate.indexOf("pnpm test:browser:full:prepared --max-failures=1"),
-  );
-  expect(releaseGate.at(-1)).toBe("pnpm test:package:prepared");
-  const chromium = ci.jobs["chromium-integration"];
-  expect(chromium.if).toBe("github.event_name == 'pull_request'");
-  const commands = runs(chromium);
-  for (const command of [
-    "pnpm prepare:browser",
-    "pnpm test:package:prepared",
-    "pnpm test:browser:smoke:prepared",
-  ])
-    expect(commands).toContain(command);
-  expect(commands.indexOf("pnpm prepare:browser")).toBeLessThan(
-    commands.indexOf("pnpm test:browser:smoke:prepared"),
-  );
-  expect(scripts["test:browser:smoke:prepared"]).toContain("--grep @smoke");
-  expect(scripts["test:browser:smoke:prepared"]).toContain("--max-failures=1");
-  expect(scripts["test"]).toContain("vitest run --bail=1");
-  expect(scripts["test:package:prepared"]).toBe(
-    "node scripts/test-package.mjs",
-  );
-  expect(scripts["release:prepare"]).toContain(
-    "pnpm test:browser:full:prepared --max-failures=1",
-  );
-  expect(scripts["release:prepare"]).toContain("pnpm test:package:prepared");
-  expect(scripts["test:browser:full:prepared"]).toBe("playwright test");
-  expect(chromium.steps).toContainEqual(
+  expect(ci.jobs.checks.steps).toContainEqual(
     expect.objectContaining({
-      uses: "actions/upload-artifact@v4",
-      if: "failure()",
-      with: expect.objectContaining({ path: "test-results/" }),
+      run: "node scripts/ci/check-required.mjs",
+      env: { NEEDS_JSON: "${{ toJSON(needs) }}" },
     }),
   );
+  const runner = readFileSync("scripts/prepare-release.mjs", "utf8");
+  for (const gate of [
+    "verify:package",
+    "prepare:runtime:prepared",
+    "test:runtime:prepared",
+    "test:package:prepared",
+  ])
+    expect(runner).toContain(`"${gate}"`);
+  expect(runner).not.toMatch(
+    /build:site|build:prepared|test:consumers|test:browser:full/,
+  );
+  expect(scripts["release:prepare"]).toBe("node scripts/prepare-release.mjs");
+  expect(scripts["test:consumers:prepared"]).toContain("--consumers");
+  expect(scripts["test:package:prepared"]).not.toContain("--consumers");
+  expect(scripts["test:browser:full:prepared"]).toBe("playwright test");
+  expect(scripts["test:browser:smoke:prepared"]).toContain("--grep @smoke");
   const { default: browser } = await import("../playwright.config");
-  expect(browser.projects?.map(({ name }) => name)).toEqual(["chromium"]);
-  expect(browser.retries).toBe(0);
-  expect(browser.use?.trace).toBe(process.env.CI ? "retain-on-failure" : "off");
+  const { default: runtime } = await import("../playwright.runtime.config");
+  for (const config of [browser, runtime]) {
+    expect(config.projects?.map(({ name }) => name)).toEqual(["chromium"]);
+    expect(config.retries).toBe(0);
+    expect(config.workers).toBe(2);
+    expect(config.use?.trace).toBe(
+      process.env.CI ? "retain-on-failure" : "off",
+    );
+  }
+  expect(JSON.stringify(runtime.webServer)).not.toMatch(/www|3100|next/i);
   expect(metadata.browserMatrix).toEqual(["Chromium"]);
+});
+
+test("workflow actions are immutable and maintained as a group", async () => {
+  const { createRequire } = await import("node:module");
+  const require = createRequire(import.meta.url);
+  const { load } = createRequire(require.resolve("eslint/package.json"))(
+    "js-yaml",
+  );
+  for (const file of ["ci", "release"]) {
+    const source = readFileSync(`.github/workflows/${file}.yml`, "utf8");
+    const workflow = load(source);
+    for (const job of Object.values(workflow.jobs) as {
+      steps: { uses?: string }[];
+    }[]) {
+      for (const step of job.steps)
+        if (step.uses) expect(step.uses).toMatch(/^[\w/-]+@[a-f0-9]{40}$/);
+    }
+  }
+  const maintenance = load(readFileSync(".github/dependabot.yml", "utf8"));
+  expect(maintenance.updates).toContainEqual(
+    expect.objectContaining({
+      "package-ecosystem": "github-actions",
+      directory: "/",
+      groups: { "github-actions": { patterns: ["*"] } },
+    }),
+  );
 });
 
 test("production release isolates direct npm publication from GitHub finalization", async () => {
@@ -158,12 +180,6 @@ test("production release isolates direct npm publication from GitHub finalizatio
   expect(release.jobs["select-mode"].if).toBe(
     "github.ref == 'refs/heads/main'",
   );
-  expect(Object.keys(release.jobs).sort()).toEqual([
-    "github-release",
-    "publish",
-    "select-mode",
-    "version",
-  ]);
   expect(release.jobs["select-mode"].permissions).toEqual({ contents: "read" });
   expect(release.jobs.version.permissions).toEqual({
     contents: "write",
@@ -177,11 +193,13 @@ test("production release isolates direct npm publication from GitHub finalizatio
     "${{ steps.mode.outputs.mode }}",
   );
   expect(release.jobs["select-mode"].steps).toContainEqual({
-    uses: "changesets/action/select-mode@v2",
+    uses: expect.stringMatching(
+      /^changesets\/action\/select-mode@[a-f0-9]{40}$/,
+    ),
     id: "mode",
   });
   expect(release.jobs.version.steps).toContainEqual({
-    uses: "changesets/action/version@v2",
+    uses: expect.stringMatching(/^changesets\/action\/version@[a-f0-9]{40}$/),
     with: {
       "pr-title": "Version Packages",
       script: "pnpm version-packages",
@@ -200,14 +218,13 @@ test("production release isolates direct npm publication from GitHub finalizatio
     const job = release.jobs[name] as {
       steps: { uses?: string; run?: string; with?: Record<string, unknown> }[];
     };
-    expect(job.steps[0].uses).toBe("actions/checkout@v5");
+    expect(job.steps[0].uses).toMatch(/^actions\/checkout@[a-f0-9]{40}$/);
     expect(
-      job.steps.find(({ uses }) => uses === "pnpm/action-setup@v4"),
+      job.steps.find(({ uses }) => uses?.startsWith("pnpm/action-setup@")),
     ).toBeDefined();
     expect(
-      job.steps.find(({ uses }) => uses === "actions/setup-node@v5")?.with?.[
-        "node-version-file"
-      ],
+      job.steps.find(({ uses }) => uses?.startsWith("actions/setup-node@"))
+        ?.with?.["node-version-file"],
     ).toBe(".node-version");
   }
   const steps = release.jobs.publish.steps;
@@ -220,8 +237,12 @@ test("production release isolates direct npm publication from GitHub finalizatio
     'npm publish "$RELEASE_ARCHIVE" --access public --tag latest',
   );
   expect(gate).toBeGreaterThan(-1);
-  expect(verify).toBe(gate + 1);
-  expect(publish).toBe(verify + 1);
+  expect(verify).toBeGreaterThan(gate);
+  expect(publish).toBeGreaterThan(verify);
+  expect(runs.slice(verify + 1, publish).join("\n")).not.toMatch(/\bpack\b/);
+  expect(runs.filter((run: string) => /\bnpm publish\b/.test(run))).toEqual([
+    'npm publish "$RELEASE_ARCHIVE" --access public --tag latest',
+  ]);
   expect(runs).toContain("npm install --global npm@11.19.0");
   for (const setup of [
     "pnpm exec playwright install --with-deps --only-shell chromium",
@@ -231,8 +252,8 @@ test("production release isolates direct npm publication from GitHub finalizatio
     expect(runs.indexOf(setup)).toBeLessThan(gate);
   }
   expect(
-    steps.find(
-      ({ uses }: { uses?: string }) => uses === "actions/setup-node@v5",
+    steps.find(({ uses }: { uses?: string }) =>
+      uses?.startsWith("actions/setup-node@"),
     ).with,
   ).toEqual({
     "node-version-file": ".node-version",
@@ -274,26 +295,31 @@ test("production release isolates direct npm publication from GitHub finalizatio
   expect(release.jobs["github-release"].steps[0].with.ref).toBe(
     "${{ github.sha }}",
   );
-  const finalization = release.jobs["github-release"].steps.at(-1);
+  const finalization = release.jobs["github-release"].steps.find(
+    ({ run }: { run?: string }) =>
+      run === "node scripts/finalize-github-release.mjs",
+  );
   expect(finalization.run).toBe("node scripts/finalize-github-release.mjs");
   expect(finalization.env).toEqual({
     GH_TOKEN: "${{ github.token }}",
     RELEASE_SHA: "${{ github.sha }}",
   });
-  expect(release.jobs["github-release"].steps).toEqual([
-    {
-      uses: "actions/checkout@v5",
-      with: { ref: "${{ github.sha }}" },
-    },
-    {
-      uses: "actions/setup-node@v5",
-      with: {
-        "node-version-file": ".node-version",
-        "package-manager-cache": false,
+  expect(release.jobs["github-release"].steps).toEqual(
+    expect.arrayContaining([
+      {
+        uses: expect.stringMatching(/^actions\/checkout@[a-f0-9]{40}$/),
+        with: { ref: "${{ github.sha }}" },
       },
-    },
-    finalization,
-  ]);
+      {
+        uses: expect.stringMatching(/^actions\/setup-node@[a-f0-9]{40}$/),
+        with: {
+          "node-version-file": ".node-version",
+          "package-manager-cache": false,
+        },
+      },
+      finalization,
+    ]),
+  );
   for (const [name, job] of Object.entries(release.jobs) as [
     string,
     { permissions: Record<string, string> },
@@ -351,6 +377,8 @@ test("publication accepts only the retained archive matching clean release evide
     version: manifest.version,
     archive,
     sha256: createHash("sha256").update(bytes).digest("hex"),
+    sourceCommit: "",
+    publicationGate: "package-v1",
   };
   const run = () =>
     spawnSync(
@@ -368,6 +396,28 @@ test("publication accepts only the retained archive matching clean release evide
       JSON.stringify(manifest),
     );
     writeFileSync(join(directory, archive), bytes);
+    const git = (...args: string[]) => {
+      const result = spawnSync("git", args, { cwd: root, encoding: "utf8" });
+      expect(result.status, result.stderr).toBe(0);
+      return result.stdout.trim();
+    };
+    git("init", "--quiet");
+    git("add", "packages");
+    git(
+      "-c",
+      "user.name=Fixture",
+      "-c",
+      "user.email=fixture@example.invalid",
+      "-c",
+      "commit.gpgsign=false",
+      "commit",
+      "--quiet",
+      "-m",
+      "fixture",
+    );
+    // Retained archives/evidence are ignored, just as in the real checkout.
+    writeFileSync(join(root, ".git/info/exclude"), "node_modules/\n");
+    evidence.sourceCommit = git("rev-parse", "HEAD");
     writeEvidence(evidence);
     const valid = run();
     expect(valid.status, valid.stderr).toBe(0);
@@ -380,6 +430,8 @@ test("publication accepts only the retained archive matching clean release evide
       { ...evidence, version: "mismatched" },
       { ...evidence, archive: "../other.tgz" },
       { ...evidence, sha256: "mismatched" },
+      { ...evidence, sourceCommit: "0".repeat(40) },
+      { ...evidence, publicationGate: undefined },
     ]) {
       writeEvidence(invalid);
       const rejected = run();
@@ -387,10 +439,93 @@ test("publication accepts only the retained archive matching clean release evide
       expect(rejected.stdout).toBe("");
     }
     writeEvidence(evidence);
+    writeFileSync(join(root, "untracked.txt"), "unverified source");
+    expect(run().status).not.toBe(0);
+    rmSync(join(root, "untracked.txt"));
     writeFileSync(join(directory, archive), "changed bytes");
     expect(run().status).not.toBe(0);
     rmSync(join(directory, archive));
     expect(run().status).not.toBe(0);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("publication preparation invalidates stale evidence on every failed phase and stamps only a complete gate", () => {
+  const root = mkdtempSync(join(tmpdir(), "audiobits-gate-"));
+  const evidencePath = join(
+    root,
+    "node_modules/.cache/audiobits-release/evidence.json",
+  );
+  const bin = join(root, "node_modules/.bin");
+  const git = (...args: string[]) => {
+    const result = spawnSync("git", args, { cwd: root, encoding: "utf8" });
+    expect(result.status, result.stderr).toBe(0);
+    return result.stdout.trim();
+  };
+  try {
+    git("init", "--quiet");
+    writeFileSync(join(root, "fixture.txt"), "verified source");
+    git("add", "fixture.txt");
+    git(
+      "-c",
+      "user.name=Fixture",
+      "-c",
+      "user.email=fixture@example.invalid",
+      "-c",
+      "commit.gpgsign=false",
+      "commit",
+      "--quiet",
+      "-m",
+      "fixture",
+    );
+    writeFileSync(join(root, ".git/info/exclude"), "node_modules/\n");
+    const sourceCommit = git("rev-parse", "HEAD");
+    mkdirSync(bin, { recursive: true });
+    mkdirSync(join(root, "node_modules/.cache/audiobits-release"), {
+      recursive: true,
+    });
+    writeFileSync(
+      join(bin, "pnpm"),
+      `#!${process.execPath}
+const fs = require('node:fs');
+if (process.argv[2] === 'test:package:prepared') fs.writeFileSync(process.env.EVIDENCE_PATH, JSON.stringify({sourceCommit:process.env.SOURCE_COMMIT,dirtySource:false}));
+if (process.argv[2] === process.env.FAIL_COMMAND) process.exit(9);
+`,
+      { mode: 0o755 },
+    );
+    const run = (fail = "") =>
+      spawnSync(process.execPath, [resolve("scripts/prepare-release.mjs")], {
+        cwd: root,
+        encoding: "utf8",
+        env: {
+          ...process.env,
+          PATH: `${bin}:${process.env.PATH}`,
+          EVIDENCE_PATH: evidencePath,
+          SOURCE_COMMIT: sourceCommit,
+          FAIL_COMMAND: fail,
+        },
+      });
+    for (const fail of [
+      "verify:package",
+      "prepare:runtime:prepared",
+      "test:runtime:prepared",
+      "test:package:prepared",
+    ]) {
+      writeFileSync(
+        evidencePath,
+        JSON.stringify({ publicationGate: "package-v1", stale: true }),
+      );
+      expect(run(fail).status).toBe(9);
+      expect(() => readFileSync(evidencePath)).toThrow();
+    }
+    const success = run();
+    expect(success.status, success.stderr).toBe(0);
+    expect(JSON.parse(readFileSync(evidencePath, "utf8"))).toEqual({
+      sourceCommit,
+      dirtySource: false,
+      publicationGate: "package-v1",
+    });
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

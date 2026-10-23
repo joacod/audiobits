@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
+import { CatalogExperience } from "../../catalog-experience";
 import { CatalogDetail } from "../../catalog-detail";
 import { CatalogInstall } from "../../catalog-install";
 import { UsageCode } from "../../usage-code";
@@ -15,84 +15,6 @@ import {
 import { experienceUsage } from "../../../lib/site-build";
 import { highlightCode } from "../../../lib/highlight-code";
 import { CodeBlock } from "../../code-block";
-
-function ChargeStageFallback() {
-  return (
-    <div className="catalog-stage catalog-charge-stage">
-      <div className="catalog-charge-well" />
-    </div>
-  );
-}
-
-function ThrusterStageFallback() {
-  return (
-    <div className="catalog-stage catalog-thruster-stage">
-      <div className="flight-pad" />
-    </div>
-  );
-}
-
-const EnergyChargeDetail = dynamic(
-  () =>
-    import("../../energy-charge-detail").then(
-      (module) => module.EnergyChargeDetail,
-    ),
-  { loading: ChargeStageFallback },
-);
-const ThrusterDetail = dynamic(
-  () => import("../../thruster-detail").then((module) => module.ThrusterDetail),
-  { loading: ThrusterStageFallback },
-);
-
-const LightsaberDetail = dynamic(
-  () =>
-    import("../../lightsaber-detail").then((module) => module.LightsaberDetail),
-  {
-    loading: () => (
-      <div className="catalog-stage" aria-label="Loading Lightsaber" />
-    ),
-  },
-);
-
-const EchoProbeDetail = dynamic(
-  () =>
-    import("../../echo-probe-detail").then((module) => module.EchoProbeDetail),
-  {
-    loading: () => (
-      <div className="catalog-stage" aria-label="Loading Echo Probe" />
-    ),
-  },
-);
-
-const RiftDetail = dynamic(
-  () => import("../../rift-detail").then((module) => module.RiftDetail),
-  {
-    loading: () => (
-      <div className="catalog-stage" aria-label="Loading The Rift" />
-    ),
-  },
-);
-
-const RiffReactorDetail = dynamic(
-  () => import("../../riff-detail").then((module) => module.RiffReactorDetail),
-  {
-    loading: () => (
-      <div className="catalog-stage" aria-label="Loading Riff Reactor" />
-    ),
-  },
-);
-
-const EchoVisionDetail = dynamic(
-  () =>
-    import("../../echo-vision-detail").then(
-      (module) => module.EchoVisionDetail,
-    ),
-  {
-    loading: () => (
-      <div className="catalog-stage" aria-label="Loading Echo Vision" />
-    ),
-  },
-);
 
 export function generateStaticParams() {
   return catalogEntries.map((entry) => ({ slug: entry.slug }));
@@ -141,21 +63,7 @@ export default async function CatalogEntryPage({
   const tokens = await highlightCode(code, "typescript");
   return (
     <CatalogDetail entry={experience}>
-      {experience.slug === "echo-vision" ? (
-        <EchoVisionDetail />
-      ) : experience.slug === "riff-reactor" ? (
-        <RiffReactorDetail />
-      ) : experience.slug === "the-rift" ? (
-        <RiftDetail />
-      ) : experience.slug === "echo-probe" ? (
-        <EchoProbeDetail />
-      ) : experience.slug === "lightsaber" ? (
-        <LightsaberDetail />
-      ) : experience.slug === "energy-charge" ? (
-        <EnergyChargeDetail />
-      ) : (
-        <ThrusterDetail />
-      )}
+      <CatalogExperience slug={experience.slug} />
       <CatalogInstall slug={experience.source.item}>
         <UsageCode slug={experience.slug} code={code}>
           <CodeBlock code={code} tokens={tokens} />

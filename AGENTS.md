@@ -112,6 +112,11 @@ accurate. Briefly justify substantial README additions in the relevant PR.
   replace verification, including when bypassed.
 - Do not perform Firefox, WebKit, Safari, device, OS, or compatibility work
   unless explicitly requested.
+- Relevant PRs must retain packed catalog/Skill compatibility for runtime,
+  catalog and Skill contracts. Modified browser specs run as full files, including
+  extended tests. Follow the explicit CI scope map and its broad fallback.
+- Keep publication verification package-specific and independent of Next.js;
+  every candidate must pass it, regardless of the version-bump diff.
 - Do not run `release:prepare` or equivalent release gates unless explicitly
   asked to prepare/verify a release.
 - Never hide failures with sleeps, retries, timeout increases, weaker

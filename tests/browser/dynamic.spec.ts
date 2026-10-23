@@ -216,7 +216,7 @@ test("vanilla impact and one continuous thruster through public exports", async 
     .toEqual(["closed"]);
 });
 
-test("reactive thruster keeps one voice through live updates and hide", async ({
+test("reactive thruster keeps one voice through live updates and hide @site", async ({
   page,
 }) => {
   await page.addInitScript(() => {

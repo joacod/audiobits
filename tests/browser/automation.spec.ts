@@ -40,13 +40,6 @@ test("managed offline linear automation preserves signal without native hold @sm
         fadeEnergy: number;
         latePeak: number;
       }>;
-      catalogSignal(
-        rate: number,
-        kind: string,
-        control: number,
-        seed: number,
-        action: string,
-      ): Promise<{ difference: number; energy: number; latePeak: number }>;
     };
     const baseline = await helpers.audioChecks.stopSignal();
     Object.defineProperty(AudioParam.prototype, "cancelAndHoldAtTime", {
@@ -56,14 +49,7 @@ test("managed offline linear automation preserves signal without native hold @sm
     const stopped = await helpers.audioChecks.stopSignal();
     const dynamic = await helpers.dynamicSignal(48000, "thruster", 0.2, true);
     const mixing = await helpers.mixingSignal(48000, true);
-    const catalog = await helpers.catalogSignal(
-      48000,
-      "thruster",
-      0.2,
-      42,
-      "live",
-    );
-    return { baseline, stopped, dynamic, mixing, catalog };
+    return { baseline, stopped, dynamic, mixing };
   });
   expect(results.stopped.energy).toBeCloseTo(results.baseline.energy, 5);
   expect(results.stopped.late).toBe(0);
@@ -75,9 +61,6 @@ test("managed offline linear automation preserves signal without native hold @sm
   expect(results.mixing.fadeEnergy).toBeGreaterThan(0);
   expect(results.mixing.tailEnergy).toBe(0);
   expect(results.mixing.latePeak).toBe(0);
-  expect(results.catalog.energy).toBeGreaterThan(0);
-  expect(results.catalog.difference).toBeLessThan(0.000001);
-  expect(results.catalog.latePeak).toBe(0);
 });
 
 test("managed live automation cleans up without native hold @smoke", async ({
@@ -112,4 +95,38 @@ test("managed live automation cleans up without native hold @smoke", async ({
   await expect(
     page.getByRole("button", { name: /"finalNodes":0/ }),
   ).toBeVisible();
+});
+
+// This native comparison uses website catalog metadata. Keep it in the full
+// suite while the core automation checks above run without the website harness.
+test("catalog live controls match native automation without native hold @site @smoke", async ({
+  page,
+}) => {
+  await page.goto("http://127.0.0.1:4173");
+  await requireOfflineCheckpoints(page);
+  await page.addScriptTag({
+    path: resolve(
+      "node_modules/.cache/audiobits-audio-tests/audio-harness.iife.js",
+    ),
+  });
+  const result = await page.evaluate(() => {
+    Object.defineProperty(AudioParam.prototype, "cancelAndHoldAtTime", {
+      configurable: true,
+      value: undefined,
+    });
+    return (
+      globalThis as unknown as {
+        catalogSignal(
+          rate: number,
+          kind: string,
+          control: number,
+          seed: number,
+          action: string,
+        ): Promise<{ difference: number; energy: number; latePeak: number }>;
+      }
+    ).catalogSignal(48000, "thruster", 0.2, 42, "live");
+  });
+  expect(result.energy).toBeGreaterThan(0);
+  expect(result.difference).toBeLessThan(0.000001);
+  expect(result.latePeak).toBe(0);
 });

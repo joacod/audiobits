@@ -87,14 +87,24 @@ export function createSoundHost(
   );
   window.addEventListener(
     "pagehide",
-    () => {
-      void dispose().catch(reportError);
+    (event) => {
+      if (event.persisted) {
+        stop();
+        void audio.suspend().catch(reportError);
+      } else {
+        void dispose().catch(reportError);
+      }
     },
     { signal: listeners.signal },
   );
   return { play, stop, dispose };
 }
 ```
+
+Persisted `pagehide` cancels pending playback and suspends the retained host.
+Restoring the page does not restart audio. Call `play` from a fresh user gesture.
+The generation guard also cancels a start that resolves after the interruption.
+Non-persisted exit and explicit owner teardown dispose the engine.
 
 Wire Stop even for finite sounds. `voice.stop()` follows the recipe release;
 `audio.stopAll({ tails: "cut" })` uses the runtime's short fade. On SPA removal,
