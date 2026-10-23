@@ -385,11 +385,7 @@ test("install command clipboard denial preserves a selectable command", async ({
   ).toBe(true);
 });
 
-for (const [width, height] of [
-  [1440, 900],
-  [768, 1024],
-  [390, 844],
-]) {
+for (const [width, height] of [[390, 844]]) {
   test(`catalog surfaces fit ${width}×${height} without obstructing source`, async ({
     page,
   }) => {

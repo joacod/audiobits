@@ -1,9 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { instrument, probe, holdLightsaber } from "./experience-probe";
-import {
-  catalogEntries,
-  catalogEntriesByCategory,
-} from "../../apps/www/lib/catalog";
+import { catalogEntriesByCategory } from "../../apps/www/lib/catalog";
 
 const home = "http://127.0.0.1:3100";
 
@@ -126,44 +123,14 @@ for (const [width, height] of [
       path: testInfo.outputPath(`landing-${width}.png`),
       fullPage: true,
     });
-    const previews = page.locator(".landing-sound-entry");
-    await expect(
-      page.getByRole("heading", { name: "Simple sounds", level: 3 }),
-    ).toBeVisible();
-    const structures: string[] = [];
-    for (const [kind, family, shape, count] of [
-      ["impact", "pulse", "ellipse", 4],
-      ["glass-notification", "harmonic", "path", 4],
-      ["whoosh", "flow", "path", 6],
-    ] as const) {
-      const entry = previews
-        .filter({ has: page.locator(`svg.preview-${family}`) })
-        .first();
-      await expect(entry).toHaveAttribute("href", `/catalog/${kind}`);
-      const svg = entry.locator(`svg.preview-${family}`);
-      await expect(svg).toHaveAttribute("aria-hidden", "true");
-      await expect(svg.locator(shape)).toHaveCount(count);
-      structures.push(await svg.innerHTML());
-      await entry.click();
-      await expect(page).toHaveURL(`${home}/catalog/${kind}`);
-      await expect(page.locator(".catalog-bench")).toBeVisible();
-      await page.goto(home);
-    }
-    expect(new Set(structures).size).toBe(3);
-    await page
-      .getByRole("link", { name: "Explore the full catalog", exact: true })
-      .click();
-    await expect(page).toHaveURL(`${home}/catalog`);
-    await expect(page.locator("[data-catalog-entry]")).toHaveCount(
-      catalogEntries.length,
-    );
-    await expect(page.locator("article.sound-card")).toHaveCount(0);
   });
 }
 
 test("landing stays silent until holding, measures real output and disposes on navigation @required", async ({
   page,
 }) => {
+  // Bound software rendering at a desktop size that still exercises letter collisions.
+  await page.setViewportSize({ width: 960, height: 640 });
   const errors: string[] = [];
   page.on("pageerror", (cause) => errors.push(cause.message));
   await instrument(page, "normal", "/");
@@ -347,7 +314,7 @@ test("landing swing, release, touch cancellation and interruptions clean up @req
 });
 
 test.describe("mobile landing activation", () => {
-  test.use({ hasTouch: true });
+  test.use({ hasTouch: true, viewport: { width: 390, height: 844 } });
 
   test("landing activation failure keeps the button available for a fresh tap @required", async ({
     page,

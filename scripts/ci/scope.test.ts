@@ -353,7 +353,7 @@ test("the CI runner executes untagged regression files and propagates command fa
   const record = join(directory, "commands.jsonl");
   writeFileSync(
     join(directory, "pnpm"),
-    `#!${process.execPath}\nrequire('node:fs').appendFileSync(process.env.RECORD, JSON.stringify(process.argv.slice(2)) + '\\n');\nif (process.env.FAIL_COMMAND === process.argv[2]) process.exit(9);\nif (process.argv[3] === 'playwright' && process.env.AUDIOBITS_BROWSER_SUITE !== 'regression') process.exit(12);\n`,
+    `#!${process.execPath}\nrequire('node:fs').appendFileSync(process.env.RECORD, JSON.stringify(process.argv.slice(2)) + '\\n');\nif (process.env.FAIL_COMMAND === process.argv[2]) process.exit(9);\nif (process.argv[2] === 'test:browser:site:prepared' && (process.env.AUDIOBITS_BROWSER_SUITE !== 'regression' || !JSON.parse(process.env.AUDIOBITS_BROWSER_FILES).includes('tests/browser/riff-reactor.spec.ts'))) process.exit(12);\n`,
     { mode: 0o755 },
   );
   const scope = select("tests/browser/riff-reactor.spec.ts");
@@ -379,16 +379,13 @@ test("the CI runner executes untagged regression files and propagates command fa
       .trim()
       .split("\n")
       .map((line) => JSON.parse(line) as string[]);
-    expect(commands).toContainEqual([
-      "exec",
-      "playwright",
-      "test",
-      "tests/browser/riff-reactor.spec.ts",
-      "--max-failures=1",
-    ]);
     expect(commands).toContainEqual(["test:runtime:prepared"]);
     expect(commands).toContainEqual(["test:browser:site:prepared"]);
     expect(commands.flat()).not.toContain("test:browser:full:prepared");
+    expect(
+      commands.filter(([name]) => name === "test:browser:site:prepared"),
+    ).toHaveLength(1);
+    expect(commands.flat()).not.toContain("playwright");
     writeFileSync(record, "");
     const failed = run("build:lib");
     expect(failed.status).toBe(9);
@@ -416,4 +413,27 @@ test("Playwright discovers untagged regression files and reserves long-form evid
   expect(list("regression", "gallery")).toContain("catalog dry signals");
   expect(list("regression", "riff-reactor")).not.toContain("whole track");
   expect(list("full", "riff-reactor")).toContain("whole track");
+});
+
+test("edited files join the required website cases in one Playwright selection", () => {
+  const result = spawnSync("pnpm", ["exec", "playwright", "test", "--list"], {
+    encoding: "utf8",
+    env: {
+      ...process.env,
+      AUDIOBITS_BROWSER_SUITE: "regression",
+      AUDIOBITS_BROWSER_FILES: JSON.stringify([
+        "tests/browser/gallery.spec.ts",
+        "tests/browser/automation.spec.ts",
+      ]),
+    },
+  });
+  expect(result.status, result.stderr).toBe(0);
+  expect(result.stdout).toContain("catalog dry signals");
+  expect(result.stdout).toContain("mobile docs menu");
+  expect(result.stdout).not.toContain("whole track");
+  expect(result.stdout).not.toContain("held pointer ignition");
+  expect(result.stdout).toContain(
+    "catalog live controls match native automation",
+  );
+  expect(result.stdout).not.toContain("managed live automation cleans up");
 });

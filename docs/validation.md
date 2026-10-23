@@ -68,8 +68,10 @@ Mixed changes combine their checks; adding prose does not broaden browser covera
 | Skill/MCP                          | Generated consistency, protocol, installed examples, native suite and website baseline               |
 | Shared/CI/dependencies/unknown     | Local preflight, package artifact, consumers, production HTML and bounded browser baseline           |
 
-New or modified browser specs are also selected explicitly, overriding the
-baseline tag so untagged regressions execute. `@extended` deliberately marks
+New or modified browser specs join the required website cases in one execution,
+so untagged regressions execute and baseline cases never run twice. Native cases
+already covered by the runtime configuration are excluded from that website run;
+`@site` regressions in mixed files remain selected. `@extended` deliberately marks
 long-form or specialized evidence for explicit full runs, never ordinary owner
 selection. To run an affected untagged case locally, override the baseline filter:
 `AUDIOBITS_BROWSER_SUITE=regression pnpm exec playwright test <file> --grep='test title'`. Deleted specs retain the

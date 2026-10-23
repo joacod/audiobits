@@ -157,7 +157,8 @@ compatibility infrastructure or investigate unrelated failures for ordinary work
 Full release preparation is reserved for an explicit release request.
 
 Pull requests combine affected boundaries around a fixed native/website baseline.
-New or modified regression specs also run explicitly, including untagged cases.
+New or modified regression specs join the website baseline in one execution,
+including untagged cases without repeating baseline tests.
 Only explicit full runs include `@extended` evidence such as the complete Riff
 Reactor song. Shared, mixed and unknown changes keep the same browser baseline.
 Pushes to `main` run quality; manual Repository checks run all retained tests.

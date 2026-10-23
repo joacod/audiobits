@@ -45,27 +45,20 @@ if (phase === "quality") {
     run(["exec", "node", "scripts/build-audio-tests.mjs"]);
   }
   if (scope.extended) run(["test:browser:full:prepared"]);
-  else {
-    if (scope.site) run(["test:runtime:prepared"]);
-    if (scope.site) run(["test:browser:site:prepared"]);
-    if (scope.browserFiles.length) {
-      assert.ok(
-        scope.browserFiles.every((file) =>
-          /^tests\/browser\/[\w-]+\.spec\.ts$/.test(file),
-        ),
-      );
-      // Explicit files override the baseline tag so untagged regressions run too.
-      // Long-form evidence remains opt-in through test:browser:full.
-      run(
-        [
-          "exec",
-          "playwright",
-          "test",
-          ...scope.browserFiles,
-          "--max-failures=1",
-        ],
-        { AUDIOBITS_BROWSER_SUITE: "regression" },
-      );
-    }
+  else if (scope.site) {
+    run(["test:runtime:prepared"]);
+    const selected = scope.browserFiles;
+    assert.ok(
+      selected.every((file) => /^tests\/browser\/[\w-]+\.spec\.ts$/.test(file)),
+    );
+    run(
+      ["test:browser:site:prepared"],
+      selected.length
+        ? {
+            AUDIOBITS_BROWSER_SUITE: "regression",
+            AUDIOBITS_BROWSER_FILES: JSON.stringify(selected),
+          }
+        : {},
+    );
   }
 }
