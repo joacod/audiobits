@@ -8,6 +8,11 @@ phase() {
   echo "Provisioning $label: $((SECONDS - started))s"
 }
 install_os() {
+  if [[ "${GITHUB_ACTIONS:-}" == "true" ]]; then
+    # Azure's mirror can stall package downloads. Use the runner's upstream
+    # Ubuntu HTTPS mirrors before Playwright refreshes the package indexes.
+    sudo sed -i '\|://azure\.archive\.ubuntu\.com/ubuntu/|d' /etc/apt/apt-mirrors.txt
+  fi
   # The pinned CLI refreshes apt indexes once and installs Chromium dependencies.
   pnpm exec playwright install-deps chromium
   # Reuse those indexes for the real output clock, without a second update.

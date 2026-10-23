@@ -105,16 +105,11 @@ because their human purposes differ.
 - Visual-only changes: lint/typecheck/build plus focused visual inspection.
 - Changed website interaction: run the affected Chromium Playwright test(s).
 - Follow the root [testing policy](../../docs/validation.md#test-selection).
-  When controls or gestures change, search browser tests for stale references
-  and run affected tests with `AUDIOBITS_BROWSER_SUITE=regression` to include untagged cases.
-  Shared changes keep the bounded baseline; use the full suite only explicitly.
-  Adding catalog items normally adds no routine website browser cases.
-  Reproduce timing-sensitive graphics regressions at their committed viewport;
-  preserve meaningful assertions without increasing timeouts or adding retries.
+  Use `AUDIOBITS_BROWSER_SUITE=regression` for affected untagged browser tests.
+  Adding a sound or component does not require another browser journey. Cover
+  AudioBits behavior, not every framework control, style token or viewport.
 - Preserve client loading boundaries for immersive renderers. Audio activation
   remains synchronous in the accepted gesture before route/renderer loading.
-- Keep exhaustive static metadata/command/pagination checks in production-output
-  tests; retain actual clipboard, focus, navigation and lifecycle behavior in Chromium.
 - Do not run package release gates or compatibility suites for ordinary website
   work.
 

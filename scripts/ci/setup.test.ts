@@ -22,7 +22,7 @@ if (args.join(' ') === 'list short sinks') console.log('0\\taudiobits_ci\\tmodul
       { mode: 0o755 },
     );
   }
-  const run = (fail = "", badSink = "") =>
+  const run = (fail = "", badSink = "", githubActions = "true") =>
     spawnSync("bash", [resolve("scripts/ci/setup-linux-audio.sh")], {
       encoding: "utf8",
       env: {
@@ -31,6 +31,7 @@ if (args.join(' ') === 'list short sinks') console.log('0\\taudiobits_ci\\tmodul
         RECORD: record,
         FAIL_COMMAND: fail,
         BAD_SINK: badSink,
+        GITHUB_ACTIONS: githubActions,
       },
     });
   try {
@@ -63,7 +64,19 @@ if (args.join(' ') === 'list short sinks') console.log('0\\taudiobits_ci\\tmodul
       "--only-shell",
       "chromium",
     ];
-    expect(calls.slice(0, 3)).toEqual([dependencies, pulse, browser]);
+    const [mirror] = calls;
+    expect(mirror.slice(0, 3)).toEqual(["sudo", "sed", "-i"]);
+    expect(mirror[4]).toBe("/etc/apt/apt-mirrors.txt");
+    const upstream =
+      "https://archive.ubuntu.com/ubuntu/\tpriority:2\n" +
+      "https://security.ubuntu.com/ubuntu/\tpriority:3\n";
+    const mirrors = spawnSync("sed", [mirror[3]], {
+      input: "http://azure.archive.ubuntu.com/ubuntu/\tpriority:1\n" + upstream,
+      encoding: "utf8",
+    });
+    expect(mirrors.status, mirrors.stderr).toBe(0);
+    expect(mirrors.stdout).toBe(upstream);
+    expect(calls.slice(1, 4)).toEqual([dependencies, pulse, browser]);
     expect(calls).toContainEqual([
       "pactl",
       "load-module",
@@ -93,6 +106,9 @@ if (args.join(' ') === 'list short sinks') console.log('0\\taudiobits_ci\\tmodul
       );
     }
     expect(run("", "1").status).not.toBe(0);
+    writeFileSync(record, "");
+    expect(run("", "", "false").status).toBe(0);
+    expect(readFileSync(record, "utf8")).not.toContain("apt-mirrors.txt");
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }

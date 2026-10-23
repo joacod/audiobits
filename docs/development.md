@@ -136,9 +136,8 @@ bound native audio/graphics contention.
 
 ## Verification by task
 
-Run the smallest check set that can falsify the requested change. Build the
-library before consumers; reuse passing builds unless subsequent edits invalidate
-those outputs.
+Use the [testing policy](validation.md#test-selection) to choose the smallest
+relevant checks. Build the library before consumers and reuse passing outputs.
 
 | Change                  | Verification                                                                   |
 | ----------------------- | ------------------------------------------------------------------------------ |
@@ -152,51 +151,28 @@ those outputs.
 | CI harness              | Directly affected script checks and Chromium tests                             |
 | Explicit release        | `pnpm release:prepare`; see [release guide](releases.md)                       |
 
-Follow the [browser policy](validation.md#browser-policy). Do not provision
-compatibility infrastructure or investigate unrelated failures for ordinary work.
-Full release preparation is reserved for an explicit release request.
-
-Pull requests combine affected boundaries around a fixed native/website baseline.
-New or modified regression specs join the website baseline in one execution,
-including untagged cases without repeating baseline tests.
-Only explicit full runs include `@extended` evidence such as the complete Riff
-Reactor song. Shared, mixed and unknown changes keep the same browser baseline.
-Pushes to `main` run quality; manual Repository checks run all retained tests.
-Publication always runs the independent package gate.
-[Test selection and tiers](validation.md#test-selection) are authoritative.
-The independent package publication flow is described in the
-[release guide](releases.md).
+CI selection and full-run policy live in [validation](validation.md#pr-scope-selection).
+Release preparation is only for an explicit release request.
 
 The browser suite owns ports 3100 and 4173; neither may already be occupied.
-[Centralized Linux audio setup](../scripts/ci/setup-linux-audio.sh) installs Chromium OS dependencies through the pinned Playwright CLI, reuses its
-refreshed package indexes to install PulseAudio, downloads only the headless shell,
-and starts and verifies a clocked null sink. `norewinds=1` bounds buffering to 50 ms.
-Run it before Chromium checks on Linux to provide the output clock.
-Do not duplicate setup or workarounds inside individual tests. CI retains failure
-traces and uploads browser artifacts for seven days; healthy runs retain no traces.
+On Linux, run `bash scripts/ci/setup-linux-audio.sh` first. It uses the pinned
+Playwright CLI to install Chromium dependencies and the headless shell, then
+starts and verifies a PulseAudio null sink to provide the audio clock. CI and
+publication use the same script. GitHub supplies the runner's Ubuntu mirror list;
+setup removes its Azure entry after observed download stalls, leaving the official
+Ubuntu HTTPS sources. CI retains traces only on failure.
 
 ### Flake investigation
 
-A flaky test is a failed test. Playwright uses zero retries locally and in CI.
-
-1. Isolate the failing test and reproduce it intentionally.
-2. Classify the failure as a product race, test race, CI environment issue or
-   unsupported capability.
-3. Identify the violated invariant and fix that layer.
-4. Add deterministic regression coverage where practical.
-5. Run the smallest evidence needed to validate the fix.
+Reproduce the failing condition in the affected test and fix its cause. Use the
+regression filter so an untagged test actually runs:
 
 ```sh
-AUDIOBITS_BROWSER_SUITE=regression pnpm exec playwright test tests/browser/gallery.spec.ts --grep='hydration' --repeat-each=10
+AUDIOBITS_BROWSER_SUITE=regression pnpm exec playwright test tests/browser/gallery.spec.ts --grep='hydration'
 ```
 
-The pre-hydration slider regression is the model: hold client JavaScript to prove
-stateful SSR controls cannot accept input before hydration owns their state.
-Do not hide failures with `page.waitForTimeout`, arbitrary sleeps, global timeout
-increases, automatic retries, weaker/removed assertions, caught/ignored failures,
-force-clicks through invalid states, Chromium skips, errors turned into warnings,
-disabled tests, unrelated-test serialization or compatibility hacks. Any such
-change requires explicit justification tied to actual system behavior.
+For a hydration race, hold client JavaScript to reproduce the condition directly.
+Repeat a run only when it answers a specific unresolved question.
 
 Keep `NODE_ENV` unset for normal local commands; unrelated values can interfere
 with Next.js. CI disables Next telemetry.
