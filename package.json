@@ -7,6 +7,7 @@
     "node": ">=24.21.0 <25"
   },
   "scripts": {
+    "prepare": "node scripts/install-hooks.mjs --auto",
     "dev": "node scripts/dev.mjs",
     "build:lib": "pnpm --filter audiobits build",
     "build:site": "pnpm build:lib && pnpm --filter @audiobits/www build",
@@ -34,7 +35,8 @@
     "test:browser:full:prepared": "AUDIOBITS_BROWSER_SUITE=full playwright test --max-failures=1",
     "test:package:prepared": "node scripts/test-package.mjs",
     "hooks:install": "node scripts/install-hooks.mjs",
-    "verify:core": "pnpm lint && pnpm build:lib && pnpm typecheck:prepared && pnpm test",
+    "verify:push": "pnpm lint && pnpm build:lib && pnpm typecheck:prepared",
+    "verify:core": "pnpm verify:push && pnpm test",
     "verify:package": "pnpm build:lib && pnpm verify:package:prepared",
     "verify:package:prepared": "pnpm --filter audiobits typecheck && node scripts/generate-recipe.mjs --check && vitest run packages/audiobits/tests --bail=1",
     "prepare:runtime": "pnpm build:lib && pnpm prepare:runtime:prepared",

@@ -111,16 +111,10 @@ export function metadataOnly(path, before, after) {
 }
 
 export function scopeForEvent(event, base, head) {
-  if (event === "push")
-    return {
-      kind: "main",
-      package: false,
-      consumers: false,
-      site: false,
-      extended: false,
-      browserFiles: [],
-    };
-  if (event !== "pull_request") return { ...selectScope([]), extended: true };
+  if (event === "workflow_dispatch")
+    return { ...selectScope([]), extended: true };
+  if (event !== "pull_request")
+    throw new Error(`Unsupported CI event: ${event}`);
   if (![base, head].every((sha) => /^[a-f0-9]{40}$/.test(sha ?? "")))
     throw new Error("PR comparison requires full base/head SHAs");
   const ancestor = git("merge-base", base, head).trim();

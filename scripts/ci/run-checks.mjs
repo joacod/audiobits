@@ -14,7 +14,6 @@ assert.ok(
     "skill",
     "baseline",
     "mixed",
-    "main",
   ].includes(scope.kind),
 );
 const run = (args, env = {}) => {
@@ -30,12 +29,22 @@ const run = (args, env = {}) => {
   if (child.status !== 0) process.exit(child.status ?? 1);
 };
 if (phase === "quality") {
-  if (["docs", "artifact"].includes(scope.kind)) run(["lint"]);
-  else run(["verify:local"]);
+  if (scope.kind === "docs")
+    run(["exec", "node", "scripts/check-doc-links.mjs"]);
+  else {
+    run(["build:lib"]);
+    if (scope.kind === "artifact") {
+      run(["exec", "node", "scripts/generate-recipe.mjs", "--check"]);
+      run(["exec", "vitest", "run", "packages/audiobits/tests", "--bail=1"]);
+    } else {
+      run(["test"]);
+      run(["check:skill"]);
+      run(["test:mcp:prepared"]);
+    }
+  }
 } else {
   if (scope.package || scope.consumers || scope.site) run(["build:lib"]);
   if (scope.package) {
-    run(["verify:package:prepared"]);
     run(["test:package:prepared"]);
   }
   if (scope.consumers) run(["test:consumers:prepared"]);

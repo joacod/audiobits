@@ -100,19 +100,9 @@ accurate. Briefly justify substantial README additions in the relevant PR.
 
 - Follow [validation](docs/validation.md#test-selection) for test selection and
   CI policy. Keep that policy there instead of duplicating it in agent files.
-- Run the smallest relevant existing checks. New features do not automatically
-  require new tests, browser cases or coverage targets. Add coverage for a real
-  gap or regression at the cheapest reliable level.
-- Run `pnpm verify:local` before opening code PRs, plus affected browser/package
-  checks. Documentation-only work may use focused static checks. Reuse passing
-  results and builds until a relevant change or failure invalidates them.
-- Full browser runs, release preparation and other-browser/device verification
-  require an explicit request. Changed browser tests must still run directly.
-- Fix failures at their cause. Do not hide them with retries, sleeps, longer
-  per-test timeouts, weaker assertions or skips. Do not impose suite-wide or CI
-  time budgets to enforce speed; investigate slow tests or setup steps directly.
-- Prefer standard tool setup. Keep necessary CI workarounds centralized and
-  tied to an observed failure; do not add infrastructure speculatively.
+- Keep PRs in draft while working; mark ready after focused verification.
+- Let the installed Git hooks enforce local checks. Do not bypass them to push
+  failing or unchecked changes.
 
 ## Instruction hierarchy
 
