@@ -57,7 +57,12 @@ its own: `performLead(index)` plays a charted note immediately until its end,
 monophonically, and `choke()` marks a stray input. `setIntensity(0 | 1 | 2)`
 lands on the next unscheduled bar line. Judge input against
 `beatAt(context.currentTime - riff.latency)`; scoring and charts stay in the
-application.
+application. Its installed `music.ts` authors scientific pitch names (`C4`,
+`F#4`, `Bb3`) in quarter-note beats with `phrase()` and `transpose()`.
+`instrument.ts` maps note/velocity inputs to recipe controls; `instruments.ts`
+selects the existing synth-rock presets. `createRiff` accepts recipe overrides
+as its fourth argument. One-shots keep their envelopes; sustained voices still
+need their host to release them. See the installed guide for ranges and examples.
 
 The installed guide defines each controller's bounded inputs and lifecycle.
 Activate the application-owned engine before starting a controller, then own

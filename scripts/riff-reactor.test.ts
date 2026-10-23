@@ -15,6 +15,7 @@ import {
   totalLatency,
   type BandEvent,
   type RiffTier,
+  type RiffInstruments,
 } from "../catalog/experiences/riff-reactor/controller";
 import { riffReactorSong as song } from "../catalog/experiences/riff-reactor/song";
 import {
@@ -64,7 +65,7 @@ const controlsOf = (
   };
 };
 
-function setup() {
+function setup(presets: Partial<RiffInstruments> = {}) {
   const clock = { currentTime: 0, outputLatency: 0.02, baseLatency: 0.01 };
   const sounds = new Map<Recipe, ReturnType<typeof fakeSound>>();
   type FakeBus = {
@@ -145,11 +146,16 @@ function setup() {
   const intensities: [RiffTier, number][] = [];
   const phases: string[] = [];
   const finished = vi.fn();
-  const riff = createRiff(audio, song, {
-    phase: (value) => phases.push(value),
-    intensity: (tier, at) => intensities.push([tier, at]),
-    finished,
-  });
+  const riff = createRiff(
+    audio,
+    song,
+    {
+      phase: (value) => phases.push(value),
+      intensity: (tier, at) => intensities.push([tier, at]),
+      finished,
+    },
+    presets,
+  );
   const of = (recipe: Recipe) => sounds.get(recipe)!;
   const advance = async (seconds: number) => {
     // Refill timers fire as the audio clock moves, in refill-sized steps.
@@ -243,8 +249,11 @@ test("sound source imports only the runtime and its own sound files", () => {
   const base = "catalog/experiences/riff-reactor";
   const allowed: Record<string, string[]> = {
     "recipe.ts": ["audiobits"],
-    "controller.ts": ["audiobits", "./recipe"],
-    "song.ts": ["./controller"],
+    "controller.ts": ["audiobits", "./instrument", "./instruments", "./music"],
+    "instrument.ts": ["audiobits", "./music"],
+    "instruments.ts": ["./recipe"],
+    "music.ts": [],
+    "song.ts": ["./controller", "./music"],
   };
   for (const [file, specifiers] of Object.entries(allowed)) {
     const source = readFileSync(`${base}/${file}`, "utf8");
@@ -290,17 +299,20 @@ test("the band plays every event once on its exact audio-clock time, booked only
   expect(played.length).toBe(events.length);
   const expected = createTransport(song.bpm, transport.origin);
   played.forEach((voice) => {
+    const at = voice.options.at;
+    if (at === undefined)
+      throw new Error("Band voices must have scheduled start times");
     const event = events.find(
       (candidate) =>
         candidate.track === voice.track &&
-        expected.timeAt(candidate.beat) === voice.options.at,
+        expected.timeAt(candidate.beat) === at,
     );
     // No drift: the 64th bar is as exact as the first.
-    expect(event, `${voice.track} at ${voice.options.at}`).toBeDefined();
-    expect(voice.options.at - voice.bookedAt).toBeLessThanOrEqual(
+    expect(event, `${voice.track} at ${at}`).toBeDefined();
+    expect(at - voice.bookedAt).toBeLessThanOrEqual(
       lookahead + refillPeriod + 1e-9,
     );
-    expect(voice.options.at).toBeGreaterThanOrEqual(voice.bookedAt);
+    expect(at).toBeGreaterThanOrEqual(voice.bookedAt);
   });
   // The song finishes on its own and releases its session.
   expect(s.riff.phase).toBe("idle");
@@ -531,4 +543,25 @@ test("peak density never reaches the global voice limit", () => {
   const bound = [...peaks.values()].reduce((sum, value) => sum + value, 0);
   expect(peak).toBeLessThan(riffVoiceLimit);
   expect(bound).toBeLessThan(riffVoiceLimit);
+});
+
+test("instrument overrides keep the composition and transport while requiring matching lifetimes", async () => {
+  const bass = { ...recipes.riffBass, duration: 0.12 };
+  const s = setup({ bass });
+  const transport = s.riff.start()!;
+  await s.advance(transport.timeAt(8) + lookahead);
+  expect(s.of(bass).play).toHaveBeenCalledWith(
+    expect.objectContaining({
+      at: transport.timeAt(8),
+      parameters: { frequency: midiToHz(40), velocity: 0.8 },
+    }),
+  );
+  s.riff.dispose();
+  expect(s.of(bass).dispose).toHaveBeenCalledOnce();
+  expect(() => setup({ bass: recipes.riffLead })).toThrow(
+    "bass needs a one-shot",
+  );
+  expect(() => setup({ lead: recipes.riffBass })).toThrow(
+    "lead needs a sustained",
+  );
 });
