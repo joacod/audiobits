@@ -1,18 +1,11 @@
-import type { AudioEngine, Bus, Recipe, Sound, Voice } from "audiobits";
-import {
-  riffArp,
-  riffBass,
-  riffChoke,
-  riffCrash,
-  riffHat,
-  riffKick,
-  riffLead,
-  riffOpenHat,
-  riffPad,
-  riffRiser,
-  riffSnare,
-  riffStab,
-} from "./recipe";
+import type { AudioEngine, Bus, Recipe, Voice } from "audiobits";
+import { createInstrument, type Instrument } from "./instrument";
+import { riffInstruments } from "./instruments";
+import { createTransport, type Transport } from "./music";
+
+// Preserve the installed controller's existing imports.
+export { createTransport, midiToHz } from "./music";
+export type RiffTransport = Transport;
 
 /** Intensity tiers: 0 base, 1 harmony and lift, 2 thickest arrangement. */
 export type RiffTier = 0 | 1 | 2;
@@ -46,26 +39,6 @@ export interface RiffSong {
   readonly lead: readonly RiffNote[];
 }
 export type RiffPhase = "idle" | "playing";
-
-export const midiToHz = (note: number) => 440 * 2 ** ((note - 69) / 12);
-
-/** The single musical timeline: beats to and from AudioContext seconds. */
-export interface RiffTransport {
-  /** AudioContext time of beat 0. */
-  readonly origin: number;
-  readonly secondsPerBeat: number;
-  beatAt(time: number): number;
-  timeAt(beat: number): number;
-}
-export function createTransport(bpm: number, origin: number): RiffTransport {
-  const secondsPerBeat = 60 / bpm;
-  return Object.freeze({
-    origin,
-    secondsPerBeat,
-    beatAt: (time: number) => (time - origin) / secondsPerBeat,
-    timeAt: (beat: number) => origin + beat * secondsPerBeat,
-  });
-}
 
 export interface BandEvent {
   readonly track: RiffTrack;
@@ -164,18 +137,8 @@ const panFor = (event: BandEvent) =>
       ? 0.38
       : -0.38
     : (pans[event.track] ?? 0);
-const recipes = {
-  kick: riffKick,
-  snare: riffSnare,
-  hat: riffHat,
-  openHat: riffOpenHat,
-  bass: riffBass,
-  pad: riffPad,
-  arp: riffArp,
-  stab: riffStab,
-  riser: riffRiser,
-  crash: riffCrash,
-} as const satisfies Record<RiffTrack, Recipe>;
+/** Override individual recipes without changing composition or game rules. */
+export type RiffInstruments = Record<RiffTrack | "lead" | "choke", Recipe>;
 
 // Timers exist in browsers and Node; typed here without DOM or Node libraries.
 const clock = globalThis as unknown as {
@@ -216,29 +179,36 @@ export function createRiff(
     /** The song reached its end naturally. */
     finished?(): void;
   } = {},
+  presets: Partial<RiffInstruments> = {},
 ) {
+  const palette: RiffInstruments = { ...riffInstruments, ...presets };
+  for (const track of [...trackOrder, "choke"] as const)
+    if (palette[track].kind !== "one-shot")
+      throw new TypeError(`${track} needs a one-shot instrument`);
+  if (palette.lead.kind !== "sustained")
+    throw new TypeError("lead needs a sustained instrument");
   const instance = ++instances;
   const events = bandEvents(song);
   const endBeat = songEndBeat(song);
   const sounds = Object.fromEntries(
-    trackOrder.map((track) => [track, audio.sound(recipes[track] as Recipe)]),
-  ) as Record<RiffTrack, Sound>;
-  const lead = audio.sound(riffLead);
-  const choke = audio.sound(riffChoke);
+    trackOrder.map((track) => [track, createInstrument(audio, palette[track])]),
+  ) as Record<RiffTrack, Instrument>;
+  const lead = createInstrument(audio, palette.lead);
+  const choke = createInstrument(audio, palette.choke);
   const listeners = new Set<(value: RiffPhase) => void>();
   const timers = new Set<unknown>();
   const retiring = new Set<Bus>();
   let phase: RiffPhase = "idle";
   let generation = 0;
   let disposed = false;
-  let transport: RiffTransport | undefined;
+  let transport: Transport | undefined;
   let band: Bus | undefined;
   let buses: Partial<Record<Group, Bus>> = {};
   let cursor = 0;
   let scheduledBeat = 0;
   let tier: RiffTier = 0;
   let pending: { tier: RiffTier; fromBeat: number } | undefined;
-  let held: { voice: Voice<typeof riffLead>; end: number } | undefined;
+  let held: { voice: Voice; end: number } | undefined;
 
   function publish(next: RiffPhase) {
     if (next === phase) return;
@@ -328,17 +298,12 @@ export function createRiff(
   }
 
   function play(event: BandEvent, at: number) {
-    const sound = sounds[event.track];
-    const declared = sound.recipe.parameters ?? {};
-    const parameters: Record<string, number> = {};
-    if ("velocity" in declared) parameters.velocity = event.velocity;
-    if ("frequency" in declared && event.note !== undefined)
-      parameters.frequency = midiToHz(event.note);
-    sound.play({
+    sounds[event.track].play({
       at,
       pan: panFor(event),
       bus: buses[routing[event.track]],
-      parameters,
+      note: event.note,
+      velocity: event.velocity,
     });
   }
 
@@ -429,10 +394,8 @@ export function createRiff(
     held?.voice.stop();
     const voice = lead.play({
       bus: buses.lead,
-      parameters: {
-        frequency: midiToHz(note.note),
-        velocity: note.velocity ?? 0.85,
-      },
+      note: note.note,
+      velocity: note.velocity ?? 0.85,
     });
     const current = { voice, end };
     held = current;

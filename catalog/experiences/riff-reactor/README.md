@@ -2,7 +2,8 @@
 
 Install with `npx shadcn@latest add joacod/audiobits/riff-reactor`.
 You own and may modify the installed source.
-The item installs `recipe.ts`, `song.ts`, `controller.ts`, and this guide under
+The item installs recipes, music helpers, instruments, a song, a controller,
+and this guide under
 `src/sounds/experiences/riff-reactor/`. `audiobits` is the only runtime
 dependency.
 
@@ -17,10 +18,19 @@ connect `stop()` to cancellation, and `dispose()` to removal:
 import { createAudio } from "audiobits";
 import { createRiff } from "./sounds/experiences/riff-reactor/controller";
 import { riffReactorSong } from "./sounds/experiences/riff-reactor/song";
+import { riffInstruments } from "./sounds/experiences/riff-reactor/instruments";
 
 // The band's top tier needs about 30 voices; 48 keeps stealing out of reach.
 const audio = createAudio({ maxVoices: 48, masterGainDb: -8 });
-const riff = createRiff(audio, riffReactorSong);
+// Optional fourth argument: choose or edit recipes independently of the song.
+const riff = createRiff(
+  audio,
+  riffReactorSong,
+  {},
+  {
+    bass: riffInstruments.bass,
+  },
+);
 let request = 0;
 
 export async function play() {
@@ -81,6 +91,58 @@ drums, bass, pad and chorus chugs; tier 1 adds the arpeggio, open hats, ghost
 notes, bass octaves and verse chugs; tier 2 adds sixteenth hats, extra kicks,
 fills and pushes. `setIntensity()` lands on the next bar line that has not been
 scheduled yet. Replace the song with your own `RiffSong` data.
+
+### Write notes and choose instruments
+
+`music.ts` uses scientific pitch notation: `C4` is middle C, `A4` is 440 Hz,
+`F#4` and `Gb4` are the same pitch. It supports single sharps/flats and MIDI
+pitches 0 through 127 in twelve-tone equal temperament. Times and lengths are
+quarter-note beats: `1` is a quarter note, `0.5` an eighth, `1.5` a dotted
+quarter, and `1 / 3` an eighth-note triplet. BPM counts quarter notes.
+
+In `src/song.ts`, write a phrase like this:
+
+```ts
+import { phrase, transpose } from "./sounds/experiences/riff-reactor/music";
+
+export const melody = phrase([
+  // onset, length, pitch, optional velocity (default 0.8)
+  [0, 1, "C4"],
+  [1, 0.5, "D4", 0.7],
+  [2, 1.5, transpose("G4", -12)],
+]);
+export const harmony = phrase([[0, 4, ["C4", "E4", "G4"]]], 4);
+```
+
+Gaps are rests. An array of pitches expands into simultaneous notes. The second
+argument offsets a phrase in beats, so phrases can repeat at different bars.
+`phrase()` returns ordinary `{ beat, length, note, velocity }` events with MIDI
+pitches, compatible with `RiffSong`. This is a small TypeScript authoring helper,
+not a new score interchange format. Scientific pitch notation also underlies
+[MusicXML pitch data](https://www.w3.org/2021/06/musicxml40/tutorial/midi-compatible-part/).
+Importing sheet music, tempo changes and score engraving are outside its scope.
+
+`riffInstruments` selects the existing pick bass, power-chord pad, plucked arp,
+chord stab, sustained lead, drums and effects from `recipe.ts`. These are synth
+presets, not sampled acoustic instruments. Edit a recipe or supply replacements
+in `createRiff`'s fourth argument. Band parts and the choke require one-shots;
+the lead requires a sustained recipe. Pitched parts use a `frequency` control,
+and `velocity`, when declared, controls dynamics. Keep notes within each recipe's
+frequency range and recheck voice budgets and the mix when changing presets.
+The arp and lead echoes remain tuned to 128 BPM.
+
+For another host, `createInstrument(audio, recipe)` from `instrument.ts` returns
+an instrument with `play({ note: "E3", velocity: 0.8, at, bus })` and `dispose()`.
+`at` is AudioContext time, obtainable from `createTransport(bpm, origin).timeAt(beat)`.
+Play only after activation. Retain the returned voice to cancel or stop it, and
+dispose the instrument when removing it. It neither starts nor disposes the engine.
+
+A written length describes the musical event, not automatic envelope stretching.
+One-shots keep their recipe's duration and tails. The Riff controller releases the
+sustained lead at its written end; a custom host must stop sustained voices itself.
+The Riff lead is monophonic, so use chord arrays for polyphonic band parts, not
+its performed lead. The existing pad and stab already sound power chords from
+one root. Use a single-tone preset when spelling out a different chord.
 
 ### Lead
 

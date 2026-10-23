@@ -311,8 +311,11 @@ try {
           ),
       );
       if (item.meta.classification === "experience") {
+        // Authoring examples are typechecked below; keep one lifecycle entrypoint.
         assert.equal(
-          matches.length,
+          matches.filter((match) =>
+            /\bexport (?:async )?function play\b/.test(match[1]),
+          ).length,
           1,
           `${item.name}: one working installed-path example`,
         );

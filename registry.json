@@ -675,6 +675,21 @@
           "target": "~/src/sounds/experiences/riff-reactor/controller.ts"
         },
         {
+          "path": "catalog/experiences/riff-reactor/music.ts",
+          "type": "registry:file",
+          "target": "~/src/sounds/experiences/riff-reactor/music.ts"
+        },
+        {
+          "path": "catalog/experiences/riff-reactor/instrument.ts",
+          "type": "registry:file",
+          "target": "~/src/sounds/experiences/riff-reactor/instrument.ts"
+        },
+        {
+          "path": "catalog/experiences/riff-reactor/instruments.ts",
+          "type": "registry:file",
+          "target": "~/src/sounds/experiences/riff-reactor/instruments.ts"
+        },
+        {
           "path": "catalog/experiences/riff-reactor/README.md",
           "type": "registry:file",
           "target": "~/src/sounds/experiences/riff-reactor/README.md"
