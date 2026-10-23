@@ -9,7 +9,12 @@ import {
 import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { selectScope, parseNameStatus, metadataOnly } from "./select-scope.mjs";
+import {
+  selectScope,
+  parseNameStatus,
+  metadataOnly,
+  scopeForEvent,
+} from "./select-scope.mjs";
 import { checkRequired } from "./check-required.mjs";
 
 const select = (...paths: string[]) =>
@@ -33,9 +38,11 @@ test("prose and shipped metadata avoid unrelated website regressions", () => {
       { path: "packages/audiobits/package.json", metadataOnly: true },
     ]),
   ).toMatchObject({ kind: "artifact", package: true, site: false });
-  expect(
-    selectScope([{ path: "README.md", executable: true }]).fullBrowser,
-  ).toBe(true);
+  expect(selectScope([{ path: "README.md", executable: true }])).toMatchObject({
+    kind: "baseline",
+    site: true,
+    extended: false,
+  });
   expect(
     metadataOnly(
       "package.json",
@@ -52,7 +59,7 @@ test("prose and shipped metadata avoid unrelated website regressions", () => {
   ).toBe(false);
 });
 
-test("version metadata and consumed Changesets still select the artifact gate without website games", () => {
+test("version metadata and consumed Changesets retain the independent artifact gate", () => {
   expect(
     selectScope([
       { path: "packages/audiobits/package.json", metadataOnly: true },
@@ -75,7 +82,7 @@ test("version metadata and consumed Changesets still select the artifact gate wi
   });
 });
 
-test("runtime contracts retain packed consumers and full native/host regressions", () => {
+test("runtime and distribution contracts retain packed consumers with bounded native/website coverage", () => {
   for (const path of [
     "packages/audiobits/src/runtime/engine.ts",
     "packages/audiobits/src/compiler/plan.ts",
@@ -85,79 +92,91 @@ test("runtime contracts retain packed consumers and full native/host regressions
     expect(select(path)).toMatchObject({
       package: true,
       consumers: true,
-      fullBrowser: true,
       site: true,
+      extended: false,
+      browserFiles: [],
+    });
+  }
+  for (const path of [
+    "registry.json",
+    "catalog/experiences/riff-reactor/controller.ts",
+    "catalog/experiences/new-item/controller.ts",
+    "catalog/recipes/new-item/recipe.ts",
+    "skills/audiobits/references/integration.md",
+    "tools/mcp/server.ts",
+  ]) {
+    expect(select(path)).toMatchObject({
+      consumers: true,
+      site: true,
+      extended: false,
+      browserFiles: [],
     });
   }
 });
 
-test("owning experiences select their full files, including the extended Riff song", () => {
-  const riff = select("catalog/experiences/riff-reactor/controller.ts");
-  expect(riff).toMatchObject({
-    consumers: true,
-    site: true,
-    fullBrowser: false,
-  });
-  expect(riff.browserFiles).toContain("tests/browser/riff-reactor.spec.ts");
+test("presentation changes and prose combine without selecting installed consumers or historical owners", () => {
+  for (const paths of [
+    ["apps/www/app/riff-detail.tsx"],
+    ["apps/www/lib/audio-gestures.ts"],
+    ["README.md", "apps/www/app/riff-detail.tsx"],
+    ["apps/www/content/docs/(runtime)/index.mdx"],
+  ])
+    expect(select(...paths)).toMatchObject({
+      package: false,
+      consumers: false,
+      site: true,
+      extended: false,
+      browserFiles: [],
+    });
   expect(
-    select(
-      "catalog/experiences/riff-reactor/controller.ts",
-      "tests/browser/riff-reactor.spec.ts",
-    ),
-  ).toMatchObject({ consumers: true, site: true, fullBrowser: false });
-  expect(
-    select("catalog/experiences/lightsaber/controller.ts").browserFiles,
-  ).toContain("tests/browser/landing.spec.ts");
-  expect(select("apps/www/app/riff-detail.tsx")).toMatchObject({
+    select("apps/www/app/riff-detail.tsx", "packages/audiobits/README.md"),
+  ).toMatchObject({
+    package: true,
     consumers: false,
     site: true,
-    fullBrowser: false,
+    extended: false,
   });
   expect(
-    select("catalog/experiences/echo-probe/controller.ts").browserFiles,
-  ).toEqual(
-    expect.arrayContaining([
-      "tests/browser/echo-probe.spec.ts",
-      "tests/browser/echo-vision.spec.ts",
-    ]),
-  );
-  expect(select("skills/audiobits/references/integration.md")).toMatchObject({
+    select("README.md", "catalog/experiences/new-item/controller.ts"),
+  ).toMatchObject({
     consumers: true,
     site: true,
+    extended: false,
+    browserFiles: [],
   });
 });
 
-test("shared, dependency, CI, mixed and unknown changes broaden conservatively", () => {
-  for (const paths of [
-    ["apps/www/lib/audio-gestures.ts"],
-    ["apps/www/app/layout.tsx"],
-    ["pnpm-lock.yaml"],
-    [".github/workflows/ci.yml"],
-    [".changeset/config.json"],
-    ["future/source.ts"],
-    ["apps/www/future/riff-unknown.ts"],
-    ["README.md", "tests/browser/riff-reactor.spec.ts"],
-    ["catalog/experiences/new-item/controller.ts"],
-    ["catalog/recipes/new-item/recipe.ts"],
-    ["README.md", "apps/www/app/riff-detail.tsx"],
+test("shared, CI, dependency and unknown changes select the bounded baseline plus distribution checks", () => {
+  for (const path of [
+    "pnpm-lock.yaml",
+    ".github/workflows/ci.yml",
+    ".changeset/config.json",
+    "future/source.ts",
+    "tests/browser/experience-probe.ts",
   ]) {
-    expect(select(...paths), paths.join(", ")).toMatchObject({
-      fullBrowser: true,
+    expect(select(path)).toMatchObject({
+      kind: "baseline",
       package: true,
       consumers: true,
       site: true,
+      extended: false,
+      browserFiles: [],
     });
   }
 });
 
-test("new and modified browser specs run as complete files without tag filtering", () => {
-  const path = "tests/browser/new-extended.spec.ts";
+test("new and modified regression files are explicit without requiring a baseline tag", () => {
+  const path = "tests/browser/new-regression.spec.ts";
   expect(select(path)).toMatchObject({
     site: true,
-    fullBrowser: false,
+    extended: false,
     browserFiles: [path],
   });
-  expect(selectScope([{ path, deleted: true }]).fullBrowser).toBe(true);
+  expect(selectScope([{ path, deleted: true }])).toMatchObject({
+    site: true,
+    extended: false,
+    browserFiles: [],
+  });
   const changes = parseNameStatus(
     "R100\0tests/browser/old.spec.ts\0tests/browser/new.spec.ts\0D\0docs/removed.md\0A\0tests/browser/added.spec.ts\0M\0tests/browser/modified.spec.ts\0",
   );
@@ -168,12 +187,27 @@ test("new and modified browser specs run as complete files without tag filtering
     { path: "tests/browser/added.spec.ts", deleted: false, added: true },
     { path: "tests/browser/modified.spec.ts", deleted: false, added: false },
   ]);
-  expect(selectScope(changes).browserFiles).toEqual(
-    expect.arrayContaining([
-      "tests/browser/new.spec.ts",
-      "tests/browser/added.spec.ts",
-      "tests/browser/modified.spec.ts",
-    ]),
+  expect(selectScope(changes).browserFiles).toEqual([
+    "tests/browser/added.spec.ts",
+    "tests/browser/modified.spec.ts",
+    "tests/browser/new.spec.ts",
+  ]);
+});
+
+test("only explicit manual runs select extended browser evidence", () => {
+  expect(scopeForEvent("push")).toMatchObject({
+    kind: "main",
+    site: false,
+    extended: false,
+  });
+  expect(scopeForEvent("workflow_dispatch")).toMatchObject({
+    package: true,
+    consumers: true,
+    site: true,
+    extended: true,
+  });
+  expect(() => scopeForEvent("pull_request", "main", "head")).toThrow(
+    "full base/head SHAs",
   );
 });
 
@@ -245,7 +279,10 @@ test("PR comparison uses the merge base and detects executable documentation cha
       "Introduction\n\n```sh\npnpm different-command\n```\n",
     );
     const executable = commit();
-    expect(run(base, executable).fullBrowser).toBe(true);
+    expect(run(base, executable)).toMatchObject({
+      site: true,
+      extended: false,
+    });
     mkdirSync(join(directory, "tests/browser"), { recursive: true });
     writeFileSync(
       join(directory, "tests/browser/old-extended.spec.ts"),
@@ -268,7 +305,7 @@ test("PR comparison uses the merge base and detects executable documentation cha
       "tests/browser/added-extended.spec.ts",
       "tests/browser/renamed-extended.spec.ts",
     ]);
-    expect(selected.fullBrowser).toBe(true);
+    expect(selected.extended).toBe(false);
     rmSync(join(directory, "tests/browser/renamed-extended.spec.ts"));
     const missing = spawnSync(
       process.execPath,
@@ -311,12 +348,12 @@ test("the aggregation rejects failed, cancelled, missing and skipped required jo
   }
 });
 
-test("the CI runner executes selected extended files and propagates command failure", () => {
+test("the CI runner executes untagged regression files and propagates command failure", () => {
   const directory = mkdtempSync(join(tmpdir(), "audiobits-runner-"));
   const record = join(directory, "commands.jsonl");
   writeFileSync(
     join(directory, "pnpm"),
-    `#!${process.execPath}\nrequire('node:fs').appendFileSync(process.env.RECORD, JSON.stringify(process.argv.slice(2)) + '\\n');\nif (process.env.FAIL_COMMAND === process.argv[2]) process.exit(9);\n`,
+    `#!${process.execPath}\nrequire('node:fs').appendFileSync(process.env.RECORD, JSON.stringify(process.argv.slice(2)) + '\\n');\nif (process.env.FAIL_COMMAND === process.argv[2]) process.exit(9);\nif (process.argv[2] === 'test:browser:site:prepared' && (process.env.AUDIOBITS_BROWSER_SUITE !== 'regression' || !JSON.parse(process.env.AUDIOBITS_BROWSER_FILES).includes('tests/browser/riff-reactor.spec.ts'))) process.exit(12);\n`,
     { mode: 0o755 },
   );
   const scope = select("tests/browser/riff-reactor.spec.ts");
@@ -342,14 +379,13 @@ test("the CI runner executes selected extended files and propagates command fail
       .trim()
       .split("\n")
       .map((line) => JSON.parse(line) as string[]);
-    expect(commands).toContainEqual([
-      "exec",
-      "playwright",
-      "test",
-      "tests/browser/riff-reactor.spec.ts",
-      "--max-failures=1",
-    ]);
-    expect(JSON.stringify(commands)).not.toContain("--grep");
+    expect(commands).toContainEqual(["test:runtime:prepared"]);
+    expect(commands).toContainEqual(["test:browser:site:prepared"]);
+    expect(commands.flat()).not.toContain("test:browser:full:prepared");
+    expect(
+      commands.filter(([name]) => name === "test:browser:site:prepared"),
+    ).toHaveLength(1);
+    expect(commands.flat()).not.toContain("playwright");
     writeFileSync(record, "");
     const failed = run("build:lib");
     expect(failed.status).toBe(9);
@@ -357,4 +393,47 @@ test("the CI runner executes selected extended files and propagates command fail
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }
+});
+
+// Exercise discovery through Playwright itself: CLI grep is an additional filter,
+// so overriding it alone must never masquerade as running untagged regressions.
+test("Playwright discovers untagged regression files and reserves long-form evidence for full runs", () => {
+  const list = (suite: string, file: string) => {
+    const result = spawnSync(
+      "pnpm",
+      ["exec", "playwright", "test", `tests/browser/${file}.spec.ts`, "--list"],
+      {
+        encoding: "utf8",
+        env: { ...process.env, AUDIOBITS_BROWSER_SUITE: suite },
+      },
+    );
+    expect(result.status, result.stderr + result.stdout).toBe(0);
+    return result.stdout;
+  };
+  expect(list("regression", "gallery")).toContain("catalog dry signals");
+  expect(list("regression", "riff-reactor")).not.toContain("whole track");
+  expect(list("full", "riff-reactor")).toContain("whole track");
+});
+
+test("edited files join the required website cases in one Playwright selection", () => {
+  const result = spawnSync("pnpm", ["exec", "playwright", "test", "--list"], {
+    encoding: "utf8",
+    env: {
+      ...process.env,
+      AUDIOBITS_BROWSER_SUITE: "regression",
+      AUDIOBITS_BROWSER_FILES: JSON.stringify([
+        "tests/browser/gallery.spec.ts",
+        "tests/browser/automation.spec.ts",
+      ]),
+    },
+  });
+  expect(result.status, result.stderr).toBe(0);
+  expect(result.stdout).toContain("catalog dry signals");
+  expect(result.stdout).toContain("mobile docs menu");
+  expect(result.stdout).not.toContain("whole track");
+  expect(result.stdout).not.toContain("held pointer ignition");
+  expect(result.stdout).toContain(
+    "catalog live controls match native automation",
+  );
+  expect(result.stdout).not.toContain("managed live automation cleans up");
 });

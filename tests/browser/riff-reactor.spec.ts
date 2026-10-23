@@ -104,7 +104,7 @@ function perform(page: Page, notes: { beat: number; lane: number }[]) {
   );
 }
 
-test("perform, miss, lift on a bar line, stop, replay, hide and leave cleanly @smoke", async ({
+test("perform, miss, lift on a bar line, stop, replay, hide and leave cleanly @required", async ({
   page,
 }) => {
   test.setTimeout(60_000);
@@ -218,7 +218,7 @@ test("perform, miss, lift on a bar line, stop, replay, hide and leave cleanly @s
     .toEqual({ connected: 0, contexts: [] });
 });
 
-test("the whole track stays on the audio clock and ends on its own", async ({
+test("the whole track stays on the audio clock and ends on its own @extended", async ({
   page,
 }) => {
   test.setTimeout(120_000);

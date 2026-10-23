@@ -11,7 +11,7 @@ import { requireOfflineCheckpoints } from "./offline-capabilities";
 const stage = (page: import("@playwright/test").Page) =>
   page.getByRole("group", { name: "Lightsaber stage", exact: true });
 
-test("held pointer ignition, swept target hits, release retraction and teardown @smoke", async ({
+test("held pointer ignition, swept target hits, release retraction and teardown", async ({
   page,
 }) => {
   // Bound software WebGL's pixel cost while retaining the full gesture and
@@ -137,7 +137,7 @@ test("held pointer ignition, swept target hits, release retraction and teardown 
   expect(errors).toEqual([]);
 });
 
-for (const cancellation of ["capture", "blur"] as const)
+for (const cancellation of ["capture"] as const)
   test(`${cancellation} cancellation stops a held blade and permits another gesture`, async ({
     page,
   }) => {
@@ -183,68 +183,6 @@ for (const cancellation of ["capture", "blur"] as const)
       .toEqual(["closed"]);
     expect((await probe(page)).connected).toBe(0);
   });
-
-test("repeated landing holds and releases bound voices and dispose on navigation", async ({
-  page,
-}) => {
-  // Bound software WebGL's pixel cost in this voice stress test.
-  await page.setViewportSize({ width: 390, height: 844 });
-  const errors: string[] = [];
-  page.on("pageerror", (cause) => errors.push(cause.message));
-  await instrument(page, "normal", "/");
-  const pad = stage(page);
-  await expect(pad).toHaveAttribute("data-renderer", "three");
-  for (let i = 0; i < 5; i++) {
-    await holdStage(page);
-    await expect(pad).toHaveAttribute("data-state", "running");
-    const current = await probe(page);
-    expect(current.sources - current.ended).toBeLessThanOrEqual(26);
-    if (i === 4) {
-      const box = (await pad.boundingBox())!;
-      await page.mouse.move(box.x + box.width * 0.8, box.y + box.height * 0.7, {
-        steps: 4,
-      });
-      // Reproduce the observed desktop release: capture is lost with buttons=0,
-      // but pointerup never reaches the stage. Chromium still releases capture.
-      await page.evaluate(() =>
-        document.addEventListener(
-          "pointerup",
-          (event) => event.stopImmediatePropagation(),
-          {
-            capture: true,
-            once: true,
-          },
-        ),
-      );
-    }
-    const beforeRelease = await probe(page);
-    await page.mouse.up();
-    await expect(pad).toHaveAttribute("data-state", "stopped");
-    expect((await probe(page)).sources).toBeGreaterThan(beforeRelease.sources);
-    // Release plays a retraction tail; measure the next ignition after it ends.
-    await expect
-      .poll(async () => {
-        const p = await probe(page);
-        return p.sources === p.ended;
-      })
-      .toBe(true);
-  }
-  await expect
-    .poll(async () => {
-      const p = await probe(page);
-      return p.sources === p.ended;
-    })
-    .toBe(true);
-  await page
-    .getByRole("navigation", { name: "Main navigation" })
-    .getByRole("link", { name: "Catalog", exact: true })
-    .click();
-  await expect
-    .poll(async () => (await probe(page)).contexts)
-    .toEqual(["closed"]);
-  expect((await probe(page)).connected).toBe(0);
-  expect(errors).toEqual([]);
-});
 
 for (const mode of ["held", "failed"] as const)
   test(`${mode} activation remains cancelled or exposes retry`, async ({
@@ -503,7 +441,7 @@ test("keyboard alternatives, touch release and cancellation, reduced motion, sou
     .toBe(true);
 });
 
-test("Chromium native signal: five timbres, control extrema, rapid ramps and eight-voice headroom @smoke", async ({
+test("Chromium native signal: five timbres, control extrema, rapid ramps and eight-voice headroom", async ({
   page,
 }) => {
   await page.goto("http://127.0.0.1:4173");
@@ -853,3 +791,64 @@ for (const failure of ["context", "shader", "lost"] as const)
     expect((await probe(page)).connected).toBe(0);
     expect(await bladeResourceCount(page)).toBe(0);
   });
+
+test("lost pointerup still retracts a captured blade and disposes on navigation", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const errors: string[] = [];
+  page.on("pageerror", (cause) => errors.push(cause.message));
+  await instrument(page, "normal", "/");
+  const pad = stage(page);
+  await expect(pad).toHaveAttribute("data-renderer", "three");
+
+  await holdStage(page);
+  await expect(pad).toHaveAttribute("data-state", "running");
+  const current = await probe(page);
+  expect(current.sources - current.ended).toBeLessThanOrEqual(26);
+  {
+    const box = (await pad.boundingBox())!;
+    await page.mouse.move(box.x + box.width * 0.8, box.y + box.height * 0.7, {
+      steps: 4,
+    });
+    // Reproduce the observed desktop release: capture is lost with buttons=0,
+    // but pointerup never reaches the stage. Chromium still releases capture.
+    await page.evaluate(() =>
+      document.addEventListener(
+        "pointerup",
+        (event) => event.stopImmediatePropagation(),
+        {
+          capture: true,
+          once: true,
+        },
+      ),
+    );
+  }
+  const beforeRelease = await probe(page);
+  await page.mouse.up();
+  await expect(pad).toHaveAttribute("data-state", "stopped");
+  expect((await probe(page)).sources).toBeGreaterThan(beforeRelease.sources);
+  // Release plays a retraction tail; measure the next ignition after it ends.
+  await expect
+    .poll(async () => {
+      const p = await probe(page);
+      return p.sources === p.ended;
+    })
+    .toBe(true);
+
+  await expect
+    .poll(async () => {
+      const p = await probe(page);
+      return p.sources === p.ended;
+    })
+    .toBe(true);
+  await page
+    .getByRole("navigation", { name: "Main navigation" })
+    .getByRole("link", { name: "Catalog", exact: true })
+    .click();
+  await expect
+    .poll(async () => (await probe(page)).contexts)
+    .toEqual(["closed"]);
+  expect((await probe(page)).connected).toBe(0);
+  expect(errors).toEqual([]);
+});

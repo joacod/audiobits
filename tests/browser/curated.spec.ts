@@ -7,7 +7,7 @@ import { whoosh } from "../../catalog/recipes/whoosh/recipe";
 import { powerUp } from "../../catalog/recipes/power-up/recipe";
 import type { Recipe } from "../../packages/audiobits/src/recipe/generated";
 
-test("new sounds render finite, bounded, repeatable output and clear their tails @smoke", async ({
+test("new sounds render finite, bounded, repeatable output and clear their tails", async ({
   page,
 }) => {
   await page.goto("http://127.0.0.1:4173");

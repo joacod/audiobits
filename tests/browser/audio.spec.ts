@@ -20,7 +20,7 @@ interface Checks {
   lifecycle(): Promise<unknown>;
 }
 
-test("Native offline signal, overlap and cancellation @smoke", async ({
+test("Native offline signal, overlap and cancellation", async ({
   page,
   browser,
   browserName,
@@ -52,7 +52,7 @@ test("Native offline signal, overlap and cancellation @smoke", async ({
   expect(output.cancelled.energy).toBe(0);
 });
 
-test("native offline release during attack fades to silence @smoke", async ({
+test("native offline release during attack fades to silence", async ({
   page,
 }) => {
   await page.goto("http://127.0.0.1:4173");
@@ -71,7 +71,7 @@ test("native offline release during attack fades to silence @smoke", async ({
   expect(output.delta).toBeLessThan(0.001);
 });
 
-test("Native lifecycle and simulated failed activation retry @smoke", async ({
+test("Native lifecycle and simulated failed activation retry", async ({
   page,
 }) => {
   await page.goto("http://127.0.0.1:4173");
@@ -104,7 +104,7 @@ test("Native lifecycle and simulated failed activation retry @smoke", async ({
   ).toBeVisible();
 });
 
-test("actual Chromium autoplay block times out and retries from a gesture @smoke", async ({
+test("actual Chromium autoplay block times out and retries from a gesture", async ({
   browserName,
 }) => {
   test.skip(

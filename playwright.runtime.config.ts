@@ -1,16 +1,9 @@
 import { defineConfig } from "@playwright/test";
-import { shared } from "./playwright.shared";
+import { shared, runtimeSpecs } from "./playwright.shared";
 
 export default defineConfig({
   ...shared,
-  testMatch: [
-    "audio.spec.ts",
-    "automation.spec.ts",
-    "delay.spec.ts",
-    "release.spec.ts",
-    "dynamic.spec.ts",
-    "mixing.spec.ts",
-  ],
+  testMatch: runtimeSpecs,
   grepInvert: /@site/,
   webServer: {
     command:

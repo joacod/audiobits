@@ -769,4 +769,4 @@ async function lightsaberSignal(
 }
 Object.assign(globalThis, { lightsaberSignal });
 
-export { waitForCleanup, require };
+export { require };

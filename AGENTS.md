@@ -98,33 +98,21 @@ accurate. Briefly justify substantial README additions in the relevant PR.
 
 ## Verification discipline
 
-- Run the smallest check set that can validate the requested change.
-- Follow the authoritative [testing policy](docs/validation.md#test-selection).
-  New code does not automatically need a test. Protect meaningful uncovered
-  behavior or an actual regression at the cheapest reliable level; use Chromium
-  when native audio or browser lifecycle is essential. Improve existing coverage
-  before adding cases, and explain why a new browser test is needed.
-- Do not expand viewport, input, parameter or stress permutations without a
-  concrete regression risk. Do not add tests for counts, implementation details
-  or generic habits. Keep tests deterministic, maintainable and proportionate.
+- Follow [validation](docs/validation.md#test-selection) for test selection and
+  CI policy. Keep that policy there instead of duplicating it in agent files.
+- Run the smallest relevant existing checks. New features do not automatically
+  require new tests, browser cases or coverage targets. Add coverage for a real
+  gap or regression at the cheapest reliable level.
 - Run `pnpm verify:local` before opening code PRs, plus affected browser/package
-  checks. Documentation-only work may use focused static checks. Hooks do not
-  replace verification, including when bypassed.
-- Do not perform Firefox, WebKit, Safari, device, OS, or compatibility work
-  unless explicitly requested.
-- Relevant PRs must retain packed catalog/Skill compatibility for runtime,
-  catalog and Skill contracts. Modified browser specs run as full files, including
-  extended tests. Follow the explicit CI scope map and its broad fallback.
-- Keep publication verification package-specific and independent of Next.js;
-  every candidate must pass it, regardless of the version-bump diff.
-- Do not run `release:prepare` or equivalent release gates unless explicitly
-  asked to prepare/verify a release.
-- Never hide failures with sleeps, retries, timeout increases, weaker
-  assertions, ignored errors, or skips.
-- When investigating a flake, reproduce the violated product/test/environment
-  invariant directly.
-- CI environment setup belongs in centralized repository scripts, not
-  individual tests.
+  checks. Documentation-only work may use focused static checks. Reuse passing
+  results and builds until a relevant change or failure invalidates them.
+- Full browser runs, release preparation and other-browser/device verification
+  require an explicit request. Changed browser tests must still run directly.
+- Fix failures at their cause. Do not hide them with retries, sleeps, longer
+  per-test timeouts, weaker assertions or skips. Do not impose suite-wide or CI
+  time budgets to enforce speed; investigate slow tests or setup steps directly.
+- Prefer standard tool setup. Keep necessary CI workarounds centralized and
+  tied to an observed failure; do not add infrastructure speculatively.
 
 ## Instruction hierarchy
 

@@ -32,8 +32,11 @@ pnpm exec playwright install --only-shell chromium
 pnpm release:prepare
 ```
 
-On Linux, run [centralized audio setup](../scripts/ci/setup-linux-audio.sh) before
-browser verification. The gate always builds the candidate runtime, checks its
+On Linux, use [centralized Chromium/audio setup](../scripts/ci/setup-linux-audio.sh)
+instead of the standalone browser download. It installs OS dependencies, reuses
+the refreshed indexes for PulseAudio, downloads the headless shell, then starts
+and verifies the `norewinds=1` null sink. Both CI and publication bound this
+provisioning step to three minutes. The gate always builds the candidate runtime, checks its
 types and meaningful units, checks generated schema/capabilities, builds the
 vanilla/native harness and runs the complete selected native Chromium files.
 These cover activation, scheduling, cancellation, resource bounds, routing,
@@ -102,8 +105,7 @@ The maintainer must configure the npm Trusted Publisher for this repository and
 `release.yml`, with **`npm publish` permission enabled**, and enable GitHub
 Actions to create pull requests. These external settings are not configured by
 the repository. Actions are pinned to reviewed full commit SHAs with readable
-version comments;
-Dependabot groups GitHub Actions updates for review. The workflow defines the npm
+version comments. The workflow defines the npm
 version and uses the repository's Node/pnpm toolchain and centralized
 Linux/Chromium setup without dependency
 caches in the publish job.

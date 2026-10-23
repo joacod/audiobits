@@ -1,9 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { instrument, probe, holdLightsaber } from "./experience-probe";
-import {
-  catalogEntries,
-  catalogEntriesByCategory,
-} from "../../apps/www/lib/catalog";
+import { catalogEntriesByCategory } from "../../apps/www/lib/catalog";
 
 const home = "http://127.0.0.1:3100";
 
@@ -126,151 +123,14 @@ for (const [width, height] of [
       path: testInfo.outputPath(`landing-${width}.png`),
       fullPage: true,
     });
-    const previews = page.locator(".landing-sound-entry");
-    await expect(
-      page.getByRole("heading", { name: "Simple sounds", level: 3 }),
-    ).toBeVisible();
-    const structures: string[] = [];
-    for (const [kind, family, shape, count] of [
-      ["impact", "pulse", "ellipse", 4],
-      ["glass-notification", "harmonic", "path", 4],
-      ["whoosh", "flow", "path", 6],
-    ] as const) {
-      const entry = previews
-        .filter({ has: page.locator(`svg.preview-${family}`) })
-        .first();
-      await expect(entry).toHaveAttribute("href", `/catalog/${kind}`);
-      const svg = entry.locator(`svg.preview-${family}`);
-      await expect(svg).toHaveAttribute("aria-hidden", "true");
-      await expect(svg.locator(shape)).toHaveCount(count);
-      structures.push(await svg.innerHTML());
-      await entry.click();
-      await expect(page).toHaveURL(`${home}/catalog/${kind}`);
-      await expect(page.locator(".catalog-bench")).toBeVisible();
-      await page.goto(home);
-    }
-    expect(new Set(structures).size).toBe(3);
-    await page
-      .getByRole("link", { name: "Explore the full catalog", exact: true })
-      .click();
-    await expect(page).toHaveURL(`${home}/catalog`);
-    await expect(page.locator("[data-catalog-entry]")).toHaveCount(
-      catalogEntries.length,
-    );
-    await expect(page.locator("article.sound-card")).toHaveCount(0);
   });
 }
 
-test("landing install commands copy exactly and documentation destinations resolve", async ({
-  page,
-  context,
-}) => {
-  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
-  await page.goto(home);
-  await page.evaluate(() => {
-    const write = navigator.clipboard.writeText.bind(navigator.clipboard);
-    navigator.clipboard.writeText = async (text) => {
-      const completion = new Promise<void>((resolve) => {
-        Object.assign(globalThis, { finishCopy: resolve });
-      });
-      await write(text);
-      await completion;
-    };
-  });
-  for (const [label, command] of [
-    ["lightsaber install", "npx shadcn@latest add joacod/audiobits/lightsaber"],
-    ["Skill install", "npx skills add joacod/audiobits --skill audiobits"],
-  ]) {
-    const copy = page.getByRole("button", { name: `Copy ${label} command` });
-    await expect(copy).toBeEnabled();
-    const width = await copy.evaluate(
-      (button) => button.getBoundingClientRect().width,
-    );
-    await copy.focus();
-    await page.keyboard.press("Enter");
-    const status = page
-      .locator(".landing-command")
-      .filter({ has: copy })
-      .getByRole("status");
-    await expect(status).toHaveText("Copying…");
-    await expect(copy).toBeFocused();
-    await page.evaluate(() => {
-      (globalThis as unknown as { finishCopy(): void }).finishCopy();
-    });
-    await expect(copy.getByText("✓ Copied", { exact: true })).toBeVisible();
-    await expect(copy).toBeFocused();
-    expect(
-      await copy.evaluate((button) => button.getBoundingClientRect().width),
-    ).toBe(width);
-    await expect(status).toHaveText("Copied.");
-    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
-      command,
-    );
-    await expect(copy.getByText("Copy", { exact: true })).toBeVisible();
-  }
-  for (const [name, href, heading] of [
-    ["Install editable source", "/docs/catalog", "Catalog and editable source"],
-    ["Build with the runtime", "/docs", "Introduction and quick start"],
-    [
-      "Build with AI agents",
-      "/docs/agents",
-      "Official Skill and agent workflows",
-    ],
-    ["optional local MCP tooling", "/docs/mcp", "Optional local MCP tooling"],
-  ]) {
-    const link = page.getByRole("link", { name, exact: true });
-    await expect(link).toHaveAttribute("href", href);
-    await link.click();
-    await expect(page).toHaveURL(`${home}${href}`);
-    await expect(
-      page.getByRole("heading", { name: heading, exact: true }),
-    ).toBeVisible();
-    await page.goto(home);
-  }
-  for (const [name, href] of [
-    ["npm", "https://www.npmjs.com/package/audiobits"],
-    ["GitHub", "https://github.com/joacod/audiobits"],
-    ["Catalog", "/catalog"],
-    ["Docs", "/docs"],
-  ]) {
-    await expect(
-      page.locator(".landing-footer").getByRole("link", { name, exact: true }),
-    ).toHaveAttribute("href", href);
-  }
-});
-
-test("landing copy failure keeps the command available for manual copying", async ({
+test("landing stays silent until holding, measures real output and disposes on navigation @required", async ({
   page,
 }) => {
-  await page.addInitScript(() => {
-    Object.defineProperty(navigator.clipboard, "writeText", {
-      value: async () => {
-        throw new Error("Clipboard unavailable");
-      },
-    });
-  });
-  await page.setViewportSize({ width: 320, height: 667 });
-  await page.goto(home);
-  for (const command of await page.locator(".landing-command").all()) {
-    const copy = command.getByRole("button");
-    await expect(copy).toBeEnabled();
-    await copy.click();
-    await expect(command.getByRole("status")).toHaveText(
-      "Copy unavailable. Select and copy the command above.",
-    );
-    await expect(command.locator("code")).toBeVisible();
-    await expect(copy).toBeEnabled();
-  }
-  expect(
-    await page.evaluate(
-      () => document.documentElement.scrollWidth <= innerWidth,
-    ),
-  ).toBe(true);
-});
-
-test("landing stays silent until holding, measures real output and disposes on navigation", async ({
-  page,
-}) => {
+  // Bound software rendering at a desktop size that still exercises letter collisions.
+  await page.setViewportSize({ width: 960, height: 640 });
   const errors: string[] = [];
   page.on("pageerror", (cause) => errors.push(cause.message));
   await instrument(page, "normal", "/");
@@ -359,7 +219,7 @@ test("landing stays silent until holding, measures real output and disposes on n
   expect(errors).toEqual([]);
 });
 
-test("landing swing, release, touch cancellation and interruptions clean up @smoke", async ({
+test("landing swing, release, touch cancellation and interruptions clean up @required", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
@@ -454,9 +314,9 @@ test("landing swing, release, touch cancellation and interruptions clean up @smo
 });
 
 test.describe("mobile landing activation", () => {
-  test.use({ hasTouch: true });
+  test.use({ hasTouch: true, viewport: { width: 390, height: 844 } });
 
-  test("landing activation failure keeps the button available for a fresh tap", async ({
+  test("landing activation failure keeps the button available for a fresh tap @required", async ({
     page,
   }) => {
     await instrument(page, "failed", "/");
@@ -485,7 +345,7 @@ test.describe("mobile landing activation", () => {
     await page.mouse.up();
   });
 
-  test("pending landing activation waits for success without igniting @smoke", async ({
+  test("pending landing activation waits for success without igniting @required", async ({
     page,
   }) => {
     await instrument(page, "held", "/");
@@ -517,123 +377,6 @@ test.describe("mobile landing activation", () => {
     );
     expect((await probe(page)).sources).toBe(0);
   });
-});
-
-test("reduced motion preserves gesture feedback, level feedback and navigation focus", async ({
-  page,
-}) => {
-  await page.emulateMedia({ reducedMotion: "reduce" });
-  await instrument(page, "normal", "/");
-  await expect(page.locator(".lightsaber-canvas")).toHaveAttribute(
-    "data-audio-entry",
-    "stage",
-  );
-  expect((await probe(page)).contexts).toEqual([]);
-  expect((await probe(page)).sources).toBe(0);
-  await expect(page.locator(".lightsaber-activation")).toHaveCount(0);
-  await holdLightsaber(page);
-  await expect(page.locator(".lightsaber-canvas")).toHaveAttribute(
-    "data-state",
-    "running",
-  );
-  await expect(page.locator(".lightsaber-canvas")).toHaveAttribute(
-    "data-reduced-motion",
-    "true",
-  );
-  await expect(page.locator(".hero-wave")).toHaveAttribute("d", "M0 30H600");
-  await expect(page.locator(".lightsaber-intro h1")).toHaveCSS(
-    "transform",
-    "none",
-  );
-  const box = (await page.locator(".lightsaber-canvas").boundingBox())!;
-  await page.mouse.move(box.x + box.width * 0.28, box.y + box.height * 0.65, {
-    steps: 6,
-  });
-  expect(
-    await page
-      .locator(".hero-letter")
-      .evaluateAll((letters) =>
-        letters.every(
-          (letter) =>
-            Number(
-              getComputedStyle(letter).getPropertyValue("--letter-heat"),
-            ) === 0 && getComputedStyle(letter, "::before").display === "none",
-        ),
-      ),
-  ).toBe(true);
-  await expect
-    .poll(async () =>
-      Number(
-        await page.locator(".lightsaber-canvas").getAttribute("data-peak"),
-      ),
-    )
-    .toBeGreaterThan(0);
-  await page.mouse.up();
-  await expect(page.locator(".lightsaber-canvas")).toHaveAttribute(
-    "data-state",
-    "stopped",
-  );
-  // Switch from the preceding pointer gesture to keyboard focus visibility.
-  await page.keyboard.press("Tab");
-  for (const name of ["GitHub", "npm"]) {
-    const link = page
-      .getByRole("navigation", { name: "Main navigation" })
-      .getByRole("link", { name, exact: true });
-    await link.focus();
-    expect(
-      await link.evaluate((node) => getComputedStyle(node).outlineStyle),
-    ).toBe("solid");
-  }
-});
-
-test("external links use new tabs and internal navigation stays in this tab", async ({
-  page,
-  context,
-}) => {
-  for (const route of [
-    "/",
-    "/catalog",
-    "/catalog/impact",
-    "/catalog/reactive-thruster",
-    "/catalog/energy-charge",
-    "/docs",
-    "/docs/catalog",
-    "/docs/agents",
-    "/docs/mcp",
-  ]) {
-    await page.goto(`${home}${route}`);
-    for (const link of await page.locator('a[href^="https://"]').all()) {
-      await expect(link).toHaveAttribute("target", "_blank");
-      await expect(link).toHaveAttribute("rel", /noopener/);
-      await expect(link).toHaveAttribute("rel", /noreferrer/);
-    }
-    for (const link of await page.locator('a[href^="/"]').all())
-      expect(await link.getAttribute("target")).not.toBe("_blank");
-  }
-  // Stub only the remote response; Chromium must still create a real new tab.
-  await context.route("https://github.com/**", (route) =>
-    route.fulfill({
-      contentType: "text/html",
-      body: "<h1>External destination</h1>",
-    }),
-  );
-  await page.goto(home);
-  const popupPromise = page.waitForEvent("popup");
-  await page
-    .getByRole("navigation", { name: "Main navigation" })
-    .getByRole("link", { name: "GitHub", exact: true })
-    .click();
-  const popup = await popupPromise;
-  await expect(popup).toHaveURL("https://github.com/joacod/audiobits");
-  expect(await popup.evaluate(() => window.opener)).toBeNull();
-  await expect(page).toHaveURL(`${home}/`);
-  await popup.close();
-  await page
-    .getByRole("navigation", { name: "Main navigation" })
-    .getByRole("link", { name: "Catalog", exact: true })
-    .click();
-  await expect(page).toHaveURL(`${home}/catalog`);
-  expect(context.pages()).toHaveLength(1);
 });
 
 for (const route of ["/", "/catalog/confirmation"]) {

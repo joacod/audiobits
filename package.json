@@ -15,7 +15,7 @@
     "lint": "eslint . && prettier --check . && node scripts/check-doc-links.mjs",
     "format": "prettier --write .",
     "test": "node scripts/generate-recipe.mjs --check && vitest run --bail=1",
-    "test:browser": "pnpm test:browser:full",
+    "test:browser": "pnpm prepare:browser && pnpm test:browser:prepared",
     "test:package": "pnpm build:lib && pnpm test:package:prepared",
     "changeset": "changeset",
     "version-packages": "changeset version && node scripts/generate-recipe.mjs",
@@ -30,10 +30,8 @@
     "test:mcp:prepared": "pnpm build:mcp && node tools/mcp/generate-snapshot.mjs --check && vitest run --config tools/mcp/vitest.config.ts",
     "verify:local": "pnpm verify:core && pnpm check:skill && pnpm test:mcp:prepared",
     "prepare:browser": "pnpm build && node scripts/build-audio-tests.mjs",
-    "test:browser:smoke": "pnpm prepare:browser && pnpm test:browser:smoke:prepared",
-    "test:browser:smoke:prepared": "playwright test --grep @smoke --max-failures=1",
     "test:browser:full": "pnpm prepare:browser && pnpm test:browser:full:prepared",
-    "test:browser:full:prepared": "playwright test",
+    "test:browser:full:prepared": "AUDIOBITS_BROWSER_SUITE=full playwright test --max-failures=1",
     "test:package:prepared": "node scripts/test-package.mjs",
     "hooks:install": "node scripts/install-hooks.mjs",
     "verify:core": "pnpm lint && pnpm build:lib && pnpm typecheck:prepared && pnpm test",
@@ -47,7 +45,9 @@
     "test:consumers:prepared": "node scripts/test-package.mjs --consumers",
     "test:site-output": "vitest run --config vitest.site-output.config.ts",
     "test:consumers:latest": "pnpm build:lib && node scripts/test-package.mjs --latest",
-    "test:consumers:github": "pnpm build:lib && node scripts/test-package.mjs --github"
+    "test:consumers:github": "pnpm build:lib && node scripts/test-package.mjs --github",
+    "test:browser:prepared": "pnpm test:runtime:prepared && pnpm test:browser:site:prepared",
+    "test:browser:site:prepared": "playwright test --max-failures=1"
   },
   "devDependencies": {
     "@changesets/cli": "3.0.3",

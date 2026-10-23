@@ -5,7 +5,7 @@ const name = { name: "Echo Vision stage", exact: true };
 
 // Native input and ownership matter here: the pure mapping tests cannot prove
 // that one completed gesture emits, becomes quiet, or disposes on navigation.
-test("one pulse reveals the room and naturally returns to silence and darkness @smoke", async ({
+test("one pulse reveals the room and naturally returns to silence and darkness", async ({
   page,
 }) => {
   await instrument(page, "normal", "echo-vision");

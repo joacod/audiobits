@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { resolve } from "node:path";
 import { requireOfflineCheckpoints } from "./offline-capabilities";
 
-test("managed offline linear automation preserves signal without native hold @smoke", async ({
+test("managed offline linear automation preserves signal without native hold", async ({
   page,
 }) => {
   await page.goto("http://127.0.0.1:4173");
@@ -63,7 +63,7 @@ test("managed offline linear automation preserves signal without native hold @sm
   expect(results.mixing.latePeak).toBe(0);
 });
 
-test("managed live automation cleans up without native hold @smoke", async ({
+test("managed live automation cleans up without native hold", async ({
   page,
 }) => {
   await page.goto("http://127.0.0.1:4173");
@@ -99,7 +99,7 @@ test("managed live automation cleans up without native hold @smoke", async ({
 
 // This native comparison uses website catalog metadata. Keep it in the full
 // suite while the core automation checks above run without the website harness.
-test("catalog live controls match native automation without native hold @site @smoke", async ({
+test("catalog live controls match native automation without native hold @site", async ({
   page,
 }) => {
   await page.goto("http://127.0.0.1:4173");

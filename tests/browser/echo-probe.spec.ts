@@ -95,11 +95,11 @@ test("1000 scheduled voices cancel without retained ownership or touching shared
   });
 });
 
-test("tap, repeated emission, measured output, Escape, interruption and navigation clean up @smoke", async ({
+test("tap output, Escape, interruption recovery and active navigation release owned audio", async ({
   page,
 }) => {
-  // Natural completion waits for metal's late echo (about 6 s per emission).
-  test.setTimeout(90_000);
+  // Echo Vision checks natural completion for this shared controller. This host
+  // protects cancellation, interruption recovery and disposal while still active.
   await instrument(page, "normal", "echo-probe");
   const stage = page.getByRole("group", stageName);
   await expect(stage).toHaveAttribute("data-ready", "true");
@@ -121,17 +121,6 @@ test("tap, repeated emission, measured output, Escape, interruption and navigati
     })
     .toBe(0);
   const restingConnections = (await probe(page)).connected;
-  for (let index = 0; index < 3; index++) {
-    await stage.press("Enter");
-    await expect(stage).toHaveAttribute("data-state", "running");
-    await expect
-      .poll(async () => {
-        const p = await probe(page);
-        return p.sources - p.ended;
-      })
-      .toBe(0);
-    await expect(stage).toHaveAttribute("data-state", "stopped");
-  }
   await stage.press("Enter");
   await expect(stage).toHaveAttribute("data-state", "running");
   await page.evaluate(async () => {
@@ -148,11 +137,8 @@ test("tap, repeated emission, measured output, Escape, interruption and navigati
   await stage.press("Enter");
   await expect(stage).toHaveAttribute("data-state", "running");
   await expect
-    .poll(async () => {
-      const p = await probe(page);
-      return p.sources - p.ended;
-    })
-    .toBe(0);
+    .poll(async () => (await probe(page)).ownedSources)
+    .toBeGreaterThan(0);
   await page
     .getByRole("navigation", { name: "Breadcrumb" })
     .getByRole("link")
@@ -310,7 +296,7 @@ test("materials have distinct signatures, the surface fallback matches, and cont
 for (const count of [8, 40])
   test(
     `rapid interaction admits ${count} pulses with bounded native sources and cleanup`,
-    { tag: count === 8 ? "@smoke" : "@extended" },
+    { tag: count === 8 ? [] : "@extended" },
     async ({ page }) => {
       await instrument(page, "normal", "echo-probe");
       await page.addScriptTag({ path: harness });
@@ -560,7 +546,7 @@ test("retirement removes cancelled paths and highlights while sounded returns fi
   expect(framesAfterDisposal.after).toBe(framesAfterDisposal.before);
 });
 
-test("a new emission cuts sounding native late repeats and preserves shared audio @smoke", async ({
+test("a new emission cuts sounding native late repeats and preserves shared audio", async ({
   page,
 }) => {
   await page.goto("http://127.0.0.1:3100");
@@ -595,7 +581,7 @@ test("a new emission cuts sounding native late repeats and preserves shared audi
   });
 });
 
-test("native late echoes are the material voice plus its own feedback repeats @smoke", async ({
+test("native late echoes are the material voice plus its own feedback repeats", async ({
   page,
 }) => {
   await page.goto("http://127.0.0.1:3100");

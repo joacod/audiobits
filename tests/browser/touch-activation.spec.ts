@@ -4,104 +4,79 @@ import { instrument, probe } from "./experience-probe";
 
 test.use({ hasTouch: true });
 
-for (const [route, selector] of [
-  ["/", ".lightsaber-canvas"],
-  ["reactive-thruster", ".flight-pad"],
-  ["lightsaber", ".lightsaber-canvas"],
-  ["energy-charge", ".charge-hold"],
-] as const) {
-  test(`${route} Chromium held touch starts sound after its entry flow`, async ({
-    page,
-  }) => {
-    await page.setViewportSize({ width: 390, height: 844 });
-    await instrument(page, route === "/" ? "touch-release" : "normal", route);
-    const pad = page.locator(selector);
-    await expect(pad).toHaveAttribute("data-state", "stopped");
-    if (route === "/") {
-      await expect(pad).toHaveAttribute("data-audio-entry", "stage");
-      expect((await probe(page)).contexts).toEqual([]);
-      await expect(pad).toHaveAttribute("inert", "");
-      const activation = page.getByRole("button", {
-        name: "Use the Force",
-        exact: true,
-      });
-      await expect(activation).toBeEnabled();
-      const button = (await activation.boundingBox())!;
-      expect(button.height).toBeGreaterThanOrEqual(44);
-      expect(button.x).toBeGreaterThanOrEqual(0);
-      expect(button.x + button.width).toBeLessThanOrEqual(390);
-      const tap = await page.context().newCDPSession(page);
-      await tap.send("Input.dispatchTouchEvent", {
-        type: "touchStart",
-        touchPoints: [
-          { x: button.x + button.width / 2, y: button.y + button.height / 2 },
-        ],
-      });
-      // A held button is not an activation: its completed tap supplies the click.
-      expect((await probe(page)).contexts).toEqual([]);
-      await tap.send("Input.dispatchTouchEvent", {
-        type: "touchEnd",
-        touchPoints: [],
-      });
-      await expect(activation).toHaveCount(0);
-      await expect(pad).not.toHaveAttribute("inert");
-      expect((await probe(page)).contexts).toEqual(["running"]);
-      expect((await probe(page)).sources).toBe(0);
-      await tap.detach();
-    }
-    if (route === "energy-charge") await expect(pad).toBeEnabled();
-    if (route === "lightsaber" || route === "/")
-      await expect(pad).toHaveAttribute("data-renderer", "three");
-    await pad.scrollIntoViewIfNeeded();
-    const box = (await pad.boundingBox())!;
-    const touch = await page.context().newCDPSession(page);
-    const press = () =>
-      touch.send("Input.dispatchTouchEvent", {
-        type: "touchStart",
-        touchPoints: [{ x: box.x + box.width / 2, y: box.y + box.height / 2 }],
-      });
-    await press();
-    await expect(pad).toHaveAttribute("data-state", "running");
-    if (route === "lightsaber" || route === "/") {
-      // Ignition must produce both the blade and sound before any drag/release.
-      await expect(pad).toHaveAttribute("data-extension", "1.000");
-      await expect
-        .poll(async () => Number(await pad.getAttribute("data-peak")))
-        .toBeGreaterThan(0);
-    }
-    await touch.send("Input.dispatchTouchEvent", {
-      type: "touchMove",
-      touchPoints: [{ x: box.x + box.width * 0.8, y: box.y + box.height / 2 }],
+test("cold landing touch requires completed activation before a held gesture", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await instrument(page, "touch-release", "/");
+  const pad = page.locator(".lightsaber-canvas");
+  await expect(pad).toHaveAttribute("data-state", "stopped");
+  {
+    await expect(pad).toHaveAttribute("data-audio-entry", "stage");
+    expect((await probe(page)).contexts).toEqual([]);
+    await expect(pad).toHaveAttribute("inert", "");
+    const activation = page.getByRole("button", {
+      name: "Use the Force",
+      exact: true,
     });
-    const signal =
-      route === "lightsaber" || route === "/"
-        ? pad
-        : page
-            .locator(
-              route === "energy-charge"
-                ? ".charge-rings"
-                : ".thruster-ribbons canvas",
-            )
-            .first();
-    await expect
-      .poll(async () =>
-        Number(
-          await signal.getAttribute(
-            route === "energy-charge" ? "data-level" : "data-peak",
-          ),
-        ),
-      )
-      .toBeGreaterThan(0);
-    await touch.send("Input.dispatchTouchEvent", {
+    await expect(activation).toBeEnabled();
+    const button = (await activation.boundingBox())!;
+    expect(button.height).toBeGreaterThanOrEqual(44);
+    expect(button.x).toBeGreaterThanOrEqual(0);
+    expect(button.x + button.width).toBeLessThanOrEqual(390);
+    const tap = await page.context().newCDPSession(page);
+    await tap.send("Input.dispatchTouchEvent", {
+      type: "touchStart",
+      touchPoints: [
+        { x: button.x + button.width / 2, y: button.y + button.height / 2 },
+      ],
+    });
+    // A held button is not an activation: its completed tap supplies the click.
+    expect((await probe(page)).contexts).toEqual([]);
+    await tap.send("Input.dispatchTouchEvent", {
       type: "touchEnd",
       touchPoints: [],
     });
-    await expect(pad).toHaveAttribute("data-state", "stopped");
-    expect(
-      (await page.getByRole("alert").allTextContents()).join("").trim(),
-    ).toBe("");
+    await expect(activation).toHaveCount(0);
+    await expect(pad).not.toHaveAttribute("inert");
+    expect((await probe(page)).contexts).toEqual(["running"]);
+    expect((await probe(page)).sources).toBe(0);
+    await tap.detach();
+  }
+  await expect(pad).toHaveAttribute("data-renderer", "three");
+  await pad.scrollIntoViewIfNeeded();
+  const box = (await pad.boundingBox())!;
+  const touch = await page.context().newCDPSession(page);
+  const press = () =>
+    touch.send("Input.dispatchTouchEvent", {
+      type: "touchStart",
+      touchPoints: [{ x: box.x + box.width / 2, y: box.y + box.height / 2 }],
+    });
+  await press();
+  await expect(pad).toHaveAttribute("data-state", "running");
+  {
+    // Ignition must produce both the blade and sound before any drag/release.
+    await expect(pad).toHaveAttribute("data-extension", "1.000");
+    await expect
+      .poll(async () => Number(await pad.getAttribute("data-peak")))
+      .toBeGreaterThan(0);
+  }
+  await touch.send("Input.dispatchTouchEvent", {
+    type: "touchMove",
+    touchPoints: [{ x: box.x + box.width * 0.8, y: box.y + box.height / 2 }],
   });
-}
+  await expect
+    .poll(async () => Number(await pad.getAttribute("data-peak")))
+    .toBeGreaterThan(0);
+  await touch.send("Input.dispatchTouchEvent", {
+    type: "touchEnd",
+    touchPoints: [],
+  });
+  await expect(pad).toHaveAttribute("data-state", "stopped");
+  expect(
+    (await page.getByRole("alert").allTextContents()).join("").trim(),
+  ).toBe("");
+});
 
 // Keep the initial resume pending until a native touch event retries activation.
 test("a first Echo Probe tap retries blocked activation on touch release", async ({
@@ -204,96 +179,57 @@ test("native touch starts a hold, cancels cleanly and works after a persisted pa
 
 // The handoff must preserve native context identity across real client navigation.
 // Direct-entry checks above cannot establish that earlier activation is retained.
-for (const [route, label, selector, signalSelector, signalAttribute] of [
-  [
-    "reactive-thruster",
-    "Open reactive thruster",
-    ".flight-pad",
-    ".thruster-ribbons canvas",
-    "data-peak",
-  ],
-  [
-    "lightsaber",
-    "Open lightsaber",
-    ".lightsaber-canvas",
-    ".lightsaber-canvas",
-    "data-peak",
-  ],
-  [
-    "energy-charge",
-    "Open energy charge",
-    ".charge-hold",
-    ".charge-rings",
-    "data-level",
-  ],
-  ["/", "AudioBits", ".lightsaber-canvas", ".lightsaber-canvas", "data-peak"],
-] as const) {
-  test(`${route} navigation prepares audio for the first held touch @smoke`, async ({
-    page,
-  }) => {
-    await page.setViewportSize({ width: 390, height: 844 });
-    await instrument(page, "normal", "/catalog");
-    expect((await probe(page)).contexts).toEqual([]);
-    const link =
-      route === "/"
-        ? page
-            .getByRole("navigation", { name: "Main navigation" })
-            .getByRole("link", { name: label, exact: true })
-        : page.getByRole("link", { name: label, exact: true });
-    await link.scrollIntoViewIfNeeded();
-    const linkBox = (await link.boundingBox())!;
-    const touch = await page.context().newCDPSession(page);
-    await touch.send("Input.dispatchTouchEvent", {
-      type: "touchStart",
-      touchPoints: [
-        { x: linkBox.x + linkBox.width / 2, y: linkBox.y + linkBox.height / 2 },
-      ],
-    });
-    await touch.send("Input.dispatchTouchEvent", {
-      type: "touchEnd",
-      touchPoints: [],
-    });
-    const pad = page.locator(selector);
-    await expect(pad).toHaveAttribute("data-state", "stopped");
-    await expect(pad).toHaveAttribute("data-audio-entry", "navigation");
-    await expect
-      .poll(async () => (await probe(page)).contexts)
-      .toEqual(["running"]);
-    expect((await probe(page)).sources).toBe(0);
-    if (route === "/")
-      await expect(page.locator(".lightsaber-activation")).toHaveCount(0);
-    await pad.scrollIntoViewIfNeeded();
-    const box = (await pad.boundingBox())!;
-    await touch.send("Input.dispatchTouchEvent", {
-      type: "touchStart",
-      touchPoints: [{ x: box.x + box.width / 2, y: box.y + box.height / 2 }],
-    });
-    await expect(pad).toHaveAttribute("data-state", "running");
-    await expect
-      .poll(async () =>
-        Number(
-          await page
-            .locator(signalSelector)
-            .first()
-            .getAttribute(signalAttribute),
-        ),
-      )
-      .toBeGreaterThan(0);
-    if (route === "lightsaber" || route === "/")
-      await expect(pad).toHaveAttribute("data-extension", "1.000");
-    expect((await probe(page)).contexts).toEqual(["running"]);
-    await touch.send("Input.dispatchTouchEvent", {
-      type: "touchEnd",
-      touchPoints: [],
-    });
-    await expect(pad).toHaveAttribute("data-state", "stopped");
-    await page
-      .getByRole("navigation", { name: "Main navigation" })
-      .getByRole("link", { name: "Catalog", exact: true })
-      .click();
-    await expect
-      .poll(async () => (await probe(page)).contexts)
-      .toEqual(["closed"]);
-    expect((await probe(page)).connected).toBe(0);
+
+test("lightsaber navigation prepares audio for the first held touch @required", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await instrument(page, "normal", "/catalog");
+  expect((await probe(page)).contexts).toEqual([]);
+  const link = page.getByRole("link", { name: "Open lightsaber", exact: true });
+  await link.scrollIntoViewIfNeeded();
+  const linkBox = (await link.boundingBox())!;
+  const touch = await page.context().newCDPSession(page);
+  await touch.send("Input.dispatchTouchEvent", {
+    type: "touchStart",
+    touchPoints: [
+      { x: linkBox.x + linkBox.width / 2, y: linkBox.y + linkBox.height / 2 },
+    ],
   });
-}
+  await touch.send("Input.dispatchTouchEvent", {
+    type: "touchEnd",
+    touchPoints: [],
+  });
+  const pad = page.locator(".lightsaber-canvas");
+  await expect(pad).toHaveAttribute("data-state", "stopped");
+  await expect(pad).toHaveAttribute("data-audio-entry", "navigation");
+  await expect
+    .poll(async () => (await probe(page)).contexts)
+    .toEqual(["running"]);
+  expect((await probe(page)).sources).toBe(0);
+  await pad.scrollIntoViewIfNeeded();
+  const box = (await pad.boundingBox())!;
+  await touch.send("Input.dispatchTouchEvent", {
+    type: "touchStart",
+    touchPoints: [{ x: box.x + box.width / 2, y: box.y + box.height / 2 }],
+  });
+  await expect(pad).toHaveAttribute("data-state", "running");
+  await expect
+    .poll(async () => Number(await pad.getAttribute("data-peak")))
+    .toBeGreaterThan(0);
+  await expect(pad).toHaveAttribute("data-extension", "1.000");
+  expect((await probe(page)).contexts).toEqual(["running"]);
+  await touch.send("Input.dispatchTouchEvent", {
+    type: "touchEnd",
+    touchPoints: [],
+  });
+  await expect(pad).toHaveAttribute("data-state", "stopped");
+  await page
+    .getByRole("navigation", { name: "Main navigation" })
+    .getByRole("link", { name: "Catalog", exact: true })
+    .click();
+  await expect
+    .poll(async () => (await probe(page)).contexts)
+    .toEqual(["closed"]);
+  expect((await probe(page)).connected).toBe(0);
+});

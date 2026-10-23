@@ -1,5 +1,14 @@
 import { defineConfig, devices } from "@playwright/test";
 
+export const runtimeSpecs = [
+  "audio.spec.ts",
+  "automation.spec.ts",
+  "delay.spec.ts",
+  "release.spec.ts",
+  "dynamic.spec.ts",
+  "mixing.spec.ts",
+];
+
 export const shared = defineConfig({
   testDir: "./tests/browser",
   fullyParallel: true,

@@ -97,7 +97,7 @@ test("a tear released before activation remains visible and can be sealed", asyn
   await expect.poll(() => owned(page)).toBe(0);
 });
 
-test("tear, persist without input, shape, interrupted seal, collapse, keyboard and navigation clean up @smoke", async ({
+test("tear, persist without input, shape, interrupted seal, collapse, keyboard and navigation clean up", async ({
   page,
 }) => {
   test.setTimeout(60_000);

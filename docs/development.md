@@ -72,33 +72,32 @@ pnpm --filter @audiobits/vanilla dev
 
 ## Root commands
 
-| Command                   | Behavior                                                                           |
-| ------------------------- | ---------------------------------------------------------------------------------- |
-| `pnpm dev`                | Initial library build, library watch, and site server                              |
-| `pnpm build:lib`          | Library ESM and declarations                                                       |
-| `pnpm build:mcp`          | Independent local stdio MCP server build                                           |
-| `pnpm build:skill`        | Bundle optional MCP executable and licenses into the official Skill                |
-| `pnpm check:skill`        | Fail on stale committed Skill executable or dependency licenses                    |
-| `pnpm build:site`         | Library build followed by site build                                               |
-| `pnpm build`              | Library, site, and vanilla production builds                                       |
-| `pnpm typecheck`          | Build library, generate site types, check all workspaces                           |
-| `pnpm lint`               | ESLint, formatting, Markdown/MDX files and documentation routes                    |
-| `pnpm format`             | Format in-scope source/configuration/onboarding files                              |
-| `pnpm test`               | Supervisor, recipe/runtime/release checks; schema/metadata drift                   |
-| `pnpm verify:package`     | Package build, declarations, units and generated contracts                         |
-| `pnpm test:package`       | Packed artifact, isolated types/imports, tree-shaking and shipped README           |
-| `pnpm test:consumers`     | Packed runtime with actual catalog installs, Skill examples and showcase hosts     |
-| `pnpm test:runtime`       | Native runtime Chromium with the vanilla server, without Next.js                   |
-| `pnpm test:site-output`   | Existing production HTML metadata, commands and pagination contracts               |
-| `pnpm test:mcp`           | Offline MCP units and stdio protocol with packed external runtime                  |
-| `pnpm test:mcp:github`    | Explicit live GitHub source retrieval through the MCP protocol                     |
-| `pnpm verify:local`       | Shared non-browser CI preflight, including library build                           |
-| `pnpm hooks:install`      | One-time local staged formatting/lint hook installation                            |
-| `pnpm test:browser:smoke` | Build and run critical Chromium tests, fail fast                                   |
-| `pnpm test:browser:full`  | Build and run all retained Chromium regressions                                    |
-| `pnpm test:browser`       | Compatible alias for full Chromium verification                                    |
-| `pnpm release:prepare`    | Explicit candidate verification: package units/types, native Chromium and artifact |
-| `pnpm changeset`          | Record published-package changes, including relevant docs/metadata                 |
+| Command                  | Behavior                                                                           |
+| ------------------------ | ---------------------------------------------------------------------------------- |
+| `pnpm dev`               | Initial library build, library watch, and site server                              |
+| `pnpm build:lib`         | Library ESM and declarations                                                       |
+| `pnpm build:mcp`         | Independent local stdio MCP server build                                           |
+| `pnpm build:skill`       | Bundle optional MCP executable and licenses into the official Skill                |
+| `pnpm check:skill`       | Fail on stale committed Skill executable or dependency licenses                    |
+| `pnpm build:site`        | Library build followed by site build                                               |
+| `pnpm build`             | Library, site, and vanilla production builds                                       |
+| `pnpm typecheck`         | Build library, generate site types, check all workspaces                           |
+| `pnpm lint`              | ESLint, formatting, Markdown/MDX files and documentation routes                    |
+| `pnpm format`            | Format in-scope source/configuration/onboarding files                              |
+| `pnpm test`              | Supervisor, recipe/runtime/release checks; schema/metadata drift                   |
+| `pnpm verify:package`    | Package build, declarations, units and generated contracts                         |
+| `pnpm test:package`      | Packed artifact, isolated types/imports, tree-shaking and shipped README           |
+| `pnpm test:consumers`    | Packed runtime with actual catalog installs, Skill examples and showcase hosts     |
+| `pnpm test:runtime`      | Native runtime Chromium with the vanilla server, without Next.js                   |
+| `pnpm test:site-output`  | Existing production HTML metadata, commands and pagination contracts               |
+| `pnpm test:mcp`          | Offline MCP units and stdio protocol with packed external runtime                  |
+| `pnpm test:mcp:github`   | Explicit live GitHub source retrieval through the MCP protocol                     |
+| `pnpm verify:local`      | Shared non-browser CI preflight, including library build                           |
+| `pnpm hooks:install`     | One-time local staged formatting/lint hook installation                            |
+| `pnpm test:browser:full` | Build and run all retained Chromium regressions                                    |
+| `pnpm test:browser`      | Build and run native runtime plus the bounded required website suite               |
+| `pnpm release:prepare`   | Explicit candidate verification: package units/types, native Chromium and artifact |
+| `pnpm changeset`         | Record published-package changes, including relevant docs/metadata                 |
 
 For stdio client setup and the consumer project boundary, see
 [local MCP development](../tools/mcp/README.md).
@@ -107,7 +106,7 @@ For browser checks, install the browser matching the pinned Playwright version:
 
 ```sh
 pnpm exec playwright install --only-shell chromium
-pnpm test:browser:smoke
+pnpm test:browser
 ```
 
 ## Local hooks and preflight
@@ -126,8 +125,8 @@ not been verified. No slow pre-push hook is installed.
 Before code PRs, run `pnpm verify:local` and affected browser/package checks.
 CI uses the same preflight. For prepared, unchanged outputs, `:prepared` commands
 avoid rebuilding: run `pnpm prepare:browser` once, then
-`pnpm test:browser:smoke:prepared`, `pnpm test:browser:full:prepared` or a focused
-`pnpm exec playwright test <file>`. `pnpm test:package:prepared` requires a current
+`pnpm test:browser:prepared`, `pnpm test:browser:full:prepared` or a focused
+`AUDIOBITS_BROWSER_SUITE=regression pnpm exec playwright test <file> --grep='test title'`. `pnpm test:package:prepared` requires a current
 library build; the same applies to `pnpm test:consumers:prepared`.
 For native-only checks, use `pnpm prepare:runtime` and
 `pnpm test:runtime:prepared`. Native preparation replaces the browser harness;
@@ -137,9 +136,8 @@ bound native audio/graphics contention.
 
 ## Verification by task
 
-Run the smallest check set that can falsify the requested change. Build the
-library before consumers; reuse passing builds unless subsequent edits invalidate
-those outputs.
+Use the [testing policy](validation.md#test-selection) to choose the smallest
+relevant checks. Build the library before consumers and reuse passing outputs.
 
 | Change                  | Verification                                                                   |
 | ----------------------- | ------------------------------------------------------------------------------ |
@@ -153,47 +151,28 @@ those outputs.
 | CI harness              | Directly affected script checks and Chromium tests                             |
 | Explicit release        | `pnpm release:prepare`; see [release guide](releases.md)                       |
 
-Follow the [browser policy](validation.md#browser-policy). Do not provision
-compatibility infrastructure or investigate unrelated failures for ordinary work.
-Full release preparation is reserved for an explicit release request.
-
-Pull requests use the explicit affected-scope mapping. Full owning test files,
-including extended tests, run before merge. Shared, mixed and unknown changes
-broaden to full regression. Pushes to `main` run quality; manual Repository checks
-runs execute all gates. Publication always runs the independent package gate.
-[Test selection and tiers](validation.md#test-selection) are authoritative.
-The independent package publication flow is described in the
-[release guide](releases.md).
+CI selection and full-run policy live in [validation](validation.md#pr-scope-selection).
+Release preparation is only for an explicit release request.
 
 The browser suite owns ports 3100 and 4173; neither may already be occupied.
-[Centralized Linux audio setup](../scripts/ci/setup-linux-audio.sh) provisions
-PulseAudio with a clocked null sink. `norewinds=1` bounds buffering to 50 ms.
-Run it before Chromium checks on Linux to provide the output clock.
-Do not duplicate setup or workarounds inside individual tests. CI retains failure
-traces and uploads browser artifacts for seven days; healthy runs retain no traces.
+On Linux, run `bash scripts/ci/setup-linux-audio.sh` first. It uses the pinned
+Playwright CLI to install Chromium dependencies and the headless shell, then
+starts and verifies a PulseAudio null sink to provide the audio clock. CI and
+publication use the same script. GitHub supplies the runner's Ubuntu mirror list;
+setup removes its Azure entry after observed download stalls, leaving the official
+Ubuntu HTTPS sources. CI retains traces only on failure.
 
 ### Flake investigation
 
-A flaky test is a failed test. Playwright uses zero retries locally and in CI.
-
-1. Isolate the failing test and reproduce it intentionally.
-2. Classify the failure as a product race, test race, CI environment issue or
-   unsupported capability.
-3. Identify the violated invariant and fix that layer.
-4. Add deterministic regression coverage where practical.
-5. Run the smallest evidence needed to validate the fix.
+Reproduce the failing condition in the affected test and fix its cause. Use the
+regression filter so an untagged test actually runs:
 
 ```sh
-pnpm exec playwright test tests/browser/gallery.spec.ts --project=chromium --repeat-each=10
+AUDIOBITS_BROWSER_SUITE=regression pnpm exec playwright test tests/browser/gallery.spec.ts --grep='hydration'
 ```
 
-The pre-hydration slider regression is the model: hold client JavaScript to prove
-stateful SSR controls cannot accept input before hydration owns their state.
-Do not hide failures with `page.waitForTimeout`, arbitrary sleeps, global timeout
-increases, automatic retries, weaker/removed assertions, caught/ignored failures,
-force-clicks through invalid states, Chromium skips, errors turned into warnings,
-disabled tests, unrelated-test serialization or compatibility hacks. Any such
-change requires explicit justification tied to actual system behavior.
+For a hydration race, hold client JavaScript to reproduce the condition directly.
+Repeat a run only when it answers a specific unresolved question.
 
 Keep `NODE_ENV` unset for normal local commands; unrelated values can interfere
 with Next.js. CI disables Next telemetry.
@@ -275,7 +254,7 @@ distinguish manifest/source validation, exact consumer snippets, actual shadcn
 installation, and browser/runtime verification. Consumer evidence stays under
 ignored `node_modules/.cache/audiobits-consumers/`, separate from publication
 evidence. These consumers remain mandatory for runtime/catalog/Skill contract
-changes and conservative broad selections.
+changes and shared CI/toolchain selections.
 
 For an explicit network integration check, run
 `pnpm test:consumers:github --revision=<reviewed-full-SHA>` from a clean checkout
@@ -302,7 +281,7 @@ last-valid playback; applying valid data stops current voices. No JavaScript
 text is evaluated.
 
 `pnpm test` typechecks every TypeScript docs fence and generated examples across
-control/seed extrema through public exports. `pnpm test:browser` bundles the
-exact displayed host examples, then exercises activation, Stop, and disposal
-alongside catalog signal checks and the catalog UI. Generated inputs/bundles and
+control/seed extrema through public exports. `pnpm test:consumers` compiles the exact displayed host examples against
+the installed runtime. `pnpm test:browser` runs the fixed native and website
+baseline. Explicit full browser runs also exercise catalog signal comparisons. Generated inputs/bundles and
 browser artifacts stay under ignored directories.
