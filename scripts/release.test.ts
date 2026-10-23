@@ -98,6 +98,12 @@ test("CI keeps stable required checks, explicit selection and native-only public
     );
   }
   expect(ci.jobs["select-scope"].steps[0].with["fetch-depth"]).toBe(0);
+  // Selection uses only Node/Git and runs before any package manager setup.
+  const selectorNode = ci.jobs["select-scope"].steps.find(
+    ({ uses }: { uses?: string }) => uses?.startsWith("actions/setup-node@"),
+  );
+  expect(selectorNode.with["package-manager-cache"]).toBe(false);
+  expect(selectorNode.with.cache).toBeUndefined();
   expect(ci.jobs.checks.if).toBe("always()");
   expect(ci.jobs.checks.needs).toEqual(
     expect.arrayContaining(["select-scope", "quality", "chromium-integration"]),
