@@ -1,5 +1,5 @@
 import { dragThruster, instrument, probe } from "./experience-probe";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page, type Response } from "@playwright/test";
 import { catalogEntries, catalogGroups } from "../../apps/www/lib/catalog";
 
 const home = "http://127.0.0.1:3100";
@@ -17,7 +17,7 @@ async function expectClosed(page: Page) {
     .toEqual({ connected: 0, contexts: [] });
 }
 
-test("catalog presents every registry entry once with one card system and no index sidebar or monitor", async ({
+test("catalog card playback contrast and index navigation remain readable", async ({
   page,
 }) => {
   await instrument(page, "normal", "/catalog");
@@ -30,19 +30,11 @@ test("catalog presents every registry entry once with one card system and no ind
   await expect(page.locator(".catalog-section > h2")).toHaveText(
     catalogGroups.map((group) => group.title),
   );
-  expect(
-    await page
-      .locator("[data-catalog-entry]")
-      .evaluateAll((nodes) =>
-        nodes.map((node) => node.getAttribute("data-catalog-entry")),
-      ),
-  ).toEqual(catalogEntries.map((entry) => entry.slug));
-  for (const entry of catalogEntries) {
+  // Registry order, labels and links are checked against every production card.
+  for (const entry of catalogEntries.filter(
+    (entry) => entry.category === "bundled",
+  )) {
     const card = page.locator(`[data-catalog-entry="${entry.slug}"]`);
-    await expect(card.getByRole("heading")).toHaveText(entry.title);
-    await expect(card).toContainText(entry.description);
-    await expect(card.getByRole("link")).toHaveAttribute("href", entry.href);
-    await expect(page.locator(`a[href="${entry.href}"]`)).toHaveCount(1);
     if (entry.category === "bundled") {
       // Inspect the playback state synchronously, before a short one-shot ends.
       const colors = await card.evaluate((node) => {
@@ -61,9 +53,6 @@ test("catalog presents every registry entry once with one card system and no ind
       expect(colors.icon).toBe(colors.contrast);
     }
   }
-  await expect(page.locator(".catalog-card")).toHaveCount(
-    catalogEntries.length,
-  );
   await expect(
     page.getByRole("navigation", { name: "Catalog", exact: true }),
   ).toHaveCount(0);
@@ -78,10 +67,18 @@ test("catalog presents every registry entry once with one card system and no ind
   expect((await probe(page)).contexts).toEqual([]);
 });
 
-test("every card preview opens its own route with simple breadcrumbs and canonical non-wrapping Previous/Next", async ({
+test("representative card hit areas navigate with non-wrapping Previous/Next boundaries", async ({
   page,
 }) => {
-  for (const [index, entry] of catalogEntries.entries()) {
+  // All route order/link contracts run against production HTML. Keep real hit
+  // areas, navigation and both pagination boundaries in Chromium.
+  const representatives = [
+    catalogEntries[0],
+    catalogEntries.find((entry) => entry.slug === "confirmation")!,
+    catalogEntries.at(-1)!,
+  ];
+  for (const entry of representatives) {
+    const index = catalogEntries.indexOf(entry);
     await page.goto(catalog);
     const card = page.locator(`[data-catalog-entry="${entry.slug}"]`);
     // Use real pointer coordinates: the stretched link covers the preview.
@@ -364,7 +361,7 @@ test("experience cards stay silent and full interactions clean up on return", as
 });
 
 for (const width of [1440, 390]) {
-  test(`every sidebar route and active item follow direct navigation, Back and Forward at ${width}px`, async ({
+  test(`sidebar selection, Back and Forward at ${width}px`, async ({
     page,
   }) => {
     await page.setViewportSize({ width, height: 900 });
@@ -379,7 +376,12 @@ for (const width of [1440, 390]) {
         .locator('[aria-current="page"]'),
     ).toHaveText("Impact");
     if (width < 761) await page.keyboard.press("Escape");
-    for (const entry of catalogEntries) {
+    const destinations = [
+      catalogEntries[0],
+      catalogEntries.find((entry) => entry.slug === "echo-vision")!,
+      catalogEntries.at(-1)!,
+    ];
+    for (const entry of destinations) {
       if (width < 761)
         await page
           .getByRole("button", { name: "Catalog menu", exact: true })
@@ -402,8 +404,8 @@ for (const width of [1440, 390]) {
       await expect(nav.locator('[aria-current="page"]')).toHaveCount(1);
       if (width < 761) await page.keyboard.press("Escape");
     }
-    const last = catalogEntries.at(-1)!;
-    const previous = catalogEntries.at(-2)!;
+    const last = destinations.at(-1)!;
+    const previous = destinations.at(-2)!;
     await page.goBack();
     if (width < 761)
       await page
@@ -537,4 +539,48 @@ test("main navigation opens the canonical catalog", async ({ page }) => {
     .getByRole("link", { name: "Catalog", exact: true })
     .click();
   await expect(page).toHaveURL(catalog);
+});
+
+test("simple catalog entry avoids immersive renderer requests while immersive entries load theirs", async ({
+  browser,
+}) => {
+  // Actual production requests matter here: a Server Component can emit the same
+  // eager scripts despite dynamic imports. Static route metadata cannot prove it.
+  for (const slug of ["confirmation", "echo-vision", "lightsaber"]) {
+    const context = await browser.newContext();
+    try {
+      const page = await context.newPage();
+      const scripts: Response[] = [];
+      const record = (response: Response) => {
+        if (response.request().resourceType() === "script")
+          scripts.push(response);
+      };
+      page.on("response", record);
+      await page.goto(`${home}/catalog/${slug}`);
+      await page.waitForLoadState("networkidle");
+      // Immersive routes replace the loading placeholder with a named stage.
+      // Assert the loaded UI so fast hydration cannot make this check miss it.
+      const stage =
+        slug === "confirmation"
+          ? page.locator(".catalog-stage")
+          : page.getByRole("group", {
+              name:
+                slug === "echo-vision"
+                  ? "Echo Vision stage"
+                  : "Lightsaber stage",
+              exact: true,
+            });
+      await expect(stage).toBeVisible();
+      page.off("response", record);
+      const code = (
+        await Promise.all(scripts.map((response) => response.text()))
+      ).join("\n");
+      expect(code.includes("WebGLRenderer"), slug).toBe(
+        slug !== "confirmation",
+      );
+      expect(code, slug).not.toContain("Riff Reactor stage");
+    } finally {
+      await context.close();
+    }
+  }
 });

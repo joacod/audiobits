@@ -61,7 +61,10 @@ Follow the authoritative [testing policy](../../docs/validation.md#test-selectio
 
 - Run focused unit/type tests for internal changes.
 - Run affected Chromium integration tests when browser/runtime behavior changes.
-- Package verification is required only when exports/build/distribution change
-  or when explicitly preparing a release.
+- Runtime/compiler/schema/API/build changes require packed artifact checks,
+  native runtime Chromium and installed catalog/Skill compatibility. Use
+  `test:package`, `test:runtime` and `test:consumers` for those distinct boundaries.
+- Every publication candidate runs the complete package gate without Next.js;
+  do not infer its safety from the version-bump diff.
 - Do not run release preparation by default.
 - Stop when the requested runtime task and focused verification are complete.

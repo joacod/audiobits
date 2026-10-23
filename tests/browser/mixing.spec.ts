@@ -103,7 +103,7 @@ test("native combined routing stress returns to bus and engine baselines @smoke"
 });
 
 for (const target of ["site", "vanilla"] as const) {
-  test(`${target} hide invalidates a delayed native resume and requires a fresh gesture`, async ({
+  test(`${target} hide invalidates a delayed native resume and requires a fresh gesture ${target === "site" ? "@site" : ""}`, async ({
     page,
   }) => {
     await page.addInitScript(() => {
@@ -199,7 +199,7 @@ for (const target of ["site", "vanilla"] as const) {
   });
   test(
     target === "site"
-      ? "site card previews share routing and replace the previous voice"
+      ? "site card previews share routing and replace the previous voice @site"
       : "vanilla gain, mute and cut Stop all use public routing",
     async ({ page }) => {
       if (target === "site") {

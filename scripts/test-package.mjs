@@ -20,6 +20,7 @@ const root = process.cwd();
 const args = process.argv.slice(2);
 const github = args.includes("--github");
 const latest = args.includes("--latest");
+const consumers = args.includes("--consumers") || github || latest;
 const revision = execFileSync("git", ["rev-parse", "HEAD"], {
   encoding: "utf8",
 }).trim();
@@ -29,7 +30,10 @@ const requestedRevision = args
 assert.ok(
   args.every(
     (arg) =>
-      arg === "--github" || arg === "--latest" || arg.startsWith("--revision="),
+      arg === "--github" ||
+      arg === "--latest" ||
+      arg === "--consumers" ||
+      arg.startsWith("--revision="),
   ),
   "Unknown package verification argument",
 );
@@ -60,50 +64,58 @@ if (github) {
   );
 }
 // Reject invalid invocations before loading consumer/build dependencies.
-const { default: ts } = await import("typescript");
+const { default: ts } = consumers ? await import("typescript") : {};
 const { chromium, expect } = await import("@playwright/test");
-const { libraryExample, parametersFor, quickExample, sounds } =
-  await import("../apps/www/lib/gallery.ts");
-const { experienceExample } =
-  await import("../apps/www/lib/experience-example.ts");
+// Consumer-only imports never participate in the publication artifact gate.
+const { libraryExample, parametersFor, quickExample, sounds } = consumers
+  ? await import("../apps/www/lib/gallery.ts")
+  : {};
+const { experienceExample } = consumers
+  ? await import("../apps/www/lib/experience-example.ts")
+  : {};
 const require = createRequire(
   new URL("../packages/audiobits/package.json", import.meta.url),
 );
 const { build } = await import(require.resolve("tsdown"));
 const evidence = { examples: [], browser: [], treeShaking: false };
-const workspace = JSON.parse(
-  await readFile(join(root, "package.json"), "utf8"),
-);
-const npx = process.platform === "win32" ? "npx.cmd" : "npx";
-const shadcnCommand = latest ? npx : process.execPath;
-const shadcnArgs = latest
-  ? ["--yes", "shadcn@latest"]
-  : [resolve("node_modules/shadcn/dist/index.js")];
-const cliVersion = latest
-  ? execFileSync(npx, [...shadcnArgs, "--version"], { encoding: "utf8" }).trim()
-  : workspace.devDependencies.shadcn;
-assert.match(
-  cliVersion,
-  /^\d+\.\d+\.\d+$/,
-  "Installer must report a CLI version",
-);
-if (!latest) {
-  assert.equal(
-    JSON.parse(
-      await readFile(join(root, "node_modules/shadcn/package.json"), "utf8"),
-    ).version,
-    cliVersion,
+let shadcnCommand, shadcnArgs, cliVersion;
+if (consumers) {
+  const workspace = JSON.parse(
+    await readFile(join(root, "package.json"), "utf8"),
   );
+  const npx = process.platform === "win32" ? "npx.cmd" : "npx";
+  shadcnCommand = latest ? npx : process.execPath;
+  shadcnArgs = latest
+    ? ["--yes", "shadcn@latest"]
+    : [resolve("node_modules/shadcn/dist/index.js")];
+  cliVersion = latest
+    ? execFileSync(npx, [...shadcnArgs, "--version"], {
+        encoding: "utf8",
+      }).trim()
+    : workspace.devDependencies.shadcn;
+  assert.match(
+    cliVersion,
+    /^\d+\.\d+\.\d+$/,
+    "Installer must report a CLI version",
+  );
+  if (consumers && !latest) {
+    assert.equal(
+      JSON.parse(
+        await readFile(join(root, "node_modules/shadcn/package.json"), "utf8"),
+      ).version,
+      cliVersion,
+    );
+  }
+  evidence.installation = {
+    mode: github ? "github" : "local checkout",
+    cliVersion,
+    channel: latest ? "latest" : "locked",
+    revision,
+    dirtySource,
+    items: [],
+  };
+  evidence.consumerSnippets = [];
 }
-evidence.installation = {
-  mode: github ? "github" : "local checkout",
-  cliVersion,
-  channel: latest ? "latest" : "locked",
-  revision,
-  dirtySource,
-  items: [],
-};
-evidence.consumerSnippets = [];
 
 const pnpm = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
 const npm = process.platform === "win32" ? "npm.cmd" : "npm";
@@ -117,6 +129,8 @@ const run = (command, args, cwd = root, env = process.env) =>
     });
   });
 let packedRegistry;
+let skillFactory;
+const catalogExamples = [];
 const consumer = await mkdtemp(join(tmpdir(), "audiobits-package-"));
 try {
   await run(pnpm, ["exec", "publint", "packages/audiobits", "--strict"]);
@@ -188,515 +202,526 @@ try {
     join(consumer, "index.ts"),
     'import { createAudio, defineSound, validateRecipe } from "audiobits"; import { confirmation } from "./items/confirmation/src/sounds/recipes/confirmation/recipe.js"; import { impact } from "./items/impact/src/sounds/recipes/impact/recipe.js"; import { thruster } from "./items/thruster/src/sounds/recipes/thruster/recipe.js"; const audio = createAudio(); const recipe = defineSound(confirmation); audio.sound(recipe); const dynamic = () => { const voice = audio.sound(thruster).play({ seed: 42, parameters: { throttle: 0.2 } }); voice.set({ throttle: 1 }); const bus = audio.bus("effects"); bus.setGainDb(-6, 0.1); bus.setMuted(true); bus.setParent(audio.master); audio.sound(impact).play({ bus }); const analyser = audio.native.context.createAnalyser(); const detach = audio.native.connect(analyser); detach(); analyser.disconnect(); audio.stopAll({ tails: "cut" }); bus.dispose(); const seed: number = voice.seed; audio.sound(impact).play({ parameters: { intensity: 1 }, seed }); voice.stop(); }; void dynamic; console.log(validateRecipe(recipe)); void audio.dispose();\n',
   );
-  // Versioned registry dependencies must resolve to this exact packed runtime,
-  // including when the installer insists on reinstalling an existing version.
-  // Serve only its npm metadata and archive on loopback; never substitute npm's
-  // latest release for the candidate being verified.
-  const packedManifest = JSON.parse(
-    await readFile(
-      join(consumer, "node_modules/audiobits/package.json"),
-      "utf8",
-    ),
-  );
-  const packedBytes = await readFile(archive);
-  // The optional latest-CLI journey still obtains its tool from the configured
-  // public registry. Only AudioBits resolution is confined to the candidate.
-  const toolRegistry = latest
-    ? execFileSync(npm, ["config", "get", "registry"], {
-        encoding: "utf8",
-      }).trim()
-    : undefined;
-  let packedRegistryUrl;
-  packedRegistry = createServer((request, response) => {
-    if (request.url === "/audiobits/-/runtime.tgz") {
-      response.end(packedBytes);
-    } else if (request.url === "/audiobits") {
-      response.setHeader("content-type", "application/json");
-      response.end(
-        JSON.stringify({
-          name: "audiobits",
-          "dist-tags": { latest: packedManifest.version },
-          versions: {
-            [packedManifest.version]: {
-              ...packedManifest,
-              dist: {
-                tarball: `${packedRegistryUrl}/audiobits/-/runtime.tgz`,
-                integrity: `sha512-${createHash("sha512").update(packedBytes).digest("base64")}`,
+  // Portable fixtures exercise public types without installing catalog or website code.
+  for (const id of ["confirmation", "impact", "thruster"]) {
+    const target = join(
+      consumer,
+      `items/${id}/src/sounds/recipes/${id}/recipe.ts`,
+    );
+    await mkdir(resolve(target, ".."), { recursive: true });
+    await copyFile(join(root, `catalog/recipes/${id}/recipe.ts`), target);
+  }
+  if (consumers) {
+    // Versioned registry dependencies must resolve to this exact packed runtime,
+    // including when the installer insists on reinstalling an existing version.
+    // Serve only its npm metadata and archive on loopback; never substitute npm's
+    // latest release for the candidate being verified.
+    const packedManifest = JSON.parse(
+      await readFile(
+        join(consumer, "node_modules/audiobits/package.json"),
+        "utf8",
+      ),
+    );
+    const packedBytes = await readFile(archive);
+    // The optional latest-CLI journey still obtains its tool from the configured
+    // public registry. Only AudioBits resolution is confined to the candidate.
+    const toolRegistry = latest
+      ? execFileSync(npm, ["config", "get", "registry"], {
+          encoding: "utf8",
+        }).trim()
+      : undefined;
+    let packedRegistryUrl;
+    packedRegistry = createServer((request, response) => {
+      if (request.url === "/audiobits/-/runtime.tgz") {
+        response.end(packedBytes);
+      } else if (request.url === "/audiobits") {
+        response.setHeader("content-type", "application/json");
+        response.end(
+          JSON.stringify({
+            name: "audiobits",
+            "dist-tags": { latest: packedManifest.version },
+            versions: {
+              [packedManifest.version]: {
+                ...packedManifest,
+                dist: {
+                  tarball: `${packedRegistryUrl}/audiobits/-/runtime.tgz`,
+                  integrity: `sha512-${createHash("sha512").update(packedBytes).digest("base64")}`,
+                },
               },
             },
-          },
+          }),
+        );
+      } else if (toolRegistry) {
+        response
+          .writeHead(307, { location: new URL(request.url, toolRegistry).href })
+          .end();
+      } else {
+        response.writeHead(404).end();
+      }
+    });
+    await new Promise((resolve, reject) => {
+      packedRegistry.once("error", reject);
+      packedRegistry.listen(0, "127.0.0.1", resolve);
+    });
+    packedRegistryUrl = `http://127.0.0.1:${packedRegistry.address().port}`;
+    const registry = JSON.parse(await readFile("registry.json", "utf8"));
+    const registryOutput = join(consumer, "registry");
+    if (!github) {
+      // Use the CLI's own build format, with bytes from this checkout, never main.
+      await run(shadcnCommand, [
+        ...shadcnArgs,
+        "build",
+        "registry.json",
+        "--output",
+        registryOutput,
+      ]);
+    }
+    console.log(
+      `[Actual shadcn installation] CLI ${cliVersion} (${latest ? "latest" : "locked"}); ${github ? "GitHub" : "local checkout"}; commit ${revision}; dirty=${dirtySource}; items: ${registry.items.map((item) => item.name).join(", ")}`,
+    );
+    const manifestTypes = [];
+    const consumerTypes = [];
+    evidence.catalog = [];
+    for (const item of registry.items) {
+      // Each item has its own source tree. Sibling items cannot satisfy imports.
+      const directory = join(consumer, "items", item.name);
+      const types = [];
+      for (const file of item.files) {
+        const target = join(directory, file.target.replace(/^~\//, ""));
+        await mkdir(resolve(target, ".."), { recursive: true });
+        await copyFile(join(root, file.path), target);
+        if (target.endsWith(".ts")) types.push(target);
+      }
+      const guide =
+        item.meta.classification === "recipe"
+          ? ""
+          : await readFile(
+              join(
+                directory,
+                item.files
+                  .find((file) => file.path.endsWith("/README.md"))
+                  .target.replace(/^~\//, ""),
+              ),
+              "utf8",
+            );
+      const matches = [...guide.matchAll(/```ts\n([\s\S]*?)```/g)].filter(
+        (match) =>
+          match[1].includes(
+            `from "./sounds/${item.meta.classification === "recipe" ? "recipes" : "experiences"}/${item.name}/`,
+          ),
+      );
+      if (item.meta.classification === "experience") {
+        assert.equal(
+          matches.length,
+          1,
+          `${item.name}: one working installed-path example`,
+        );
+      } else {
+        assert.ok(
+          item.name in sounds,
+          `${item.name}: missing website presentation and usage setup`,
+        );
+      }
+      const integration =
+        item.meta.classification === "recipe"
+          ? quickExample(item.name, parametersFor(sounds[item.name]), 42)
+          : experienceExample(item.name, guide);
+      const exampleSource = join(directory, "src/integration.ts");
+      await writeFile(exampleSource, integration);
+      types.push(exampleSource);
+      catalogExamples.push({
+        name: `catalog-${item.name}`,
+        file: item.name,
+        index: 0,
+        code: integration,
+        source: exampleSource,
+        sustained: item.meta.requiredCapabilities.kinds.includes("sustained"),
+        // Metal returns ring for 2.4 s and their late echo repeats for about
+        // 3.2 s more, so Echo Probe finishes about 7 s after its pulse.
+        // The Rift's collapse folds, implodes and repeats its pocket echo.
+        ...(["echo-probe", "the-rift"].includes(item.name)
+          ? { finishTimeout: 12000 }
+          : {}),
+      });
+      manifestTypes.push(...types);
+      // This consumer starts with only the packed runtime. No framework or
+      // components.json is present, and sibling items cannot satisfy imports.
+      const installedDirectory = join(consumer, "installed-items", item.name);
+      await mkdir(installedDirectory, { recursive: true });
+      await writeFile(
+        join(installedDirectory, "package.json"),
+        JSON.stringify({
+          name: `consumer-${item.name}`,
+          private: true,
+          type: "module",
         }),
       );
-    } else if (toolRegistry) {
-      response
-        .writeHead(307, { location: new URL(request.url, toolRegistry).href })
-        .end();
-    } else {
-      response.writeHead(404).end();
-    }
-  });
-  await new Promise((resolve, reject) => {
-    packedRegistry.once("error", reject);
-    packedRegistry.listen(0, "127.0.0.1", resolve);
-  });
-  packedRegistryUrl = `http://127.0.0.1:${packedRegistry.address().port}`;
-  const registry = JSON.parse(await readFile("registry.json", "utf8"));
-  const registryOutput = join(consumer, "registry");
-  if (!github) {
-    // Use the CLI's own build format, with bytes from this checkout, never main.
-    await run(shadcnCommand, [
-      ...shadcnArgs,
-      "build",
-      "registry.json",
-      "--output",
-      registryOutput,
-    ]);
-  }
-  console.log(
-    `[Actual shadcn installation] CLI ${cliVersion} (${latest ? "latest" : "locked"}); ${github ? "GitHub" : "local checkout"}; commit ${revision}; dirty=${dirtySource}; items: ${registry.items.map((item) => item.name).join(", ")}`,
-  );
-  const catalogExamples = [];
-  const manifestTypes = [];
-  const consumerTypes = [];
-  evidence.catalog = [];
-  for (const item of registry.items) {
-    // Each item has its own source tree. Sibling items cannot satisfy imports.
-    const directory = join(consumer, "items", item.name);
-    const types = [];
-    for (const file of item.files) {
-      const target = join(directory, file.target.replace(/^~\//, ""));
-      await mkdir(resolve(target, ".."), { recursive: true });
-      await copyFile(join(root, file.path), target);
-      if (target.endsWith(".ts")) types.push(target);
-    }
-    const guide =
-      item.meta.classification === "recipe"
-        ? ""
-        : await readFile(
-            join(
-              directory,
-              item.files
-                .find((file) => file.path.endsWith("/README.md"))
-                .target.replace(/^~\//, ""),
-            ),
-            "utf8",
-          );
-    const matches = [...guide.matchAll(/```ts\n([\s\S]*?)```/g)].filter(
-      (match) =>
-        match[1].includes(
-          `from "./sounds/${item.meta.classification === "recipe" ? "recipes" : "experiences"}/${item.name}/`,
-        ),
-    );
-    if (item.meta.classification === "experience") {
-      assert.equal(
-        matches.length,
-        1,
-        `${item.name}: one working installed-path example`,
+      await run(
+        npm,
+        [
+          "install",
+          archive,
+          "--offline",
+          "--ignore-scripts",
+          "--no-audit",
+          "--no-fund",
+          "--cache",
+          join(consumer, "cache"),
+        ],
+        installedDirectory,
       );
-    } else {
+      const beforeInstall = await readFile(
+        join(installedDirectory, "package.json"),
+        "utf8",
+      );
+      const address = github
+        ? `${new URL(registry.homepage).pathname.slice(1)}/${item.name}#${requestedRevision}`
+        : join(registryOutput, `${item.name}.json`);
+      await run(
+        shadcnCommand,
+        [...shadcnArgs, "add", address, "--yes", "--cwd", installedDirectory],
+        installedDirectory,
+        {
+          ...process.env,
+          npm_config_registry: packedRegistryUrl,
+          npm_config_cache: join(consumer, "cache"),
+          npm_config_ignore_scripts: "true",
+        },
+      );
+      const expectedManifest = JSON.parse(beforeInstall);
+      for (const dependency of item.dependencies) {
+        if (dependency.startsWith("audiobits@"))
+          // shadcn rewrites versioned deps to ^packed when resolving the candidate.
+          expectedManifest.dependencies.audiobits = `^${packedManifest.version}`;
+      }
+      assert.deepEqual(
+        JSON.parse(
+          await readFile(join(installedDirectory, "package.json"), "utf8"),
+        ),
+        expectedManifest,
+        `${item.name}: installer changed dependencies beyond registry requirements`,
+      );
+      for (const file of allowed) {
+        const path = file.replace(/^package\//, "");
+        assert.deepEqual(
+          await readFile(
+            join(installedDirectory, "node_modules/audiobits", path),
+          ),
+          await readFile(join(consumer, "node_modules/audiobits", path)),
+          `${item.name}: installer substituted the packed runtime's ${path}`,
+        );
+      }
+      assert.deepEqual(
+        (await readdir(join(installedDirectory, "node_modules"))).sort(),
+        [".package-lock.json", "audiobits"],
+        `${item.name}: unexpected installed dependencies`,
+      );
+      assert.deepEqual(
+        (await readdir(installedDirectory)).sort(),
+        ["node_modules", "package-lock.json", "package.json", "src"].sort(),
+        `${item.name}: unexpected framework/config files`,
+      );
+      const actualFiles = (
+        await readdir(join(installedDirectory, "src"), {
+          recursive: true,
+          withFileTypes: true,
+        })
+      )
+        .filter((file) => file.isFile())
+        .map((file) =>
+          relative(
+            installedDirectory,
+            join(file.parentPath, file.name),
+          ).replaceAll("\\", "/"),
+        );
       assert.ok(
-        item.name in sounds,
-        `${item.name}: missing website presentation and usage setup`,
+        actualFiles.every((path) => !/LICENSE/i.test(path)),
+        `${item.name}: redundant installed license file`,
       );
-    }
-    const integration =
-      item.meta.classification === "recipe"
-        ? quickExample(item.name, parametersFor(sounds[item.name]), 42)
-        : experienceExample(item.name, guide);
-    const exampleSource = join(directory, "src/integration.ts");
-    await writeFile(exampleSource, integration);
-    types.push(exampleSource);
-    catalogExamples.push({
-      name: `catalog-${item.name}`,
-      file: item.name,
-      index: 0,
-      code: integration,
-      source: exampleSource,
-      sustained: item.meta.requiredCapabilities.kinds.includes("sustained"),
-      // Metal returns ring for 2.4 s and their late echo repeats for about
-      // 3.2 s more, so Echo Probe finishes about 7 s after its pulse.
-      // The Rift's collapse folds, implodes and repeats its pocket echo.
-      ...(["echo-probe", "the-rift"].includes(item.name)
-        ? { finishTimeout: 12000 }
-        : {}),
-    });
-    manifestTypes.push(...types);
-    // This consumer starts with only the packed runtime. No framework or
-    // components.json is present, and sibling items cannot satisfy imports.
-    const installedDirectory = join(consumer, "installed-items", item.name);
-    await mkdir(installedDirectory, { recursive: true });
-    await writeFile(
-      join(installedDirectory, "package.json"),
-      JSON.stringify({
-        name: `consumer-${item.name}`,
-        private: true,
-        type: "module",
-      }),
-    );
-    await run(
-      npm,
-      [
-        "install",
-        archive,
-        "--offline",
-        "--ignore-scripts",
-        "--no-audit",
-        "--no-fund",
-        "--cache",
-        join(consumer, "cache"),
-      ],
-      installedDirectory,
-    );
-    const beforeInstall = await readFile(
-      join(installedDirectory, "package.json"),
-      "utf8",
-    );
-    const address = github
-      ? `${new URL(registry.homepage).pathname.slice(1)}/${item.name}#${requestedRevision}`
-      : join(registryOutput, `${item.name}.json`);
-    await run(
-      shadcnCommand,
-      [...shadcnArgs, "add", address, "--yes", "--cwd", installedDirectory],
-      installedDirectory,
-      {
-        ...process.env,
-        npm_config_registry: packedRegistryUrl,
-        npm_config_cache: join(consumer, "cache"),
-        npm_config_ignore_scripts: "true",
-      },
-    );
-    const expectedManifest = JSON.parse(beforeInstall);
-    for (const dependency of item.dependencies) {
-      if (dependency.startsWith("audiobits@"))
-        // shadcn rewrites versioned deps to ^packed when resolving the candidate.
-        expectedManifest.dependencies.audiobits = `^${packedManifest.version}`;
-    }
-    assert.deepEqual(
-      JSON.parse(
-        await readFile(join(installedDirectory, "package.json"), "utf8"),
-      ),
-      expectedManifest,
-      `${item.name}: installer changed dependencies beyond registry requirements`,
-    );
-    for (const file of allowed) {
-      const path = file.replace(/^package\//, "");
       assert.deepEqual(
-        await readFile(
-          join(installedDirectory, "node_modules/audiobits", path),
-        ),
-        await readFile(join(consumer, "node_modules/audiobits", path)),
-        `${item.name}: installer substituted the packed runtime's ${path}`,
+        actualFiles.sort(),
+        item.files.map((file) => file.target.replace(/^~\//, "")).sort(),
+        `${item.name}: installed paths differ from manifest`,
       );
-    }
-    assert.deepEqual(
-      (await readdir(join(installedDirectory, "node_modules"))).sort(),
-      [".package-lock.json", "audiobits"],
-      `${item.name}: unexpected installed dependencies`,
-    );
-    assert.deepEqual(
-      (await readdir(installedDirectory)).sort(),
-      ["node_modules", "package-lock.json", "package.json", "src"].sort(),
-      `${item.name}: unexpected framework/config files`,
-    );
-    const actualFiles = (
-      await readdir(join(installedDirectory, "src"), {
-        recursive: true,
-        withFileTypes: true,
-      })
-    )
-      .filter((file) => file.isFile())
-      .map((file) =>
-        relative(
-          installedDirectory,
-          join(file.parentPath, file.name),
-        ).replaceAll("\\", "/"),
-      );
-    assert.ok(
-      actualFiles.every((path) => !/LICENSE/i.test(path)),
-      `${item.name}: redundant installed license file`,
-    );
-    assert.deepEqual(
-      actualFiles.sort(),
-      item.files.map((file) => file.target.replace(/^~\//, "")).sort(),
-      `${item.name}: installed paths differ from manifest`,
-    );
-    for (const file of item.files) {
-      assert.deepEqual(
-        await readFile(
-          join(installedDirectory, file.target.replace(/^~\//, "")),
-        ),
-        await readFile(join(root, file.path)),
-        `${item.name}: installer changed bytes in ${file.target}`,
-      );
-    }
-    evidence.installation.items.push({
-      id: item.name,
-      files: actualFiles.length,
-      paths: "passed",
-      bytes: "passed",
-      dependencies: item.dependencies,
-    });
+      for (const file of item.files) {
+        assert.deepEqual(
+          await readFile(
+            join(installedDirectory, file.target.replace(/^~\//, "")),
+          ),
+          await readFile(join(root, file.path)),
+          `${item.name}: installer changed bytes in ${file.target}`,
+        );
+      }
+      evidence.installation.items.push({
+        id: item.name,
+        files: actualFiles.length,
+        paths: "passed",
+        bytes: "passed",
+        dependencies: item.dependencies,
+      });
 
-    // Compile the same generators the website calls. Presentation can change
-    // without extracting code from rendered markup or rewriting user imports.
-    const snippets = [
-      {
-        source: "website usage",
-        code: integration,
-      },
-    ];
-    if (item.meta.classification === "recipe") {
-      for (const control of [0, 0.5, 1]) {
-        for (const seed of [0, 42, 0xffffffff]) {
-          snippets.push({
-            source: "quickExample",
-            code: quickExample(
-              item.name,
-              parametersFor(sounds[item.name], control),
-              seed,
-            ),
-          });
-          snippets.push({
-            source: "libraryExample",
-            code: libraryExample(sounds[item.name], control, seed),
-          });
+      // Compile the same generators the website calls. Presentation can change
+      // without extracting code from rendered markup or rewriting user imports.
+      const snippets = [
+        {
+          source: "website usage",
+          code: integration,
+        },
+      ];
+      if (item.meta.classification === "recipe") {
+        for (const control of [0, 0.5, 1]) {
+          for (const seed of [0, 42, 0xffffffff]) {
+            snippets.push({
+              source: "quickExample",
+              code: quickExample(
+                item.name,
+                parametersFor(sounds[item.name], control),
+                seed,
+              ),
+            });
+            snippets.push({
+              source: "libraryExample",
+              code: libraryExample(sounds[item.name], control, seed),
+            });
+          }
         }
       }
-    }
-    if (item.meta.classification === "recipe") {
-      const edited = JSON.parse(JSON.stringify(sounds[item.name]));
-      edited.parameters = {
-        ...edited.parameters,
-        default: {
-          min: 0,
-          max: 1,
-          default: 0.3,
-          mode: edited.kind === "sustained" ? "live" : "play",
-          ...(edited.kind === "sustained" ? { smoothing: 0.06 } : {}),
-        },
-      };
-      snippets.push({
-        source: "edited website usage",
-        code: quickExample(item.name, parametersFor(edited), 7, edited),
+      if (item.meta.classification === "recipe") {
+        const edited = JSON.parse(JSON.stringify(sounds[item.name]));
+        edited.parameters = {
+          ...edited.parameters,
+          default: {
+            min: 0,
+            max: 1,
+            default: 0.3,
+            mode: edited.kind === "sustained" ? "live" : "play",
+            ...(edited.kind === "sustained" ? { smoothing: 0.06 } : {}),
+          },
+        };
+        snippets.push({
+          source: "edited website usage",
+          code: quickExample(item.name, parametersFor(edited), 7, edited),
+        });
+      }
+      const installedTypes = item.files
+        .filter((file) => file.path.endsWith(".ts"))
+        .map((file) =>
+          join(installedDirectory, file.target.replace(/^~\//, "")),
+        );
+      for (const [index, snippet] of snippets.entries()) {
+        const source = join(
+          installedDirectory,
+          "src",
+          index === 0 ? "integration.ts" : `snippet-${index}.ts`,
+        );
+        await writeFile(source, snippet.code);
+        installedTypes.push(source);
+      }
+      consumerTypes.push(...installedTypes);
+      evidence.consumerSnippets.push({
+        id: item.name,
+        count: snippets.length,
+        sources: [...new Set(snippets.map((snippet) => snippet.source))],
+        typecheck: "passed",
       });
-    }
-    const installedTypes = item.files
-      .filter((file) => file.path.endsWith(".ts"))
-      .map((file) => join(installedDirectory, file.target.replace(/^~\//, "")));
-    for (const [index, snippet] of snippets.entries()) {
-      const source = join(
+      catalogExamples.at(-1).code = snippets[0].code;
+      catalogExamples.at(-1).source = join(
         installedDirectory,
-        "src",
-        index === 0 ? "integration.ts" : `snippet-${index}.ts`,
+        "src/integration.ts",
       );
-      await writeFile(source, snippet.code);
-      installedTypes.push(source);
-    }
-    consumerTypes.push(...installedTypes);
-    evidence.consumerSnippets.push({
-      id: item.name,
-      count: snippets.length,
-      sources: [...new Set(snippets.map((snippet) => snippet.source))],
-      typecheck: "passed",
-    });
-    catalogExamples.at(-1).code = snippets[0].code;
-    catalogExamples.at(-1).source = join(
-      installedDirectory,
-      "src/integration.ts",
-    );
-    const recipeFile = item.files.find(
-      (file) =>
-        file.path ===
-        `catalog/${item.meta.classification === "recipe" ? "recipes" : "experiences"}/${item.name}/recipe.ts`,
-    );
-    const source = join(directory, recipeFile.target.replace(/^~\//, ""));
-    await build({
-      entry: [source],
-      format: "esm",
-      platform: "node",
-      target: "es2022",
-      outDir: join(directory, "validation"),
-      dts: false,
-      clean: true,
-      external: ["audiobits"],
-    });
-    await run(
-      process.execPath,
-      [
-        "--input-type=module",
-        "-e",
-        `
+      const recipeFile = item.files.find(
+        (file) =>
+          file.path ===
+          `catalog/${item.meta.classification === "recipe" ? "recipes" : "experiences"}/${item.name}/recipe.ts`,
+      );
+      const source = join(directory, recipeFile.target.replace(/^~\//, ""));
+      await build({
+        entry: [source],
+        format: "esm",
+        platform: "node",
+        target: "es2022",
+        outDir: join(directory, "validation"),
+        dts: false,
+        clean: true,
+        external: ["audiobits"],
+      });
+      await run(
+        process.execPath,
+        [
+          "--input-type=module",
+          "-e",
+          `
       import assert from "node:assert/strict";
       import { validateRecipe } from "audiobits";
       import * as recipes from "./validation/recipe.mjs";
       for (const recipe of Object.values(recipes)) assert.equal(validateRecipe(recipe).ok, true);
     `,
-      ],
-      directory,
-    );
-    evidence.catalog.push({
-      id: item.name,
-      files: item.files.length,
-      typecheck: "passed",
-      validation: "passed",
-      example: "typechecked",
-    });
-  }
-  const documentation = [
-    "catalog/README.md",
-    ...registry.items.flatMap((item) =>
-      item.files
-        .filter((file) => file.path.endsWith(".md"))
-        .map((file) => file.path),
-    ),
-    ...(await readdir("skills/audiobits", { recursive: true }).then((files) =>
-      files
-        .filter((file) => file.endsWith(".md"))
-        .map((file) => `skills/audiobits/${file}`),
-    )),
-    ...(await readdir("apps/www/content/docs", { recursive: true }).then(
-      (files) =>
-        files
-          .filter((file) => file.endsWith(".mdx"))
-          .map((file) => `apps/www/content/docs/${file}`),
-    )),
-  ];
-  evidence.documentation = [];
-  for (const [documentIndex, file] of documentation.entries()) {
-    const content = await readFile(file, "utf8");
-    for (const [snippetIndex, match] of [
-      ...content.matchAll(/```ts\n([\s\S]*?)```/g),
-    ].entries()) {
-      const code = match[1];
-      const directory = join(
-        consumer,
-        "documentation",
-        `${documentIndex}-${snippetIndex}`,
+        ],
+        directory,
       );
-      const source = join(directory, "src/integration.ts");
-      await mkdir(join(directory, "src"), { recursive: true });
-      const needed = new Set();
-      for (const imported of ts.preProcessFile(code, true, true)
-        .importedFiles) {
-        if (!imported.fileName.startsWith(".")) continue;
-        const specifier = imported.fileName.replace(/\.(?:ts|js)$/, "");
-        const item = registry.items.find((item) =>
-          item.files.some(
-            (entry) =>
-              `./${entry.target.slice("~/src/".length).replace(/\.ts$/, "")}` ===
-              specifier,
-          ),
-        );
-        assert.ok(
-          item,
-          `${file}: example imports noninstalled source ${imported.fileName}`,
-        );
-        needed.add(item);
-      }
-      for (const item of needed) {
-        for (const entry of item.files) {
-          const target = join(directory, entry.target.slice(2));
-          await mkdir(resolve(target, ".."), { recursive: true });
-          await copyFile(
-            join(consumer, "installed-items", item.name, entry.target.slice(2)),
-            target,
-          );
-          if (target.endsWith(".ts")) consumerTypes.push(target);
-        }
-      }
-      await writeFile(source, code);
-      consumerTypes.push(source);
-      evidence.documentation.push({
-        file,
-        snippet: snippetIndex,
-        items: [...needed].map((item) => item.name),
+      evidence.catalog.push({
+        id: item.name,
+        files: item.files.length,
+        typecheck: "passed",
+        validation: "passed",
+        example: "typechecked",
       });
-      // Follow the official Skill for one-shot, sustained and coordinated sound.
-      if (
-        file.startsWith("skills/") &&
-        needed.size === 1 &&
-        /export async function play\(/.test(code)
-      ) {
-        const [item] = needed;
-        if (["confirmation", "thruster", "lightsaber"].includes(item.name)) {
-          catalogExamples.push({
-            name: `skill-${item.name}`,
-            file: item.name,
-            guide: file,
-            index: snippetIndex,
-            code,
-            source,
-            sustained:
-              item.meta.requiredCapabilities.kinds.includes("sustained"),
-          });
+    }
+    const documentation = [
+      "catalog/README.md",
+      ...registry.items.flatMap((item) =>
+        item.files
+          .filter((file) => file.path.endsWith(".md"))
+          .map((file) => file.path),
+      ),
+      ...(await readdir("skills/audiobits", { recursive: true }).then((files) =>
+        files
+          .filter((file) => file.endsWith(".md"))
+          .map((file) => `skills/audiobits/${file}`),
+      )),
+      ...(await readdir("apps/www/content/docs", { recursive: true }).then(
+        (files) =>
+          files
+            .filter((file) => file.endsWith(".mdx"))
+            .map((file) => `apps/www/content/docs/${file}`),
+      )),
+    ];
+    evidence.documentation = [];
+    for (const [documentIndex, file] of documentation.entries()) {
+      const content = await readFile(file, "utf8");
+      for (const [snippetIndex, match] of [
+        ...content.matchAll(/```ts\n([\s\S]*?)```/g),
+      ].entries()) {
+        const code = match[1];
+        const directory = join(
+          consumer,
+          "documentation",
+          `${documentIndex}-${snippetIndex}`,
+        );
+        const source = join(directory, "src/integration.ts");
+        await mkdir(join(directory, "src"), { recursive: true });
+        const needed = new Set();
+        for (const imported of ts.preProcessFile(code, true, true)
+          .importedFiles) {
+          if (!imported.fileName.startsWith(".")) continue;
+          const specifier = imported.fileName.replace(/\.(?:ts|js)$/, "");
+          const item = registry.items.find((item) =>
+            item.files.some(
+              (entry) =>
+                `./${entry.target.slice("~/src/".length).replace(/\.ts$/, "")}` ===
+                specifier,
+            ),
+          );
+          assert.ok(
+            item,
+            `${file}: example imports noninstalled source ${imported.fileName}`,
+          );
+          needed.add(item);
+        }
+        for (const item of needed) {
+          for (const entry of item.files) {
+            const target = join(directory, entry.target.slice(2));
+            await mkdir(resolve(target, ".."), { recursive: true });
+            await copyFile(
+              join(
+                consumer,
+                "installed-items",
+                item.name,
+                entry.target.slice(2),
+              ),
+              target,
+            );
+            if (target.endsWith(".ts")) consumerTypes.push(target);
+          }
+        }
+        await writeFile(source, code);
+        consumerTypes.push(source);
+        evidence.documentation.push({
+          file,
+          snippet: snippetIndex,
+          items: [...needed].map((item) => item.name),
+        });
+        if (
+          file === "skills/audiobits/references/integration.md" &&
+          code.includes("export function createSoundHost(")
+        ) {
+          skillFactory = { code, source };
+        }
+        // Follow the official Skill for one-shot, sustained and coordinated sound.
+        if (
+          file.startsWith("skills/") &&
+          needed.size === 1 &&
+          /export async function play\(/.test(code)
+        ) {
+          const [item] = needed;
+          if (["confirmation", "thruster", "lightsaber"].includes(item.name)) {
+            catalogExamples.push({
+              name: `skill-${item.name}`,
+              file: item.name,
+              guide: file,
+              index: snippetIndex,
+              code,
+              source,
+              sustained:
+                item.meta.requiredCapabilities.kinds.includes("sustained"),
+            });
+          }
         }
       }
     }
-  }
-  assert.deepEqual(
-    catalogExamples
-      .filter((example) => example.name.startsWith("skill-"))
-      .map((example) => example.file)
-      .sort(),
-    ["confirmation", "lightsaber", "thruster"],
-    "Three real Skill consumer paths are required",
-  );
-  // Each import still resolves from its own isolated item directory. Batching
-  // shares TypeScript's standard-library work, with no aliases or source rewrites.
-  for (const [name, sources] of [
-    ["manifest", manifestTypes],
-    ["consumer", consumerTypes],
-  ]) {
-    const config = join(consumer, `${name}.tsconfig.json`);
-    await writeFile(
-      config,
-      JSON.stringify({
-        compilerOptions: {
-          noEmit: true,
-          strict: true,
-          noUncheckedSideEffectImports: true,
-          module: "ESNext",
-          moduleResolution: "Bundler",
-          target: "ES2022",
-          types: [],
-        },
-        files: sources.map((file) => relative(consumer, file)),
-      }),
+    assert.deepEqual(
+      catalogExamples
+        .filter((example) => example.name.startsWith("skill-"))
+        .map((example) => example.file)
+        .sort(),
+      ["confirmation", "lightsaber", "thruster"],
+      "Three real Skill consumer paths are required",
     );
-    await run(
-      process.execPath,
-      [resolve("node_modules/typescript/bin/tsc"), "--project", config],
-      consumer,
+    // Each import still resolves from its own isolated item directory. Batching
+    // shares TypeScript's standard-library work, with no aliases or source rewrites.
+    for (const [name, sources] of [
+      ["manifest", manifestTypes],
+      ["consumer", consumerTypes],
+    ]) {
+      const config = join(consumer, `${name}.tsconfig.json`);
+      await writeFile(
+        config,
+        JSON.stringify({
+          compilerOptions: {
+            noEmit: true,
+            strict: true,
+            noUncheckedSideEffectImports: true,
+            module: "ESNext",
+            moduleResolution: "Bundler",
+            target: "ES2022",
+            types: [],
+          },
+          files: sources.map((file) => relative(consumer, file)),
+        }),
+      );
+      await run(
+        process.execPath,
+        [resolve("node_modules/typescript/bin/tsc"), "--project", config],
+        consumer,
+      );
+    }
+    console.log(
+      `[Manifest/source validation] ${evidence.catalog.length} items: declared files, installed-path integration types and runtime recipe validation passed (manifest copies).`,
     );
+    console.log(
+      `[Actual shadcn installation] ${evidence.installation.items.length} items, ${evidence.installation.items.reduce((count, item) => count + item.files, 0)} files: paths, bytes and only audiobits dependency passed.`,
+    );
+    console.log(
+      `[Documentation/Skill validation] ${evidence.documentation.length} unchanged examples compiled against packed audiobits and actual shadcn-installed source.`,
+    );
+    console.log(
+      `[Exact consumer snippet validation] ${evidence.consumerSnippets.reduce((count, item) => count + item.count, 0)} unchanged snippets across ${evidence.consumerSnippets.length} items passed against shadcn-installed source and packed audiobits.`,
+    );
+    // Repository demonstrations are verified separately from installed source.
+    await cp(join(root, "catalog"), join(consumer, "showcases/catalog"), {
+      recursive: true,
+    });
   }
-  console.log(
-    `[Manifest/source validation] ${evidence.catalog.length} items: declared files, installed-path integration types and runtime recipe validation passed (manifest copies).`,
-  );
-  console.log(
-    `[Actual shadcn installation] ${evidence.installation.items.length} items, ${evidence.installation.items.reduce((count, item) => count + item.files, 0)} files: paths, bytes and only audiobits dependency passed.`,
-  );
-  console.log(
-    `[Documentation/Skill validation] ${evidence.documentation.length} unchanged examples compiled against packed audiobits and actual shadcn-installed source.`,
-  );
-  console.log(
-    `[Exact consumer snippet validation] ${evidence.consumerSnippets.reduce((count, item) => count + item.count, 0)} unchanged snippets across ${evidence.consumerSnippets.length} items passed against shadcn-installed source and packed audiobits.`,
-  );
-  // Repository demonstrations are verified separately from installed source.
-  await cp(join(root, "catalog"), join(consumer, "showcases/catalog"), {
-    recursive: true,
-  });
-  const bladeDirectory = join(
-    consumer,
-    "showcases/catalog/experiences/lightsaber",
-  );
-  const thrusterDirectory = join(
-    consumer,
-    "showcases/catalog/experiences/reactive-thruster",
-  );
-  const energyDirectory = join(
-    consumer,
-    "showcases/catalog/experiences/energy-charge",
-  );
   await writeFile(
     join(consumer, "authoring.types.ts"),
     (await readFile("packages/audiobits/tests/authoring.types.ts", "utf8"))
@@ -821,26 +846,15 @@ try {
     await readFile(join(installed, "LICENSE"), "utf8"),
     await readFile(resolve("LICENSE"), "utf8"),
   );
-  // Recreate the GitHub README's documented local source layout. It is not shipped.
-  const copiedConfirmation = join(
-    consumer,
-    "sounds/recipes/confirmation/recipe.ts",
-  );
-  await mkdir(resolve(copiedConfirmation, ".."), { recursive: true });
-  await copyFile(
-    join(
-      consumer,
-      "items/confirmation/src/sounds/recipes/confirmation/recipe.ts",
-    ),
-    copiedConfirmation,
-  );
   const examples = [];
-  const githubReadme = await readFile(join(root, "README.md"), "utf8");
-  assert.equal(
-    [...githubReadme.matchAll(/```ts\n([\s\S]*?)```/g)].length,
-    0,
-    "GitHub README.md must defer the TypeScript quick start to the package README",
-  );
+  if (consumers) {
+    const githubReadme = await readFile(join(root, "README.md"), "utf8");
+    assert.equal(
+      [...githubReadme.matchAll(/```ts\n([\s\S]*?)```/g)].length,
+      0,
+      "GitHub README.md must defer the TypeScript quick start to the package README",
+    );
+  }
   for (const [file, content] of [
     ["README.md", await readFile(join(installed, "README.md"), "utf8")],
   ]) {
@@ -873,35 +887,37 @@ try {
       );
     }
   }
-  const delayCode = await readFile(
-    join(root, "examples/vanilla/src/delay.ts"),
-    "utf8",
-  );
-  await writeFile(join(consumer, "delay-example.ts"), delayCode);
-  await run(
-    process.execPath,
-    [
-      resolve("node_modules/typescript/bin/tsc"),
-      "--noEmit",
-      "--strict",
-      "--module",
-      "NodeNext",
-      "--moduleResolution",
-      "NodeNext",
-      "--target",
-      "ES2022",
-      "delay-example.ts",
-    ],
-    consumer,
-  );
-  examples.push({
-    name: "delay-example",
-    file: "Native delay consumer",
-    index: 0,
-    code: delayCode,
-    // Feedback repeats keep this one-shot audible for about 1.85s.
-    finishTimeout: 4000,
-  });
+  if (consumers) {
+    const delayCode = await readFile(
+      join(root, "examples/vanilla/src/delay.ts"),
+      "utf8",
+    );
+    await writeFile(join(consumer, "delay-example.ts"), delayCode);
+    await run(
+      process.execPath,
+      [
+        resolve("node_modules/typescript/bin/tsc"),
+        "--noEmit",
+        "--strict",
+        "--module",
+        "NodeNext",
+        "--moduleResolution",
+        "NodeNext",
+        "--target",
+        "ES2022",
+        "delay-example.ts",
+      ],
+      consumer,
+    );
+    examples.push({
+      name: "delay-example",
+      file: "Native delay consumer",
+      index: 0,
+      code: delayCode,
+      // Feedback repeats keep this one-shot audible for about 1.85s.
+      finishTimeout: 4000,
+    });
+  }
   evidence.examples = examples.map(({ file, index }) => ({
     file,
     index,
@@ -909,7 +925,9 @@ try {
   }));
   examples.push(...catalogExamples);
   console.log(
-    "[Browser/runtime verification] Chromium: packaged README quick start, all installed integrations, three Skill consumer paths and three repository demonstration hosts.",
+    consumers
+      ? "[Consumer verification] Chromium: installed integrations, Skill factories and repository hosts."
+      : "[Artifact verification] Chromium: exact shipped README, native output, Stop and disposal.",
   );
   const browserOutput = join(consumer, "browser");
   await mkdir(browserOutput);
@@ -1002,42 +1020,77 @@ Object.assign(globalThis, { probe });`,
       clean: false,
     });
   }
-  await build({
-    entry: [join(thrusterDirectory, "host.ts")],
-    format: "esm",
-    platform: "browser",
-    target: "es2022",
-    outDir: browserOutput,
-    dts: false,
-    clean: false,
-  });
-  await build({
-    entry: [join(energyDirectory, "host.ts")],
-    format: "esm",
-    platform: "browser",
-    target: "es2022",
-    outDir: join(browserOutput, "energy-charge"),
-    dts: false,
-    clean: false,
-  });
-  await build({
-    entry: [join(bladeDirectory, "host.ts"), join(bladeDirectory, "stage.ts")],
-    format: "esm",
-    platform: "browser",
-    target: "es2022",
-    outDir: join(browserOutput, "lightsaber"),
-    dts: false,
-    clean: false,
-  });
-  const bladeHtml = (await readFile(join(bladeDirectory, "index.html"), "utf8"))
-    .replace('"./host.ts"', '"./lightsaber/host.js"')
-    .replace('"./stage.ts"', '"./lightsaber/stage.js"');
-  const energyHtml = (
-    await readFile(join(energyDirectory, "index.html"), "utf8")
-  ).replace('"./host.ts"', '"./energy-charge/host.js"');
-  const thrusterHtml = (
-    await readFile(join(thrusterDirectory, "index.html"), "utf8")
-  ).replace('"./host.ts"', '"./host.js"');
+  if (consumers) {
+    assert.ok(skillFactory, "The generic Skill host factory must be exercised");
+    const source = skillFactory.source.replace(/\.ts$/, "-browser.ts");
+    await writeFile(
+      source,
+      `${skillFactory.code}\nObject.assign(globalThis, { createSoundHost });`,
+    );
+    await build({
+      entry: { "skill-host": source },
+      format: "iife",
+      platform: "browser",
+      target: "es2022",
+      outDir: browserOutput,
+      dts: false,
+      clean: false,
+    });
+  }
+  let bladeHtml, energyHtml, thrusterHtml;
+  if (consumers) {
+    const bladeDirectory = join(
+      consumer,
+      "showcases/catalog/experiences/lightsaber",
+    );
+    const thrusterDirectory = join(
+      consumer,
+      "showcases/catalog/experiences/reactive-thruster",
+    );
+    const energyDirectory = join(
+      consumer,
+      "showcases/catalog/experiences/energy-charge",
+    );
+    await build({
+      entry: [join(thrusterDirectory, "host.ts")],
+      format: "esm",
+      platform: "browser",
+      target: "es2022",
+      outDir: browserOutput,
+      dts: false,
+      clean: false,
+    });
+    await build({
+      entry: [join(energyDirectory, "host.ts")],
+      format: "esm",
+      platform: "browser",
+      target: "es2022",
+      outDir: join(browserOutput, "energy-charge"),
+      dts: false,
+      clean: false,
+    });
+    await build({
+      entry: [
+        join(bladeDirectory, "host.ts"),
+        join(bladeDirectory, "stage.ts"),
+      ],
+      format: "esm",
+      platform: "browser",
+      target: "es2022",
+      outDir: join(browserOutput, "lightsaber"),
+      dts: false,
+      clean: false,
+    });
+    bladeHtml = (await readFile(join(bladeDirectory, "index.html"), "utf8"))
+      .replace('"./host.ts"', '"./lightsaber/host.js"')
+      .replace('"./stage.ts"', '"./lightsaber/stage.js"');
+    energyHtml = (
+      await readFile(join(energyDirectory, "index.html"), "utf8")
+    ).replace('"./host.ts"', '"./energy-charge/host.js"');
+    thrusterHtml = (
+      await readFile(join(thrusterDirectory, "index.html"), "utf8")
+    ).replace('"./host.ts"', '"./host.js"');
+  }
   const server = createServer(async (request, response) => {
     if (request.url === "/blade") {
       response.setHeader("Content-Type", "text/html");
@@ -1088,160 +1141,344 @@ Object.assign(globalThis, { probe });`,
     });
     browser = await chromium.launch();
     evidence.chromium = browser.version();
-    {
+    if (consumers) {
+      // Execute the exact generic factory, with native contexts and a deliberately
+      // pending resume. Simulated page events do not prove real BFCache navigation.
       const page = await browser.newPage();
       const errors = [];
       page.on("pageerror", (cause) => errors.push(cause.message));
-      await page.addInitScript(() => {
+      await page.goto(`http://127.0.0.1:${server.address().port}`);
+      await page.evaluate(() => {
+        globalThis.hostContexts = [];
+        globalThis.hostSources = 0;
+        globalThis.hostLive = 0;
+        globalThis.hostErrors = [];
         const Native = globalThis.AudioContext;
-        globalThis.bladeContexts = [];
         globalThis.AudioContext = class extends Native {
           constructor() {
             super();
-            globalThis.bladeContexts.push(this);
+            globalThis.hostContexts.push(this);
+            const resume = this.resume.bind(this);
+            this.resume = () => {
+              if (!globalThis.holdResume) return resume();
+              globalThis.holdResume = false;
+              return new Promise((resolve, reject) => {
+                globalThis.releaseResume = () => {
+                  void resume().then(resolve, reject);
+                };
+              });
+            };
+          }
+          createOscillator() {
+            const source = super.createOscillator();
+            const start = source.start.bind(source);
+            source.start = (...args) => {
+              globalThis.hostSources++;
+              globalThis.hostLive++;
+              source.addEventListener("ended", () => globalThis.hostLive--, {
+                once: true,
+              });
+              return start(...args);
+            };
+            return source;
           }
         };
       });
-      await page.goto(`http://127.0.0.1:${server.address().port}/blade`);
+      await page.addScriptTag({ url: "/skill-host.iife.js" });
+      await page.evaluate(() => {
+        globalThis.makeHost = () =>
+          globalThis.createSoundHost(
+            {
+              schemaVersion: 1,
+              kind: "sustained",
+              layers: [
+                {
+                  id: "tone",
+                  source: {
+                    type: "oscillator",
+                    waveform: "sine",
+                    frequency: 440,
+                  },
+                  gainDb: -18,
+                  envelope: {
+                    attack: 0.005,
+                    decay: 0.03,
+                    sustain: 0.35,
+                    release: 0.08,
+                  },
+                },
+              ],
+            },
+            (cause) => globalThis.hostErrors.push(String(cause)),
+          );
+        globalThis.host = globalThis.makeHost();
+        globalThis.document.querySelector("#play").onclick = () => {
+          globalThis.hostPlaying = globalThis.host.play();
+        };
+        globalThis.document.querySelector("#stop").onclick = () =>
+          globalThis.host.stop();
+        globalThis.document.querySelector("#dispose").onclick = () => {
+          globalThis.hostDisposing = globalThis.host.dispose();
+        };
+      });
       assert.equal(
-        await page.evaluate(() => globalThis.bladeContexts.length),
+        await page.evaluate(() => globalThis.hostContexts.length),
         0,
       );
-      await page.getByRole("button", { name: "Ignite", exact: true }).click();
-      await page.waitForFunction(
-        () =>
-          globalThis.document.querySelector("#stage").dataset.state ===
-          "running",
-      );
-      await page.waitForFunction(
-        () =>
-          Number(globalThis.document.querySelector("#stage").dataset.peak) > 0,
-      );
-      await page
-        .getByRole("button", { name: "Strike target", exact: true })
-        .click();
-      await expect(page.locator("#stage")).toHaveAttribute("data-hits", "1");
-      await page.getByRole("button", { name: "Retract", exact: true }).click();
-      await page.waitForFunction(
-        () =>
-          globalThis.document.querySelector("#stage").dataset.extension ===
-          "0.000",
-      );
-      await page.getByRole("button", { name: "Ignite", exact: true }).click();
-      await page.waitForFunction(
-        () =>
-          globalThis.document.querySelector("#stage").dataset.state ===
-          "running",
-      );
-      await page.getByRole("button", { name: "Stop all", exact: true }).click();
+      await page.click("#play");
+      await page.evaluate(() => globalThis.hostPlaying);
+      assert.equal(await page.evaluate(() => globalThis.hostSources), 1);
       await page.evaluate(() =>
-        globalThis.dispatchEvent(new globalThis.Event("pagehide")),
-      );
-      await page.waitForFunction(() =>
-        globalThis.bladeContexts.every((context) => context.state === "closed"),
-      );
-      assert.deepEqual(errors, []);
-      evidence.browser.push({
-        file: "catalog/experiences/lightsaber/index.html",
-        independentHost: true,
-        closed: true,
-      });
-      await page.close();
-    }
-    {
-      const page = await browser.newPage();
-      const errors = [];
-      page.on("pageerror", (error) => errors.push(error.message));
-      await page.addInitScript(() => {
-        globalThis.thrusterContexts = [];
-        const Native = globalThis.AudioContext;
-        globalThis.AudioContext = class extends Native {
-          constructor() {
-            super();
-            globalThis.thrusterContexts.push(this);
-          }
-        };
-      });
-      await page.goto(`http://127.0.0.1:${server.address().port}/thruster`);
-      await page
-        .getByRole("button", { name: "Start thruster", exact: true })
-        .click();
-      await expect(page.locator("#status")).toHaveText("running");
-      await page.getByRole("slider", { name: "Throttle" }).fill("0.8");
-      await expect(page.locator("#pad")).toHaveText("Thrust 80%");
-      await page.getByRole("button", { name: "Play impact" }).click();
-      await page.getByRole("button", { name: "Stop all" }).click();
-      await expect(page.locator("#status")).toHaveText("stopped");
-      await page.evaluate(() =>
-        globalThis.window.dispatchEvent(new globalThis.Event("pagehide")),
+        globalThis.dispatchEvent(
+          new globalThis.PageTransitionEvent("pagehide", { persisted: true }),
+        ),
       );
       await expect
         .poll(() =>
           page.evaluate(() =>
-            globalThis.thrusterContexts.map((context) => context.state),
+            globalThis.hostContexts.map((context) => context.state),
           ),
         )
-        .toEqual(["closed"]);
-      assert.deepEqual(errors, []);
-      evidence.browser.push({
-        file: "catalog/experiences/reactive-thruster/index.html",
-        independentHost: true,
-        closed: true,
-      });
-      await page.close();
-    }
-    {
-      const page = await browser.newPage();
-      const errors = [];
-      page.on("pageerror", (error) => errors.push(error.message));
-      await page.addInitScript(() => {
-        globalThis.energyContexts = [];
-        const Native = globalThis.AudioContext;
-        globalThis.AudioContext = class extends Native {
-          constructor() {
-            super();
-            globalThis.energyContexts.push(this);
-          }
-        };
-      });
-      await page.goto(`http://127.0.0.1:${server.address().port}/energy`);
-      assert.deepEqual(
-        await page.evaluate(() => globalThis.energyContexts.length),
-        0,
-      );
-      await page
-        .getByRole("button", { name: "Start charge", exact: true })
-        .click();
-      await expect(page.locator("#status")).toHaveText("running");
-      for (const value of ["1", "0.3", "0.3", "0.8"]) {
-        await page
-          .getByRole("slider", { name: "Charge", exact: true })
-          .fill(value);
-        await expect(page.locator("#status")).toHaveText("running");
-      }
-      await page.getByRole("button", { name: "Release charge" }).click();
-      await expect(page.locator("#status")).toHaveText("stopped");
-      await page
-        .getByRole("button", { name: "Start charge", exact: true })
-        .click();
-      await expect(page.locator("#status")).toHaveText("running");
-      await page.getByRole("button", { name: "Stop all" }).click();
-      await expect(page.locator("#status")).toHaveText("stopped");
+        .toEqual(["suspended"]);
       await page.evaluate(() =>
-        globalThis.window.dispatchEvent(new globalThis.Event("pagehide")),
+        globalThis.dispatchEvent(
+          new globalThis.PageTransitionEvent("pageshow", { persisted: true }),
+        ),
+      );
+      assert.equal(await page.evaluate(() => globalThis.hostSources), 1);
+      // A start pending across a second persisted transition must never play.
+      await page.evaluate(() => {
+        globalThis.holdResume = true;
+      });
+      await page.click("#play");
+      await page.evaluate(() => {
+        globalThis.dispatchEvent(
+          new globalThis.PageTransitionEvent("pagehide", { persisted: true }),
+        );
+        globalThis.dispatchEvent(
+          new globalThis.PageTransitionEvent("pageshow", { persisted: true }),
+        );
+        globalThis.releaseResume();
+      });
+      await page.evaluate(() => globalThis.hostPlaying);
+      assert.equal(await page.evaluate(() => globalThis.hostSources), 1);
+      await expect
+        .poll(() =>
+          page.evaluate(() =>
+            globalThis.hostContexts.map((context) => context.state),
+          ),
+        )
+        .toEqual(["suspended"]);
+      // A fresh gesture reuses that host and context after restoration.
+      await page.click("#play");
+      await page.evaluate(() => globalThis.hostPlaying);
+      assert.equal(await page.evaluate(() => globalThis.hostSources), 2);
+      assert.equal(
+        await page.evaluate(() => globalThis.hostContexts.length),
+        1,
+      );
+      await page.click("#stop");
+      await expect.poll(() => page.evaluate(() => globalThis.hostLive)).toBe(0);
+      await page.click("#dispose");
+      await page.evaluate(() => globalThis.hostDisposing);
+      assert.equal(
+        await page.evaluate(() => globalThis.hostContexts[0].state),
+        "closed",
+      );
+      // Non-persisted exit disposes a newly owned host as well.
+      await page.evaluate(() => {
+        globalThis.host = globalThis.makeHost();
+      });
+      await page.click("#play");
+      await page.evaluate(() => globalThis.hostPlaying);
+      await page.evaluate(() =>
+        globalThis.dispatchEvent(
+          new globalThis.PageTransitionEvent("pagehide", { persisted: false }),
+        ),
       );
       await expect
         .poll(() =>
-          page.evaluate(() => globalThis.energyContexts.map((c) => c.state)),
+          page.evaluate(() =>
+            globalThis.hostContexts.map((context) => context.state),
+          ),
         )
-        .toEqual(["closed"]);
+        .toEqual(["closed", "closed"]);
+      await page.click("#play");
+      await page.evaluate(() => globalThis.hostPlaying);
+      assert.equal(await page.evaluate(() => globalThis.hostSources), 3);
+      assert.deepEqual(await page.evaluate(() => globalThis.hostErrors), []);
       assert.deepEqual(errors, []);
       evidence.browser.push({
-        file: "catalog/experiences/energy-charge/index.html",
-        independentHost: true,
+        file: "skills/audiobits/references/integration.md",
+        factory: "createSoundHost",
+        simulatedPersistedLifecycle: true,
+        staleStartCancelled: true,
+        freshGesture: true,
         closed: true,
       });
       await page.close();
+      {
+        const page = await browser.newPage();
+        const errors = [];
+        page.on("pageerror", (cause) => errors.push(cause.message));
+        await page.addInitScript(() => {
+          const Native = globalThis.AudioContext;
+          globalThis.bladeContexts = [];
+          globalThis.AudioContext = class extends Native {
+            constructor() {
+              super();
+              globalThis.bladeContexts.push(this);
+            }
+          };
+        });
+        await page.goto(`http://127.0.0.1:${server.address().port}/blade`);
+        assert.equal(
+          await page.evaluate(() => globalThis.bladeContexts.length),
+          0,
+        );
+        await page.getByRole("button", { name: "Ignite", exact: true }).click();
+        await page.waitForFunction(
+          () =>
+            globalThis.document.querySelector("#stage").dataset.state ===
+            "running",
+        );
+        await page.waitForFunction(
+          () =>
+            Number(globalThis.document.querySelector("#stage").dataset.peak) >
+            0,
+        );
+        await page
+          .getByRole("button", { name: "Strike target", exact: true })
+          .click();
+        await expect(page.locator("#stage")).toHaveAttribute("data-hits", "1");
+        await page
+          .getByRole("button", { name: "Retract", exact: true })
+          .click();
+        await page.waitForFunction(
+          () =>
+            globalThis.document.querySelector("#stage").dataset.extension ===
+            "0.000",
+        );
+        await page.getByRole("button", { name: "Ignite", exact: true }).click();
+        await page.waitForFunction(
+          () =>
+            globalThis.document.querySelector("#stage").dataset.state ===
+            "running",
+        );
+        await page
+          .getByRole("button", { name: "Stop all", exact: true })
+          .click();
+        await page.evaluate(() =>
+          globalThis.dispatchEvent(new globalThis.Event("pagehide")),
+        );
+        await page.waitForFunction(() =>
+          globalThis.bladeContexts.every(
+            (context) => context.state === "closed",
+          ),
+        );
+        assert.deepEqual(errors, []);
+        evidence.browser.push({
+          file: "catalog/experiences/lightsaber/index.html",
+          independentHost: true,
+          closed: true,
+        });
+        await page.close();
+      }
+      {
+        const page = await browser.newPage();
+        const errors = [];
+        page.on("pageerror", (error) => errors.push(error.message));
+        await page.addInitScript(() => {
+          globalThis.thrusterContexts = [];
+          const Native = globalThis.AudioContext;
+          globalThis.AudioContext = class extends Native {
+            constructor() {
+              super();
+              globalThis.thrusterContexts.push(this);
+            }
+          };
+        });
+        await page.goto(`http://127.0.0.1:${server.address().port}/thruster`);
+        await page
+          .getByRole("button", { name: "Start thruster", exact: true })
+          .click();
+        await expect(page.locator("#status")).toHaveText("running");
+        await page.getByRole("slider", { name: "Throttle" }).fill("0.8");
+        await expect(page.locator("#pad")).toHaveText("Thrust 80%");
+        await page.getByRole("button", { name: "Play impact" }).click();
+        await page.getByRole("button", { name: "Stop all" }).click();
+        await expect(page.locator("#status")).toHaveText("stopped");
+        await page.evaluate(() =>
+          globalThis.window.dispatchEvent(new globalThis.Event("pagehide")),
+        );
+        await expect
+          .poll(() =>
+            page.evaluate(() =>
+              globalThis.thrusterContexts.map((context) => context.state),
+            ),
+          )
+          .toEqual(["closed"]);
+        assert.deepEqual(errors, []);
+        evidence.browser.push({
+          file: "catalog/experiences/reactive-thruster/index.html",
+          independentHost: true,
+          closed: true,
+        });
+        await page.close();
+      }
+      {
+        const page = await browser.newPage();
+        const errors = [];
+        page.on("pageerror", (error) => errors.push(error.message));
+        await page.addInitScript(() => {
+          globalThis.energyContexts = [];
+          const Native = globalThis.AudioContext;
+          globalThis.AudioContext = class extends Native {
+            constructor() {
+              super();
+              globalThis.energyContexts.push(this);
+            }
+          };
+        });
+        await page.goto(`http://127.0.0.1:${server.address().port}/energy`);
+        assert.deepEqual(
+          await page.evaluate(() => globalThis.energyContexts.length),
+          0,
+        );
+        await page
+          .getByRole("button", { name: "Start charge", exact: true })
+          .click();
+        await expect(page.locator("#status")).toHaveText("running");
+        for (const value of ["1", "0.3", "0.3", "0.8"]) {
+          await page
+            .getByRole("slider", { name: "Charge", exact: true })
+            .fill(value);
+          await expect(page.locator("#status")).toHaveText("running");
+        }
+        await page.getByRole("button", { name: "Release charge" }).click();
+        await expect(page.locator("#status")).toHaveText("stopped");
+        await page
+          .getByRole("button", { name: "Start charge", exact: true })
+          .click();
+        await expect(page.locator("#status")).toHaveText("running");
+        await page.getByRole("button", { name: "Stop all" }).click();
+        await expect(page.locator("#status")).toHaveText("stopped");
+        await page.evaluate(() =>
+          globalThis.window.dispatchEvent(new globalThis.Event("pagehide")),
+        );
+        await expect
+          .poll(() =>
+            page.evaluate(() => globalThis.energyContexts.map((c) => c.state)),
+          )
+          .toEqual(["closed"]);
+        assert.deepEqual(errors, []);
+        evidence.browser.push({
+          file: "catalog/experiences/energy-charge/index.html",
+          independentHost: true,
+          closed: true,
+        });
+        await page.close();
+      }
     }
     for (const example of examples) {
       const page = await browser.newPage();
@@ -1400,7 +1637,7 @@ Object.assign(globalThis, { probe });`,
         "closed",
       );
       assert.deepEqual(errors, []);
-      const catalogItem = evidence.catalog.find(
+      const catalogItem = evidence.catalog?.find(
         (item) => item.id === example.file,
       );
       if (catalogItem)
@@ -1420,7 +1657,11 @@ Object.assign(globalThis, { probe });`,
     await browser?.close();
     await new Promise((resolve) => server.close(resolve));
   }
-  const retained = resolve("node_modules/.cache/audiobits-release");
+  const retained = resolve(
+    consumers
+      ? "node_modules/.cache/audiobits-consumers"
+      : "node_modules/.cache/audiobits-release",
+  );
   await mkdir(retained, { recursive: true });
   const archiveName = `audiobits-${manifest.version}.tgz`;
   await copyFile(archive, join(retained, archiveName));
@@ -1432,12 +1673,21 @@ Object.assign(globalThis, { probe });`,
   evidence.bytes = (await stat(archive)).size;
   evidence.files = files;
   evidence.node = process.version;
-  evidence.sourceCommit = execFileSync("git", ["rev-parse", "HEAD"], {
-    encoding: "utf8",
-  }).trim();
-  evidence.dirtySource = Boolean(
-    execFileSync("git", ["status", "--porcelain"], { encoding: "utf8" }).trim(),
+  evidence.sourceCommit = revision;
+  assert.equal(
+    execFileSync("git", ["rev-parse", "HEAD"], {
+      encoding: "utf8",
+    }).trim(),
+    revision,
+    "Source commit changed during verification",
   );
+  evidence.dirtySource =
+    dirtySource ||
+    Boolean(
+      execFileSync("git", ["status", "--porcelain"], {
+        encoding: "utf8",
+      }).trim(),
+    );
   await writeFile(
     join(retained, "evidence.json"),
     JSON.stringify(evidence, null, 2) + "\n",

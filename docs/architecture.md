@@ -54,7 +54,7 @@ portable sound source. It derives discovery metadata and source manifests from
 `registry.json`, keeping visual families, labels and display order locally.
 
 Consumer examples in the catalog guides and the website's usage snippets use
-actual installed paths. `pnpm test:package` installs every item with shadcn into
+actual installed paths. `pnpm test:consumers` installs every item with shadcn into
 separate consumers, checks unchanged examples against the packed public runtime,
 and exercises activation, live inputs, Stop and disposal in Chromium. Registry
 checks reject demo files, missing imports and browser presentation dependencies.

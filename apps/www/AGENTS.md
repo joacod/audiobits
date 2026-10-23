@@ -109,6 +109,10 @@ because their human purposes differ.
   and run affected tests. Use the full suite for broad impact or explicit requests.
   Reproduce timing-sensitive graphics regressions at their committed viewport;
   preserve meaningful assertions without increasing timeouts or adding retries.
+- Preserve client loading boundaries for immersive renderers. Audio activation
+  remains synchronous in the accepted gesture before route/renderer loading.
+- Keep exhaustive static metadata/command/pagination checks in production-output
+  tests; retain actual clipboard, focus, navigation and lifecycle behavior in Chromium.
 - Do not run package release gates or compatibility suites for ordinary website
   work.
 

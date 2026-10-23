@@ -27,7 +27,7 @@ const docs = readdirSync("apps/www/content/docs", { recursive: true })
 
 test.use({ javaScriptEnabled: false });
 
-test("public pages expose unique metadata and content without JavaScript", async ({
+test("representative public pages expose content and metadata without JavaScript", async ({
   page,
 }) => {
   const routes = [
@@ -56,7 +56,16 @@ test("public pages expose unique metadata and content without JavaScript", async
     ...docs.map((doc) => ({ ...doc, title: `AudioBits | ${doc.title}` })),
   ];
   expect(new Set(routes.map((route) => route.title)).size).toBe(routes.length);
-  for (const route of routes) {
+  // Exhaustive metadata is checked against production HTML without a browser.
+  for (const route of routes.filter((route) =>
+    [
+      "/",
+      "/catalog",
+      "/catalog/confirmation",
+      "/catalog/lightsaber",
+      "/docs",
+    ].includes(route.path),
+  )) {
     const response = await page.goto(`${home}${route.path}`);
     expect(response?.status(), route.path).toBe(200);
     expect(response?.headers()["x-robots-tag"] ?? "").not.toMatch(/noindex/i);

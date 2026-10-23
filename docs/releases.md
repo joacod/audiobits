@@ -33,20 +33,31 @@ pnpm release:prepare
 ```
 
 On Linux, run [centralized audio setup](../scripts/ci/setup-linux-audio.sh) before
-browser verification. The gate runs lint, typechecking, units, production builds,
-full Chromium integration and `test:package`. Unit tests and release Chromium
-checks stop after their first failure so a blocked release does not run the
-remaining tests.
-The package rehearsal includes strict
-publint, archive inventory, a clean offline consumer install, SSR-safe imports,
-TypeScript examples, tree-shaking and packed Chromium host checks.
+browser verification. The gate always builds the candidate runtime, checks its
+types and meaningful units, checks generated schema/capabilities, builds the
+vanilla/native harness and runs the complete selected native Chromium files.
+These cover activation, scheduling, cancellation, resource bounds, routing,
+Stop, suspension and disposal, including extended runtime checks.
+
+The artifact rehearsal uses the same packing/install infrastructure as consumer
+verification. It checks strict publint, archive inventory/metadata, zero runtime
+dependencies, offline installation, SSR-safe imports, isolated public declarations,
+tree-shaking and the exact shipped README's native playback/Stop/disposal.
+No website build, Next.js server, catalog installer or Skill/showcase integration
+is required by this publication gate. Relevant PRs still require those consumers
+and affected website regressions, with full regression available explicitly.
+Every publication candidate passes this package gate regardless of its latest diff.
+
+A failed or interrupted gate invalidates earlier publication evidence. Artifact-only
+`test:package` does not authorize publishing: the complete gate must stamp its
+successful evidence before the publication verifier accepts it.
 
 ## Verified artifact
 
 Successful package rehearsal retains the `.tgz` and `evidence.json` under ignored
 `node_modules/.cache/audiobits-release/`. Inspect the archive allowlist/content,
-version, SHA-256, source identity and dirty-source flag. Keep artifacts and
-local diagnostics out of Git. Merging the Version Packages PR is the human
+version, SHA-256, source commit, complete-gate marker and dirty-source flag. Keep
+artifacts and local diagnostics out of Git. Merging the Version Packages PR is the human
 release decision. Recreate and review after any shipped-file change.
 
 ## Publication
@@ -61,7 +72,8 @@ The version job creates or updates **Version Packages**; its maintainer review
 and merge is the human release decision.
 
 The publish job runs `pnpm release:prepare` from a clean GitHub-hosted checkout,
-checks clean-source evidence, matching package version, archive existence and
+checks that evidence names the current commit and a still-clean checkout,
+matching package version, the complete package gate, archive existence and
 SHA-256, then publishes that exact verified tarball without repacking:
 
 ```sh
@@ -89,8 +101,11 @@ release are treated as complete.
 The maintainer must configure the npm Trusted Publisher for this repository and
 `release.yml`, with **`npm publish` permission enabled**, and enable GitHub
 Actions to create pull requests. These external settings are not configured by
-the repository. The workflow defines the npm version and uses the repository's
-Node/pnpm toolchain and centralized Linux/Chromium setup without dependency
+the repository. Actions are pinned to reviewed full commit SHAs with readable
+version comments;
+Dependabot groups GitHub Actions updates for review. The workflow defines the npm
+version and uses the repository's Node/pnpm toolchain and centralized
+Linux/Chromium setup without dependency
 caches in the publish job.
 
 Package publication and website delivery are independent. The site reads its
