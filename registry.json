@@ -566,14 +566,14 @@
       "type": "registry:item",
       "title": "The Rift",
       "description": "Tear open a living fracture. Stretch, destabilize and seal it into a collapsing implosion.",
-      "dependencies": ["audiobits@^0.3.0"],
+      "dependencies": ["audiobits@^0.4.0"],
       "categories": ["experience"],
       "meta": {
         "classification": "experience",
         "tags": ["portal", "sustained", "evolving", "collapse", "ambient"],
         "schemaVersion": 1,
         "compatibility": {
-          "runtime": "audiobits >=0.3.0 with native recipe delay",
+          "runtime": "audiobits with native recipe delay and scheduled release",
           "language": "TypeScript",
           "moduleResolution": "Bundler",
           "browser": "Web Audio; automated verification in Chromium",
@@ -593,6 +593,7 @@
           "runtime": [
             "gesture-start",
             "bounded-voices",
+            "scheduled-release",
             "live-controls",
             "seeded-replay",
             "buses",
@@ -625,14 +626,14 @@
       "type": "registry:item",
       "title": "Riff Reactor",
       "description": "Perform the lead of an original synth-rock track. Every hit plays; streaks make the band hit harder.",
-      "dependencies": ["audiobits@^0.3.0"],
+      "dependencies": ["audiobits@^0.4.0"],
       "categories": ["experience"],
       "meta": {
         "classification": "experience",
         "tags": ["music", "rhythm", "band", "lookahead", "performance"],
         "schemaVersion": 1,
         "compatibility": {
-          "runtime": "audiobits >=0.3.0 with native recipe delay",
+          "runtime": "audiobits with native recipe delay and scheduled release",
           "language": "TypeScript",
           "moduleResolution": "Bundler",
           "browser": "Web Audio; automated verification in Chromium",
@@ -652,6 +653,7 @@
           "runtime": [
             "gesture-start",
             "bounded-voices",
+            "scheduled-release",
             "buses",
             "suspend",
             "dispose"

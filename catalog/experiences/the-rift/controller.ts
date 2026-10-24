@@ -376,7 +376,8 @@ export function createRift(
     // Pending evolution belongs to the previous generation and now expires.
     publish("collapse");
     const context = audio.native.context;
-    const at = context.currentTime + 0.01;
+    const now = context.currentTime;
+    const at = now + 0.01;
     const implodeAt = at + collapseLead;
     const current = voice;
     try {
@@ -404,7 +405,7 @@ export function createRift(
       void seal.ended.then(() => {
         if (token === generation) finish();
       });
-      later(token, collapseLead + 0.05, () => current?.stop());
+      current?.stop({ at: now + collapseLead + 0.05 });
       // Bounded even if an ended notification is delayed.
       later(token, collapseLead + 4, finish);
       return Object.freeze({ at, implodeAt });

@@ -1,5 +1,5 @@
 import { createAudio, defineSound, validateRecipe } from "../src/index";
-import type { Recipe } from "../src/index";
+import type { Recipe, StopOptions } from "../src/index";
 import { confirmation } from "../../../catalog/recipes/confirmation/recipe";
 import { impact } from "../../../catalog/recipes/impact/recipe";
 import { thruster } from "../../../catalog/recipes/thruster/recipe";
@@ -25,6 +25,13 @@ const voice = audio
   .sound(authored)
   .play({ parameters: { intensity: 0.8, throttle: 0.3 } });
 voice.set({ throttle: 0.8 });
+const release: StopOptions = { at: 2 };
+voice.stop(release);
+voice.stop();
+// @ts-expect-error Release accepts an absolute numeric timestamp
+voice.stop({ at: "later" });
+// @ts-expect-error No relative release option
+voice.stop({ after: 2 });
 // @ts-expect-error Misspelled authoring parameter
 audio.sound(authored).play({ parameters: { intensitty: 0.8 } });
 // @ts-expect-error Play-only control cannot be mutated

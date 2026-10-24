@@ -25,6 +25,7 @@ export type {
   Sound,
   Voice,
   PlayOptions,
+  StopOptions,
   RecipeControls,
   LiveControls,
 } from "./runtime/engine";

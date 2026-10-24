@@ -106,6 +106,12 @@ Restoring the page does not restart audio. Call `play` from a fresh user gesture
 The generation guard also cancels a start that resolves after the interruption.
 Non-persisted exit and explicit owner teardown dispose the engine.
 
+For a known release deadline, call `voice.stop({ at })` immediately using absolute
+AudioContext seconds. Native automation begins release on time without a timer.
+The voice accepts live updates until the deadline; an earlier stop overrides it.
+One-shots still end at their natural gate if earlier. `voice.ended` waits for
+resource cleanup, including tails. Disposal overrides pending schedules.
+
 Wire Stop even for finite sounds. `voice.stop()` follows the recipe release;
 `audio.stopAll({ tails: "cut" })` uses the runtime's short fade. On SPA removal,
 call and handle `host.dispose()`; page events alone do not cover route changes.

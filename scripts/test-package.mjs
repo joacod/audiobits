@@ -377,6 +377,19 @@ try {
         join(installedDirectory, "package.json"),
         "utf8",
       );
+      if (!github) {
+        // A pending Changeset can require a release newer than the unbumped
+        // candidate. Pin only the temporary payload's runtime dependency to
+        // that candidate; installed source bytes and public ranges stay intact.
+        const payloadPath = join(registryOutput, `${item.name}.json`);
+        const payload = JSON.parse(await readFile(payloadPath, "utf8"));
+        payload.dependencies = payload.dependencies.map((dependency) =>
+          dependency.startsWith("audiobits@")
+            ? `audiobits@${packedManifest.version}`
+            : dependency,
+        );
+        await writeFile(payloadPath, JSON.stringify(payload));
+      }
       const address = github
         ? `${new URL(registry.homepage).pathname.slice(1)}/${item.name}#${requestedRevision}`
         : join(registryOutput, `${item.name}.json`);
@@ -461,6 +474,7 @@ try {
         paths: "passed",
         bytes: "passed",
         dependencies: item.dependencies,
+        verifiedRuntimeVersion: packedManifest.version,
       });
 
       // Compile the same generators the website calls. Presentation can change

@@ -106,9 +106,11 @@ function setup(presets: Partial<RiffInstruments> = {}) {
           options,
           bookedAt: clock.currentTime,
           stoppedAt: undefined as number | undefined,
-          stop: vi.fn(() => {
-            voice.state = "stopping";
-            voice.stoppedAt = clock.currentTime;
+          stop: vi.fn((options?: { at?: number }) => {
+            voice.stoppedAt = Math.min(
+              voice.stoppedAt ?? Infinity,
+              options?.at ?? clock.currentTime,
+            );
           }),
           set: vi.fn(),
           ended: new Promise<void>((resolve) => {
@@ -375,11 +377,11 @@ test("a hit plays the charted pitch now until its end; a miss leaves a gap while
   expect(voice.options.at).toBeUndefined();
   expect(voice.options.parameters.frequency).toBeCloseTo(midiToHz(first.note!));
   expect(voice.options.bus.name).toMatch(/-lead$/);
+  expect(voice.stop).toHaveBeenCalledExactlyOnceWith({ at: timeline.end });
+  // No refill tick is needed to book release, and later ticks never reissue it.
   await s.advance(timeline.end + 0.05 - s.clock.currentTime);
   expect(voice.stop).toHaveBeenCalledTimes(1);
-  expect(Math.abs(voice.stoppedAt! - timeline.end)).toBeLessThanOrEqual(
-    refillPeriod / 2 + 1e-9,
-  );
+  expect(voice.stoppedAt).toBe(timeline.end);
   // The second note is missed: nothing plays for it and the band continues.
   const bandBefore = s.band().length;
   s.riff.choke();
@@ -396,8 +398,9 @@ test("a hit plays the charted pitch now until its end; a miss leaves a gap while
   await s.advance(transport.timeAt(third.beat) - s.clock.currentTime);
   s.riff.performLead(2);
   s.riff.performLead(3);
-  expect(s.lead().voices[1].stop).toHaveBeenCalledTimes(1);
-  expect(s.lead().voices[2].stop).not.toHaveBeenCalled();
+  expect(s.lead().voices[1].stop).toHaveBeenCalledTimes(2);
+  expect(s.lead().voices[1].stop).toHaveBeenLastCalledWith();
+  expect(s.lead().voices[2].stop).toHaveBeenCalledTimes(1);
   s.riff.dispose();
 });
 

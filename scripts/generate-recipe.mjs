@@ -76,6 +76,7 @@ const capabilities = {
     "gesture-start",
     "bounded-voices",
     "live-controls",
+    "scheduled-release",
     "seeded-replay",
     "buses",
     "native-output-tap",

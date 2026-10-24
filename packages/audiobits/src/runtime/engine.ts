@@ -62,13 +62,17 @@ export interface PlayOptions<R extends Recipe = Recipe> {
   readonly seed?: number;
   readonly bus?: Bus;
 }
+export interface StopOptions {
+  /** Absolute context time at which release begins; past times release now. */
+  readonly at?: number;
+}
 export interface Voice<R extends Recipe = Recipe> {
   readonly ended: Promise<void>;
   readonly seed: number;
   readonly parameters: RecipeControls<R>;
   set(parameters: LiveControls<R>): void;
   readonly state: "active" | "stopping" | "retiring" | "ended";
-  stop(): void;
+  stop(options?: StopOptions): void;
 }
 export interface Sound<R extends Recipe = Recipe> {
   readonly recipe: R;
@@ -284,7 +288,10 @@ export function createEngine(
               return parameters;
             },
             set(update) {
-              if (record.status !== "active" || context?.state !== "running")
+              if (
+                record.voice.state !== "active" ||
+                context?.state !== "running"
+              )
                 throw new AudioBitsError(
                   "ended-voice",
                   "Voice is no longer active.",
@@ -295,13 +302,18 @@ export function createEngine(
               parameters = next;
             },
             get state() {
-              return record.status;
+              return record.status === "active" && record.graph?.stopping
+                ? "stopping"
+                : record.status;
             },
-            stop() {
-              if (record.status !== "active") return;
-              record.status = "stopping";
+            stop(options = {}) {
+              const requested = options.at;
+              if (requested !== undefined)
+                range(requested, 0, Number.MAX_SAFE_INTEGER, "at");
+              if (record.status === "ended" || record.status === "retiring")
+                return;
               if (context?.state !== "running") record.finish();
-              else record.graph?.stop();
+              else record.graph?.stop(undefined, requested);
             },
           },
           finish() {

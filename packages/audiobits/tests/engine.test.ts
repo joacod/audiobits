@@ -780,3 +780,162 @@ it("keeps live source, gain and ordered filter controls working alongside static
   await audio.dispose();
   await voice.ended;
 });
+
+it("schedules the earliest release while accepting live controls until its audio deadline", async () => {
+  const { audio, context, sources } = setup();
+  await audio.start();
+  const voice = audio.sound(thruster).play();
+  const settled = vi.fn();
+  void voice.ended.then(settled);
+  for (const at of [
+    -1,
+    NaN,
+    Infinity,
+    Number.MAX_SAFE_INTEGER + 1,
+    null,
+    "2",
+  ]) {
+    expect(() => voice.stop({ at: at as number })).toThrow(/at must/);
+  }
+  expect(sources[0].stop).not.toHaveBeenCalled();
+  voice.stop({ at: 3 });
+  const deadline = sources[0].stop.mock.calls.at(-1)![0];
+  voice.stop({ at: 4 });
+  voice.stop({ at: 3 });
+  expect(sources[0].stop).toHaveBeenCalledTimes(1);
+  expect(voice.state).toBe("active");
+  context.currentTime = 1.5;
+  voice.set({ throttle: 1 });
+  voice.stop({ at: 2 });
+  expect(sources[0].stop.mock.calls.at(-1)![0]).toBeLessThan(deadline);
+  context.currentTime = 1.999;
+  voice.set({ throttle: 0.5 });
+  expect(voice.state).toBe("active");
+  context.currentTime = 2;
+  expect(voice.state).toBe("stopping");
+  expect(() => voice.set({ throttle: 0 })).toThrow(/no longer active/);
+  const calls = sources[0].stop.mock.calls.length;
+  voice.stop();
+  voice.stop({ at: 1 });
+  expect(sources[0].stop).toHaveBeenCalledTimes(calls);
+  await Promise.resolve();
+  expect(settled).not.toHaveBeenCalled();
+  await audio.suspend();
+  await voice.ended;
+  expect(settled).toHaveBeenCalledTimes(1);
+  expect(audio.counts.active).toBe(0);
+  await audio.dispose();
+});
+
+it("replaces future release from the original attack or decay, with immediate overrides", async () => {
+  for (const earlier of [1.1, 1.3]) {
+    const { audio, context, nodes, sources } = setup();
+    await audio.start();
+    const voice = audio
+      .sound({
+        schemaVersion: 1,
+        kind: "sustained",
+        layers: [
+          {
+            id: "tone",
+            gainDb: 0,
+            source: { type: "oscillator", waveform: "sine", frequency: 440 },
+            envelope: { attack: 0.2, decay: 0.2, sustain: 0.5, release: 0.1 },
+          },
+        ],
+      })
+      .play();
+    const envelope = nodes.find((n) =>
+      n.gain.calls.some(
+        ([kind, value, time]) =>
+          kind === "linear" && value === 1 && time === 1.2,
+      ),
+    )!.gain;
+    voice.stop({ at: 2 });
+    voice.stop({ at: earlier });
+    expect(envelope.calls.at(-2)![1]).toBeCloseTo(earlier === 1.1 ? 0.5 : 0.75);
+    expect(envelope.calls.at(-2)![2]).toBe(earlier);
+    expect(envelope.calls.at(-1)).toEqual(["linear", 0, earlier + 0.1]);
+    context.currentTime = 1.05;
+    voice.stop();
+    expect(voice.state).toBe("stopping");
+    expect(envelope.calls.at(-2)![1]).toBeCloseTo(0.25);
+    expect(sources[0].stop.mock.calls.at(-1)![0]).toBeCloseTo(1.15);
+    await audio.dispose();
+  }
+});
+
+it("cancels reserved onsets, accepts past release, and never stretches a natural gate", async () => {
+  const { audio, context, sources } = setup();
+  await audio.start();
+  const sound = audio.sound(confirmation);
+  for (const deadline of [2, 3]) {
+    const future = sound.play({ at: 3 });
+    future.stop({ at: deadline });
+    await future.ended;
+    expect(future.state).toBe("ended");
+  }
+  const atOnset = sound.play({ at: 3 });
+  context.currentTime = 3;
+  atOnset.stop();
+  await atOnset.ended;
+  expect(atOnset.state).toBe("ended");
+  const voice = sound.play();
+  const source = sources.at(-1)!;
+  const calls = source.stop.mock.calls.length;
+  voice.stop({ at: 10 });
+  expect(source.stop).toHaveBeenCalledTimes(calls);
+  context.currentTime = 3.002;
+  voice.stop({ at: 0 });
+  expect(voice.state).toBe("stopping");
+  expect(source.stop.mock.calls.at(-1)![0]).toBeLessThan(
+    source.stop.mock.calls[0][0],
+  );
+  await audio.dispose();
+});
+
+it("pending release retains tails and is overridden by cuts, stealing and explicit owners", async () => {
+  for (const cleanup of [
+    "tail",
+    "cut",
+    "steal",
+    "sound",
+    "bus",
+    "suspend",
+    "dispose",
+  ] as const) {
+    const { audio, context, sources } = setup({ maxVoices: 1 });
+    await audio.start();
+    const bus = audio.bus("release");
+    const sound = audio.sound({
+      ...thruster,
+      effects: [{ type: "delay", time: 0.2, feedback: 0.5, mix: 0.25 }],
+    });
+    const voice = sound.play({ bus });
+    voice.stop({ at: 3 });
+    const clock = sources.at(-1)!;
+    expect(clock.stop.mock.calls.at(-1)![0]).toBeGreaterThan(3.2);
+    context.currentTime = 1.1;
+    if (cleanup === "tail") {
+      context.currentTime = 3.1;
+      sources.slice(0, -1).forEach((s) => s.onended?.());
+      expect(voice.state).toBe("stopping");
+      expect(audio.counts.active).toBe(1);
+      clock.onended?.();
+    } else if (cleanup === "cut" || cleanup === "steal") {
+      if (cleanup === "cut") audio.stopAll({ tails: "cut" });
+      else sound.play();
+      expect(clock.stop.mock.calls.at(-1)![0]).toBeCloseTo(1.105);
+      clock.onended?.();
+    } else {
+      context.state = "suspended";
+      if (cleanup === "sound") sound.dispose();
+      if (cleanup === "bus") bus.dispose();
+      if (cleanup === "suspend") await audio.suspend();
+      if (cleanup === "dispose") await audio.dispose();
+    }
+    await voice.ended;
+    expect(voice.state).toBe("ended");
+    await audio.dispose();
+  }
+});

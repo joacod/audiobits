@@ -38,7 +38,11 @@ by their bounded declared allowance. Sustained sounds close their gate on stop.
 
 Natural voice cleanup occurs after the latest layer release and effect tail.
 Calling `stop()` during attack or decay releases from the current automated
-value, not a guessed sustain value. Repeated stop cannot extend playback.
+value, not a guessed sustain value. `stop({ at })` begins that same release at
+an absolute context time; valid past times release immediately. The earliest
+request wins, and pending releases allow live updates until their audio-clock
+deadline. Scheduled release never extends a one-shot gate or lifetime.
+Repeated stop cannot extend playback.
 Disposal cancels scheduled starts, clears tails, and releases all owned resources;
 it is distinct from normal musical release.
 
