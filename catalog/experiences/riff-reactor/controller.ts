@@ -208,7 +208,7 @@ export function createRiff(
   let scheduledBeat = 0;
   let tier: RiffTier = 0;
   let pending: { tier: RiffTier; fromBeat: number } | undefined;
-  let held: { voice: Voice; end: number } | undefined;
+  let held: Voice | undefined;
 
   function publish(next: RiffPhase) {
     if (next === phase) return;
@@ -333,11 +333,6 @@ export function createRiff(
       tier = pending.tier;
       pending = undefined;
     }
-    // Performed notes end on the refill nearest their charted end.
-    if (held && held.end - now < refillPeriod / 2) {
-      held.voice.stop();
-      held = undefined;
-    }
     if (cursor >= events.length && now >= transport.timeAt(endBeat) + outro) {
       finish();
       return;
@@ -391,16 +386,16 @@ export function createRiff(
     const now = audio.native.context.currentTime;
     const end = transport.timeAt(note.beat + note.length);
     if (end - now < 0.03) return undefined;
-    held?.voice.stop();
+    held?.stop();
     const voice = lead.play({
       bus: buses.lead,
       note: note.note,
       velocity: note.velocity ?? 0.85,
     });
-    const current = { voice, end };
-    held = current;
+    voice.stop({ at: end });
+    held = voice;
     void voice.ended.then(() => {
-      if (token === generation && held === current) held = undefined;
+      if (token === generation && held === voice) held = undefined;
     });
     return Object.freeze({ at: now, end });
   }
@@ -408,7 +403,7 @@ export function createRiff(
   /** A short muted thunk for a missed or stray input. The band is unchanged. */
   function chokeLead() {
     if (disposed || !transport || audio.state !== "running") return;
-    held?.voice.stop();
+    held?.stop();
     held = undefined;
     choke.play({ bus: buses.lead });
   }

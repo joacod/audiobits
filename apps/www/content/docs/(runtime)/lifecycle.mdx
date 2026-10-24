@@ -73,10 +73,16 @@ buffer sources and delayed calls do not establish permission to play.
 ## Stop and disposal
 
 `voice.stop()` cancels before onset or releases from the current envelope.
-`voice.ended` resolves after cleanup. States are `active`, `stopping`, `retiring`,
+`voice.stop({ at })` schedules release on the audio clock. The voice stays
+`active` and accepts live updates until that deadline, then reports `stopping`
+without a JavaScript transition timer. An earlier stop overrides the schedule.
+`voice.ended` resolves after owned sources and tails are cleaned up, never merely
+because release was scheduled. States are `active`, `stopping`, `retiring`,
 and `ended`; repeated stops do not extend lifetime. `sound.dispose()` finalizes
 that sound's voices immediately. `audio.stopAll()` releases managed voices and
 follows their recipe release; `{ tails: "cut" }` uses a 5 ms voice fade.
+
+Sound/bus disposal and forced cuts override pending releases.
 
 `suspend()` invalidates pending starts and finalizes owned voices before
 suspending. Native interruption or closure also clears managed resources.

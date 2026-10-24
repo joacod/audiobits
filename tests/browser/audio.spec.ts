@@ -17,6 +17,7 @@ interface Checks {
     late: number;
     delta: number;
   }>;
+  scheduledReleaseSignal(fallback: boolean): Promise<number[]>;
   lifecycle(): Promise<unknown>;
 }
 
@@ -69,6 +70,28 @@ test("native offline release during attack fades to silence", async ({
   expect(output.releaseEnergy).toBeGreaterThan(0.0001);
   expect(output.late).toBe(0);
   expect(output.delta).toBeLessThan(0.001);
+});
+
+test("scheduled release preserves attack, decay, live controls and tails with earlier overrides", async ({
+  page,
+}) => {
+  await page.goto("http://127.0.0.1:4173");
+  await requireOfflineCheckpoints(page);
+  await page.addScriptTag({
+    path: resolve(
+      "node_modules/.cache/audiobits-audio-tests/audio-harness.iife.js",
+    ),
+  });
+  const differences = await page.evaluate(async () => {
+    const checks = (globalThis as unknown as { audioChecks: Checks })
+      .audioChecks;
+    return [
+      ...(await checks.scheduledReleaseSignal(false)),
+      ...(await checks.scheduledReleaseSignal(true)),
+    ];
+  });
+  for (const difference of differences)
+    expect(difference).toBeLessThan(0.000001);
 });
 
 test("Native lifecycle and simulated failed activation retry", async ({

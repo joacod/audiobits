@@ -111,7 +111,7 @@ ownership.
 | `audio.sound(recipe)`      | Return an engine-bound reusable definition after validation        |
 | `sound.play(options)`      | Synchronous voice creation when the engine is running              |
 | `voice.set(parameters)`    | Validate and smooth supported live controls                        |
-| `voice.stop()`             | Release/fade once, then clean up owned sources and effects         |
+| `voice.stop({ at }?)`      | Schedule or begin release, then clean up owned sources and effects |
 | `voice.ended`              | Promise that settles when owned resources are released             |
 | `audio.stopAll({ tails })` | Release owned voices with recipe release or 5 ms fade              |
 | `audio.bus(name, parent)`  | Reuse/create a named bus after activation                          |

@@ -102,6 +102,104 @@ async function stopSignal() {
   }
   return { energy, releaseEnergy, late, delta, stopTime };
 }
+// Compare prebooked automation with release at an exact offline checkpoint.
+async function scheduledReleaseSignal(fallback: boolean) {
+  const hold = AudioParam.prototype.cancelAndHoldAtTime;
+  if (fallback)
+    Object.defineProperty(AudioParam.prototype, "cancelAndHoldAtTime", {
+      configurable: true,
+      value: undefined,
+    });
+  try {
+    const differences: number[] = [];
+    for (const deadline of [0.16, 0.32]) {
+      const render = async (scheduled: boolean) => {
+        const context = new OfflineAudioContext(1, 48000, 48000);
+        const plan = compile({
+          schemaVersion: 1,
+          kind: "sustained",
+          parameters: {
+            pitch: {
+              min: 220,
+              max: 440,
+              default: 220,
+              mode: "live",
+              smoothing: 0.02,
+            },
+          },
+          layers: [
+            {
+              id: "tone",
+              gainDb: -12,
+              source: {
+                type: "oscillator",
+                waveform: "sine",
+                frequency: { control: "pitch", range: [220, 440] },
+              },
+              envelope: { attack: 0.2, decay: 0.2, sustain: 0.5, release: 0.1 },
+            },
+          ],
+          effects: [{ type: "delay", time: 0.04, feedback: 0, mix: 0.3 }],
+        });
+        let finished = false;
+        const graph = createGraph(
+          context,
+          context.destination,
+          plan,
+          0.032,
+          0,
+          0,
+          () => {
+            finished = true;
+          },
+        );
+        if (scheduled) {
+          graph.stop(undefined, 0.6);
+          graph.stop(undefined, deadline);
+          graph.stop(undefined, 0.7);
+          require(!graph.stopping, "Scheduled release stopped the graph early");
+        }
+        const updated = context.suspend(0.08).then(() => {
+          graph.set({ pitch: 440 });
+          return context.resume();
+        });
+        const stopped = context.suspend(deadline).then(() => {
+          if (scheduled)
+            require(graph.stopping, "Audio deadline did not change graph state");
+          else graph.stop();
+          return context.resume();
+        });
+        const rendering = context.startRendering();
+        await Promise.all([updated, stopped]);
+        const data = (await rendering).getChannelData(0);
+        await waitForCleanup(() => finished);
+        require(data.some(
+          (value) => Math.abs(value) > 0.01,
+        ), "Silent scheduled voice");
+        require(data
+          .slice(24000)
+          .every((value) => value === 0), "Scheduled tail did not end");
+        return data;
+      };
+      const expected = await render(false);
+      const scheduled = await render(true);
+      differences.push(
+        scheduled.reduce(
+          (peak, value, i) => Math.max(peak, Math.abs(value - expected[i])),
+          0,
+        ),
+      );
+    }
+    return differences;
+  } finally {
+    if (fallback)
+      Object.defineProperty(AudioParam.prototype, "cancelAndHoldAtTime", {
+        configurable: true,
+        value: hold,
+      });
+  }
+}
+
 async function lifecycle() {
   let allocation = 0;
   const contexts: AudioContext[] = [];
@@ -134,6 +232,17 @@ async function lifecycle() {
   future.stop();
   await future.ended;
   require(audio.counts.active === 0, "Future cancellation leaked");
+  const sustained = audio.sound(thruster).play();
+  const releaseAt = contexts[0].currentTime + 0.08;
+  sustained.stop({ at: releaseAt });
+  require(sustained.state === "active", "Scheduled voice stopped early");
+  sustained.set({ throttle: 1 });
+  while (contexts[0].currentTime < releaseAt)
+    await new Promise((resolve) => setTimeout(resolve, 5));
+  require(sustained.state ===
+    "stopping", "Release state missed the audio deadline");
+  await sustained.ended;
+  require(audio.counts.active === 0, "Scheduled release leaked");
   const first = sound.play();
   const second = sound.play();
   await Promise.all([first.ended, second.ended]);
@@ -145,7 +254,7 @@ async function lifecycle() {
   require(audio.counts.active === 0 &&
     audio.counts.retiring === 0, "Suspension leaked");
   await audio.start();
-  sound.play();
+  sound.play().stop({ at: contexts[0].currentTime + 10 });
   await contexts[0].suspend();
   await audio.dispose();
   require(contexts[0].state === "closed" &&
@@ -168,7 +277,9 @@ async function lifecycle() {
   return { allocation, state: audio.state, counts: audio.counts };
 }
 // Property assignment keeps the test helper isolated from application globals.
-Object.assign(globalThis, { audioChecks: { signal, stopSignal, lifecycle } });
+Object.assign(globalThis, {
+  audioChecks: { signal, stopSignal, scheduledReleaseSignal, lifecycle },
+});
 
 async function blockedActivation() {
   const context = new AudioContext();
