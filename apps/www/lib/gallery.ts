@@ -1,3 +1,4 @@
+import { synthLead } from "../../../catalog/recipes/synth-lead/recipe.ts";
 import capabilities from "audiobits/capabilities.json" with { type: "json" };
 import { confirmation } from "../../../catalog/recipes/confirmation/recipe.ts";
 import { impact } from "../../../catalog/recipes/impact/recipe.ts";
@@ -12,6 +13,20 @@ import type { Recipe } from "audiobits";
 
 // Presentation belongs to the gallery, independently of portable recipe data.
 export const demos = {
+  "synth-lead": {
+    visualFamily: "harmonic",
+    exportName: registryItem("synth-lead").meta.exportName,
+    title: registryItem("synth-lead").title,
+    description: registryItem("synth-lead").description,
+    recipe: synthLead,
+    use: "Pitched melodies · sustained",
+    labels: {
+      brightness: "Brightness",
+      frequency: "Frequency (Hz)",
+      velocity: "Velocity",
+    },
+    endpoints: { brightness: ["Warm", "Bright"] },
+  },
   confirmation: {
     visualFamily: "harmonic",
     exportName: registryItem("confirmation").meta.exportName,

@@ -188,3 +188,10 @@ Source contents and targets are defined by the root `registry.json`. Recipes use
 schema 1 and public AudioBits exports. Automated browser verification targets
 Chromium; signal and lifecycle checks do not establish listening quality or
 physical-device compatibility.
+
+The reusable implementations now live in `src/sounds/helpers/`. This item's
+manifest includes them; existing `music.ts`, `instrument.ts` and controller
+exports remain supported through reexports. For a standalone sustained recipe
+with typed extra controls, install `synth-lead` and follow its guide. Explicit
+note/velocity inputs override the corresponding values in `parameters`;
+other controls pass through with their recipe types intact.

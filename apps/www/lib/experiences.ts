@@ -28,6 +28,17 @@ export const experienceSourcePurpose = {
       "Standalone acoustic bench with Open, Collapse, Stop and shape sliders.",
   },
   "riff-reactor": {
+    "instrument.ts":
+      "Compatibility reexport of the shared recipe-backed instrument adapter.",
+    "music.ts":
+      "Compatibility reexport of shared pitch, phrase and fixed-tempo helpers.",
+    "instruments.ts": "Editable synth-rock preset selection.",
+    "../../helpers/instrument.ts":
+      "Typed note and velocity aliases over native Sound and Voice.",
+    "../../helpers/music.ts":
+      "Scientific pitch, phrases and audio-clock tempo conversion.",
+    "../../helpers/mapping.ts":
+      "Pure fixed-ratio mapping authoring that emits ordinary schema data.",
     "recipe.ts":
       "Kick, snare, hats, bass, pad, arpeggio, chugs, riser, crash, a sustained lead and a choke as schema-1 data.",
     "song.ts":

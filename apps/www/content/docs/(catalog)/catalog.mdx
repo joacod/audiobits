@@ -42,6 +42,17 @@ complete browser demonstrations remain in the public repository.
 in a dark 3D room. Application geometry supplies material, distance and direction;
 surfaces appear when their echoes return. Install Echo Probe for the sound source.
 
+## Standalone instruments
+
+[Synth lead](/catalog/synth-lead) is a sustained pitched recipe with a short onset
+scoop and live brightness. Install it independently with
+`npx shadcn@latest add joacod/audiobits/synth-lead`. Its
+[integration guide](https://github.com/joacod/audiobits/blob/main/catalog/recipes/synth-lead/README.md)
+uses the installed `createInstrument` helper for note/velocity input, typed
+additional parameters, native Voice updates, scheduled release and cleanup.
+The manifest includes the recipe, guide and shared authoring helpers; it needs
+no Riff song or controller. Riff's previous helper imports remain reexports.
+
 ## Install source
 
 <Steps>
@@ -105,7 +116,8 @@ public AudioBits exports and bundler module resolution, not precompiled JavaScri
 This tree shows representative targets for Confirmation and Energy Charge.
 Inspect the registry payload for the selected item's complete file manifest.
 Only the selected item's files are installed. Recipe items install
-just their recipe. Experience installs exclude demo hosts and UI.
+their definition and any explicitly listed helpers and guide. Shared helpers
+install under `src/sounds/helpers/`. Experience installs exclude demo hosts and UI.
 
 <Files>
   <Folder name="src" defaultOpen>
