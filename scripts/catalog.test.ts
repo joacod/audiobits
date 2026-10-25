@@ -76,9 +76,11 @@ test("registry covers every canonical recipe and sound-only experience", async (
   );
   for (const item of registry.items) {
     expect(item.dependencies).toEqual(
-      delayExperiences.includes(item.name)
-        ? ["audiobits@^0.3.0"]
-        : ["audiobits"],
+      ["the-rift", "riff-reactor"].includes(item.name)
+        ? ["audiobits@^0.4.0"]
+        : delayExperiences.includes(item.name)
+          ? ["audiobits@^0.3.0"]
+          : ["audiobits"],
     );
     expect(item.title.length).toBeGreaterThan(0);
     expect(item.description.length).toBeGreaterThan(0);

@@ -23,7 +23,7 @@ Import them from local application files after copying or installing their sourc
 
 Public types include `Recipe`, its layer/source/envelope/filter/value and
 parameter types, `ValidationResult`, `RecipeIssue`, `AudioEngine`, `AudioOptions`,
-`AudioState`, `Sound`, `Voice`, `PlayOptions`, `RecipeControls`, `LiveControls`,
+`AudioState`, `Sound`, `Voice`, `PlayOptions`, `StopOptions`, `RecipeControls`, `LiveControls`,
 `Effect`, `Delay`, and `Bus`.
 
 ## Playback options
@@ -39,6 +39,21 @@ active/stopping reservations from retirees. Stopping voices retain capacity unti
 cleanup; further steals finalize the previous retiree before creating another.
 `masterGainDb` accepts -60–0 dB; playback gain and pan default to 0.
 At most 32 buses, including master, may be live.
+
+## Voice release
+
+`voice.stop()` begins the existing release immediately. `voice.stop({ at })`
+schedules its beginning at an absolute AudioContext time in seconds. Explicit
+`at` values must be finite numbers from 0 through `Number.MAX_SAFE_INTEGER`;
+invalid values throw `invalid-option` before changing the voice. Valid past
+values release immediately. This does not change `play({ at })` validation.
+
+The earliest release wins: a later or equal request does nothing, an earlier
+request replaces a pending release, and plain `stop()` releases now. Once release
+has begun, repeated stops are idempotent. A scheduled stop cannot extend a
+one-shot's natural gate or lifetime. A stop at or before a reserved onset cancels
+playback and cleans up immediately. Release envelopes and effect tails retain
+their normal behavior.
 
 ## Recipe effects
 

@@ -152,11 +152,10 @@ until its charted end; it is never quantized. The lead is monophonic: a new hit
 stops the previous note. A missed note is a gap in the lead while the band keeps
 its level; `choke()` adds a short muted thunk for stray inputs.
 
-A performed note ends within about 12 ms of its charted end, not exactly on
-it: the stop runs on the 25 ms refill tick, which is a main-thread timer, so a
-busy main thread can also hold the note late. The release masks small errors.
-An exact end would need a scheduled stop such as `voice.stop({ at })` in the
-AudioBits core.
+A performed note schedules `voice.stop({ at: end })` as soon as it starts.
+Release begins at the charted end on the audio clock, independently of refill
+timers or main-thread stalls. The recipe's release envelope and effect tails
+then finish normally. Replacement and choke can release the note earlier.
 
 ### Lifecycle and budget
 

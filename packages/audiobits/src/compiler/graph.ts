@@ -9,7 +9,8 @@ import { envelopeAt } from "./plan";
 import type { Plan, PlannedLayer } from "./plan";
 
 export interface Graph {
-  stop(fade?: number): void;
+  readonly stopping: boolean;
+  stop(fade?: number, at?: number): void;
   finish(): void;
   set(controls: Controls): void;
 }
@@ -75,8 +76,9 @@ export function createGraph(
     source: AudioScheduledSourceNode;
   }[] = [];
   let clock: ConstantSourceNode | undefined;
+  const reserved = at > context.currentTime;
   let finished = false;
-  let stopped = false;
+  let releaseAt = Infinity;
   let stopEnd = at + plan.lifetime;
   const releases = new Map<
     AudioParam,
@@ -342,8 +344,11 @@ export function createGraph(
     }
     return {
       finish,
+      get stopping() {
+        return context.currentTime >= releaseAt;
+      },
       set(controls) {
-        if (finished || stopped)
+        if (finished || context.currentTime >= releaseAt)
           throw new AudioBitsError("ended-voice", "Voice is no longer active.");
         const now = Math.max(at, context.currentTime);
         for (const binding of bindings) {
@@ -374,14 +379,28 @@ export function createGraph(
           });
         }
       },
-      stop(fade) {
-        if (finished || (stopped && fade === undefined)) return;
-        stopped = true;
-        const now = context.currentTime;
-        if (now < at) {
+      stop(fade, requested) {
+        if (finished) return;
+        const now = Math.max(
+          context.currentTime,
+          requested ?? context.currentTime,
+        );
+        if (
+          fade === undefined &&
+          (context.currentTime >= releaseAt || now >= releaseAt)
+        )
+          return;
+        if (
+          now < at ||
+          (now === at &&
+            (reserved || (fade === undefined && requested !== undefined)))
+        ) {
           finish();
           return;
         }
+        // Natural one-shot automation is already scheduled. Never move its gate.
+        releaseAt = Math.min(releaseAt, now, at + plan.duration);
+        if (fade === undefined && now >= at + plan.duration) return;
         let end = now;
         for (const { param, layer, source } of envelopes) {
           const remaining =
@@ -394,15 +413,16 @@ export function createGraph(
             Math.min(fade ?? layer.layer.envelope.release, remaining),
           );
           const previous = releases.get(param);
-          const value = previous
-            ? previous.value *
-              Math.max(
-                0,
-                1 -
-                  (now - previous.at) /
-                    Math.max(previous.duration, Number.EPSILON),
-              )
-            : envelopeAt(layer, plan.duration, now - at);
+          const value =
+            previous && now >= previous.at
+              ? previous.value *
+                Math.max(
+                  0,
+                  1 -
+                    (now - previous.at) /
+                      Math.max(previous.duration, Number.EPSILON),
+                )
+              : envelopeAt(layer, plan.duration, now - at);
           releases.set(param, { at: now, value, duration: release });
           holdLinear(param, now, value);
           param.linearRampToValueAtTime(0, now + release);

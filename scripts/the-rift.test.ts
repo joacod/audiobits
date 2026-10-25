@@ -247,8 +247,11 @@ test("Idle, Opening, Active, Collapsing, Idle with one live field voice", async 
   expect(s.of(recipes.riftImplosion).voices[0].options.at).toBe(
     timeline.implodeAt,
   );
+  expect(s.field().voices[0].stop).toHaveBeenCalledExactlyOnceWith({
+    at: expect.closeTo(timeline.implodeAt + 0.04, 8),
+  });
   await s.advance(1.2);
-  expect(s.field().voices[0].stop).toHaveBeenCalled();
+  expect(s.field().voices[0].stop).toHaveBeenCalledTimes(1);
   s.of(recipes.riftImplosion).voices[0].finish();
   await settle();
   expect(s.phases).toEqual(["opening", "active", "collapsing", "idle"]);
@@ -283,7 +286,7 @@ test("an old session's tails and timers change nothing after a new open", async 
     expect(bus.dispose).not.toHaveBeenCalled();
     expect(bus.setGainDb).not.toHaveBeenCalledWith(-60, expect.anything());
   }
-  expect(oldField.stop).not.toHaveBeenCalled();
+  expect(oldField.stop).toHaveBeenCalledTimes(1);
   expect(s.played() - plays).toBeLessThanOrEqual(2);
   expect(s.of(recipes.riftImplosion).play).toHaveBeenCalledTimes(1);
   s.rift.dispose();
