@@ -1,5 +1,12 @@
+import { synthLead } from "../catalog/recipes/synth-lead/recipe";
+import { ratioMapping } from "../catalog/helpers/mapping";
 import { expect, test, vi } from "vitest";
-import type { AudioEngine } from "audiobits";
+import {
+  createAudio,
+  defineSound,
+  type Recipe,
+  type AudioEngine,
+} from "audiobits";
 import {
   createTransport,
   noteToHz,
@@ -75,7 +82,11 @@ test("instruments map musical inputs and preserve the native voice and host owne
   const play = vi.fn(() => voice);
   const dispose = vi.fn();
   const audio = {
-    sound: vi.fn(() => ({ play, dispose })),
+    sound: vi.fn((recipe: Recipe) => ({
+      recipe: defineSound(recipe),
+      play,
+      dispose,
+    })),
   } as unknown as AudioEngine;
   const bass = createInstrument(audio, riffInstruments.bass);
   const played = bass.play({
@@ -101,4 +112,64 @@ test("instruments map musical inputs and preserve the native voice and host owne
   expect(play).toHaveBeenLastCalledWith({ parameters: { velocity: 0.9 } });
   bass.dispose();
   expect(dispose).toHaveBeenCalledOnce();
+});
+
+test("instrument aliases override only conventional controls and expose the immutable engine recipe", () => {
+  const input = {
+    ...synthLead,
+    parameters: {
+      ...synthLead.parameters,
+      frequency: { ...synthLead.parameters.frequency, max: 880 },
+    },
+  };
+  const audio = createAudio();
+  const instrument = createInstrument(audio, input);
+  input.parameters.frequency.max = 1000;
+  expect(instrument.recipe.parameters.frequency.max).toBe(880);
+  expect(Object.isFrozen(instrument.recipe.parameters.frequency)).toBe(true);
+  instrument.dispose();
+  void audio.dispose();
+
+  const voice = { set: vi.fn(), stop: vi.fn() };
+  const play = vi.fn(() => voice);
+  const mock = {
+    sound: () => ({ recipe: synthLead, play }),
+  } as unknown as AudioEngine;
+  const lead = createInstrument(mock, synthLead);
+  const parameters = { frequency: 220, velocity: 0.1, brightness: 0.7 };
+  expect(lead.play({ note: "A4", velocity: 0, parameters })).toBe(voice);
+  expect(play).toHaveBeenLastCalledWith({
+    parameters: { frequency: 440, velocity: 0, brightness: 0.7 },
+  });
+  expect(parameters).toEqual({
+    frequency: 220,
+    velocity: 0.1,
+    brightness: 0.7,
+  });
+  lead.play({ parameters });
+  expect(play).toHaveBeenLastCalledWith({ parameters });
+  expect(voice.stop).not.toHaveBeenCalled();
+});
+
+test("ratio mappings preserve proportional endpoints and leave authored Riff contours intact", () => {
+  expect(ratioMapping("frequency", { min: 60, max: 200 }, 1.5)).toEqual({
+    control: "frequency",
+    range: [90, 300],
+    scale: "linear",
+  });
+  expect(ratioMapping("frequency", { min: 150, max: 1400 }, 0.5).range).toEqual(
+    [75, 700],
+  );
+  expect(riffInstruments.pad.layers[2].source.frequency).toEqual(
+    ratioMapping("frequency", riffInstruments.pad.parameters.frequency, 1.5),
+  );
+  expect(riffInstruments.lead.layers[0].source.frequency.points[0][1]).toEqual({
+    control: "frequency",
+    range: [146.3, 1365],
+    scale: "linear",
+  });
+  for (const ratio of [0, -1, NaN, Infinity])
+    expect(() =>
+      ratioMapping("frequency", { min: 60, max: 200 }, ratio),
+    ).toThrow(RangeError);
 });

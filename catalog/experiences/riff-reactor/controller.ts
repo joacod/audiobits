@@ -1,4 +1,4 @@
-import type { AudioEngine, Bus, Recipe, Voice } from "audiobits";
+import type { AudioEngine, Bus, Recipe } from "audiobits";
 import { createInstrument, type Instrument } from "./instrument";
 import { riffInstruments } from "./instruments";
 import { createTransport, type Transport } from "./music";
@@ -208,7 +208,7 @@ export function createRiff(
   let scheduledBeat = 0;
   let tier: RiffTier = 0;
   let pending: { tier: RiffTier; fromBeat: number } | undefined;
-  let held: Voice | undefined;
+  let held: ReturnType<typeof lead.play> | undefined;
 
   function publish(next: RiffPhase) {
     if (next === phase) return;

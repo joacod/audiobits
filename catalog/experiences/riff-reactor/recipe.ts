@@ -1,4 +1,5 @@
 import { defineSound } from "audiobits";
+import { ratioMapping } from "../../helpers/mapping";
 
 // Industrial synth-rock band. Every pitched recipe takes its note as a
 // play-mode frequency in hertz, so one recipe plays any charted pitch. Layer
@@ -164,12 +165,18 @@ export const riffOpenHat = defineSound({
 });
 
 /** Driving pick bass: plucked filtered saw over a sine sub and octave grit. */
+const bassFrequency = {
+  min: 30,
+  max: 200,
+  default: 82.41,
+  mode: "play",
+} as const;
 export const riffBass = defineSound({
   schemaVersion: 1,
   kind: "one-shot",
   duration: 0.17,
   parameters: {
-    frequency: { min: 30, max: 200, default: 82.41, mode: "play" },
+    frequency: bassFrequency,
     velocity,
   },
   layers: [
@@ -178,7 +185,7 @@ export const riffBass = defineSound({
       source: {
         type: "oscillator",
         waveform: "sawtooth",
-        frequency: { control: "frequency", range: [30, 200], scale: "linear" },
+        frequency: ratioMapping("frequency", bassFrequency, 1),
       },
       gainDb: level(-20, -10),
       envelope: { attack: 0.003, decay: 0.09, sustain: 0.7, release: 0.05 },
@@ -208,7 +215,7 @@ export const riffBass = defineSound({
       source: {
         type: "oscillator",
         waveform: "sine",
-        frequency: { control: "frequency", range: [30, 200], scale: "linear" },
+        frequency: ratioMapping("frequency", bassFrequency, 1),
       },
       gainDb: level(-20, -11),
       envelope: { attack: 0.003, decay: 0.05, sustain: 0.85, release: 0.05 },
@@ -232,12 +239,18 @@ export const riffBass = defineSound({
 });
 
 /** Power-chord pad: root, fifth and octave saws under a dark lowpass. */
+const padFrequency = {
+  min: 60,
+  max: 200,
+  default: 82.41,
+  mode: "play",
+} as const;
 export const riffPad = defineSound({
   schemaVersion: 1,
   kind: "one-shot",
   duration: 1.6,
   parameters: {
-    frequency: { min: 60, max: 200, default: 82.41, mode: "play" },
+    frequency: padFrequency,
     velocity,
   },
   layers: [
@@ -246,7 +259,7 @@ export const riffPad = defineSound({
       source: {
         type: "oscillator",
         waveform: "sawtooth",
-        frequency: { control: "frequency", range: [60, 200], scale: "linear" },
+        frequency: ratioMapping("frequency", padFrequency, 1),
       },
       gainDb: level(-25, -13),
       envelope: { attack: 0.25, decay: 0.4, sustain: 0.8, release: 0.45 },
@@ -270,7 +283,7 @@ export const riffPad = defineSound({
       source: {
         type: "oscillator",
         waveform: "sawtooth",
-        frequency: { control: "frequency", range: [90, 300], scale: "linear" },
+        frequency: ratioMapping("frequency", padFrequency, 1.5),
       },
       gainDb: level(-29, -17),
       envelope: { attack: 0.3, decay: 0.4, sustain: 0.8, release: 0.45 },
@@ -280,7 +293,7 @@ export const riffPad = defineSound({
       source: {
         type: "oscillator",
         waveform: "triangle",
-        frequency: { control: "frequency", range: [120, 400], scale: "linear" },
+        frequency: ratioMapping("frequency", padFrequency, 2),
       },
       gainDb: level(-25, -15),
       envelope: { attack: 0.2, decay: 0.4, sustain: 0.8, release: 0.45 },
@@ -293,12 +306,18 @@ export const riffPad = defineSound({
 });
 
 /** Plucked square arpeggio with one dotted-eighth echo at 128 BPM. */
+const arpFrequency = {
+  min: 150,
+  max: 1400,
+  default: 329.63,
+  mode: "play",
+} as const;
 export const riffArp = defineSound({
   schemaVersion: 1,
   kind: "one-shot",
   duration: 0.08,
   parameters: {
-    frequency: { min: 150, max: 1400, default: 329.63, mode: "play" },
+    frequency: arpFrequency,
     velocity,
   },
   layers: [
@@ -307,11 +326,7 @@ export const riffArp = defineSound({
       source: {
         type: "oscillator",
         waveform: "square",
-        frequency: {
-          control: "frequency",
-          range: [150, 1400],
-          scale: "linear",
-        },
+        frequency: ratioMapping("frequency", arpFrequency, 1),
       },
       gainDb: level(-30, -17),
       envelope: { attack: 0.002, decay: 0.07, sustain: 0.3, release: 0.1 },
@@ -335,12 +350,18 @@ export const riffArp = defineSound({
 });
 
 /** Short saw power-chord stab for the thickest tier. */
+const stabFrequency = {
+  min: 60,
+  max: 400,
+  default: 164.81,
+  mode: "play",
+} as const;
 export const riffStab = defineSound({
   schemaVersion: 1,
   kind: "one-shot",
   duration: 0.12,
   parameters: {
-    frequency: { min: 60, max: 400, default: 164.81, mode: "play" },
+    frequency: stabFrequency,
     velocity,
   },
   layers: [
@@ -349,7 +370,7 @@ export const riffStab = defineSound({
       source: {
         type: "oscillator",
         waveform: "sawtooth",
-        frequency: { control: "frequency", range: [60, 400], scale: "linear" },
+        frequency: ratioMapping("frequency", stabFrequency, 1),
       },
       gainDb: level(-25, -13),
       envelope: { attack: 0.003, decay: 0.1, sustain: 0.5, release: 0.08 },
@@ -359,7 +380,7 @@ export const riffStab = defineSound({
       source: {
         type: "oscillator",
         waveform: "sawtooth",
-        frequency: { control: "frequency", range: [90, 600], scale: "linear" },
+        frequency: ratioMapping("frequency", stabFrequency, 1.5),
       },
       gainDb: level(-27, -15),
       envelope: { attack: 0.003, decay: 0.1, sustain: 0.5, release: 0.08 },
@@ -369,7 +390,7 @@ export const riffStab = defineSound({
       source: {
         type: "oscillator",
         waveform: "square",
-        frequency: { control: "frequency", range: [120, 800], scale: "linear" },
+        frequency: ratioMapping("frequency", stabFrequency, 2),
       },
       gainDb: level(-33, -21),
       envelope: { attack: 0.003, decay: 0.08, sustain: 0.4, release: 0.08 },
@@ -462,11 +483,17 @@ export const riffCrash = defineSound({
  * into the note, under a pitch-tracking lowpass that settles after the attack,
  * with a dotted-eighth echo. Sustained: stop() ends the note.
  */
+const leadFrequency = {
+  min: 150,
+  max: 1400,
+  default: 329.63,
+  mode: "play",
+} as const;
 export const riffLead = defineSound({
   schemaVersion: 1,
   kind: "sustained",
   parameters: {
-    frequency: { min: 150, max: 1400, default: 329.63, mode: "play" },
+    frequency: leadFrequency,
     velocity,
   },
   layers: [
@@ -481,10 +508,7 @@ export const riffLead = defineSound({
               0,
               { control: "frequency", range: [146.3, 1365], scale: "linear" },
             ],
-            [
-              0.05,
-              { control: "frequency", range: [150, 1400], scale: "linear" },
-            ],
+            [0.05, ratioMapping("frequency", leadFrequency, 1)],
           ],
           curve: "exponential",
         },
@@ -519,7 +543,7 @@ export const riffLead = defineSound({
       source: {
         type: "oscillator",
         waveform: "square",
-        frequency: { control: "frequency", range: [75, 700], scale: "linear" },
+        frequency: ratioMapping("frequency", leadFrequency, 0.5),
       },
       gainDb: level(-30, -20),
       envelope: { attack: 0.006, decay: 0.2, sustain: 0.6, release: 0.08 },

@@ -76,7 +76,7 @@ test("registry covers every canonical recipe and sound-only experience", async (
   );
   for (const item of registry.items) {
     expect(item.dependencies).toEqual(
-      ["the-rift", "riff-reactor"].includes(item.name)
+      ["the-rift", "riff-reactor", "synth-lead"].includes(item.name)
         ? ["audiobits@^0.4.0"]
         : delayExperiences.includes(item.name)
           ? ["audiobits@^0.3.0"]
@@ -101,28 +101,54 @@ test("registry covers every canonical recipe and sound-only experience", async (
         "filter",
       ]);
     }
-    const definitions = item.files
-      .filter((file) => file.path.endsWith("/recipe.ts"))
-      .map((file) => readFileSync(file.path, "utf8"))
-      .join("\n");
-    const fields = {
-      sources: /type: "(oscillator|noise)"/g,
-      filters: /filter: "([^"]+)"/g,
-      parameterModes: /mode: "(play|live)"/g,
-      kinds: /kind: "([^"]+)"/g,
-      waveforms: /waveform: "([^"]+)"/g,
-      noiseColors: /color: "([^"]+)"/g,
-      mappingScales: /scale: "([^"]+)"/g,
-      automationCurves: /curve: "([^"]+)"/g,
-    };
-    for (const [key, pattern] of Object.entries(fields)) {
-      const actual = [
-        ...new Set([...definitions.matchAll(pattern)].map((match) => match[1])),
-      ].sort();
+    const definitions: Recipe[] = [];
+    for (const file of item.files.filter((file) =>
+      file.path.endsWith("/recipe.ts"),
+    )) {
+      for (const value of Object.values(await import(resolve(file.path)))) {
+        const result = validateRecipe(value);
+        expect(result.ok, file.path).toBe(true);
+        if (result.ok) definitions.push(result.recipe);
+      }
+    }
+    const fields: Record<string, Set<string>> = Object.fromEntries(
+      [
+        "sources",
+        "filters",
+        "parameterModes",
+        "kinds",
+        "waveforms",
+        "noiseColors",
+        "mappingScales",
+        "automationCurves",
+      ].map((key) => [key, new Set<string>()]),
+    );
+    function inspect(value: unknown) {
+      if (!value || typeof value !== "object") return;
+      const object = value as Record<string, unknown>;
+      const keys = {
+        filter: "filters",
+        mode: "parameterModes",
+        kind: "kinds",
+        waveform: "waveforms",
+        color: "noiseColors",
+        scale: "mappingScales",
+        curve: "automationCurves",
+      };
+      if (object.type === "oscillator" || object.type === "noise")
+        fields.sources.add(object.type);
+      for (const [key, field] of Object.entries(keys))
+        if (typeof object[key] === "string") fields[field].add(object[key]);
+      Object.values(object).forEach(inspect);
+    }
+    definitions.forEach(inspect);
+    for (const [key, values] of Object.entries(fields)) {
       expect(
-        item.meta.requiredCapabilities[key as keyof typeof fields],
+        item.meta.requiredCapabilities[
+          key as keyof typeof item.meta.requiredCapabilities
+        ],
         `${item.name}: ${key}`,
-      ).toEqual(actual);
+      ).toEqual([...values].sort());
     }
     const bySource = new Map(
       item.files.map((file) => [file.path, file.target]),
@@ -138,7 +164,13 @@ test("registry covers every canonical recipe and sound-only experience", async (
     expect(paths).toContain(`${base}/recipe.ts`);
     expect(new Set(paths).size).toBe(paths.length);
     if (item.meta.classification === "recipe") {
-      expect(paths).toEqual([`${base}/recipe.ts`]);
+      expect(
+        paths.filter(
+          (path) =>
+            !path.startsWith("catalog/helpers/") &&
+            !path.endsWith("/README.md"),
+        ),
+      ).toEqual([`${base}/recipe.ts`]);
     } else {
       expect(paths).toContain(`${base}/README.md`);
       expect(
@@ -150,7 +182,7 @@ test("registry covers every canonical recipe and sound-only experience", async (
     for (const file of item.files) {
       const source = readFileSync(file.path, "utf8");
       // HTML/CSS/assets and browser demo entrypoints never belong to an install.
-      expect(posix.dirname(file.path)).toBe(base);
+      expect([base, "catalog/helpers"]).toContain(posix.dirname(file.path));
       expect(
         file.path.endsWith(".ts") || file.path === `${base}/README.md`,
       ).toBe(true);
@@ -203,9 +235,27 @@ test("installed sound source typechecks without browser presentation globals", (
         ),
     ),
   );
+  virtual.set(
+    resolve("__catalog_consumer__/src/instrument-types.ts"),
+    `
+import { createAudio, type Voice } from "audiobits";
+import { createInstrument } from "./sounds/helpers/instrument";
+import { synthLead } from "./sounds/recipes/synth-lead/recipe";
+const lead = createInstrument(createAudio(), synthLead);
+const voice: Voice<typeof synthLead> = lead.play({ note: "A4", parameters: { brightness: 0.7 } });
+voice.set({ brightness: 0.3 });
+// @ts-expect-error Unknown play control must not be widened to Record<string, number>.
+lead.play({ parameters: { typo: 1 } });
+// @ts-expect-error Frequency is an onset-only control on this recipe.
+voice.set({ frequency: 220 });
+// @ts-expect-error Unknown live control must remain rejected.
+lead.play().set({ typo: 1 });
+`,
+  );
   const options: ts.CompilerOptions = {
     strict: true,
     noEmit: true,
+    allowImportingTsExtensions: true,
     skipLibCheck: true,
     noUncheckedSideEffectImports: true,
     target: ts.ScriptTarget.ES2022,

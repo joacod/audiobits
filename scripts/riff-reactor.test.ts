@@ -250,11 +250,14 @@ test("the opening accompaniment leaves room for the lead even at top intensity",
 test("sound source imports only the runtime and its own sound files", () => {
   const base = "catalog/experiences/riff-reactor";
   const allowed: Record<string, string[]> = {
-    "recipe.ts": ["audiobits"],
+    "recipe.ts": ["audiobits", "../../helpers/mapping"],
     "controller.ts": ["audiobits", "./instrument", "./instruments", "./music"],
-    "instrument.ts": ["audiobits", "./music"],
+    "instrument.ts": ["../../helpers/instrument"],
     "instruments.ts": ["./recipe"],
-    "music.ts": [],
+    "music.ts": ["../../helpers/music"],
+    "../../helpers/instrument.ts": ["audiobits", "./music"],
+    "../../helpers/music.ts": [],
+    "../../helpers/mapping.ts": ["audiobits"],
     "song.ts": ["./controller", "./music"],
   };
   for (const [file, specifiers] of Object.entries(allowed)) {

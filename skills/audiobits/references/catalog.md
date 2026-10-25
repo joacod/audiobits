@@ -29,9 +29,17 @@ Recipes install at `src/sounds/recipes/<id>/`; experiences at
 tree, never from `../../catalog/` or unpublished package internals. The registry
 may evolve independently of an older installed runtime.
 
-Recipe items install only `recipe.ts`; sustained Thruster can use `voice.set()`
-directly. Experience items install acoustic definitions, a sound controller and
+Recipe items install their definition plus any explicitly listed helpers and guide;
+sustained Thruster can use `voice.set()` directly. Experience items install acoustic definitions, a sound controller and
 a README with a tested `src/integration.ts` example.
+
+For standalone pitched authoring, install `synth-lead`. Its installed README
+uses `./sounds/helpers/instrument` and `./sounds/recipes/synth-lead/recipe`
+from `src/integration.ts`, with typed brightness updates and scheduled release.
+Shared helpers live at `src/sounds/helpers/`: `instrument.ts`, `music.ts` and
+`mapping.ts`. No Riff song/controller is required. Explicit note/velocity aliases
+override their matching parameter values; other controls retain recipe typing.
+The native Voice and application-owned engine lifecycle remain unchanged.
 
 Echo Probe's `createEchoProbe(audio)` takes bounded reflection data through
 `emit(reflections, { seed, strength })`. Each reflection supplies relative distance,

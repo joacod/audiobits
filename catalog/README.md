@@ -45,7 +45,8 @@ builds and playback need only local source and `audiobits`.
 Recipes install `recipe.ts` under `src/sounds/recipes/<id>/`. Experiences install
 acoustic definitions, a sound controller, and an item-specific guide under
 `src/sounds/experiences/<id>/`. The registry declares each item's complete file
-manifest. Relative imports survive installation.
+manifest, including shared authoring files under `src/sounds/helpers/` when needed.
+Relative imports survive installation.
 
 Use the selected showcase's Copy usage in `src/integration.ts`, or follow an
 experience's installed README. Every registry item is verified against the
@@ -129,6 +130,16 @@ export async function dispose() {
   await audio.dispose();
 }
 ```
+
+## Standalone instrument authoring
+
+Install `synth-lead` with `npx shadcn@latest add joacod/audiobits/synth-lead`.
+Its [installed guide](recipes/synth-lead/README.md) demonstrates the typed
+`createInstrument` adapter, note and velocity aliases, live brightness updates,
+scheduled release, cancellation and disposal. The recipe and guide install with
+`helpers/instrument.ts`, `helpers/music.ts` and `helpers/mapping.ts`; no Riff song
+or controller is needed. These helpers remain copy-owned source outside the npm
+runtime. Riff's existing helper imports reexport the same implementations.
 
 ## Controllers and presentation
 

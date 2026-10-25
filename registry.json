@@ -329,6 +329,72 @@
       "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/main/catalog/README.md for integration and update guidance."
     },
     {
+      "name": "synth-lead",
+      "type": "registry:item",
+      "title": "Synth lead",
+      "description": "A sustained pitched lead with a gentle onset scoop and live brightness.",
+      "dependencies": ["audiobits@^0.4.0"],
+      "categories": ["recipe", "sustained"],
+      "meta": {
+        "classification": "recipe",
+        "tags": ["instrument", "lead", "music", "sustained", "brightness"],
+        "schemaVersion": 1,
+        "compatibility": {
+          "runtime": "audiobits with scheduled release",
+          "language": "TypeScript",
+          "moduleResolution": "Bundler",
+          "browser": "Web Audio; automated verification in Chromium",
+          "framework": "none"
+        },
+        "exportName": "synthLead",
+        "requiredCapabilities": {
+          "sources": ["oscillator"],
+          "filters": ["lowpass"],
+          "parameterModes": ["live", "play"],
+          "runtime": [
+            "gesture-start",
+            "live-controls",
+            "scheduled-release",
+            "seeded-replay",
+            "dispose"
+          ],
+          "kinds": ["sustained"],
+          "waveforms": ["sawtooth", "triangle"],
+          "noiseColors": [],
+          "mappingScales": ["exponential", "linear"],
+          "automationCurves": ["exponential"]
+        }
+      },
+      "files": [
+        {
+          "path": "catalog/recipes/synth-lead/recipe.ts",
+          "type": "registry:file",
+          "target": "~/src/sounds/recipes/synth-lead/recipe.ts"
+        },
+        {
+          "path": "catalog/helpers/instrument.ts",
+          "type": "registry:file",
+          "target": "~/src/sounds/helpers/instrument.ts"
+        },
+        {
+          "path": "catalog/helpers/music.ts",
+          "type": "registry:file",
+          "target": "~/src/sounds/helpers/music.ts"
+        },
+        {
+          "path": "catalog/helpers/mapping.ts",
+          "type": "registry:file",
+          "target": "~/src/sounds/helpers/mapping.ts"
+        },
+        {
+          "path": "catalog/recipes/synth-lead/README.md",
+          "type": "registry:file",
+          "target": "~/src/sounds/recipes/synth-lead/README.md"
+        }
+      ],
+      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/main/catalog/README.md for integration and update guidance."
+    },
+    {
       "name": "energy-charge",
       "type": "registry:item",
       "title": "Energy charge",
@@ -695,6 +761,21 @@
           "path": "catalog/experiences/riff-reactor/README.md",
           "type": "registry:file",
           "target": "~/src/sounds/experiences/riff-reactor/README.md"
+        },
+        {
+          "path": "catalog/helpers/instrument.ts",
+          "type": "registry:file",
+          "target": "~/src/sounds/helpers/instrument.ts"
+        },
+        {
+          "path": "catalog/helpers/music.ts",
+          "type": "registry:file",
+          "target": "~/src/sounds/helpers/music.ts"
+        },
+        {
+          "path": "catalog/helpers/mapping.ts",
+          "type": "registry:file",
+          "target": "~/src/sounds/helpers/mapping.ts"
         }
       ],
       "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/main/catalog/README.md for integration and update guidance."

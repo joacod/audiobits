@@ -292,25 +292,22 @@ try {
         await copyFile(join(root, file.path), target);
         if (target.endsWith(".ts")) types.push(target);
       }
-      const guide =
-        item.meta.classification === "recipe"
-          ? ""
-          : await readFile(
-              join(
-                directory,
-                item.files
-                  .find((file) => file.path.endsWith("/README.md"))
-                  .target.replace(/^~\//, ""),
-              ),
-              "utf8",
-            );
+      const guideFile = item.files.find((file) =>
+        file.path.endsWith("/README.md"),
+      );
+      const guide = guideFile
+        ? await readFile(
+            join(directory, guideFile.target.replace(/^~\//, "")),
+            "utf8",
+          )
+        : "";
       const matches = [...guide.matchAll(/```ts\n([\s\S]*?)```/g)].filter(
         (match) =>
           match[1].includes(
             `from "./sounds/${item.meta.classification === "recipe" ? "recipes" : "experiences"}/${item.name}/`,
           ),
       );
-      if (item.meta.classification === "experience") {
+      if (guideFile) {
         // Authoring examples are typechecked below; keep one lifecycle entrypoint.
         assert.equal(
           matches.filter((match) =>
@@ -325,10 +322,13 @@ try {
           `${item.name}: missing website presentation and usage setup`,
         );
       }
-      const integration =
-        item.meta.classification === "recipe"
-          ? quickExample(item.name, parametersFor(sounds[item.name]), 42)
-          : experienceExample(item.name, guide);
+      const integration = guideFile
+        ? item.meta.classification === "experience"
+          ? experienceExample(item.name, guide)
+          : matches.find((match) =>
+              /\bexport (?:async )?function play\b/.test(match[1]),
+            )[1]
+        : quickExample(item.name, parametersFor(sounds[item.name]), 42);
       const exampleSource = join(directory, "src/integration.ts");
       await writeFile(exampleSource, integration);
       types.push(exampleSource);
@@ -706,6 +706,7 @@ try {
         JSON.stringify({
           compilerOptions: {
             noEmit: true,
+            allowImportingTsExtensions: true,
             strict: true,
             noUncheckedSideEffectImports: true,
             module: "ESNext",
@@ -1624,6 +1625,23 @@ Object.assign(globalThis, { probe });`,
             timeout: 2000,
           })
           .toEqual({ active: 0, retiring: 0 });
+      }
+      if (example.file === "synth-lead") {
+        await expect
+          .poll(() => page.evaluate(() => globalThis.probe.counts))
+          .toEqual({ active: 0, retiring: 0 });
+        // Cancel pending activation, then cut a fresh scheduled voice.
+        await page.evaluate(async () => {
+          const playing = globalThis.probe.play();
+          globalThis.probe.stop();
+          await playing;
+        });
+        assert.deepEqual(await page.evaluate(() => globalThis.probe.counts), {
+          active: 0,
+          retiring: 0,
+        });
+        await page.click("#play");
+        await page.evaluate(() => globalThis.playing);
       }
       await page.click("#stop");
       await expect
