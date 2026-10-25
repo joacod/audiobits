@@ -1,5 +1,11 @@
 # audiobits
 
+## 0.4.0
+
+### Minor Changes
+
+- eeec68e: Add `voice.stop({ at })` to schedule the existing release envelope at an absolute audio-context time. Pending releases preserve live controls, earlier stops override them, and one-shot gates, tails and explicit cleanup retain their bounds.
+
 ## 0.3.6
 
 ### Patch Changes
