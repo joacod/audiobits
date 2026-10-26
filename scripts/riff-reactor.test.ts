@@ -3,6 +3,9 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import ts from "typescript";
 import { validateRecipe, type AudioEngine, type Recipe } from "audiobits";
 import * as recipes from "../catalog/experiences/riff-reactor/recipe";
+import { electricGuitarLead } from "../catalog/recipes/electric-guitar-lead/recipe";
+import { rhythmGuitar } from "../catalog/recipes/rhythm-guitar/recipe";
+import { riffSongs } from "../apps/www/lib/riff-songs";
 import {
   bandEvents,
   collectWindow,
@@ -16,11 +19,13 @@ import {
   type BandEvent,
   type RiffTier,
   type RiffInstruments,
+  type RiffSong,
 } from "../catalog/experiences/riff-reactor/controller";
 import { riffReactorSong as song } from "../catalog/experiences/riff-reactor/song";
 import {
   riffVoiceLimit,
   riffVoicesPerSound,
+  mountRiff,
 } from "../catalog/experiences/riff-reactor/host";
 import {
   compile,
@@ -35,6 +40,7 @@ beforeEach(() => {
 afterEach(() => {
   vi.useRealTimers();
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
 
 const settle = async () => {
@@ -65,7 +71,10 @@ const controlsOf = (
   };
 };
 
-function setup(presets: Partial<RiffInstruments> = {}) {
+function setup(
+  presets: Partial<RiffInstruments> = {},
+  composition: RiffSong = song,
+) {
   const clock = { currentTime: 0, outputLatency: 0.02, baseLatency: 0.01 };
   const sounds = new Map<Recipe, ReturnType<typeof fakeSound>>();
   type FakeBus = {
@@ -150,7 +159,7 @@ function setup(presets: Partial<RiffInstruments> = {}) {
   const finished = vi.fn();
   const riff = createRiff(
     audio,
-    song,
+    composition,
     {
       phase: (value) => phases.push(value),
       intensity: (tier, at) => intensities.push([tier, at]),
@@ -169,7 +178,10 @@ function setup(presets: Partial<RiffInstruments> = {}) {
   };
   const band = () =>
     (Object.keys(recipeFor) as BandEvent["track"][]).flatMap((track) =>
-      of(recipeFor[track]).voices.map((voice) => ({ track, ...voice })),
+      of(presets[track] ?? recipeFor[track]).voices.map((voice) => ({
+        track,
+        ...voice,
+      })),
     );
   return {
     riff,
@@ -189,7 +201,11 @@ function setup(presets: Partial<RiffInstruments> = {}) {
 }
 
 test("the installed recipe module exports only valid recipes that compile at extrema", () => {
-  for (const recipe of Object.values(recipes)) {
+  for (const recipe of [
+    ...Object.values(recipes),
+    electricGuitarLead,
+    rhythmGuitar,
+  ]) {
     expect(validateRecipe(recipe).ok).toBe(true);
     expect(validateRecipe(JSON.parse(JSON.stringify(recipe))).ok).toBe(true);
     for (const edge of ["min", "default", "max"] as const) {
@@ -206,26 +222,67 @@ test("the installed recipe module exports only valid recipes that compile at ext
   }
 });
 
-test("every composed note is inside its recipe's parameter range", () => {
-  for (const event of bandEvents(song))
-    expect(() =>
-      compile(
-        recipeFor[event.track],
-        controlsOf(recipeFor[event.track], event),
-      ),
-    ).not.toThrow();
-  for (const note of song.lead)
-    expect(() =>
-      compile(recipes.riffLead, controlsOf(recipes.riffLead, note)),
-    ).not.toThrow();
-  // About 60 seconds: 32 bars of 4/4 at 128 BPM, then a closing downbeat.
-  expect((song.bars * song.beatsPerBar * 60) / song.bpm).toBe(60);
-  expect(song.lead.length).toBeGreaterThan(100);
-  for (let i = 0; i < song.lead.length - 1; i++) {
-    const note = song.lead[i];
-    expect(note.length).toBeGreaterThan(0);
-    expect(note.beat + note.length).toBeLessThanOrEqual(song.lead[i + 1].beat);
-  }
+test.each(riffSongs)(
+  "$song.title notes stay inside their instrument ranges",
+  (entry) => {
+    const palette = {
+      ...recipeFor,
+      lead: recipes.riffLead,
+      ...entry.instruments,
+    };
+    const song = entry.song;
+    for (const event of bandEvents(song)) {
+      if (!("frequency" in (palette[event.track].parameters ?? {})))
+        expect(
+          event.note,
+          `${event.track} cannot accept a pitched note`,
+        ).toBeUndefined();
+      expect(() =>
+        compile(palette[event.track], controlsOf(palette[event.track], event)),
+      ).not.toThrow();
+    }
+    for (const note of song.lead)
+      expect(() =>
+        compile(palette.lead, controlsOf(palette.lead, note)),
+      ).not.toThrow();
+    // Both showcase arrangements stay within the agreed short-track scope.
+    const duration = (song.bars * song.beatsPerBar * 60) / song.bpm;
+    if (entry.id === "reactor-core") expect(duration).toBe(60);
+    expect(duration).toBeGreaterThanOrEqual(60);
+    expect(duration).toBeLessThanOrEqual(90);
+    expect(song.lead.length).toBeGreaterThan(100);
+    for (let i = 0; i < song.lead.length - 1; i++) {
+      const note = song.lead[i];
+      expect(note.length).toBeGreaterThan(0);
+      expect(note.beat + note.length).toBeLessThanOrEqual(
+        song.lead[i + 1].beat,
+      );
+    }
+  },
+);
+
+test("Sweet Child's base band accompanies the first performed riff", () => {
+  const song = riffSongs[1].song;
+  const first = song.lead[0].beat;
+  const opening = bandEvents(song).filter(
+    (event) =>
+      event.tier === 0 && event.beat >= first && event.beat < first + 4,
+  );
+  expect(new Set(opening.map((event) => event.track))).toEqual(
+    new Set(["kick", "snare", "hat", "bass", "stab"]),
+  );
+});
+
+test("Sweet Child schedules its opening band through the instrument adapter without lead input", async () => {
+  const entry = riffSongs[1];
+  const s = setup(entry.instruments, entry.song);
+  const transport = s.riff.start()!;
+  await s.advance(transport.timeAt(entry.song.lead[0].beat + 4));
+  expect(new Set(s.band().map((voice) => voice.track))).toEqual(
+    new Set(["kick", "snare", "hat", "bass", "stab"]),
+  );
+  expect(s.of(electricGuitarLead).play).not.toHaveBeenCalled();
+  s.riff.dispose();
 });
 
 test("the opening accompaniment leaves room for the lead even at top intensity", () => {
@@ -250,7 +307,12 @@ test("the opening accompaniment leaves room for the lead even at top intensity",
 test("sound source imports only the runtime and its own sound files", () => {
   const base = "catalog/experiences/riff-reactor";
   const allowed: Record<string, string[]> = {
-    "recipe.ts": ["audiobits", "../../helpers/mapping"],
+    "recipe.ts": [
+      "audiobits",
+      "../../helpers/mapping",
+      "../../recipes/rock-drum-kit/recipe",
+      "../../recipes/picked-bass/recipe",
+    ],
     "controller.ts": ["audiobits", "./instrument", "./instruments", "./music"],
     "instrument.ts": ["../../helpers/instrument"],
     "instruments.ts": ["./recipe"],
@@ -503,7 +565,13 @@ test("latency is base plus output latency, either missing or zero", () => {
   expect(totalLatency({ baseLatency: Number.NaN, outputLatency: -1 })).toBe(0);
 });
 
-test("peak density never reaches the global voice limit", () => {
+test.each(riffSongs)("$song.title stays within the voice budget", (entry) => {
+  const song = entry.song;
+  const palette = {
+    ...recipeFor,
+    lead: recipes.riffLead,
+    ...entry.instruments,
+  };
   // Worst case: top tier, every lead note hit, a stray choke on every note.
   // Booked voices count as active from booking, up to one lookahead early.
   const transport = createTransport(song.bpm, 0);
@@ -511,7 +579,7 @@ test("peak density never reaches the global voice limit", () => {
   const add = (sound: string, start: number, end: number) =>
     spans.set(sound, [...(spans.get(sound) ?? []), [start, end]]);
   for (const event of bandEvents(song)) {
-    const recipe = recipeFor[event.track];
+    const recipe = palette[event.track];
     const at = transport.timeAt(event.beat);
     add(
       event.track,
@@ -519,7 +587,7 @@ test("peak density never reaches the global voice limit", () => {
       at + compile(recipe, controlsOf(recipe, event)).lifetime,
     );
   }
-  const lead = compile(recipes.riffLead, { frequency: 330 });
+  const lead = compile(palette.lead, { frequency: 330 });
   const leadTail =
     Math.max(...lead.layers.map((layer) => layer.layer.envelope.release)) +
     Math.min(MAX_DELAY_TAIL, effectTail(lead.effectChain)) +
@@ -573,4 +641,48 @@ test("instrument overrides keep the composition and transport while requiring ma
   expect(() => setup({ lead: recipes.riffBass })).toThrow(
     "lead needs a sustained",
   );
+});
+
+test("selecting a song cancels pending activation and retains engine ownership", async () => {
+  const document = Object.assign(new EventTarget(), { hidden: false });
+  vi.stubGlobal("document", document);
+  vi.stubGlobal("window", new EventTarget());
+  const s = setup();
+  s.riff.dispose();
+  let activate!: () => void;
+  const activation = new Promise<void>((resolve) => {
+    activate = resolve;
+  });
+  s.audio.start = vi.fn(() => activation);
+  s.audio.dispose = vi.fn(async () => {});
+  const started = vi.fn();
+  const host = mountRiff(
+    { phase: vi.fn(), starting: vi.fn(), error: vi.fn(), started },
+    s.audio,
+  );
+  const first = host.control;
+  host.play();
+  expect(host.starting).toBe(true);
+  const entry = riffSongs[1];
+  host.select(entry.song, entry.instruments);
+  expect(first.disposed).toBe(true);
+  expect(host.audio).toBe(s.audio);
+  expect(host.song).toBe(entry.song);
+  expect(host.starting).toBe(false);
+  activate();
+  await settle();
+  expect(started).not.toHaveBeenCalled();
+  expect(host.control.phase).toBe("idle");
+  host.play();
+  await settle();
+  expect(host.control.phase).toBe("playing");
+  expect(host.control.transport?.secondsPerBeat).toBe(60 / entry.song.bpm);
+  const second = host.control;
+  host.select(song);
+  expect(second.disposed).toBe(true);
+  expect(host.control.phase).toBe("idle");
+  expect(s.audio.dispose).not.toHaveBeenCalled();
+  await host.dispose();
+  expect(vi.getTimerCount()).toBe(0);
+  expect(s.audio.dispose).toHaveBeenCalledOnce();
 });

@@ -1,4 +1,41 @@
 @layer components {
+  .foundation .riff-song-picker {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    font-size: 0.8125rem;
+    color: var(--mute);
+  }
+  .foundation .riff-song-control {
+    position: relative;
+    min-width: 0;
+    display: inline-flex;
+  }
+  .foundation .riff-song-chevron {
+    position: absolute;
+    right: 0.875rem;
+    top: 50%;
+    width: 1rem;
+    height: 1rem;
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
+  .foundation .riff-song-picker select {
+    appearance: none;
+    min-width: 0;
+    max-width: 100%;
+    padding: 0.6rem 2.5rem 0.6rem 0.75rem;
+    border: 1px solid var(--graphite-edge);
+    border-radius: 6px;
+    background: #111115;
+    color: var(--ink);
+    font: inherit;
+  }
+  .foundation .riff-song-picker select:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 3px;
+  }
   .foundation .riff-stage {
     position: relative;
     height: clamp(400px, 62vh, 600px);

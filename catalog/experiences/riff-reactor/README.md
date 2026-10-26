@@ -198,3 +198,12 @@ exports remain supported through reexports. For a standalone sustained recipe
 with typed extra controls, install `synth-lead` and follow its guide. Explicit
 note/velocity inputs override the corresponding values in `parameters`;
 other controls pass through with their recipe types intact.
+
+The drum and bass definitions are also independently installable as
+`rock-drum-kit` and `picked-bass`. The Riff manifest includes their canonical
+recipe files and preserves the `riffKick`, `riffSnare`, `riffHat`,
+`riffOpenHat`, `riffCrash` and `riffBass` exports. Reactor Core's recipe data
+is unchanged. For another palette install `electric-guitar-lead` and
+`rhythm-guitar`, then supply those recipes through the fourth argument.
+The website's song selector and shortened Sweet Child O’ Mine arrangement
+are showcase-only and are not part of this source installation.

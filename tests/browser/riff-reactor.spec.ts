@@ -2,6 +2,7 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 import { instrument, probe } from "./experience-probe";
 import { riffReactorSong as song } from "../../catalog/experiences/riff-reactor/song";
 import { buildChart } from "../../apps/www/lib/riff-chart";
+import { sweetChildSong } from "../../apps/www/lib/riff-sweet-child";
 
 const stageName = { name: "Riff Reactor stage", exact: true };
 const chart = buildChart(song);
@@ -34,6 +35,7 @@ function expectOnGrid(
   list: { when: number; now: number }[],
   origin: number,
   until = Infinity,
+  bpm = song.bpm,
 ) {
   const band = list.filter(
     (entry) =>
@@ -42,7 +44,7 @@ function expectOnGrid(
       entry.when > entry.now + 0.015,
   );
   expect(band.length).toBeGreaterThan(0);
-  const sixteenth = secondsPerBeat / 4;
+  const sixteenth = 60 / bpm / 4;
   for (const { when, now } of band) {
     const steps = (when - origin) / sixteenth;
     expect(
@@ -67,7 +69,11 @@ async function owned(page: Page) {
  * Perform chart notes in the page on the audio clock, alternating keyboard and
  * pointer input, so the judgement does not depend on automation round trips.
  */
-function perform(page: Page, notes: { beat: number; lane: number }[]) {
+function perform(
+  page: Page,
+  notes: { beat: number; lane: number }[],
+  bpm = song.bpm,
+) {
   return page.evaluate(
     async ({ notes, secondsPerBeat }) => {
       const stage = document.querySelector<HTMLElement>(".riff-stage")!;
@@ -100,7 +106,7 @@ function perform(page: Page, notes: { beat: number; lane: number }[]) {
           );
       }
     },
-    { notes, secondsPerBeat },
+    { notes, secondsPerBeat: 60 / bpm },
   );
 }
 
@@ -214,6 +220,60 @@ test("perform, miss, lift on a bar line, stop, replay, hide and leave cleanly @r
   await stage.press("Enter");
   await expect(stage).toHaveAttribute("data-phase", "playing");
   expectOnGrid(await starts(page), await origin(stage));
+
+  // Switching while playing must cancel the old session and reset judging,
+  // without replacing the activated context or automatically starting the song.
+  await page.setViewportSize({ width: 390, height: 844 });
+  const picker = page.getByRole("combobox", { name: "Track", exact: true });
+  await expect(picker).toHaveValue("reactor-core");
+  await picker.selectOption("sweet-child-o-mine");
+  await expect(stage).toHaveAttribute("data-song", "sweet-child-o-mine");
+  await expect(stage).toHaveAttribute("data-phase", "idle");
+  await expect(stage).toHaveAttribute("data-score", "0");
+  await expect(stage).toHaveAttribute("data-hits", "0");
+  await expect(stage).toHaveAttribute("data-misses", "0");
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await expect.poll(async () => (await probe(page)).ownedSources).toBe(0);
+  expect((await probe(page)).contexts).toEqual(["running"]);
+  await stage.press("Enter");
+  await expect(stage).toHaveAttribute("data-phase", "playing");
+  const selectedOrigin = await origin(stage);
+  await perform(
+    page,
+    buildChart(sweetChildSong).slice(0, 8),
+    sweetChildSong.bpm,
+  );
+  await expect(stage).toHaveAttribute("data-hits", "8");
+  await expect(stage).toHaveAttribute("data-misses", "0");
+  const selectedBand = expectOnGrid(
+    await starts(page),
+    selectedOrigin,
+    Infinity,
+    sweetChildSong.bpm,
+  );
+  const firstRiff =
+    selectedOrigin + (sweetChildSong.lead[0].beat * 60) / sweetChildSong.bpm;
+  expect(
+    selectedBand.some(({ when }) => Math.abs(when - firstRiff) < 1e-6),
+  ).toBe(true);
+  // Let two notes pass without input, beyond the last lead's release and slap
+  // echo. The backing must still produce signal at base intensity.
+  await expect
+    .poll(async () => Number(await stage.getAttribute("data-misses")))
+    .toBeGreaterThanOrEqual(2);
+  await expect.poll(() => peak(stage)).toBeGreaterThan(0);
+  await stage.press("Escape");
+  await expect.poll(() => owned(page)).toBe(0);
+  await picker.selectOption("reactor-core");
+  await expect(stage).toHaveAttribute("data-song", "reactor-core");
+  await expect(stage).toHaveAttribute("data-score", "0");
+  await stage.press("Enter");
+  await expect(stage).toHaveAttribute("data-phase", "playing");
+  expect((await probe(page)).contexts).toEqual(["running"]);
 
   // Leaving the route disposes the song and its engine.
   await page

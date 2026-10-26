@@ -5,6 +5,7 @@ import type {
 } from "../../../catalog/experiences/riff-reactor/controller";
 import type { AudioEngine } from "audiobits";
 import { bindAudioGestures } from "../lib/audio-gestures";
+import type { RiffSongEntry } from "../lib/riff-songs";
 import {
   buildChart,
   createPerformance,
@@ -133,6 +134,7 @@ export function mountRiffStage(
     prepared,
   );
   chart = buildChart(host.song);
+  surface.dataset.song = "reactor-core";
   surface.dataset.phase = "idle";
   surface.dataset.starting = "false";
   surface.dataset.tier = "0";
@@ -447,6 +449,24 @@ export function mountRiffStage(
   feedback.hint(idleHint);
   return {
     audio: host.audio,
+    select(entry: RiffSongEntry) {
+      if (disposed) return;
+      host.select(entry.song, entry.instruments);
+      chart = buildChart(host.song);
+      transport = undefined;
+      performance = undefined;
+      tiers = [];
+      results.clear();
+      flashes = [];
+      pressed.fill(-1);
+      delete surface.dataset.origin;
+      surface.dataset.song = entry.id;
+      surface.dataset.tier = "0";
+      publishScore();
+      feedback.clearError();
+      feedback.hint(idleHint);
+      wake();
+    },
     async dispose() {
       if (disposed) return;
       disposed = true;

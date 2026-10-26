@@ -39,6 +39,10 @@ export const experienceSourcePurpose = {
       "Scientific pitch, phrases and audio-clock tempo conversion.",
     "../../helpers/mapping.ts":
       "Pure fixed-ratio mapping authoring that emits ordinary schema data.",
+    "../../recipes/rock-drum-kit/recipe.ts":
+      "Canonical kick, snare, closed/open hats and crash, also independently installable.",
+    "../../recipes/picked-bass/recipe.ts":
+      "Canonical picked bass, also independently installable.",
     "recipe.ts":
       "Kick, snare, hats, bass, pad, arpeggio, chugs, riser, crash, a sustained lead and a choke as schema-1 data.",
     "song.ts":
@@ -46,7 +50,7 @@ export const experienceSourcePurpose = {
     "controller.ts":
       "One audio-clock transport, lookahead band scheduling, bar-line intensity, monophonic lead performance and owned cleanup.",
     "host.ts":
-      "Gesture activation, restart, hide, pagehide, Stop, and disposal.",
+      "Gesture activation, song selection on one engine, restart, hide, pagehide, Stop, and disposal.",
     "index.html":
       "Standalone band bench with Play, Stop, Perform, Choke and intensity.",
   },
@@ -139,7 +143,7 @@ export const riffReactorExperience = {
   title: registryItem("riff-reactor").title,
   href: "/catalog/riff-reactor",
   description: registryItem("riff-reactor").description,
-  controls: ["Play", "Three lanes", "Streak", "Intensity", "Stop"],
+  controls: ["Track", "Play", "Three lanes", "Streak", "Intensity", "Stop"],
   sourceFiles: experienceDemoSourceFiles("riff-reactor").map(
     (file) => file.name,
   ),

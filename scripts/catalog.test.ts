@@ -8,6 +8,7 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join, posix, resolve } from "node:path";
 import { execFileSync, spawnSync } from "node:child_process";
+import { runInNewContext } from "node:vm";
 import { expect, test } from "vitest";
 import ts from "typescript";
 import { validateRecipe, type Recipe } from "audiobits";
@@ -19,6 +20,57 @@ import { controlsFor } from "../packages/audiobits/src/compiler/values";
 
 // Experiences whose recipes use native delay, which needs the 0.3 runtime line.
 const delayExperiences = ["echo-probe", "the-rift", "riff-reactor"];
+
+test("the installed drum-kit example reserves a shared onset while the audio clock advances", async () => {
+  const guide = readFileSync("catalog/recipes/rock-drum-kit/README.md", "utf8");
+  const source = guide.match(/```ts\n([\s\S]*?)```/)![1];
+  const { outputText } = ts.transpileModule(source, {
+    compilerOptions: {
+      module: ts.ModuleKind.CommonJS,
+      target: ts.ScriptTarget.ES2022,
+    },
+  });
+  const definitions = await import("../catalog/recipes/rock-drum-kit/recipe");
+  const context = { currentTime: 0 };
+  const starts: { recipe: Recipe; at: number; bookedAt: number }[] = [];
+  const audio = {
+    start: async () => {},
+    native: { context },
+    sound(recipe: Recipe) {
+      return {
+        play({ at }: { at: number }) {
+          if (at < context.currentTime)
+            throw new RangeError("Scheduled onset is in the past");
+          starts.push({ recipe, at, bookedAt: context.currentTime });
+          // Native audio continues while recipe validation and graph preparation
+          // run. Reproduce a loaded browser taking 8 ms to prepare each hit.
+          context.currentTime += 0.008;
+        },
+      };
+    },
+  };
+  const exports: { play?: () => Promise<void> } = {};
+  runInNewContext(outputText, {
+    exports,
+    require(specifier: string) {
+      if (specifier === "audiobits") return { createAudio: () => audio };
+      expect(specifier).toBe("./sounds/recipes/rock-drum-kit/recipe");
+      return definitions;
+    },
+  });
+  await exports.play!();
+  expect(starts).toHaveLength(6);
+  expect(new Set(starts.map(({ recipe }) => recipe))).toEqual(
+    new Set(Object.values(definitions)),
+  );
+  const downbeat = starts[0].at;
+  for (const name of ["rockKick", "rockHat", "rockCrash"] as const)
+    expect(starts.find(({ recipe }) => recipe === definitions[name])!.at).toBe(
+      downbeat,
+    );
+  expect(starts[2].at - downbeat).toBeCloseTo(60 / 124);
+  expect(starts[5].at - downbeat).toBeCloseTo((2 * 60) / 124);
+});
 
 test("canonical gallery imports resolve in native Node tooling", () => {
   execFileSync(process.execPath, [
@@ -180,7 +232,13 @@ test("registry covers every canonical recipe and sound-only experience", async (
     for (const file of item.files) {
       const source = readFileSync(file.path, "utf8");
       // HTML/CSS/assets and browser demo entrypoints never belong to an install.
-      expect([base, "catalog/helpers"]).toContain(posix.dirname(file.path));
+      expect([
+        base,
+        "catalog/helpers",
+        ...registry.items
+          .filter((entry) => entry.meta.classification === "recipe")
+          .map((entry) => `catalog/recipes/${entry.name}`),
+      ]).toContain(posix.dirname(file.path));
       expect(
         file.path.endsWith(".ts") || file.path === `${base}/README.md`,
       ).toBe(true);

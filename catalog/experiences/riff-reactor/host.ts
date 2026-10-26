@@ -5,6 +5,7 @@ import {
   type RiffSong,
   type RiffTier,
   type RiffTransport,
+  type RiffInstruments,
 } from "./controller";
 import { riffReactorSong } from "./song";
 
@@ -35,11 +36,12 @@ export function mountRiff(
   audio: AudioEngine = createRiffAudio(),
   song: RiffSong = riffReactorSong,
 ) {
-  const control = createRiff(audio, song, {
+  const callbacks = {
     phase: feedback.phase,
-    intensity: (tier, at) => feedback.intensity?.(tier, at),
+    intensity: (tier: RiffTier, at: number) => feedback.intensity?.(tier, at),
     finished: () => feedback.finished?.(),
-  });
+  };
+  let control = createRiff(audio, song, callbacks);
   const listeners = new AbortController();
   let disposed = false;
   let generation = 0;
@@ -111,8 +113,20 @@ export function mountRiff(
   }
   return {
     audio,
-    control,
-    song,
+    get control() {
+      return control;
+    },
+    get song() {
+      return song;
+    },
+    /** Retain the activated engine, cancel the old session and await a new gesture. */
+    select(next: RiffSong, instruments: Partial<RiffInstruments> = {}) {
+      if (disposed) return;
+      stop();
+      control.dispose();
+      song = next;
+      control = createRiff(audio, song, callbacks, instruments);
+    },
     /** True while a Play gesture waits for audio activation. */
     get starting() {
       return pending;

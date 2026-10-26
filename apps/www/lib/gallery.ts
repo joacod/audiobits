@@ -1,3 +1,7 @@
+import { rockKick } from "../../../catalog/recipes/rock-drum-kit/recipe.ts";
+import { pickedBass } from "../../../catalog/recipes/picked-bass/recipe.ts";
+import { electricGuitarLead } from "../../../catalog/recipes/electric-guitar-lead/recipe.ts";
+import { rhythmGuitar } from "../../../catalog/recipes/rhythm-guitar/recipe.ts";
 import { synthLead } from "../../../catalog/recipes/synth-lead/recipe.ts";
 import capabilities from "audiobits/capabilities.json" with { type: "json" };
 import { confirmation } from "../../../catalog/recipes/confirmation/recipe.ts";
@@ -13,6 +17,51 @@ import type { Recipe } from "audiobits";
 
 // Presentation belongs to the gallery, independently of portable recipe data.
 export const demos = {
+  "rock-drum-kit": {
+    visualFamily: "pulse",
+    exportName: registryItem("rock-drum-kit").meta.exportName,
+    title: registryItem("rock-drum-kit").title,
+    description: registryItem("rock-drum-kit").description,
+    recipe: rockKick,
+    use: "Rock percussion · kick preview",
+    labels: { velocity: "Velocity" },
+    endpoints: {},
+  },
+  "picked-bass": {
+    visualFamily: "harmonic",
+    exportName: registryItem("picked-bass").meta.exportName,
+    title: registryItem("picked-bass").title,
+    description: registryItem("picked-bass").description,
+    recipe: pickedBass,
+    use: "Bass lines · picked string",
+    labels: { frequency: "Frequency (Hz)", velocity: "Velocity" },
+    endpoints: {},
+  },
+  "electric-guitar-lead": {
+    visualFamily: "harmonic",
+    exportName: registryItem("electric-guitar-lead").meta.exportName,
+    title: registryItem("electric-guitar-lead").title,
+    description: registryItem("electric-guitar-lead").description,
+    recipe: electricGuitarLead,
+    use: "Guitar melodies · sustained",
+    labels: {
+      frequency: "Frequency (Hz)",
+      velocity: "Velocity",
+      brightness: "Brightness",
+    },
+    endpoints: {},
+  },
+  "rhythm-guitar": {
+    visualFamily: "harmonic",
+    exportName: registryItem("rhythm-guitar").meta.exportName,
+    title: registryItem("rhythm-guitar").title,
+    description: registryItem("rhythm-guitar").description,
+    recipe: rhythmGuitar,
+    use: "Chord strums · one string per voice",
+    labels: { frequency: "Frequency (Hz)", velocity: "Velocity" },
+    endpoints: {},
+  },
+
   "synth-lead": {
     visualFamily: "harmonic",
     exportName: registryItem("synth-lead").meta.exportName,

@@ -143,6 +143,15 @@ scheduled release, cancellation and disposal. The recipe and guide install with
 or controller is needed. These helpers remain copy-owned source outside the npm
 runtime. Riff's existing helper imports reexport the same implementations.
 
+The starter band palette also includes [Rock drum kit](recipes/rock-drum-kit/README.md),
+[Picked bass](recipes/picked-bass/README.md),
+[Electric guitar lead](recipes/electric-guitar-lead/README.md) and
+[Rhythm guitar](recipes/rhythm-guitar/README.md). Install each by its item ID,
+such as `npx shadcn@latest add joacod/audiobits/electric-guitar-lead`.
+Each guide provides a working integration. These are procedural instrument
+approximations. Their recipes contain sound behavior; songs and charts remain
+in the consuming application.
+
 ## Controllers and presentation
 
 Simple sounds need no controller, including sustained recipes driven directly
