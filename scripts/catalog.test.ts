@@ -13,6 +13,7 @@ import ts from "typescript";
 import { validateRecipe, type Recipe } from "audiobits";
 import capabilities from "audiobits/capabilities.json";
 import registry from "../registry.json" with { type: "json" };
+import runtimePackage from "../packages/audiobits/package.json" with { type: "json" };
 import { compile } from "../packages/audiobits/src/compiler/plan";
 import { controlsFor } from "../packages/audiobits/src/compiler/values";
 
@@ -75,15 +76,10 @@ test("registry covers every canonical recipe and sound-only experience", async (
     ].sort(),
   );
   for (const item of registry.items) {
-    expect(item.dependencies).toEqual(
-      item.name === "synth-lead"
-        ? ["audiobits@^0.5.0"]
-        : ["the-rift", "riff-reactor"].includes(item.name)
-          ? ["audiobits@^0.4.0"]
-          : delayExperiences.includes(item.name)
-            ? ["audiobits@^0.3.0"]
-            : ["audiobits"],
-    );
+    // All items target the same verified runtime line, so later installs cannot
+    // request an older minor. Derive the line from the package being tested.
+    const [major, minor] = runtimePackage.version.split(".");
+    expect(item.dependencies).toEqual([`audiobits@^${major}.${minor}.0`]);
     expect(item.title.length).toBeGreaterThan(0);
     expect(item.description.length).toBeGreaterThan(0);
     expect(item.categories).toContain(item.meta.classification);

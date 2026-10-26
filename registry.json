@@ -8,7 +8,7 @@
       "type": "registry:item",
       "title": "Confirmation",
       "description": "A soft upward chime for a completed action.",
-      "dependencies": ["audiobits"],
+      "dependencies": ["audiobits@^0.5.0"],
       "categories": ["recipe", "one-shot"],
       "meta": {
         "classification": "recipe",
@@ -48,7 +48,7 @@
       "type": "registry:item",
       "title": "Impact",
       "description": "A descending body and filtered noise transient. Intensity changes pitch, brightness, and level.",
-      "dependencies": ["audiobits"],
+      "dependencies": ["audiobits@^0.5.0"],
       "categories": ["recipe", "one-shot"],
       "meta": {
         "classification": "recipe",
@@ -88,7 +88,7 @@
       "type": "registry:item",
       "title": "Thruster",
       "description": "Start once, adjust throttle while it runs, then release with Stop.",
-      "dependencies": ["audiobits"],
+      "dependencies": ["audiobits@^0.5.0"],
       "categories": ["recipe", "sustained"],
       "meta": {
         "classification": "recipe",
@@ -133,7 +133,7 @@
       "type": "registry:item",
       "title": "Tactile click",
       "description": "A tiny rounded contact with a restrained noise texture.",
-      "dependencies": ["audiobits"],
+      "dependencies": ["audiobits@^0.5.0"],
       "categories": ["recipe", "one-shot"],
       "meta": {
         "classification": "recipe",
@@ -173,7 +173,7 @@
       "type": "registry:item",
       "title": "Gentle rejection",
       "description": "Two soft descending tones for an unavailable action.",
-      "dependencies": ["audiobits"],
+      "dependencies": ["audiobits@^0.5.0"],
       "categories": ["recipe", "one-shot"],
       "meta": {
         "classification": "recipe",
@@ -213,7 +213,7 @@
       "type": "registry:item",
       "title": "Glass notification",
       "description": "Four delicate partials with independent decays and a bright glass rim.",
-      "dependencies": ["audiobits"],
+      "dependencies": ["audiobits@^0.5.0"],
       "categories": ["recipe", "one-shot"],
       "meta": {
         "classification": "recipe",
@@ -253,7 +253,7 @@
       "type": "registry:item",
       "title": "Whoosh",
       "description": "Filtered noise sweeps past with an adjustable sense of weight.",
-      "dependencies": ["audiobits"],
+      "dependencies": ["audiobits@^0.5.0"],
       "categories": ["recipe", "one-shot"],
       "meta": {
         "classification": "recipe",
@@ -293,7 +293,7 @@
       "type": "registry:item",
       "title": "Power-up",
       "description": "A rising triangle and sine halo that gather energy together.",
-      "dependencies": ["audiobits"],
+      "dependencies": ["audiobits@^0.5.0"],
       "categories": ["recipe", "one-shot"],
       "meta": {
         "classification": "recipe",
@@ -407,7 +407,7 @@
       "type": "registry:item",
       "title": "Energy charge",
       "description": "Hold to build energy. Shape the sound with progress.",
-      "dependencies": ["audiobits"],
+      "dependencies": ["audiobits@^0.5.0"],
       "categories": ["experience"],
       "meta": {
         "classification": "experience",
@@ -464,7 +464,7 @@
       "type": "registry:item",
       "title": "Reactive thruster",
       "description": "Move to shape a living sound. Release to coast.",
-      "dependencies": ["audiobits"],
+      "dependencies": ["audiobits@^0.5.0"],
       "categories": ["experience"],
       "meta": {
         "classification": "experience",
@@ -521,7 +521,7 @@
       "type": "registry:item",
       "title": "Lightsaber",
       "description": "Ignite a living electrical blade. Swing through the field. Strike, spark, retract.",
-      "dependencies": ["audiobits"],
+      "dependencies": ["audiobits@^0.5.0"],
       "categories": ["experience"],
       "meta": {
         "classification": "experience",
@@ -578,7 +578,7 @@
       "type": "registry:item",
       "title": "Echo Probe",
       "description": "Send a sculpted pulse into the field. Hear it return through resonant surfaces and scattered late reflections.",
-      "dependencies": ["audiobits@^0.3.0"],
+      "dependencies": ["audiobits@^0.5.0"],
       "categories": ["experience"],
       "meta": {
         "classification": "experience",
@@ -640,7 +640,7 @@
       "type": "registry:item",
       "title": "The Rift",
       "description": "Tear open a living fracture. Stretch, destabilize and seal it into a collapsing implosion.",
-      "dependencies": ["audiobits@^0.4.0"],
+      "dependencies": ["audiobits@^0.5.0"],
       "categories": ["experience"],
       "meta": {
         "classification": "experience",
@@ -700,7 +700,7 @@
       "type": "registry:item",
       "title": "Riff Reactor",
       "description": "Perform the lead of an original synth-rock track. Every hit plays; streaks make the band hit harder.",
-      "dependencies": ["audiobits@^0.4.0"],
+      "dependencies": ["audiobits@^0.5.0"],
       "categories": ["experience"],
       "meta": {
         "classification": "experience",

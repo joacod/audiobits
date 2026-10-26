@@ -26,7 +26,8 @@ changes. Do not use `--overwrite` casually.
 
 Recipes install at `src/sounds/recipes/<id>/`; experiences at
 `src/sounds/experiences/<id>/`. Import copied files from the consumer's source
-tree, never from `../../catalog/` or unpublished package internals. The registry
+tree, never from `../../catalog/` or unpublished package internals. Current registry items share one compatible runtime line, verified together
+against the packed package without rewriting their dependency ranges. The registry
 may evolve independently of an older installed runtime.
 
 Recipe items install their definition plus any explicitly listed helpers and guide;
