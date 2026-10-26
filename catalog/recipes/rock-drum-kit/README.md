@@ -36,7 +36,9 @@ export async function play() {
   const token = ++request;
   await audio.start();
   if (token !== request) return;
-  const at = audio.native.context.currentTime + 0.02;
+  // Reserve the same 150 ms scheduling horizon as Riff's backing band so
+  // preparing several voices does not consume the shared opening timestamp.
+  const at = audio.native.context.currentTime + 0.15;
   const beat = 60 / 124;
   kick.play({ at, parameters: { velocity: 0.8 }, seed: 42 });
   hat.play({ at, parameters: { velocity: 0.5 }, seed: 42 });
