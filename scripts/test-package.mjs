@@ -587,6 +587,10 @@ try {
       }),
     );
     const combinedItems = [
+      "rock-drum-kit",
+      "picked-bass",
+      "electric-guitar-lead",
+      "rhythm-guitar",
       "synth-lead",
       "riff-reactor",
       "the-rift",

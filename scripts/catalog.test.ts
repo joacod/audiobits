@@ -180,7 +180,13 @@ test("registry covers every canonical recipe and sound-only experience", async (
     for (const file of item.files) {
       const source = readFileSync(file.path, "utf8");
       // HTML/CSS/assets and browser demo entrypoints never belong to an install.
-      expect([base, "catalog/helpers"]).toContain(posix.dirname(file.path));
+      expect([
+        base,
+        "catalog/helpers",
+        ...registry.items
+          .filter((entry) => entry.meta.classification === "recipe")
+          .map((entry) => `catalog/recipes/${entry.name}`),
+      ]).toContain(posix.dirname(file.path));
       expect(
         file.path.endsWith(".ts") || file.path === `${base}/README.md`,
       ).toBe(true);

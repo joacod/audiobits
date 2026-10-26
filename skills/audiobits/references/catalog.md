@@ -43,6 +43,16 @@ Shared helpers live at `src/sounds/helpers/`: `instrument.ts`, `music.ts` and
 override their matching parameter values; other controls retain recipe typing.
 The native Voice and application-owned engine lifecycle remain unchanged.
 
+For a starter band palette, install `rock-drum-kit`, `picked-bass`,
+`electric-guitar-lead` or `rhythm-guitar` independently. Their guides contain
+installed-path integrations with activation, Stop and disposal. The kit exports
+kick, snare, closed/open hats and crash recipes; its workbench previews the kick.
+The lead is sustained with brightness and bend controls. Bass and rhythm guitar
+are fixed-envelope one-shots; play separate rhythm-guitar pitches for chords.
+These are procedural approximations, not samples or acoustic instrument models.
+Use `createInstrument` for pitched recipes and retain the native Voice for
+release. Song arrangements and game rules remain outside instrument recipes.
+
 Echo Probe's `createEchoProbe(audio)` takes bounded reflection data through
 `emit(reflections, { seed, strength })`. Each reflection supplies relative distance,
 stereo pan, intensity, and surface character. The controller schedules emission,
