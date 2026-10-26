@@ -91,7 +91,8 @@ These are [shadcn GitHub registry addresses](https://ui.shadcn.com/docs/registry
 The CLI resolves the repository's root `registry.json` and its declared files;
 there is no separate AudioBits registry server to configure. Each item declares
 `audiobits` in `dependencies`, so adding source also requests the npm runtime
-dependency. Review dependency changes if your project already has AudioBits;
+dependency. Current items share one compatible runtime line so adding another
+item cannot request an older line. Review dependency changes if your project already has AudioBits;
 compare the source requirements with your installed `audiobits/capabilities.json`.
 For runtime-only installation, use the [quick start](/docs#install-the-runtime).
 

@@ -36,7 +36,9 @@ Use top-level `view` for inspection. In an unconfigured project,
 `add --dry-run`, `--diff` and `--view` can request component setup; decline it
 and use top-level `view` instead.
 
-Review existing-file overwrite prompts and retain local edits. Keep owned source
+All current items request the same compatible runtime line. Adding another item
+therefore cannot request an older runtime line. Review dependency changes along
+with existing-file overwrite prompts and retain local edits. Keep owned source
 in version control; later installs are source updates to review. Once copied,
 builds and playback need only local source and `audiobits`.
 

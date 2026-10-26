@@ -377,19 +377,8 @@ try {
         join(installedDirectory, "package.json"),
         "utf8",
       );
-      if (!github) {
-        // A pending Changeset can require a release newer than the unbumped
-        // candidate. Pin only the temporary payload's runtime dependency to
-        // that candidate; installed source bytes and public ranges stay intact.
-        const payloadPath = join(registryOutput, `${item.name}.json`);
-        const payload = JSON.parse(await readFile(payloadPath, "utf8"));
-        payload.dependencies = payload.dependencies.map((dependency) =>
-          dependency.startsWith("audiobits@")
-            ? `audiobits@${packedManifest.version}`
-            : dependency,
-        );
-        await writeFile(payloadPath, JSON.stringify(payload));
-      }
+      // Keep the public dependency ranges unchanged. The loopback registry
+      // serves only the candidate, so incompatible ranges fail installation.
       const address = github
         ? `${new URL(registry.homepage).pathname.slice(1)}/${item.name}#${requestedRevision}`
         : join(registryOutput, `${item.name}.json`);
@@ -474,6 +463,7 @@ try {
         paths: "passed",
         bytes: "passed",
         dependencies: item.dependencies,
+        dependencyRanges: "unchanged",
         verifiedRuntimeVersion: packedManifest.version,
       });
 
@@ -584,6 +574,73 @@ try {
         example: "typechecked",
       });
     }
+    // Install the newest instrument first, then the older experiences into the
+    // same project. This catches dependency downgrades hidden by isolated installs.
+    const combinedDirectory = join(consumer, "combined-items");
+    await mkdir(combinedDirectory, { recursive: true });
+    await writeFile(
+      join(combinedDirectory, "package.json"),
+      JSON.stringify({
+        name: "consumer-combined",
+        private: true,
+        type: "module",
+      }),
+    );
+    const combinedItems = [
+      "synth-lead",
+      "riff-reactor",
+      "the-rift",
+      "echo-probe",
+    ];
+    for (const name of combinedItems) {
+      const address = github
+        ? `${new URL(registry.homepage).pathname.slice(1)}/${name}#${requestedRevision}`
+        : join(registryOutput, `${name}.json`);
+      await run(
+        shadcnCommand,
+        [
+          ...shadcnArgs,
+          "add",
+          address,
+          "--yes",
+          "--overwrite",
+          "--cwd",
+          combinedDirectory,
+        ],
+        combinedDirectory,
+        {
+          ...process.env,
+          npm_config_registry: packedRegistryUrl,
+          npm_config_cache: join(consumer, "cache"),
+          npm_config_ignore_scripts: "true",
+        },
+      );
+      const manifest = JSON.parse(
+        await readFile(join(combinedDirectory, "package.json"), "utf8"),
+      );
+      assert.deepEqual(manifest.dependencies, {
+        audiobits: `^${packedManifest.version}`,
+      });
+      const installed = JSON.parse(
+        await readFile(
+          join(combinedDirectory, "node_modules/audiobits/package.json"),
+          "utf8",
+        ),
+      );
+      assert.equal(
+        installed.version,
+        packedManifest.version,
+        `${name}: combined install changed the runtime`,
+      );
+    }
+    evidence.installation.combined = {
+      items: combinedItems,
+      dependencyRanges: "unchanged",
+      verifiedRuntimeVersion: packedManifest.version,
+    };
+    console.log(
+      "[Combined shadcn installation] Synth lead, Riff Reactor, The Rift and Echo Probe retained the candidate runtime with unchanged public ranges.",
+    );
     const documentation = [
       "catalog/README.md",
       ...registry.items.flatMap((item) =>
