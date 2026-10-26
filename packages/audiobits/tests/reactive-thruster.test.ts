@@ -32,11 +32,13 @@ it("keeps one serializable validated recipe with cohesive live pitch, gain and f
     type: "oscillator",
     waveform: "triangle",
     frequency: 38,
+    detune: 0,
   });
   expect(high.layers[0].layer.source).toEqual({
     type: "oscillator",
     waveform: "triangle",
     frequency: 160,
+    detune: 0,
   });
   expect(high.layers[2].layer.effects![1].frequency).toBe(5200);
   expect(low.layers[2].layer.effects![1].frequency).toBe(220);

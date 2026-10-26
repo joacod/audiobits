@@ -33,6 +33,7 @@ export type ResolvedLayer = Omit<Layer, "source" | "gainDb" | "effects"> & {
         readonly type: "oscillator";
         readonly waveform: OscillatorType;
         readonly frequency: ResolvedValue;
+        readonly detune: number;
       };
   readonly gainDb: number;
   readonly effects?: readonly ResolvedEffect[];
@@ -84,6 +85,12 @@ export function compile(recipe: Recipe, input: Controls = {}, seed = 0): Plan {
         ? {
             ...definition.source,
             frequency: resolve(definition.source.frequency),
+            detune: resolveValue(
+              definition.source.detune ?? 0,
+              recipe,
+              controls,
+              random,
+            ),
           }
         : definition.source;
     const noiseSeed =

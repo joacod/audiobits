@@ -1,7 +1,8 @@
 # Synth lead
 
 A sustained saw and triangle lead with an authored 50 ms pitch scoop and live
-filter brightness. Install with `npx shadcn@latest add joacod/audiobits/synth-lead`.
+filter brightness and independent pitch bend. Install with
+`npx shadcn@latest add joacod/audiobits/synth-lead`.
 The manifest includes this recipe, guide and `src/sounds/helpers/` sources;
 Riff Reactor's song and controller are not required. For no-emit TypeScript
 checks, use `moduleResolution: "Bundler"` and `allowImportingTsExtensions: true`
@@ -11,7 +12,8 @@ to accept the recipe's explicit `.ts` helper import.
 
 Place this exact example in `src/integration.ts`. Bind `play()` directly to an
 existing user gesture and handle its rejected promise. Bind `update()` to your
-brightness input, `release()` to note release, and `stop()` to cancellation.
+brightness and bend inputs, `release()` to note release, and `stop()` to
+cancellation.
 This integration owns a dedicated engine; the application suspends it on hide
 and calls `dispose()` on removal. Invalidate pending activation with Stop first.
 
@@ -34,7 +36,7 @@ export async function play() {
   voice = lead.play({
     note: "A4",
     velocity: 0.8,
-    parameters: { brightness: 0.5 },
+    parameters: { brightness: 0.5, bend: 0 },
     at,
     seed: 42,
   });
@@ -42,8 +44,8 @@ export async function play() {
   voice.stop({ at: at + 1 });
 }
 
-export function update(brightness: number) {
-  if (voice?.state === "active") voice.set({ brightness });
+export function update(brightness: number, bend = 0) {
+  if (voice?.state === "active") voice.set({ brightness, bend });
 }
 
 export function release() {
@@ -69,9 +71,11 @@ export async function dispose() {
 
 `createInstrument` returns the native Voice. `parameters` retains the supplied
 recipe's play controls; `voice.set()` accepts only its live controls. Brightness
-is in `0..1`; frequency is `110..880` Hz (A2 through A5). Frequency is a play
-control so the authored onset contour remains intact. Velocity is normalized
-`0..1`, and zero is a valid played level, never note-off.
+is in `0..1`; bend is `-200..200` cents (two semitones each way), with neutral
+zero and 40 ms smoothing. Both oscillator layers bend together while the authored
+frequency contour runs independently. Frequency is a play control in `110..880` Hz
+(A2 through A5). This requires the `oscillator-detune` capability; older runtimes
+reject the field. Velocity is normalized `0..1`, and zero is a valid played level, never note-off.
 
 The adapter uses the conventional `frequency` and `velocity` parameter names.
 Explicit `note` and `velocity` override `parameters.frequency` and

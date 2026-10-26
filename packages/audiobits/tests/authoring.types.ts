@@ -14,7 +14,12 @@ const authored = defineSound({
   layers: [
     {
       id: "body",
-      source: { type: "oscillator", waveform: "sine", frequency: 220 },
+      source: {
+        type: "oscillator",
+        waveform: "sine",
+        frequency: 220,
+        detune: { control: "throttle", range: [-200, 200], scale: "linear" },
+      },
       gainDb: -20,
       envelope: { attack: 0.01, decay: 0.02, sustain: 0.5, release: 0.1 },
     },

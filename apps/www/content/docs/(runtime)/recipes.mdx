@@ -56,6 +56,22 @@ recipe is separate from the simpler catalog `thruster`. See
 [catalog integration](/docs/catalog#integrate-into-your-application) for file
 layout, controller ownership, and adapting these experiences to your application.
 
+## Independent oscillator pitch offset
+
+An oscillator's optional `detune` accepts a number or a play/live mapping in cents
+(`-4800..4800`, default `0`). It has no automation or random-value form.
+The authored `frequency` curve stays intact while detune changes smoothly through
+`voice.set()`. Effective pitch is `frequency * 2 ** (detune / 1200)`.
+All combinations of declared frequency and detune extrema must stay in
+`20..20000` Hz and below the context's Nyquist limit, including overlapping ramps.
+The bounds are conservative even for mappings that share a control.
+Live controls inside frequency automation remain unsupported.
+
+Check the runtime's `oscillator-detune` capability and `recipe.oscillatorDetune`
+metadata. This additive schema-1 field is rejected by older runtimes. The
+[Synth lead workbench](/catalog/synth-lead) exposes a neutral-zero live bend of
+`-200..200` cents while retaining its authored 50 ms pitch scoop.
+
 ## Supported subset
 
 Schema version 1 supports one-shot gates up to 60 seconds or sustained playback

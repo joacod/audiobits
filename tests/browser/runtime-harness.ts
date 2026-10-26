@@ -1,3 +1,5 @@
+import { synthLead } from "../../catalog/recipes/synth-lead/recipe";
+import type { Recipe } from "../../packages/audiobits/src/index";
 import "./echo-probe-harness";
 import "./delay-harness";
 import * as bladeRecipes from "../../catalog/experiences/lightsaber/recipe";
@@ -278,7 +280,13 @@ async function lifecycle() {
 }
 // Property assignment keeps the test helper isolated from application globals.
 Object.assign(globalThis, {
-  audioChecks: { signal, stopSignal, scheduledReleaseSignal, lifecycle },
+  audioChecks: {
+    signal,
+    stopSignal,
+    scheduledReleaseSignal,
+    detuneSignal,
+    lifecycle,
+  },
 });
 
 async function blockedActivation() {
@@ -881,3 +889,140 @@ async function lightsaberSignal(
 Object.assign(globalThis, { lightsaberSignal });
 
 export { require };
+
+// Native sample comparison covers overlapping onset automation and bend ramps,
+// including retargeting before smoothing ends, with scheduled release and delay.
+async function detuneSignal() {
+  const difference = (a: Float32Array, b: Float32Array) =>
+    a.reduce((peak, sample, i) => Math.max(peak, Math.abs(sample - b[i])), 0);
+  const render = async (
+    recipe: Recipe,
+    mode: "neutral" | "live" | "reference",
+  ) => {
+    const context = new OfflineAudioContext(1, 48000, 48000);
+    const nativeCreate = context.createOscillator.bind(context);
+    const oscillators: OscillatorNode[] = [];
+    context.createOscillator = () => {
+      const oscillator = nativeCreate();
+      oscillators.push(oscillator);
+      return oscillator;
+    };
+    let finished = false;
+    const graph = createGraph(
+      context,
+      context.destination,
+      compile(recipe),
+      0.032,
+      -12,
+      0,
+      () => {
+        finished = true;
+      },
+    );
+    graph.stop(undefined, 0.5);
+    const updates: Promise<void>[] = [];
+    if (mode !== "neutral") {
+      let from = 0,
+        to = 0,
+        start = 0;
+      for (const [time, target] of [
+        [0.128, 200],
+        [0.144, -200],
+        [0.256, 0],
+      ]) {
+        updates.push(
+          context.suspend(time).then(() => {
+            const now = context.currentTime;
+            if (mode === "live") graph.set({ bend: target });
+            else {
+              const current =
+                from + (to - from) * Math.min(1, (now - start) / 0.04);
+              for (const oscillator of oscillators) {
+                oscillator.detune.cancelScheduledValues(now);
+                oscillator.detune.setValueAtTime(current, now);
+                oscillator.detune.linearRampToValueAtTime(target, now + 0.04);
+              }
+              from = current;
+              to = target;
+              start = now;
+            }
+            require(oscillators.length ===
+              recipe.layers.length, "Bend recreated a source");
+            return context.resume();
+          }),
+        );
+      }
+    }
+    const rendering = context.startRendering();
+    await Promise.all(updates);
+    const data = (await rendering).getChannelData(0);
+    await waitForCleanup(() => finished);
+    require(data.every(Number.isFinite), "Nonfinite bent signal");
+    require(data
+      .slice(40000)
+      .every((sample) => sample === 0), "Bend leaked release/tail");
+    return data;
+  };
+  const withoutDetune = (recipe: Recipe): Recipe => ({
+    ...recipe,
+    layers: recipe.layers.map((layer) => {
+      if (layer.source.type !== "oscillator") return layer;
+      const source = { ...layer.source };
+      delete source.detune;
+      return { ...layer, source };
+    }),
+  });
+  const absent = await render(withoutDetune(synthLead), "neutral");
+  const neutral = await render(synthLead, "neutral");
+  const recipe: Recipe = {
+    schemaVersion: 1,
+    kind: "sustained",
+    parameters: { bend: synthLead.parameters.bend },
+    layers: [
+      {
+        id: "tone",
+        gainDb: -12,
+        source: {
+          type: "oscillator",
+          waveform: "sine",
+          frequency: {
+            points: [
+              [0, 220],
+              [0.3, 440],
+            ],
+            curve: "exponential",
+          },
+          detune: { control: "bend", range: [-200, 200], scale: "linear" },
+        },
+        envelope: { attack: 0.008, decay: 0, sustain: 1, release: 0.1 },
+      },
+    ],
+    effects: [{ type: "delay", time: 0.07, feedback: 0, mix: 0.5 }],
+  };
+  const reference = await render(withoutDetune(recipe), "reference");
+  const live = await render(recipe, "live");
+  const unbent = await render(recipe, "neutral");
+  const hold = AudioParam.prototype.cancelAndHoldAtTime;
+  let fallback: Float32Array;
+  try {
+    Object.defineProperty(AudioParam.prototype, "cancelAndHoldAtTime", {
+      configurable: true,
+      value: undefined,
+    });
+    fallback = await render(recipe, "live");
+  } finally {
+    Object.defineProperty(AudioParam.prototype, "cancelAndHoldAtTime", {
+      configurable: true,
+      value: hold,
+    });
+  }
+  return {
+    neutralDifference: difference(absent, neutral),
+    nativeDifference: difference(reference, live),
+    fallbackDifference: difference(reference, fallback),
+    audibleDifference: difference(unbent, live),
+    tailEnergy: live
+      .slice(28800, 31680)
+      .reduce((sum, sample) => sum + sample * sample, 0),
+  };
+}

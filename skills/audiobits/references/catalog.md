@@ -35,7 +35,8 @@ a README with a tested `src/integration.ts` example.
 
 For standalone pitched authoring, install `synth-lead`. Its installed README
 uses `./sounds/helpers/instrument` and `./sounds/recipes/synth-lead/recipe`
-from `src/integration.ts`, with typed brightness updates and scheduled release.
+from `src/integration.ts`, with typed brightness and bend updates and scheduled release. Bend is a live
+`-200..200` cent offset with neutral zero; check for `oscillator-detune` support.
 Shared helpers live at `src/sounds/helpers/`: `instrument.ts`, `music.ts` and
 `mapping.ts`. No Riff song/controller is required. Explicit note/velocity aliases
 override their matching parameter values; other controls retain recipe typing.

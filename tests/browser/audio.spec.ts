@@ -18,6 +18,13 @@ interface Checks {
     delta: number;
   }>;
   scheduledReleaseSignal(fallback: boolean): Promise<number[]>;
+  detuneSignal(): Promise<{
+    neutralDifference: number;
+    nativeDifference: number;
+    fallbackDifference: number;
+    audibleDifference: number;
+    tailEnergy: number;
+  }>;
   lifecycle(): Promise<unknown>;
 }
 
@@ -181,4 +188,27 @@ test("actual Chromium autoplay block times out and retries from a gesture", asyn
   } finally {
     await browser.close();
   }
+});
+
+// Missing native contract: a live offset must not cancel an authored pitch ramp.
+test("independent detune preserves contours, neutral sound, smooth retargeting and scheduled tails", async ({
+  page,
+}) => {
+  await page.goto("http://127.0.0.1:4173");
+  await requireOfflineCheckpoints(page);
+  await page.addScriptTag({
+    path: resolve(
+      "node_modules/.cache/audiobits-audio-tests/audio-harness.iife.js",
+    ),
+  });
+  const result = await page.evaluate(() =>
+    (
+      globalThis as unknown as { audioChecks: Checks }
+    ).audioChecks.detuneSignal(),
+  );
+  expect(result.neutralDifference).toBe(0);
+  expect(result.nativeDifference).toBeLessThan(1e-6);
+  expect(result.fallbackDifference).toBeLessThan(1e-6);
+  expect(result.audibleDifference).toBeGreaterThan(0.01);
+  expect(result.tailEnergy).toBeGreaterThan(0.001);
 });

@@ -1,5 +1,5 @@
 import { holdLinear } from "../runtime/automation";
-import { AudioBitsError } from "../recipe/validate";
+import { AudioBitsError, oscillatorFrequencyBounds } from "../recipe/validate";
 import type { Value, Mapping, Effect } from "../recipe/generated";
 import { mapControl, noiseData, checkNoiseRate } from "./values";
 import type { Controls } from "./values";
@@ -41,7 +41,7 @@ export function checkNyquist(plan: Plan, sampleRate: number): void {
   }
   for (const { definition } of plan.layers) {
     if (definition.source.type === "oscillator")
-      extrema(definition.source.frequency);
+      frequencies.push(...oscillatorFrequencyBounds(definition.source));
     else checkNoiseRate(sampleRate);
     definition.effects?.forEach(
       (effect) => effect.type === "filter" && extrema(effect.frequency),
@@ -245,6 +245,13 @@ export function createGraph(
           planned.definition.source.type === "oscillator"
             ? planned.definition.source.frequency
             : 440,
+        );
+        schedule(
+          oscillator.detune,
+          layer.source.detune,
+          planned.definition.source.type === "oscillator"
+            ? (planned.definition.source.detune ?? 0)
+            : 0,
         );
         source = oscillator;
       } else {

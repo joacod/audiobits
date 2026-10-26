@@ -13,6 +13,7 @@ export type Value =
       readonly curve: "linear" | "exponential";
     };
 export type Frequency = Value;
+export type Detune = number | Mapping;
 export type Parameter =
   | {
       readonly min: number;
@@ -55,6 +56,7 @@ export type Source =
       readonly type: "oscillator";
       readonly waveform: "sine" | "triangle" | "sawtooth" | "square";
       readonly frequency: Frequency;
+      readonly detune?: Detune;
     }
   | { readonly type: "noise"; readonly color: "white" };
 export type Layer = {
@@ -159,6 +161,12 @@ export const recipeSchema: Readonly<Record<string, unknown>> = {
       ],
     },
     Frequency: { $ref: "#/$defs/Value" },
+    Detune: {
+      anyOf: [
+        { type: "number", minimum: -4800, maximum: 4800 },
+        { $ref: "#/$defs/Mapping" },
+      ],
+    },
     Parameter: {
       anyOf: [
         {
@@ -255,6 +263,7 @@ export const recipeSchema: Readonly<Record<string, unknown>> = {
             type: { const: "oscillator" },
             waveform: { enum: ["sine", "triangle", "sawtooth", "square"] },
             frequency: { $ref: "#/$defs/Frequency" },
+            detune: { $ref: "#/$defs/Detune" },
           },
           required: ["type", "waveform", "frequency"],
           additionalProperties: false,

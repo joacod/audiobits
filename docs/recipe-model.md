@@ -69,7 +69,14 @@ onset sequence of at most 60 seconds, then holds its final value.
 Frequency values are Hz, gain values dB, time seconds, and pan `[-1, 1]`.
 Frequency targets obey the generated bounds; context-dependent checks reject
 values at or above Nyquist before allocating a voice. Playback gain/pan are numeric
-options; transposition is not supported.
+options. Oscillator `detune` is an independent cents offset, defaulting to zero.
+It accepts a number or bounded play/live mapping in `-4800..4800`, without
+automation or seeded variation. Effective frequency is `frequency * 2 ** (detune / 1200)`.
+All combinations of frequency and detune extrema must stay in `20..20000` Hz
+and below context Nyquist. This conservative bound includes overlapping live ramps,
+even when mappings share a control. Existing frequency target bounds still apply.
+The additive schema-1 field requires the `oscillator-detune` capability; older
+runtimes reject it.
 
 Parameter declarations carry `min`, `max`, `default`, and `mode` (`play` or
 `live`). Live declarations also carry bounded `smoothing` seconds.
@@ -77,7 +84,8 @@ References must exist; supplied parameter names and values must be valid.
 Out-of-range values are rejected, not silently clamped. A mapping inside an
 automation point may reference only a `play` parameter, preventing ambiguity
 about retiming an existing envelope. Live mappings may drive direct source
-frequency, layer gain, or filter frequency. Envelopes remain fixed per recipe.
+frequency, oscillator detune, layer gain, or filter frequency. Detune preserves
+authored frequency automation and uses the existing live smoothing in cents. Envelopes remain fixed per recipe.
 
 `voice.set()` applies a validated parameter update atomically using its declared
 smoothing; invalid or play-only updates change nothing. Retarget a ramp from

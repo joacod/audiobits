@@ -1,5 +1,5 @@
 import { recipeSchema } from "./generated";
-import type { Recipe, Value, PointValue } from "./generated";
+import type { Recipe, Value, PointValue, Source } from "./generated";
 
 export interface RecipeIssue {
   readonly code: string;
@@ -321,13 +321,27 @@ export function validateRecipe(input: unknown): ValidationResult {
         `${path}["envelope"]`,
         "Effective attack plus decay exceeds gate duration.",
       );
-    if (layer.source.type === "oscillator")
+    if (layer.source.type === "oscillator") {
       value(
         layer.source.frequency,
         20,
         20000,
         `${path}["source"]["frequency"]`,
       );
+      point(
+        layer.source.detune ?? 0,
+        -4800,
+        4800,
+        `${path}["source"]["detune"]`,
+      );
+      const [low, high] = oscillatorFrequencyBounds(layer.source);
+      if (low < 20 || high > 20000)
+        add(
+          "range",
+          `${path}["source"]`,
+          "Every frequency/detune combination must produce 20..20000 Hz.",
+        );
+    }
     value(layer.gainDb, -60, 0, `${path}["gainDb"]`);
     filters(layer.effects, `${path}["effects"]`);
   });
@@ -387,4 +401,24 @@ export function defineSound(input: unknown): Recipe {
       result.issues,
     );
   return result.recipe;
+}
+
+// Conservative independent extrema also bound overlapping live smoothing ramps.
+function valueBounds(value: Value): readonly [number, number] {
+  const values =
+    typeof value === "number"
+      ? [value]
+      : "points" in value
+        ? value.points.flatMap(([, point]) => [...valueBounds(point)])
+        : "range" in value
+          ? value.range
+          : value.random;
+  return [Math.min(...values), Math.max(...values)];
+}
+export function oscillatorFrequencyBounds(
+  source: Extract<Source, { type: "oscillator" }>,
+): readonly [number, number] {
+  const [low, high] = valueBounds(source.frequency);
+  const [down, up] = valueBounds(source.detune ?? 0);
+  return [low * 2 ** (down / 1200), high * 2 ** (up / 1200)];
 }

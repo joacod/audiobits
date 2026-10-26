@@ -4,6 +4,7 @@ export type {
   Recipe,
   Layer,
   Frequency,
+  Detune,
   Filter,
   Delay,
   Effect,

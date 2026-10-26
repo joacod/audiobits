@@ -71,6 +71,12 @@
       ]
     },
     "Frequency": { "$ref": "#/$defs/Value" },
+    "Detune": {
+      "anyOf": [
+        { "type": "number", "minimum": -4800, "maximum": 4800 },
+        { "$ref": "#/$defs/Mapping" }
+      ]
+    },
     "Parameter": {
       "anyOf": [
         {
@@ -176,7 +182,8 @@
           "properties": {
             "type": { "const": "oscillator" },
             "waveform": { "enum": ["sine", "triangle", "sawtooth", "square"] },
-            "frequency": { "$ref": "#/$defs/Frequency" }
+            "frequency": { "$ref": "#/$defs/Frequency" },
+            "detune": { "$ref": "#/$defs/Detune" }
           },
           "required": ["type", "waveform", "frequency"],
           "additionalProperties": false
