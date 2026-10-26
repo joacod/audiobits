@@ -1627,6 +1627,16 @@ Object.assign(globalThis, { probe });`,
           .toEqual({ active: 0, retiring: 0 });
       }
       if (example.file === "synth-lead") {
+        for (const bend of [200, -200, 0]) {
+          await page.evaluate(
+            (bend) => globalThis.probe.update(0.6, bend),
+            bend,
+          );
+          assert.deepEqual(await page.evaluate(() => globalThis.probe.counts), {
+            active: 1,
+            retiring: 0,
+          });
+        }
         await expect
           .poll(() => page.evaluate(() => globalThis.probe.counts))
           .toEqual({ active: 0, retiring: 0 });

@@ -144,3 +144,71 @@ it("generates reproducible bounded seam-treated noise at both core sample rates"
   for (const rate of [7999, 192001, Infinity])
     expect(() => noiseData(rate, 1)).toThrow(/Noise/);
 });
+
+it("bounds independent detune across the entire contour and declared control ranges", () => {
+  const recipe = clone(thruster);
+  recipe.layers = [recipe.layers[0]];
+  recipe.layers[0].source.frequency = {
+    points: [
+      [0, 1000],
+      [0.2, { random: [2000, 8000] }],
+    ],
+    curve: "exponential",
+  };
+  recipe.layers[0].source.detune = {
+    control: "throttle",
+    range: [-1200, 1200],
+    scale: "linear",
+  };
+  expect(validateRecipe(recipe).ok).toBe(true);
+  const plan = compile(defineSound(recipe), { throttle: 0 });
+  expect(() => checkNyquist(plan, 32000)).toThrow(/Nyquist/);
+  expect(() => checkNyquist(plan, 44100)).not.toThrow();
+  for (const detune of [
+    4801,
+    -4801,
+    NaN,
+    { random: [0, 100] },
+    { points: [[0, 0]], curve: "linear" },
+    { control: "missing", range: [0, 100], scale: "linear" },
+    { control: "throttle", range: [-200, 200], scale: "exponential" },
+    { control: "throttle", range: [0, 4801], scale: "linear" },
+    2400,
+  ]) {
+    expect(
+      validateRecipe({
+        ...recipe,
+        layers: [
+          {
+            ...recipe.layers[0],
+            source: { ...recipe.layers[0].source, detune },
+          },
+        ],
+      }).ok,
+    ).toBe(false);
+  }
+  recipe.layers[0].source.frequency.points[0][1] = 30;
+  expect(validateRecipe(recipe).ok).toBe(false);
+  recipe.layers[0].source.frequency.points[0][1] = {
+    control: "throttle",
+    range: [1000, 2000],
+    scale: "linear",
+  };
+  const result = validateRecipe(recipe);
+  expect(result.ok).toBe(false);
+  if (!result.ok)
+    expect(result.issues.some((issue) => issue.code === "mode")).toBe(true);
+});
+
+it("absent and zero detune preserve resolved values and seeded traversal", () => {
+  const original = compile(impact, { intensity: 0.5 }, 42);
+  const data = clone(impact);
+  for (const layer of data.layers)
+    if (layer.source.type === "oscillator") layer.source.detune = 0;
+  const neutral = compile(defineSound(data), { intensity: 0.5 }, 42);
+  expect(
+    neutral.layers.map(({ layer, noiseSeed }) => ({ layer, noiseSeed })),
+  ).toEqual(
+    original.layers.map(({ layer, noiseSeed }) => ({ layer, noiseSeed })),
+  );
+});

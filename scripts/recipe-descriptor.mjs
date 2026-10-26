@@ -58,6 +58,7 @@ export const descriptor = {
       ],
     },
     Frequency: ref("Value"),
+    Detune: { anyOf: [number(-4800, 4800), ref("Mapping")] },
     Parameter: {
       anyOf: [
         object({
@@ -110,11 +111,15 @@ export const descriptor = {
     Effect: { anyOf: [ref("Filter"), ref("Delay")] },
     Source: {
       anyOf: [
-        object({
-          type: { const: "oscillator" },
-          waveform: { enum: ["sine", "triangle", "sawtooth", "square"] },
-          frequency: ref("Frequency"),
-        }),
+        object(
+          {
+            type: { const: "oscillator" },
+            waveform: { enum: ["sine", "triangle", "sawtooth", "square"] },
+            frequency: ref("Frequency"),
+            detune: ref("Detune"),
+          },
+          ["type", "waveform", "frequency"],
+        ),
         object({ type: { const: "noise" }, color: { const: "white" } }),
       ],
     },

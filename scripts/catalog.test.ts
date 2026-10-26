@@ -76,11 +76,13 @@ test("registry covers every canonical recipe and sound-only experience", async (
   );
   for (const item of registry.items) {
     expect(item.dependencies).toEqual(
-      ["the-rift", "riff-reactor", "synth-lead"].includes(item.name)
-        ? ["audiobits@^0.4.0"]
-        : delayExperiences.includes(item.name)
-          ? ["audiobits@^0.3.0"]
-          : ["audiobits"],
+      item.name === "synth-lead"
+        ? ["audiobits@^0.5.0"]
+        : ["the-rift", "riff-reactor"].includes(item.name)
+          ? ["audiobits@^0.4.0"]
+          : delayExperiences.includes(item.name)
+            ? ["audiobits@^0.3.0"]
+            : ["audiobits"],
     );
     expect(item.title.length).toBeGreaterThan(0);
     expect(item.description.length).toBeGreaterThan(0);
@@ -242,8 +244,8 @@ import { createAudio, type Voice } from "audiobits";
 import { createInstrument } from "./sounds/helpers/instrument";
 import { synthLead } from "./sounds/recipes/synth-lead/recipe";
 const lead = createInstrument(createAudio(), synthLead);
-const voice: Voice<typeof synthLead> = lead.play({ note: "A4", parameters: { brightness: 0.7 } });
-voice.set({ brightness: 0.3 });
+const voice: Voice<typeof synthLead> = lead.play({ note: "A4", parameters: { brightness: 0.7, bend: 0 } });
+voice.set({ brightness: 0.3, bend: 200 });
 // @ts-expect-error Unknown play control must not be widened to Record<string, number>.
 lead.play({ parameters: { typo: 1 } });
 // @ts-expect-error Frequency is an onset-only control on this recipe.

@@ -33,10 +33,11 @@ export async function dispose() {
 
 Omitted controls use defaults. Up to 16 parameters declare `min`, `max`,
 `default`, and `mode`. Live declarations include smoothing of 0.005–1 seconds.
-Mappings target source frequency, filter frequency, or layer gain, with linear
+Mappings target source frequency, oscillator detune, filter frequency, or layer gain, with linear
 or exponential control-to-target conversion. Live targets ramp linearly from
 their current value over smoothing time. Layer gain ramps in linear amplitude;
-the envelope remains independent. Automation points use play-only controls.
+the envelope remains independent. Oscillator detune ramps in cents while its
+authored frequency contour continues independently. Automation points use play-only controls.
 Exponential mappings require positive endpoints; mapping ranges may descend,
 while random ranges must be ordered. Variation is sampled once per property per
 voice, rather than continuously.

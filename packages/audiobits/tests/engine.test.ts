@@ -1,3 +1,4 @@
+import { synthLead } from "../../../catalog/recipes/synth-lead/recipe";
 import { expect, it, vi } from "vitest";
 import { createAudio, createEngine } from "../src/runtime/engine";
 import { confirmation } from "../../../catalog/recipes/confirmation/recipe";
@@ -26,6 +27,7 @@ class Param {
 class Node {
   gain = new Param();
   frequency = new Param();
+  detune = new Param();
   Q = new Param();
   pan = new Param();
   delayTime = new Param();
@@ -938,4 +940,81 @@ it("pending release retains tails and is overridden by cuts, stealing and explic
     expect(voice.state).toBe("ended");
     await audio.dispose();
   }
+});
+
+it("bends the existing instrument voice without rewriting its contour or partially applying invalid updates", async () => {
+  const { audio, context, nodes, sources } = setup();
+  await audio.start();
+  const sound = audio.sound(synthLead);
+  const voice = sound.play({ at: 2 });
+  const count = nodes.length;
+  const contour = sources.map((source) => [...source.frequency.calls]);
+  expect(contour[0]).toEqual([
+    ["set", 429, 2],
+    ["exponential", 440, 2.05],
+  ]);
+  voice.stop({ at: 3 });
+  voice.set({ bend: 200, brightness: 0.7 });
+  expect(sources[0].detune.calls.at(-1)).toEqual(["linear", 200, 2.04]);
+  context.currentTime = 2.02;
+  // Exercise the existing ramp fallback at its midpoint as well as native hold.
+  sources[0].detune.cancelAndHoldAtTime = undefined as never;
+  voice.set({ bend: -200 });
+  expect(sources[0].detune.calls.at(-2)![1]).toBeCloseTo(100);
+  expect(sources[0].detune.calls.at(-1)).toEqual(["linear", -200, 2.06]);
+  const calls = nodes.map((node) =>
+    JSON.stringify([node.frequency.calls, node.detune.calls, node.gain.calls]),
+  );
+  for (const bend of [201, -201, NaN, Infinity])
+    expect(() => voice.set({ brightness: 0.2, bend })).toThrow(/control/);
+  expect(voice.parameters.bend).toBe(-200);
+  expect(
+    nodes.map((node) =>
+      JSON.stringify([
+        node.frequency.calls,
+        node.detune.calls,
+        node.gain.calls,
+      ]),
+    ),
+  ).toEqual(calls);
+  expect(sources.map((source) => source.frequency.calls)).toEqual(contour);
+  expect(nodes).toHaveLength(count);
+  expect(audio.counts).toEqual({ active: 1, retiring: 0 });
+  expect(() => sound.play({ parameters: { bend: 201 } })).toThrow(/control/);
+  expect(nodes).toHaveLength(count);
+  context.currentTime = 3;
+  expect(() => voice.set({ bend: 0 })).toThrow(/no longer active/);
+  await audio.dispose();
+  await voice.ended;
+  expect(audio.counts).toEqual({ active: 0, retiring: 0 });
+  expect(nodes.every((node) => node.disconnect.mock.calls.length > 0)).toBe(
+    true,
+  );
+});
+
+it("rejects combined Nyquist extrema before allocating or stealing a voice", async () => {
+  const { audio, context, nodes } = setup({ maxVoices: 1 });
+  await audio.start();
+  context.sampleRate = 32000;
+  const voice = audio.sound(confirmation).play();
+  const count = nodes.length;
+  const sound = audio.sound({
+    ...synthLead,
+    effects: [],
+    layers: [
+      {
+        ...synthLead.layers[0],
+        source: {
+          type: "oscillator",
+          waveform: "sine",
+          frequency: 8000,
+          detune: { control: "bend", range: [0, 1200], scale: "linear" },
+        },
+      },
+    ],
+  });
+  expect(() => sound.play({ parameters: { bend: -200 } })).toThrow(/Nyquist/);
+  expect(nodes).toHaveLength(count);
+  expect(voice.state).toBe("active");
+  await audio.dispose();
 });

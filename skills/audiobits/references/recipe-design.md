@@ -48,6 +48,15 @@ expressiveness, performance or authoring simplicity, even when composition
 technically works. Avoid speculative expansion. Do not silently patch the runtime
 or introduce custom DSP; propose that work separately when outside the request.
 
+For an authored frequency contour plus independent live pitch control, check for
+`oscillator-detune` in the installed runtime capabilities. Oscillator `detune`
+accepts a number or play/live mapping in cents, defaults to zero, and uses the
+existing smoothing. It does not accept automation or random variation. Use a
+linear mapping for a signed bend such as `[-200, 200]`. Frequency automation
+still permits only play controls. Validate combined frequency/detune extrema,
+including the context Nyquist limit; do not replace or rewrite the onset curve.
+The Synth lead installed example demonstrates this through an ordinary Voice.
+
 ## Construct and validate
 
 - `one-shot` has a finite `duration`; `sustained` runs until stopped and has no

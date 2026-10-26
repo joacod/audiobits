@@ -332,15 +332,22 @@
       "name": "synth-lead",
       "type": "registry:item",
       "title": "Synth lead",
-      "description": "A sustained pitched lead with a gentle onset scoop and live brightness.",
-      "dependencies": ["audiobits@^0.4.0"],
+      "description": "A sustained pitched lead with an authored onset scoop, independent live bend and brightness.",
+      "dependencies": ["audiobits@^0.5.0"],
       "categories": ["recipe", "sustained"],
       "meta": {
         "classification": "recipe",
-        "tags": ["instrument", "lead", "music", "sustained", "brightness"],
+        "tags": [
+          "instrument",
+          "lead",
+          "music",
+          "sustained",
+          "brightness",
+          "bend"
+        ],
         "schemaVersion": 1,
         "compatibility": {
-          "runtime": "audiobits with scheduled release",
+          "runtime": "audiobits with scheduled release and oscillator-detune",
           "language": "TypeScript",
           "moduleResolution": "Bundler",
           "browser": "Web Audio; automated verification in Chromium",
@@ -355,6 +362,7 @@
             "gesture-start",
             "live-controls",
             "scheduled-release",
+            "oscillator-detune",
             "seeded-replay",
             "dispose"
           ],

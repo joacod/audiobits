@@ -39,6 +39,14 @@ const capabilities = {
     ),
     sources: definitions.Source.anyOf.map((node) => node.properties.type.const),
     waveforms: definitions.Source.anyOf[0].properties.waveform.enum,
+    oscillatorDetune: {
+      unit: "cents",
+      min: definitions.Detune.anyOf[0].minimum,
+      max: definitions.Detune.anyOf[0].maximum,
+      default: 0,
+      values: ["number", "play-mapping", "live-mapping"],
+      effectiveFrequency: { min: 20, max: 20000, belowNyquist: true },
+    },
     noiseColors: [definitions.Source.anyOf[1].properties.color.const],
     filters: definitions.Filter.properties.filter.enum,
     effects: definitions.Effect.anyOf.map(
@@ -76,6 +84,7 @@ const capabilities = {
     "gesture-start",
     "bounded-voices",
     "live-controls",
+    "oscillator-detune",
     "scheduled-release",
     "seeded-replay",
     "buses",

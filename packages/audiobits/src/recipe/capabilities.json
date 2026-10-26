@@ -6,6 +6,14 @@
     "kinds": ["one-shot", "sustained"],
     "sources": ["oscillator", "noise"],
     "waveforms": ["sine", "triangle", "sawtooth", "square"],
+    "oscillatorDetune": {
+      "unit": "cents",
+      "min": -4800,
+      "max": 4800,
+      "default": 0,
+      "values": ["number", "play-mapping", "live-mapping"],
+      "effectiveFrequency": { "min": 20, "max": 20000, "belowNyquist": true }
+    },
     "noiseColors": ["white"],
     "filters": ["lowpass", "highpass", "bandpass"],
     "effects": ["filter", "delay"],
@@ -27,6 +35,7 @@
     "gesture-start",
     "bounded-voices",
     "live-controls",
+    "oscillator-detune",
     "scheduled-release",
     "seeded-replay",
     "buses",
