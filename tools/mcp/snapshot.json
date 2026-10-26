@@ -1,13 +1,13 @@
 {
   "repository": "https://github.com/joacod/audiobits",
-  "revision": "48eff3c5e1c9fb42a7448ca322273ac4f59f964c",
+  "revision": "547ac375199f8441a1e3605adde222f2e1e31a8d",
   "items": [
     {
       "name": "confirmation",
       "type": "registry:item",
       "title": "Confirmation",
       "description": "A soft upward chime for a completed action.",
-      "dependencies": ["audiobits"],
+      "dependencies": ["audiobits@^0.5.0"],
       "categories": ["recipe", "one-shot"],
       "meta": {
         "classification": "recipe",
@@ -42,14 +42,14 @@
           "sha256": "c5beb8e75c60d9096c51af98d608d538c5503c68a8e88de7db2af97128a80bc1"
         }
       ],
-      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/48eff3c5e1c9fb42a7448ca322273ac4f59f964c/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/547ac375199f8441a1e3605adde222f2e1e31a8d/catalog/README.md for integration and update guidance."
     },
     {
       "name": "echo-probe",
       "type": "registry:item",
       "title": "Echo Probe",
       "description": "Send a sculpted pulse into the field. Hear it return through resonant surfaces and scattered late reflections.",
-      "dependencies": ["audiobits@^0.3.0"],
+      "dependencies": ["audiobits@^0.5.0"],
       "categories": ["experience"],
       "meta": {
         "classification": "experience",
@@ -112,14 +112,14 @@
           "sha256": "b6b9cc6943797a4cc173c5ffeddc08c1041af85b693fcf9bb2e26ec89d3489e5"
         }
       ],
-      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/48eff3c5e1c9fb42a7448ca322273ac4f59f964c/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/547ac375199f8441a1e3605adde222f2e1e31a8d/catalog/README.md for integration and update guidance."
     },
     {
       "name": "energy-charge",
       "type": "registry:item",
       "title": "Energy charge",
       "description": "Hold to build energy. Shape the sound with progress.",
-      "dependencies": ["audiobits"],
+      "dependencies": ["audiobits@^0.5.0"],
       "categories": ["experience"],
       "meta": {
         "classification": "experience",
@@ -175,14 +175,14 @@
           "sha256": "201bd9a384a12b2d7aae89080adfc088b526650ed65acf157afb64718052b241"
         }
       ],
-      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/48eff3c5e1c9fb42a7448ca322273ac4f59f964c/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/547ac375199f8441a1e3605adde222f2e1e31a8d/catalog/README.md for integration and update guidance."
     },
     {
       "name": "gentle-rejection",
       "type": "registry:item",
       "title": "Gentle rejection",
       "description": "Two soft descending tones for an unavailable action.",
-      "dependencies": ["audiobits"],
+      "dependencies": ["audiobits@^0.5.0"],
       "categories": ["recipe", "one-shot"],
       "meta": {
         "classification": "recipe",
@@ -217,14 +217,14 @@
           "sha256": "f939d15effe7d65e5b41ed95b67ecd60ab6b6a3f7593573d5d940ad332565637"
         }
       ],
-      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/48eff3c5e1c9fb42a7448ca322273ac4f59f964c/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/547ac375199f8441a1e3605adde222f2e1e31a8d/catalog/README.md for integration and update guidance."
     },
     {
       "name": "glass-notification",
       "type": "registry:item",
       "title": "Glass notification",
       "description": "Four delicate partials with independent decays and a bright glass rim.",
-      "dependencies": ["audiobits"],
+      "dependencies": ["audiobits@^0.5.0"],
       "categories": ["recipe", "one-shot"],
       "meta": {
         "classification": "recipe",
@@ -259,14 +259,14 @@
           "sha256": "932b43c2d6bbd659a866a828166c033589222cfd7d5b27610769543aeea04412"
         }
       ],
-      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/48eff3c5e1c9fb42a7448ca322273ac4f59f964c/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/547ac375199f8441a1e3605adde222f2e1e31a8d/catalog/README.md for integration and update guidance."
     },
     {
       "name": "impact",
       "type": "registry:item",
       "title": "Impact",
       "description": "A descending body and filtered noise transient. Intensity changes pitch, brightness, and level.",
-      "dependencies": ["audiobits"],
+      "dependencies": ["audiobits@^0.5.0"],
       "categories": ["recipe", "one-shot"],
       "meta": {
         "classification": "recipe",
@@ -301,14 +301,14 @@
           "sha256": "ea7aa0c269286becd7dc0414263d2d3af08106de80269b6dc71a6e1bf6b36f1b"
         }
       ],
-      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/48eff3c5e1c9fb42a7448ca322273ac4f59f964c/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/547ac375199f8441a1e3605adde222f2e1e31a8d/catalog/README.md for integration and update guidance."
     },
     {
       "name": "lightsaber",
       "type": "registry:item",
       "title": "Lightsaber",
       "description": "Ignite a living electrical blade. Swing through the field. Strike, spark, retract.",
-      "dependencies": ["audiobits"],
+      "dependencies": ["audiobits@^0.5.0"],
       "categories": ["experience"],
       "meta": {
         "classification": "experience",
@@ -364,14 +364,14 @@
           "sha256": "a17fe29dadc24b0cb649373dc48f4e6fd5f3b521908d091db5f3f87ac468baed"
         }
       ],
-      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/48eff3c5e1c9fb42a7448ca322273ac4f59f964c/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/547ac375199f8441a1e3605adde222f2e1e31a8d/catalog/README.md for integration and update guidance."
     },
     {
       "name": "power-up",
       "type": "registry:item",
       "title": "Power-up",
       "description": "A rising triangle and sine halo that gather energy together.",
-      "dependencies": ["audiobits"],
+      "dependencies": ["audiobits@^0.5.0"],
       "categories": ["recipe", "one-shot"],
       "meta": {
         "classification": "recipe",
@@ -406,14 +406,14 @@
           "sha256": "03c025d4b143d7b7ce1c58266b8b1048b4f186e6b60457fcccf0fbf8bb6ed8cb"
         }
       ],
-      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/48eff3c5e1c9fb42a7448ca322273ac4f59f964c/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/547ac375199f8441a1e3605adde222f2e1e31a8d/catalog/README.md for integration and update guidance."
     },
     {
       "name": "reactive-thruster",
       "type": "registry:item",
       "title": "Reactive thruster",
       "description": "Move to shape a living sound. Release to coast.",
-      "dependencies": ["audiobits"],
+      "dependencies": ["audiobits@^0.5.0"],
       "categories": ["experience"],
       "meta": {
         "classification": "experience",
@@ -469,14 +469,14 @@
           "sha256": "44576ecd2ad32f5591a350070293414f10c4db49e0af11b293e5bca642108512"
         }
       ],
-      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/48eff3c5e1c9fb42a7448ca322273ac4f59f964c/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/547ac375199f8441a1e3605adde222f2e1e31a8d/catalog/README.md for integration and update guidance."
     },
     {
       "name": "riff-reactor",
       "type": "registry:item",
       "title": "Riff Reactor",
       "description": "Perform the lead of an original synth-rock track. Every hit plays; streaks make the band hit harder.",
-      "dependencies": ["audiobits@^0.4.0"],
+      "dependencies": ["audiobits@^0.5.0"],
       "categories": ["experience"],
       "meta": {
         "classification": "experience",
@@ -582,7 +582,7 @@
           "sha256": "2c0b54c5617060b8f0cb0abe14c07184345acc56e0fdd83bf4d33bf560af3000"
         }
       ],
-      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/48eff3c5e1c9fb42a7448ca322273ac4f59f964c/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/547ac375199f8441a1e3605adde222f2e1e31a8d/catalog/README.md for integration and update guidance."
     },
     {
       "name": "synth-lead",
@@ -666,14 +666,14 @@
           "sha256": "5a50938fd051d8f5481b7c1d1dedcace951ff5f51df63cda2b40773471f03d83"
         }
       ],
-      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/48eff3c5e1c9fb42a7448ca322273ac4f59f964c/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/547ac375199f8441a1e3605adde222f2e1e31a8d/catalog/README.md for integration and update guidance."
     },
     {
       "name": "tactile-click",
       "type": "registry:item",
       "title": "Tactile click",
       "description": "A tiny rounded contact with a restrained noise texture.",
-      "dependencies": ["audiobits"],
+      "dependencies": ["audiobits@^0.5.0"],
       "categories": ["recipe", "one-shot"],
       "meta": {
         "classification": "recipe",
@@ -708,14 +708,14 @@
           "sha256": "edd22c158c223e275e5d7d11edc22a0748823bc5ddb6f97b7f511653ee607479"
         }
       ],
-      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/48eff3c5e1c9fb42a7448ca322273ac4f59f964c/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/547ac375199f8441a1e3605adde222f2e1e31a8d/catalog/README.md for integration and update guidance."
     },
     {
       "name": "the-rift",
       "type": "registry:item",
       "title": "The Rift",
       "description": "Tear open a living fracture. Stretch, destabilize and seal it into a collapsing implosion.",
-      "dependencies": ["audiobits@^0.4.0"],
+      "dependencies": ["audiobits@^0.5.0"],
       "categories": ["experience"],
       "meta": {
         "classification": "experience",
@@ -774,14 +774,14 @@
           "sha256": "dedc94c16bbd17d9e3b0a73c6eead04cdb020485dae239b0f61e2381161f45fa"
         }
       ],
-      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/48eff3c5e1c9fb42a7448ca322273ac4f59f964c/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/547ac375199f8441a1e3605adde222f2e1e31a8d/catalog/README.md for integration and update guidance."
     },
     {
       "name": "thruster",
       "type": "registry:item",
       "title": "Thruster",
       "description": "Start once, adjust throttle while it runs, then release with Stop.",
-      "dependencies": ["audiobits"],
+      "dependencies": ["audiobits@^0.5.0"],
       "categories": ["recipe", "sustained"],
       "meta": {
         "classification": "recipe",
@@ -821,14 +821,14 @@
           "sha256": "6531d046a375451d7f25afff12a239aacae3d9bebfdf14d20801202013a13a7e"
         }
       ],
-      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/48eff3c5e1c9fb42a7448ca322273ac4f59f964c/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/547ac375199f8441a1e3605adde222f2e1e31a8d/catalog/README.md for integration and update guidance."
     },
     {
       "name": "whoosh",
       "type": "registry:item",
       "title": "Whoosh",
       "description": "Filtered noise sweeps past with an adjustable sense of weight.",
-      "dependencies": ["audiobits"],
+      "dependencies": ["audiobits@^0.5.0"],
       "categories": ["recipe", "one-shot"],
       "meta": {
         "classification": "recipe",
@@ -863,7 +863,7 @@
           "sha256": "ae1552191f4ff969833ea0bad24701c920f6b7defaa5902d38bbf46a0321c7e6"
         }
       ],
-      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/48eff3c5e1c9fb42a7448ca322273ac4f59f964c/catalog/README.md for integration and update guidance."
+      "docs": "You own the installed source. Customize it locally. See https://github.com/joacod/audiobits/blob/547ac375199f8441a1e3605adde222f2e1e31a8d/catalog/README.md for integration and update guidance."
     }
   ]
 }
