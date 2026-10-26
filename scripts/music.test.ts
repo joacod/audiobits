@@ -165,7 +165,7 @@ test("ratio mappings preserve proportional endpoints and leave authored Riff con
   );
   expect(riffInstruments.lead.layers[0].source.frequency.points[0][1]).toEqual({
     control: "frequency",
-    range: [146.3, 1365],
+    range: [148.8, 1388.8],
     scale: "linear",
   });
   for (const ratio of [0, -1, NaN, Infinity])

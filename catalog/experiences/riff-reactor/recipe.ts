@@ -1,7 +1,7 @@
 import { defineSound } from "audiobits";
 import { ratioMapping } from "../../helpers/mapping";
 
-// Industrial synth-rock band. Every pitched recipe takes its note as a
+// A picked, resonant rock palette built entirely from oscillators and noise. Every pitched recipe takes its note as a
 // play-mode frequency in hertz, so one recipe plays any charted pitch. Layer
 // frequencies use linear mappings whose range is the parameter range times a
 // fixed ratio, which keeps octaves, fifths and detuning exact at every pitch.
@@ -11,7 +11,7 @@ const velocity = { min: 0, max: 1, default: 0.8, mode: "play" } as const;
 const level = (low: number, high: number) =>
   ({ control: "velocity", range: [low, high], scale: "linear" }) as const;
 
-/** Four-on-the-floor kick: a pitch-dropping body, punch, grit and a click. */
+/** Rounded drum head, short beater and quiet shell rattle. */
 export const riffKick = defineSound({
   schemaVersion: 1,
   kind: "one-shot",
@@ -25,14 +25,14 @@ export const riffKick = defineSound({
         waveform: "sine",
         frequency: {
           points: [
-            [0, 165],
-            [0.03, 78],
-            [0.16, 47],
+            [0, { random: [118, 130] }],
+            [0.025, 67],
+            [0.16, 48],
           ],
           curve: "exponential",
         },
       },
-      gainDb: level(-14, -2),
+      gainDb: level(-17, -5),
       envelope: { attack: 0, decay: 0.17, sustain: 0.2, release: 0.07 },
     },
     {
@@ -48,7 +48,7 @@ export const riffKick = defineSound({
           curve: "exponential",
         },
       },
-      gainDb: level(-20, -9),
+      gainDb: level(-24, -13),
       envelope: { attack: 0, decay: 0.035, sustain: 0, release: 0.02 },
     },
     {
@@ -64,7 +64,7 @@ export const riffKick = defineSound({
           curve: "exponential",
         },
       },
-      gainDb: level(-30, -18),
+      gainDb: level(-36, -26),
       envelope: { attack: 0, decay: 0.1, sustain: 0, release: 0.04 },
       effects: [{ type: "filter", filter: "lowpass", frequency: 420, q: 0.8 }],
     },
@@ -91,11 +91,11 @@ export const riffSnare = defineSound({
       id: "shell",
       source: {
         type: "oscillator",
-        waveform: "triangle",
+        waveform: "sine",
         frequency: {
           points: [
-            [0, 250],
-            [0.05, 178],
+            [0, { random: [225, 245] }],
+            [0.05, 174],
           ],
           curve: "exponential",
         },
@@ -104,12 +104,31 @@ export const riffSnare = defineSound({
       envelope: { attack: 0, decay: 0.07, sustain: 0, release: 0.04 },
     },
     {
+      id: "shell-edge",
+      source: {
+        type: "oscillator",
+        waveform: "sine",
+        frequency: { random: [318, 332] },
+      },
+      gainDb: level(-33, -22),
+      envelope: { attack: 0.001, decay: 0.055, sustain: 0, release: 0.04 },
+    },
+    {
       id: "body",
       source: { type: "noise", color: "white" },
-      gainDb: level(-22, -6),
+      gainDb: level(-25, -10),
       envelope: { attack: 0, decay: 0.12, sustain: 0.12, release: 0.08 },
       effects: [
-        { type: "filter", filter: "bandpass", frequency: 1800, q: 0.8 },
+        {
+          type: "filter",
+          filter: "bandpass",
+          frequency: {
+            control: "velocity",
+            range: [1100, 2400],
+            scale: "linear",
+          },
+          q: 0.75,
+        },
       ],
     },
     {
@@ -132,13 +151,31 @@ export const riffHat = defineSound({
   parameters: { velocity },
   layers: [
     {
+      id: "bronze",
+      source: {
+        type: "oscillator",
+        waveform: "triangle",
+        frequency: { random: [4310, 4390] },
+      },
+      gainDb: level(-44, -30),
+      envelope: { attack: 0.001, decay: 0.018, sustain: 0.15, release: 0.025 },
+      effects: [
+        { type: "filter", filter: "highpass", frequency: 6500, q: 0.6 },
+      ],
+    },
+    {
       id: "metal",
       source: { type: "noise", color: "white" },
       gainDb: level(-30, -12),
       envelope: { attack: 0, decay: 0.018, sustain: 0, release: 0.03 },
       effects: [
-        { type: "filter", filter: "highpass", frequency: 7600, q: 0.9 },
-        { type: "filter", filter: "bandpass", frequency: 10500, q: 0.6 },
+        {
+          type: "filter",
+          filter: "highpass",
+          frequency: { random: [6200, 7000] },
+          q: 0.7,
+        },
+        { type: "filter", filter: "bandpass", frequency: 9200, q: 0.5 },
       ],
     },
   ],
@@ -152,19 +189,37 @@ export const riffOpenHat = defineSound({
   parameters: { velocity },
   layers: [
     {
+      id: "bronze",
+      source: {
+        type: "oscillator",
+        waveform: "triangle",
+        frequency: { random: [4310, 4390] },
+      },
+      gainDb: level(-44, -33),
+      envelope: { attack: 0.001, decay: 0.018, sustain: 0.15, release: 0.13 },
+      effects: [
+        { type: "filter", filter: "highpass", frequency: 6500, q: 0.6 },
+      ],
+    },
+    {
       id: "metal",
       source: { type: "noise", color: "white" },
       gainDb: level(-30, -14),
       envelope: { attack: 0.004, decay: 0.09, sustain: 0.4, release: 0.16 },
       effects: [
-        { type: "filter", filter: "highpass", frequency: 6800, q: 0.8 },
-        { type: "filter", filter: "bandpass", frequency: 9400, q: 0.5 },
+        {
+          type: "filter",
+          filter: "highpass",
+          frequency: { random: [5400, 6200] },
+          q: 0.7,
+        },
+        { type: "filter", filter: "bandpass", frequency: 8400, q: 0.5 },
       ],
     },
   ],
 });
 
-/** Driving pick bass: plucked filtered saw over a sine sub and octave grit. */
+/** Picked bass: rounded string body, decaying upper modes and a quiet finger transient. */
 const bassFrequency = {
   min: 30,
   max: 200,
@@ -174,21 +229,21 @@ const bassFrequency = {
 export const riffBass = defineSound({
   schemaVersion: 1,
   kind: "one-shot",
-  duration: 0.17,
+  duration: 0.28,
   parameters: {
     frequency: bassFrequency,
     velocity,
   },
   layers: [
     {
-      id: "saw",
+      id: "string",
       source: {
         type: "oscillator",
-        waveform: "sawtooth",
+        waveform: "triangle",
         frequency: ratioMapping("frequency", bassFrequency, 1),
       },
       gainDb: level(-20, -10),
-      envelope: { attack: 0.003, decay: 0.09, sustain: 0.7, release: 0.05 },
+      envelope: { attack: 0.004, decay: 0.16, sustain: 0.22, release: 0.09 },
       effects: [
         {
           type: "filter",
@@ -206,7 +261,7 @@ export const riffBass = defineSound({
             ],
             curve: "exponential",
           },
-          q: 2.2,
+          q: 0.65,
         },
       ],
     },
@@ -218,27 +273,36 @@ export const riffBass = defineSound({
         frequency: ratioMapping("frequency", bassFrequency, 1),
       },
       gainDb: level(-20, -11),
-      envelope: { attack: 0.003, decay: 0.05, sustain: 0.85, release: 0.05 },
+      envelope: { attack: 0.003, decay: 0.05, sustain: 0.35, release: 0.05 },
     },
     {
-      id: "grit",
+      id: "upper-string",
       source: {
         type: "oscillator",
-        waveform: "square",
+        waveform: "sine",
         frequency: {
           control: "frequency",
           range: [60.18, 401.2],
           scale: "linear",
         },
       },
-      gainDb: level(-34, -23),
-      envelope: { attack: 0.003, decay: 0.06, sustain: 0.4, release: 0.04 },
+      gainDb: level(-31, -18),
+      envelope: { attack: 0.003, decay: 0.06, sustain: 0.08, release: 0.04 },
       effects: [{ type: "filter", filter: "lowpass", frequency: 1500, q: 0.7 }],
+    },
+    {
+      id: "finger",
+      source: { type: "noise", color: "white" },
+      gainDb: level(-44, -30),
+      envelope: { attack: 0.001, decay: 0.018, sustain: 0, release: 0.012 },
+      effects: [
+        { type: "filter", filter: "bandpass", frequency: 1700, q: 0.7 },
+      ],
     },
   ],
 });
 
-/** Power-chord pad: root, fifth and octave saws under a dark lowpass. */
+/** Bowed power harmony: staggered attacks and a slowly settling warm spectrum. */
 const padFrequency = {
   min: 60,
   max: 200,
@@ -258,17 +322,17 @@ export const riffPad = defineSound({
       id: "root",
       source: {
         type: "oscillator",
-        waveform: "sawtooth",
+        waveform: "triangle",
         frequency: ratioMapping("frequency", padFrequency, 1),
       },
       gainDb: level(-25, -13),
-      envelope: { attack: 0.25, decay: 0.4, sustain: 0.8, release: 0.45 },
+      envelope: { attack: 0.25, decay: 0.4, sustain: 0.55, release: 0.45 },
     },
     {
       id: "root-detuned",
       source: {
         type: "oscillator",
-        waveform: "sawtooth",
+        waveform: "triangle",
         frequency: {
           control: "frequency",
           range: [60.36, 201.2],
@@ -276,17 +340,17 @@ export const riffPad = defineSound({
         },
       },
       gainDb: level(-27, -15),
-      envelope: { attack: 0.3, decay: 0.4, sustain: 0.8, release: 0.45 },
+      envelope: { attack: 0.3, decay: 0.4, sustain: 0.55, release: 0.45 },
     },
     {
       id: "fifth",
       source: {
         type: "oscillator",
-        waveform: "sawtooth",
+        waveform: "triangle",
         frequency: ratioMapping("frequency", padFrequency, 1.5),
       },
       gainDb: level(-29, -17),
-      envelope: { attack: 0.3, decay: 0.4, sustain: 0.8, release: 0.45 },
+      envelope: { attack: 0.3, decay: 0.4, sustain: 0.55, release: 0.45 },
     },
     {
       id: "octave",
@@ -296,16 +360,28 @@ export const riffPad = defineSound({
         frequency: ratioMapping("frequency", padFrequency, 2),
       },
       gainDb: level(-25, -15),
-      envelope: { attack: 0.2, decay: 0.4, sustain: 0.8, release: 0.45 },
+      envelope: { attack: 0.2, decay: 0.4, sustain: 0.55, release: 0.45 },
     },
   ],
   effects: [
     { type: "filter", filter: "highpass", frequency: 110, q: 0.7 },
-    { type: "filter", filter: "lowpass", frequency: 2200, q: 0.9 },
+    {
+      type: "filter",
+      filter: "lowpass",
+      frequency: {
+        points: [
+          [0, 850],
+          [0.4, 2100],
+          [1.6, 1200],
+        ],
+        curve: "exponential",
+      },
+      q: 0.6,
+    },
   ],
 });
 
-/** Plucked square arpeggio with one dotted-eighth echo at 128 BPM. */
+/** Picked bell-string: fundamental and a quicker-decaying second mode. */
 const arpFrequency = {
   min: 150,
   max: 1400,
@@ -315,7 +391,7 @@ const arpFrequency = {
 export const riffArp = defineSound({
   schemaVersion: 1,
   kind: "one-shot",
-  duration: 0.08,
+  duration: 0.18,
   parameters: {
     frequency: arpFrequency,
     velocity,
@@ -325,11 +401,11 @@ export const riffArp = defineSound({
       id: "pluck",
       source: {
         type: "oscillator",
-        waveform: "square",
+        waveform: "triangle",
         frequency: ratioMapping("frequency", arpFrequency, 1),
       },
       gainDb: level(-30, -17),
-      envelope: { attack: 0.002, decay: 0.07, sustain: 0.3, release: 0.1 },
+      envelope: { attack: 0.003, decay: 0.13, sustain: 0.06, release: 0.17 },
       effects: [
         {
           type: "filter",
@@ -341,15 +417,25 @@ export const riffArp = defineSound({
             ],
             curve: "exponential",
           },
-          q: 1.6,
+          q: 0.7,
         },
       ],
     },
+    {
+      id: "string-mode",
+      source: {
+        type: "oscillator",
+        waveform: "sine",
+        frequency: ratioMapping("frequency", arpFrequency, 2.002),
+      },
+      gainDb: level(-37, -24),
+      envelope: { attack: 0.002, decay: 0.055, sustain: 0, release: 0.08 },
+    },
   ],
-  effects: [{ type: "delay", time: 0.3516, feedback: 0, mix: 0.3 }],
+  effects: [{ type: "delay", time: 0.3516, feedback: 0, mix: 0.16 }],
 });
 
-/** Short saw power-chord stab for the thickest tier. */
+/** Muted power strings: a brief bright pick followed by a darker body. */
 const stabFrequency = {
   min: 60,
   max: 400,
@@ -369,27 +455,27 @@ export const riffStab = defineSound({
       id: "root",
       source: {
         type: "oscillator",
-        waveform: "sawtooth",
+        waveform: "triangle",
         frequency: ratioMapping("frequency", stabFrequency, 1),
       },
       gainDb: level(-25, -13),
-      envelope: { attack: 0.003, decay: 0.1, sustain: 0.5, release: 0.08 },
+      envelope: { attack: 0.004, decay: 0.08, sustain: 0.16, release: 0.08 },
     },
     {
       id: "fifth",
       source: {
         type: "oscillator",
-        waveform: "sawtooth",
+        waveform: "triangle",
         frequency: ratioMapping("frequency", stabFrequency, 1.5),
       },
       gainDb: level(-27, -15),
-      envelope: { attack: 0.003, decay: 0.1, sustain: 0.5, release: 0.08 },
+      envelope: { attack: 0.004, decay: 0.08, sustain: 0.16, release: 0.08 },
     },
     {
       id: "octave",
       source: {
         type: "oscillator",
-        waveform: "square",
+        waveform: "sawtooth",
         frequency: ratioMapping("frequency", stabFrequency, 2),
       },
       gainDb: level(-33, -21),
@@ -402,12 +488,12 @@ export const riffStab = defineSound({
       filter: "lowpass",
       frequency: {
         points: [
-          [0, 3800],
+          [0, { control: "velocity", range: [1800, 4600], scale: "linear" }],
           [0.12, 1200],
         ],
         curve: "exponential",
       },
-      q: 1.4,
+      q: 0.75,
     },
   ],
 });
@@ -421,7 +507,7 @@ export const riffRiser = defineSound({
     {
       id: "air",
       source: { type: "noise", color: "white" },
-      gainDb: -12,
+      gainDb: -20,
       envelope: { attack: 1.6, decay: 0, sustain: 1, release: 0.12 },
       effects: [
         {
@@ -451,7 +537,7 @@ export const riffRiser = defineSound({
           curve: "exponential",
         },
       },
-      gainDb: -24,
+      gainDb: -32,
       envelope: { attack: 1.7, decay: 0, sustain: 1, release: 0.1 },
       effects: [{ type: "filter", filter: "lowpass", frequency: 2400, q: 1 }],
     },
@@ -466,6 +552,19 @@ export const riffCrash = defineSound({
   parameters: { velocity },
   layers: [
     {
+      id: "bronze",
+      source: {
+        type: "oscillator",
+        waveform: "triangle",
+        frequency: { random: [4310, 4390] },
+      },
+      gainDb: level(-44, -34),
+      envelope: { attack: 0.001, decay: 0.018, sustain: 0.15, release: 0.65 },
+      effects: [
+        { type: "filter", filter: "highpass", frequency: 6500, q: 0.6 },
+      ],
+    },
+    {
       id: "wash",
       source: { type: "noise", color: "white" },
       gainDb: level(-34, -20),
@@ -479,9 +578,9 @@ export const riffCrash = defineSound({
 });
 
 /**
- * Expressive lead: two detuned saws and a sub-octave square that scoop up
- * into the note, under a pitch-tracking lowpass that settles after the attack,
- * with a dotted-eighth echo. Sustained: stop() ends the note.
+ * Singing string lead: a rounded fundamental, separate decaying harmonics,
+ * a quiet pick, and a small onset scoop. Velocity opens its spectrum.
+ * Sustained: the controller releases each phrase on the audio clock.
  */
 const leadFrequency = {
   min: 150,
@@ -498,55 +597,52 @@ export const riffLead = defineSound({
   },
   layers: [
     {
-      id: "saw",
+      id: "string-body",
       source: {
         type: "oscillator",
-        waveform: "sawtooth",
+        waveform: "triangle",
         frequency: {
           points: [
             [
               0,
-              { control: "frequency", range: [146.3, 1365], scale: "linear" },
+              { control: "frequency", range: [148.8, 1388.8], scale: "linear" },
             ],
-            [0.05, ratioMapping("frequency", leadFrequency, 1)],
+            [0.028, ratioMapping("frequency", leadFrequency, 1)],
           ],
           curve: "exponential",
         },
       },
-      gainDb: level(-20, -9),
-      envelope: { attack: 0.006, decay: 0.3, sustain: 0.72, release: 0.09 },
+      gainDb: level(-22, -10),
+      envelope: { attack: 0.008, decay: 0.28, sustain: 0.48, release: 0.12 },
     },
     {
-      id: "saw-detuned",
+      id: "second-mode",
+      source: {
+        type: "oscillator",
+        waveform: "sine",
+        frequency: ratioMapping("frequency", leadFrequency, 2.002),
+      },
+      gainDb: level(-34, -19),
+      envelope: { attack: 0.004, decay: 0.18, sustain: 0.12, release: 0.1 },
+    },
+    {
+      id: "bow-edge",
       source: {
         type: "oscillator",
         waveform: "sawtooth",
-        frequency: {
-          points: [
-            [
-              0,
-              { control: "frequency", range: [147.2, 1373], scale: "linear" },
-            ],
-            [
-              0.05,
-              { control: "frequency", range: [150.9, 1408.4], scale: "linear" },
-            ],
-          ],
-          curve: "exponential",
-        },
+        frequency: ratioMapping("frequency", leadFrequency, 0.999),
       },
-      gainDb: level(-22, -11),
-      envelope: { attack: 0.006, decay: 0.3, sustain: 0.72, release: 0.09 },
+      gainDb: level(-39, -24),
+      envelope: { attack: 0.014, decay: 0.24, sustain: 0.2, release: 0.1 },
     },
     {
-      id: "sub",
-      source: {
-        type: "oscillator",
-        waveform: "square",
-        frequency: ratioMapping("frequency", leadFrequency, 0.5),
-      },
-      gainDb: level(-30, -20),
-      envelope: { attack: 0.006, decay: 0.2, sustain: 0.6, release: 0.08 },
+      id: "pick",
+      source: { type: "noise", color: "white" },
+      gainDb: level(-44, -30),
+      envelope: { attack: 0.001, decay: 0.018, sustain: 0, release: 0.012 },
+      effects: [
+        { type: "filter", filter: "bandpass", frequency: 2400, q: 0.7 },
+      ],
     },
   ],
   effects: [
@@ -555,17 +651,14 @@ export const riffLead = defineSound({
       filter: "lowpass",
       frequency: {
         points: [
-          [0, { control: "frequency", range: [2600, 9000], scale: "linear" }],
-          [
-            0.35,
-            { control: "frequency", range: [1300, 4200], scale: "linear" },
-          ],
+          [0, { control: "velocity", range: [1700, 5800], scale: "linear" }],
+          [0.35, { control: "velocity", range: [950, 3000], scale: "linear" }],
         ],
         curve: "exponential",
       },
-      q: 1.8,
+      q: 0.7,
     },
-    { type: "delay", time: 0.3516, feedback: 0.25, mix: 0.18 },
+    { type: "delay", time: 0.3516, feedback: 0.18, mix: 0.14 },
   ],
 });
 
@@ -586,7 +679,7 @@ export const riffChoke = defineSound({
       id: "thud",
       source: {
         type: "oscillator",
-        waveform: "square",
+        waveform: "triangle",
         frequency: {
           points: [
             [0, 110],

@@ -9,12 +9,12 @@ import {
 
 // "Reactor Core": an original 60-second synth-rock track in E minor at 128 BPM.
 // Composition data only. Write scientific pitch names and quarter-note beats.
-// Helpers compile them to MIDI numbers for the controller and game chart.
+// Helpers compile named pitches to numeric semitone positions for scheduling.
 // tier is the minimum intensity at which a band event plays: 0 is the base
 // arrangement, 1 adds harmony and lift, 2 thickens everything.
 // The lead is the part the player performs; it is never scheduled by itself.
 //
-// Form: intro (bars 1-4), verse (5-12), chorus (13-20), break (21-24),
+// Form: intro (bars 1-2), verse (3-12), chorus (13-20), break (21-24),
 // final chorus (25-32), and a closing downbeat on beat 128.
 
 const E = "E2",
@@ -26,15 +26,15 @@ const E = "E2",
 const minor = new Set<NoteName>([E, A]);
 /** Chord root per bar, in the bass register. */
 const roots: readonly NoteName[] = [
-  ...([E, E, E, E] as const),
-  ...([E, E, C, D, E, E, C, D] as const),
+  ...([E, C] as const),
+  ...([E, C, G, D, E, C, G, D, C, D] as const),
   ...([C, G, D, E, C, G, D, E] as const),
   ...([A, A, C, B] as const),
   ...([C, G, D, E, C, G, D, E] as const),
 ];
 type Section = "intro" | "verse" | "chorus" | "break";
 const sectionOf = (bar: number): Section =>
-  bar < 4
+  bar < 2
     ? "intro"
     : bar < 12
       ? "verse"
@@ -76,28 +76,40 @@ for (let bar = 0; bar < roots.length; bar++) {
   const third = minor.has(root) ? 3 : 4;
   const turnaround = bar % 4 === 3;
   if (section === "intro") {
-    for (const beat of bar < 2 ? [0, 2] : [0, 1, 2, 3])
-      hit(kick, at + beat, 0.9);
-    for (let step = 0; step < 8; step++)
-      hit(hat, at + step / 2, step % 2 ? 0.45 : 0.65);
-    if (bar >= 2) {
-      hit(snare, at + 3, 0.8);
-      for (let step = 0; step < 8; step++)
-        hit(bass, at + step / 2, step % 2 ? 0.6 : 0.8, 0, root);
-    }
-    hit(pad, at, 0.55, 0, root, 4);
-    if (bar === 3) hit(riser, at, 1, 0);
+    // A short picked invitation, then the player answers. No repeated count-in.
+    hit(kick, at, 0.78);
+    if (bar === 1) hit(snare, at + 3, 0.58);
+    for (const beat of [0, 1.5, 2.5, 3.5])
+      hit(hat, at + beat, beat === 0 ? 0.5 : 0.32);
+    hit(bass, at, 0.78, 0, root);
+    hit(bass, at + 2.5, 0.6, 0, transpose(root, 7));
+    hit(pad, at, 0.48, 0, root, 4);
+    const invitation: Phrase =
+      bar === 0
+        ? [
+            [0, 0.75, "E4", 0.74],
+            [1, 0.5, "G4", 0.6],
+            [2.5, 1, "B4", 0.68],
+          ]
+        : [
+            [0, 1, "G4", 0.68],
+            [1.5, 0.5, "E4", 0.56],
+            [2.5, 0.75, "D4", 0.6],
+          ];
+    arp.push(
+      ...phrase(invitation, at).map((note) => ({ ...note, tier: 0 as const })),
+    );
     continue;
   }
   // Give the opening motif space at every intensity. The full rhythm section
-  // joins in the second half of the verse, after the repeated lead phrase.
-  if (section === "verse" && bar < 8) {
-    if (bar === 4) hit(crash, at, 0.65);
+  // joins as the lead develops its answer.
+  if (section === "verse" && bar < 6) {
+    if (bar === 2) hit(crash, at, 0.65);
     for (let beat = 0; beat < 4; beat++) {
       hit(kick, at + beat, beat ? 0.8 : 0.9);
       hit(hat, at + beat, 0.55);
       hit(bass, at + beat, beat ? 0.75 : 0.9, 0, root);
-      if (bar >= 6) hit(hat, at + beat + 0.5, 0.35);
+      if (bar >= 4) hit(hat, at + beat + 0.5, 0.35);
     }
     hit(snare, at + 1, 0.8);
     hit(snare, at + 3, 0.85);
@@ -112,9 +124,15 @@ for (let bar = 0; bar < roots.length; bar++) {
     for (let step = 0; step < 4; step++) hit(hat, at + step + 0.5, 0.4, 1);
     for (const beat of [0, 0.5, 2.5, 3]) hit(bass, at + beat, 0.8, 0, root);
     hit(pad, at, 0.75, 0, root, 4);
-    const tones = [0, 7, 12, 12 + third, 12, 7, third, 7];
-    for (let step = 0; step < 8; step++)
-      hit(arp, at + step / 2, 0.55, 0, transpose(root, 24 + tones[step]));
+    const tones = [12, 7, third, 7];
+    for (let step = 0; step < 4; step++)
+      hit(
+        arp,
+        at + step,
+        step % 2 ? 0.4 : 0.52,
+        0,
+        transpose(root, 24 + tones[step]),
+      );
     if (bar === 23) {
       hit(riser, at, 1, 0);
       for (const beat of [3, 3.25, 3.5, 3.75])
@@ -125,8 +143,9 @@ for (let bar = 0; bar < roots.length; bar++) {
   const chorus = section === "chorus";
   if (bar === 12 || bar === 24) hit(crash, at, 0.9);
   if (bar === 16 || bar === 28) hit(crash, at, 0.75, 1);
-  for (let beat = 0; beat < 4; beat++) hit(kick, at + beat, beat ? 0.85 : 1);
-  hit(kick, at + 2.5, 0.6, 2);
+  for (const beat of chorus ? [0, 1.5, 2, 2.75] : [0, 1.5, 2.5])
+    hit(kick, at + beat, beat === 0 ? 0.92 : 0.75);
+  hit(kick, at + 0.75, 0.6, 2);
   if (turnaround) hit(kick, at + 3.75, 0.55, 2);
   hit(snare, at + 1, 0.9);
   hit(snare, at + 3, 0.95);
@@ -140,8 +159,16 @@ for (let bar = 0; bar < roots.length; bar++) {
   for (let step = 0; step < 8; step++) hit(hat, at + step / 2 + 0.25, 0.32, 2);
   hit(openHat, at + 1.5, 0.6, 1);
   hit(openHat, at + 3.5, 0.65, 1);
-  for (let step = 0; step < 8; step++)
-    hit(bass, at + step / 2, step % 2 ? 0.75 : 0.95, 0, root);
+  // Root, fifth, octave and a step into the next chord, with breathing room.
+  const nextRoot = roots[(bar + 1) % roots.length];
+  for (const [beat, pitch, strength] of [
+    [0, root, 0.9],
+    [0.75, root, 0.62],
+    [1.5, transpose(root, 7), 0.72],
+    [2.5, root, 0.8],
+    [3.5, turnaround ? nextRoot : transpose(root, 12), 0.64],
+  ] as const)
+    hit(bass, at + beat, strength, 0, pitch);
   const octave = transpose(root, 12);
   for (const beat of [1.75, 3.75])
     hit(
@@ -152,13 +179,11 @@ for (let bar = 0; bar < roots.length; bar++) {
       noteToMidi(octave) <= noteToMidi("G3") ? octave : root,
     );
   hit(pad, at, chorus ? 0.8 : 0.6, 0, root, 4);
-  const tones = chorus
-    ? [12, 7, 12 + third, 7, 19, 7, 12 + third, 7]
-    : [0, 7, 12, 7, third, 7, 12, 7];
-  for (let step = 0; step < 8; step++)
+  const tones = chorus ? [12, 7, third, 7] : [0, third, 7, 12];
+  for (let step = 0; step < 4; step++)
     hit(
       arp,
-      at + step / 2,
+      at + step + 0.5,
       chorus ? 0.6 : 0.5,
       1,
       transpose(root, 24 + tones[step]),
@@ -184,159 +209,161 @@ hit(bass, 128, 1, 0, E);
 hit(pad, 128, 0.9, 0, E, 4);
 hit(stab, 128, 0.85, 0, transpose(E, 12));
 
-/** Lead phrases as [beat within the bar, length in beats, pitch name]. */
-// Introduce the chorus's G-E shape in a lower register, repeat it, then add
-// quarter notes. The opening stays on the beat before introducing syncopation.
-const openingMotif: Phrase = [
-  [0, 2, "G4"],
-  [2, 2, "E4"],
-];
+/** Lead phrases: a question, an answer, then a recognisable chorus hook. */
+// Gaps are intentional breaths. Dynamics belong to the phrase, not a flat grid.
 const opening: Phrase[] = [
-  openingMotif,
-  openingMotif,
   [
-    [0, 2, "G4"],
-    [2, 1, "E4"],
-    [3, 1, "G4"],
+    [0, 1, "E4", 0.84],
+    [1.5, 0.5, "G4", 0.7],
+    [2.5, 1, "B4", 0.88],
   ],
   [
-    [0, 2, "A4"],
-    [2, 1, "F#4"],
-    [3, 1, "A4"],
+    [0, 1.5, "G4", 0.82],
+    [2, 0.5, "E4", 0.68],
+    [3, 0.75, "D4", 0.72],
+  ],
+  [
+    [0, 1, "G4", 0.86],
+    [1.5, 0.5, "A4", 0.72],
+    [2.5, 1, "B4", 0.9],
+  ],
+  [
+    [0, 1, "A4", 0.84],
+    [1, 0.5, "F#4", 0.7],
+    [2, 1.5, "E4", 0.78],
   ],
 ];
-// Develop the same hook before its octave lift into the chorus.
 const verse: Phrase[] = [
   [
-    [0, 1.5, "G4"],
-    [1.5, 0.5, "E4"],
-    [2, 1, "G4"],
-    [3, 1, "A4"],
+    [0, 0.75, "E4", 0.84],
+    [1, 0.5, "G4", 0.72],
+    [1.75, 0.75, "B4", 0.86],
+    [3, 0.75, "A4", 0.7],
   ],
   [
-    [0, 1.5, "B4"],
-    [1.5, 0.5, "A4"],
-    [2, 1, "G4"],
-    [3, 1, "E4"],
+    [0, 1, "G4", 0.84],
+    [1.5, 0.5, "E4", 0.7],
+    [2.5, 0.5, "G4", 0.74],
+    [3.25, 0.5, "A4", 0.78],
   ],
   [
-    [0, 1, "G4"],
-    [1, 1, "C5"],
-    [2, 0.5, "B4"],
-    [2.5, 0.5, "A4"],
-    [3, 1, "G4"],
+    [0, 1.5, "B4", 0.9],
+    [1.75, 0.5, "A4", 0.72],
+    [2.5, 0.5, "G4", 0.76],
+    [3.25, 0.5, "D4", 0.66],
   ],
-];
-const verseLift: Phrase = [
-  [0, 0.5, "F#4"],
-  [0.5, 0.5, "A4"],
-  [1, 0.5, "D5"],
-  [1.5, 0.5, "E5"],
-  [2, 2, "F#5"],
+  [
+    [0, 1, "F#4", 0.84],
+    [1.5, 0.5, "A4", 0.72],
+    [2.5, 1, "D5", 0.88],
+  ],
+  [
+    [0, 1, "E5", 0.9],
+    [1.25, 0.5, "D5", 0.7],
+    [2, 0.75, "B4", 0.8],
+    [3, 0.75, "G4", 0.72],
+  ],
+  [
+    [0, 0.75, "A4", 0.8],
+    [1, 0.5, "B4", 0.74],
+    [2, 0.75, "D5", 0.86],
+    [3, 0.75, "F#5", 0.9],
+  ],
 ];
 const chorus: Phrase[] = [
   [
-    [0, 1.5, "G5"],
-    [1.5, 0.5, "E5"],
-    [2, 1, "G5"],
-    [3, 1, "A5"],
+    [0, 1.25, "E5", 0.94],
+    [1.5, 0.5, "D5", 0.76],
+    [2.25, 0.75, "C5", 0.84],
+    [3.25, 0.5, "E5", 0.78],
   ],
   [
-    [0, 1.5, "B5"],
-    [1.5, 0.5, "A5"],
-    [2, 1, "G5"],
-    [3, 1, "D5"],
+    [0, 1.5, "D5", 0.9],
+    [2, 0.5, "B4", 0.74],
+    [3, 0.75, "G4", 0.82],
   ],
   [
-    [0, 1, "F#5"],
-    [1, 1, "A5"],
-    [2, 0.5, "F#5"],
-    [2.5, 0.5, "E5"],
-    [3, 1, "D5"],
+    [0, 1, "A4", 0.9],
+    [1.25, 0.5, "B4", 0.72],
+    [2, 1, "D5", 0.88],
+    [3.25, 0.5, "F#5", 0.8],
   ],
   [
-    [0, 2, "E5"],
-    [2, 0.5, "B4"],
-    [2.5, 0.5, "D5"],
-    [3, 1, "E5"],
+    [0, 1.5, "E5", 0.94],
+    [2, 0.5, "D5", 0.74],
+    [2.75, 0.5, "B4", 0.78],
+    [3.5, 0.5, "G4", 0.7],
   ],
 ];
 const chorusTurn: Phrase = [
-  [0, 1, "E5"],
-  [1, 0.5, "G5"],
-  [1.5, 0.5, "F#5"],
-  [2, 2, "E5"],
-];
-// Save the extra runs for the last repeat, keeping the chorus's main accents.
-const finalChorus: Phrase[] = [
-  [
-    [0, 1.5, "G5"],
-    [1.5, 0.5, "E5"],
-    [2, 1, "G5"],
-    [3, 0.5, "A5"],
-    [3.5, 0.5, "G5"],
-  ],
-  [
-    [0, 1.5, "B5"],
-    [1.5, 0.5, "A5"],
-    [2, 0.5, "G5"],
-    [2.5, 0.5, "F#5"],
-    [3, 0.5, "E5"],
-    [3.5, 0.5, "D5"],
-  ],
-  [
-    [0, 1, "F#5"],
-    [1, 0.5, "A5"],
-    [1.5, 0.5, "G5"],
-    [2, 0.5, "F#5"],
-    [2.5, 0.5, "E5"],
-    [3, 1, "D5"],
-  ],
-];
-const finalTurn: Phrase = [
-  [0, 1, "G5"],
-  [1, 1, "A5"],
-  [2, 2, "B5"],
+  [0, 1, "G4", 0.88],
+  [1.5, 0.5, "B4", 0.78],
+  [2.5, 1.25, "E5", 0.94],
 ];
 const breakdown: Phrase[] = [
   [
-    [0, 2, "A4"],
-    [2, 1, "C5"],
-    [3, 1, "B4"],
+    [0, 1.5, "C5", 0.76],
+    [2, 0.5, "B4", 0.62],
+    [3, 0.75, "A4", 0.7],
   ],
   [
-    [0, 3, "A4"],
-    [3, 1, "E5"],
+    [0.5, 1, "E4", 0.7],
+    [2, 1.5, "A4", 0.8],
   ],
   [
-    [0, 2, "G5"],
-    [2, 2, "E5"],
+    [0, 1.5, "G4", 0.76],
+    [2.5, 1, "E4", 0.66],
   ],
   [
-    [0, 2, "F#5"],
-    [2, 1, "D#5"],
-    [3, 1, "B4"],
+    [0, 1, "F#4", 0.76],
+    [1.5, 0.5, "D#4", 0.66],
+    [2.5, 1, "B4", 0.84],
+  ],
+];
+const finalChorus: Phrase[] = [
+  [
+    [0, 1, "E5", 0.96],
+    [1.25, 0.5, "G5", 0.82],
+    [2, 0.5, "E5", 0.86],
+    [2.75, 0.5, "D5", 0.76],
+    [3.5, 0.5, "C5", 0.8],
+  ],
+  [
+    [0, 1, "D5", 0.92],
+    [1.25, 0.5, "B4", 0.76],
+    [2, 0.5, "G4", 0.8],
+    [2.75, 0.5, "A4", 0.74],
+    [3.5, 0.5, "B4", 0.84],
+  ],
+  [
+    [0, 1, "A4", 0.9],
+    [1.25, 0.5, "B4", 0.76],
+    [2, 0.5, "D5", 0.86],
+    [2.75, 0.5, "E5", 0.8],
+    [3.5, 0.5, "F#5", 0.88],
+  ],
+  [
+    [0, 1, "G5", 0.96],
+    [1.25, 0.5, "F#5", 0.8],
+    [2, 0.5, "E5", 0.86],
+    [2.75, 0.5, "D5", 0.74],
+    [3.5, 0.5, "B4", 0.8],
   ],
 ];
 const leadBars: Phrase[] = [
   ...opening,
   ...verse,
-  verseLift,
   ...chorus,
   ...chorus.slice(0, 3),
   chorusTurn,
   ...breakdown,
   ...chorus,
   ...finalChorus,
-  finalTurn,
 ];
 const lead: RiffNote[] = leadBars.flatMap((notes, index) =>
-  phrase(notes, (index + 4) * 4).map((note) => ({
-    ...note,
-    velocity: note.beat % 4 === 0 ? 0.95 : 0.85,
-  })),
+  phrase(notes, (index + 2) * 4),
 );
-lead.push(...phrase([[128, 2, "E5", 1]]));
+lead.push(...phrase([[128, 2, "E5", 0.92]]));
 
 const freeze = (notes: RiffNote[]) =>
   Object.freeze(notes.map((note) => Object.freeze(note)));

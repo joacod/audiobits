@@ -22,11 +22,18 @@
     width: 100%;
     height: 100%;
   }
+  .foundation .riff-stage .riff-reactor-field {
+    pointer-events: none;
+  }
+  .foundation .riff-stage .riff-highway {
+    z-index: 1;
+  }
   .foundation .riff-stage canvas[hidden] {
     display: none;
   }
   .foundation .riff-caption {
     position: absolute;
+    z-index: 2;
     inset: auto 24px 20px;
     display: flex;
     justify-content: space-between;

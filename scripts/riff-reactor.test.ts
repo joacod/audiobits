@@ -230,7 +230,7 @@ test("every composed note is inside its recipe's parameter range", () => {
 
 test("the opening accompaniment leaves room for the lead even at top intensity", () => {
   const events = bandEvents(song);
-  const opening = events.filter(({ beat }) => beat >= 16 && beat < 32);
+  const opening = events.filter(({ beat }) => beat >= 8 && beat < 24);
   expect(new Set(opening.map(({ track }) => track))).toEqual(
     new Set(["kick", "snare", "hat", "bass", "pad", "crash"]),
   );
@@ -559,7 +559,10 @@ test("instrument overrides keep the composition and transport while requiring ma
   expect(s.of(bass).play).toHaveBeenCalledWith(
     expect.objectContaining({
       at: transport.timeAt(8),
-      parameters: { frequency: midiToHz(40), velocity: 0.8 },
+      parameters: controlsOf(
+        bass,
+        song.band.bass!.find((note) => note.beat === 8)!,
+      ),
     }),
   );
   s.riff.dispose();

@@ -13,7 +13,7 @@ import {
   riffStab,
 } from "./recipe";
 
-/** The curated synth-rock palette. Each preset is an editable, serializable recipe. */
+/** The curated picked-string and resonant-percussion palette. Each preset is an editable, serializable recipe. */
 export const riffInstruments = Object.freeze({
   kick: riffKick,
   snare: riffSnare,

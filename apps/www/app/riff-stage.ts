@@ -29,7 +29,7 @@ const keys: Record<string, Lane> = {
   ArrowRight: 2,
 };
 
-/** Canvas 2D note highway. All timing reads the controller's audio clock. */
+/** An audio-clock note highway over a lazy, measured-audio reactor scene. */
 export function mountRiffStage(
   surface: HTMLElement,
   canvas: HTMLCanvasElement,
@@ -67,6 +67,26 @@ export function mountRiffStage(
   let analyser: AnalyserNode | undefined;
   let detach: (() => void) | undefined;
   const samples = new Float32Array(1024);
+  const spectrum = new Float32Array(512);
+  let scene:
+    | ReturnType<typeof import("./riff-reactor-scene").createReactorScene>
+    | undefined;
+  // Rendering never gates synchronous audio activation or the playable highway.
+  void import("./riff-reactor-scene")
+    .then(({ createReactorScene }) => {
+      if (disposed) return;
+      try {
+        scene = createReactorScene(surface, laneColors);
+        scene.resize(width, height);
+        surface.dataset.renderer = "three";
+        wake();
+      } catch {
+        surface.dataset.renderer = "canvas";
+      }
+    })
+    .catch(() => {
+      surface.dataset.renderer = "canvas";
+    });
   const idleHint = "Tap the stage or press Enter to play.";
 
   const host = mountRiff(
@@ -216,7 +236,7 @@ export function mountRiffStage(
   const toT = (p: number) => (1 / (1 + depth * p) - k) / (1 - k);
   function geometry() {
     const line = height * 0.82;
-    const horizon = height * 0.1;
+    const horizon = height * 0.32;
     const span = Math.min(width * 0.86, 560);
     return { line, horizon, span, cx: width / 2 };
   }
@@ -253,6 +273,22 @@ export function mountRiffStage(
     const pulse =
       playing && !still ? Math.max(0, 1 - (beat - Math.floor(beat)) * 2.5) : 0;
 
+    let peak = 0,
+      bass = 0,
+      treble = 0;
+    if (analyser && host.audio.state === "running") {
+      analyser.getFloatTimeDomainData(samples);
+      for (const sample of samples) peak = Math.max(peak, Math.abs(sample));
+      analyser.getFloatFrequencyData(spectrum);
+      const binHz = host.audio.native.context.sampleRate / analyser.fftSize;
+      for (let i = 1; i < spectrum.length; i++) {
+        const amplitude = 10 ** (spectrum[i] / 20);
+        if (i * binHz < 220) bass = Math.max(bass, amplitude);
+        if (i * binHz > 3000) treble = Math.max(treble, amplitude);
+      }
+    }
+    canvas.dataset.peak = String(peak);
+    scene?.draw(playing ? beat : -1, peak, bass, treble, still);
     paint.clearRect(0, 0, width, height);
     // Reactor glow grows with the audible tier.
     const glow = paint.createRadialGradient(
@@ -271,6 +307,17 @@ export function mountRiffStage(
     paint.fillStyle = glow;
     paint.fillRect(0, 0, width, height);
 
+    // A dark road keeps notes distinct from the reactor behind the horizon.
+    const road = paint.createLinearGradient(0, g.horizon, 0, height);
+    road.addColorStop(0, "#05050710");
+    road.addColorStop(1, "#050507e8");
+    paint.fillStyle = road;
+    paint.beginPath();
+    paint.moveTo(laneX(-0.5, 0, g), g.horizon);
+    paint.lineTo(laneX(2.5, 0, g), g.horizon);
+    paint.lineTo(laneX(2.5, 1.2, g), laneY(1.2, g));
+    paint.lineTo(laneX(-0.5, 1.2, g), laneY(1.2, g));
+    paint.fill();
     // Highway edges and lane separators.
     paint.lineWidth = 1;
     for (let edge = 0; edge <= 3; edge++) {
@@ -339,11 +386,17 @@ export function mountRiffStage(
       const lit = Math.max(0, 1 - age / 0.18);
       paint.fillStyle = laneColors[lane] + (lit > 0 ? "ff" : "66");
       paint.beginPath();
-      paint.arc(laneX(lane, 1, g), g.line, 10 + 8 * lit, 0, Math.PI * 2);
+      paint.arc(
+        laneX(lane, 1, g),
+        g.line,
+        10 + (still ? 0 : 8 * lit),
+        0,
+        Math.PI * 2,
+      );
       paint.fill();
     }
     flashes = flashes.filter((flash) => now - flash.at < 0.35);
-    for (const flash of flashes) {
+    for (const flash of still ? [] : flashes) {
       const age = (now - flash.at) / 0.35;
       paint.strokeStyle = laneColors[flash.lane];
       paint.globalAlpha = 1 - age;
@@ -365,13 +418,6 @@ export function mountRiffStage(
         paint.fillRect(width - 20 - (3 - segment) * 26, 22, 22, 8);
       }
     }
-    // Measured output, for tests and honest metering.
-    let peak = 0;
-    if (analyser && host.audio.state === "running") {
-      analyser.getFloatTimeDomainData(samples);
-      for (const sample of samples) peak = Math.max(peak, Math.abs(sample));
-    }
-    canvas.dataset.peak = String(peak);
     const busy =
       host.control.phase === "playing" || host.starting || flashes.length;
     if (busy && !document.hidden) frame = requestAnimationFrame(draw);
@@ -386,6 +432,7 @@ export function mountRiffStage(
     canvas.width = Math.round(width * ratio);
     canvas.height = Math.round(height * ratio);
     paint?.setTransform(ratio, 0, 0, ratio, 0, 0);
+    scene?.resize(width, height);
     wake();
   });
   resize.observe(surface);
@@ -407,6 +454,7 @@ export function mountRiffStage(
       listeners.abort();
       resize.disconnect();
       cancelAnimationFrame(frame);
+      scene?.dispose();
       detach?.();
       analyser?.disconnect();
       await host.dispose();

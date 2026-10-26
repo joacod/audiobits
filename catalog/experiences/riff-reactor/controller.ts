@@ -20,7 +20,7 @@ export type RiffTrack =
   | "stab"
   | "riser"
   | "crash";
-/** One composed event. beat and length are in beats; note is a MIDI number. */
+/** One composed event. beat and length are in beats; note is a numeric semitone position (C4 = 60). */
 export interface RiffNote {
   readonly beat: number;
   readonly length: number;

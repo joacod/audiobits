@@ -5,7 +5,7 @@ export type Pitch = NoteName | number;
 
 const semitones = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
 
-/** MIDI numbers remain useful for generated patterns and existing songs. */
+/** Numeric semitone positions (C4 = 60), independent of instrument timbre. */
 export function noteToMidi(note: Pitch): number {
   let midi: number;
   if (typeof note === "number") midi = note;
@@ -18,7 +18,7 @@ export function noteToMidi(note: Pitch): number {
       (match[2] === "#" ? 1 : match[2] === "b" ? -1 : 0);
   }
   if (!Number.isInteger(midi) || midi < 0 || midi > 127)
-    throw new RangeError(`Note outside MIDI range 0..127: ${note}`);
+    throw new RangeError(`Note outside supported pitch range 0..127: ${note}`);
   return midi;
 }
 
