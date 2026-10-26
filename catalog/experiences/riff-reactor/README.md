@@ -83,10 +83,10 @@ judging matches what the player hears:
 
 `song.ts` holds _Reactor Core_, an original 60-second track in E minor at
 128 BPM: intro, verse, chorus, break and final chorus over 32 bars, then a
-closing downbeat. The verse opens with a repeated two-note motif and sparse
-backing at every tier, then adds quicker notes and the full rhythm section.
-The chorus develops that motif in a higher register, with extra runs saved for
-the final repeat. Every band event carries a minimum intensity tier. Tier 0 is
+closing downbeat. A two-bar picked introduction leads into answering melodic phrases with
+sparse backing at every tier. The chorus keeps a recurring hook in a compact
+register, with breathing room between phrases and extra movement in the finale.
+Bass lines connect chord roots through fifths, octaves and turnarounds. Every band event carries a minimum intensity tier. Tier 0 is
 drums, bass, pad and chorus chugs; tier 1 adds the arpeggio, open hats, ghost
 notes, bass octaves and verse chugs; tier 2 adds sixteenth hats, extra kicks,
 fills and pushes. `setIntensity()` lands on the next bar line that has not been
@@ -95,8 +95,8 @@ scheduled yet. Replace the song with your own `RiffSong` data.
 ### Write notes and choose instruments
 
 `music.ts` uses scientific pitch notation: `C4` is middle C, `A4` is 440 Hz,
-`F#4` and `Gb4` are the same pitch. It supports single sharps/flats and MIDI
-pitches 0 through 127 in twelve-tone equal temperament. Times and lengths are
+`F#4` and `Gb4` are the same pitch. It supports single sharps/flats and numeric
+semitone positions 0 through 127 in twelve-tone equal temperament. Times and lengths are
 quarter-note beats: `1` is a quarter note, `0.5` an eighth, `1.5` a dotted
 quarter, and `1 / 3` an eighth-note triplet. BPM counts quarter notes.
 
@@ -116,15 +116,18 @@ export const harmony = phrase([[0, 4, ["C4", "E4", "G4"]]], 4);
 
 Gaps are rests. An array of pitches expands into simultaneous notes. The second
 argument offsets a phrase in beats, so phrases can repeat at different bars.
-`phrase()` returns ordinary `{ beat, length, note, velocity }` events with MIDI
-pitches, compatible with `RiffSong`. This is a small TypeScript authoring helper,
-not a new score interchange format. Scientific pitch notation also underlies
-[MusicXML pitch data](https://www.w3.org/2021/06/musicxml40/tutorial/midi-compatible-part/).
+`phrase()` returns ordinary `{ beat, length, note, velocity }` events with numeric
+pitches, compatible with `RiffSong`. Pitch numbers describe tuning, not timbre.
+This is a small TypeScript authoring helper, not a score interchange format.
 Importing sheet music, tempo changes and score engraving are outside its scope.
 
-`riffInstruments` selects the existing pick bass, power-chord pad, plucked arp,
-chord stab, sustained lead, drums and effects from `recipe.ts`. These are synth
-presets, not sampled acoustic instruments. Edit a recipe or supply replacements
+`riffInstruments` selects picked bass, bowed power harmony, bell-string arp,
+muted chord strings, a singing lead, resonant drums and effects from `recipe.ts`.
+These procedural recipes combine rounded fundamentals, decaying upper modes,
+short noise transients and evolving filters. Velocity shapes brightness as well
+as level in the lead, snare and chord strings; small seeded variations change
+drum and metal resonances between hits. They suggest string and percussion
+materials without samples or a claim of acoustic-instrument reproduction. Edit a recipe or supply replacements
 in `createRiff`'s fourth argument. Band parts and the choke require one-shots;
 the lead requires a sustained recipe. Pitched parts use a `frequency` control,
 and `velocity`, when declared, controls dynamics. Keep notes within each recipe's
@@ -167,9 +170,9 @@ Background tabs throttle timers, so stop or suspend on hiding. At the top tier
 with every lead note hit, booked voices included, the sum of per-sound peaks is
 34 voices, so `maxVoices: 48` never steals across sounds. Only the lead's echo
 tails reach the per-sound limit of 8, which retires that sound's oldest tail.
-With `masterGainDb: -8`, the full mix (top tier, every lead note hit) peaked at
--6.36 dBFS in one offline render. That figure was measured once and is not
-covered by an automated test.
+Use `masterGainDb: -8` as the showcase's starting mix level and remeasure the
+full arrangement after editing sounds or dynamics. Signal checks establish finite
+output and headroom; listening is still needed to judge the musical balance.
 
 When sharing an engine, dispose only this controller on removal; the
 application owns engine suspension and final disposal. Returning requires a
@@ -181,7 +184,7 @@ fresh user gesture. See the
 The complete [public showcase](https://www.audiobits.dev/catalog/riff-reactor)
 and
 [repository source](https://github.com/joacod/audiobits/tree/main/catalog/experiences/riff-reactor)
-remain available. The website note highway, lanes, judging, streaks and scoring
+remain available. The website audio-reactive Three.js reactor, note highway, lanes, judging, streaks and scoring
 are repository examples and are excluded from installation.
 
 Source contents and targets are defined by the root `registry.json`. Recipes use

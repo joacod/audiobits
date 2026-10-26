@@ -70,7 +70,9 @@ lands on the next unscheduled bar line. Judge input against
 application. Its installed `music.ts` authors scientific pitch names (`C4`,
 `F#4`, `Bb3`) in quarter-note beats with `phrase()` and `transpose()`.
 `instrument.ts` maps note/velocity inputs to recipe controls; `instruments.ts`
-selects the existing synth-rock presets. `createRiff` accepts recipe overrides
+selects picked-string and resonant-percussion recipes. Pitch notation
+does not determine timbre; edit the recipe layers, envelopes and filters to shape
+the instrument. `createRiff` accepts recipe overrides
 as its fourth argument. One-shots keep their envelopes; sustained voices still
 need their host to release them. See the installed guide for ranges and examples.
 

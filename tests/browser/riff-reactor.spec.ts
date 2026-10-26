@@ -57,7 +57,7 @@ function expectOnGrid(
 const origin = async (stage: Locator) =>
   Number(await stage.getAttribute("data-origin"));
 const peak = async (stage: Locator) =>
-  Number(await stage.locator("canvas").getAttribute("data-peak"));
+  Number(await stage.locator(".riff-highway").getAttribute("data-peak"));
 async function owned(page: Page) {
   const p = await probe(page);
   return p.sources - p.ended;
@@ -165,6 +165,19 @@ test("perform, miss, lift on a bar line, stop, replay, hide and leave cleanly @r
     .toBeGreaterThan(0);
   await expect.poll(() => peak(stage)).toBeGreaterThan(0);
   expectOnGrid(await starts(page), first);
+
+  // Losing the decorative GPU context preserves the independent playable stage.
+  await expect(stage).toHaveAttribute("data-renderer", /three|canvas/);
+  if ((await stage.getAttribute("data-renderer")) === "three") {
+    await stage.locator(".riff-reactor-field").evaluate((element) => {
+      const context = (element as HTMLCanvasElement).getContext("webgl2")!;
+      context.getExtension("WEBGL_lose_context")!.loseContext();
+    });
+    await expect(stage).toHaveAttribute("data-renderer", "canvas");
+    await expect(stage.locator(".riff-reactor-field")).toBeHidden();
+    await expect(stage).toHaveAttribute("data-phase", "playing");
+    await expect.poll(() => peak(stage)).toBeGreaterThan(0);
+  }
 
   // Stop is immediate and silent; the stage replays from the top.
   await stage.press("Escape");
