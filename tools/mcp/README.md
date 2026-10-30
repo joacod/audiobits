@@ -32,8 +32,7 @@ To inspect AudioBits itself, first run `pnpm build:lib` and launch with the
 repository root as `cwd`.
 
 `--project <consumer-project>` explicitly sets the launch default for hosts
-without a configurable working directory. The installed executable supports
-Node 24.21.0 or later in the 24.x series. Other Node series are unverified.
+without a configurable working directory.
 
 ## Reproducible Skill distribution
 

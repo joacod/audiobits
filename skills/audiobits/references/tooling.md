@@ -45,9 +45,8 @@ The single official Skill includes `scripts/mcp.mjs`, a self-contained local
 Node.js ESM stdio executable. Its MCP SDK, Zod and offline catalog metadata are
 bundled; the AudioBits runtime is resolved from the consumer's installation.
 No extra application npm dependency, monorepo checkout, background service or
-cloud connection is needed. Supported Node: **24.21.0 or later in the 24.x
-series**. Other Node series are unverified. The executable has a 1 MiB build
-budget; the installed Skill is about 0.8 MiB including references and licenses.
+cloud connection is needed. The executable has a 1 MiB build budget; the
+installed Skill is about 0.8 MiB including references and licenses.
 
 Understand the request before choosing tools. Simple sounds use ordinary public
 APIs and coding tools without a setup prompt. For complex discovery or repeated
