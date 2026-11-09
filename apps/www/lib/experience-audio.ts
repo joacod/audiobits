@@ -8,7 +8,10 @@ import { prepareAudioPlayback } from "./audio-gestures";
 
 import { createEchoProbeAudio } from "../../../catalog/experiences/echo-probe/host";
 
+import { createGrooveAudio } from "../../../catalog/experiences/groove-mixer/host";
+
 const factories = {
+  "groove-mixer": createGrooveAudio,
   "echo-vision": createEchoProbeAudio,
   lightsaber: createLightsaberAudio,
   "reactive-thruster": createThrusterAudio,

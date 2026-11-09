@@ -1,6 +1,13 @@
 import { registryItem } from "./registry";
 
 export const experienceSourcePurpose = {
+  "groove-mixer": {
+    "recipe.ts": "Canonical picked bass and drum recipe exports.",
+    "controller.ts":
+      "Two-bar audio-clock groove, independent mix buses and owned cancellation.",
+    "host.ts": "Gesture activation, retry, interruptions, Stop and disposal.",
+    "index.html": "Standalone bass-and-drums mixer bench.",
+  },
   "echo-probe": {
     "recipe.ts":
       "Emission, preserved returns, independent material/propagation filters, and native late repeats as schema-1 data.",
@@ -155,4 +162,14 @@ export const echoProbeExperience = {
   description: registryItem("echo-probe").description,
   controls: ["Emit", "Distance", "Direction", "Surface"],
   sourceFiles: experienceDemoSourceFiles("echo-probe").map((file) => file.name),
+} as const;
+
+export const grooveMixerExperience = {
+  title: registryItem("groove-mixer").title,
+  href: "/catalog/groove-mixer",
+  description: registryItem("groove-mixer").description,
+  controls: ["Groove", "Drums", "Bass", "Master", "Mute"],
+  sourceFiles: experienceDemoSourceFiles("groove-mixer").map(
+    (file) => file.name,
+  ),
 } as const;

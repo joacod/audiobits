@@ -338,7 +338,10 @@ try {
         index: 0,
         code: integration,
         source: exampleSource,
-        sustained: item.meta.requiredCapabilities.kinds.includes("sustained"),
+        // A looping controller stays active even when its individual recipes are finite.
+        sustained:
+          item.meta.requiredCapabilities.kinds.includes("sustained") ||
+          item.name === "groove-mixer",
         // Metal returns ring for 2.4 s and their late echo repeats for about
         // 3.2 s more, so Echo Probe finishes about 7 s after its pulse.
         // The Rift's collapse folds, implodes and repeats its pocket echo.
