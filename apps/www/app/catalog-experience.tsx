@@ -76,8 +76,25 @@ const EchoVisionDetail = dynamic(
   },
 );
 
-export function CatalogExperience({ slug }: { slug: string }) {
-  return slug === "echo-vision" ? (
+const GrooveMixerDetail = dynamic(
+  () => import("./groove-detail").then((module) => module.GrooveMixerDetail),
+  {
+    loading: () => (
+      <div className="catalog-stage" aria-label="Loading Groove Mixer" />
+    ),
+  },
+);
+
+export function CatalogExperience({
+  slug,
+  code,
+}: {
+  slug: string;
+  code: string;
+}) {
+  return slug === "groove-mixer" ? (
+    <GrooveMixerDetail code={code} />
+  ) : slug === "echo-vision" ? (
     <EchoVisionDetail />
   ) : slug === "riff-reactor" ? (
     <RiffReactorDetail />

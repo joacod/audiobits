@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Groove Mixer bench</title>
+  <button id="play">Play groove</button>
+  <button id="stop">Stop</button>
+  <label
+    >Bass <input id="bass" type="range" min="0" max="1" step="0.01" value="0.5"
+  /></label>
+  <label
+    >Drums
+    <input id="drums" type="range" min="0" max="1" step="0.01" value="0.5"
+  /></label>
+  <p id="status" role="status">Stopped</p>
+  <script type="module">
+    import { mountGroove } from "./host.ts";
+    const host = mountGroove(
+      (state) => {
+        document.querySelector("#status").textContent = state;
+      },
+      () => {
+        document.querySelector("#status").textContent =
+          "Audio could not start. Try Play again.";
+      },
+    );
+    document.querySelector("#play").onclick = () => {
+      void host.start();
+    };
+    document.querySelector("#stop").onclick = () => host.stop();
+    for (const channel of ["bass", "drums"]) {
+      document.querySelector(`#${channel}`).oninput = (event) =>
+        host.groove.setMix(channel, { level: Number(event.target.value) });
+    }
+  </script>
+</html>

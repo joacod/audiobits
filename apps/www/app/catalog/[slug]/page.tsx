@@ -63,12 +63,14 @@ export default async function CatalogEntryPage({
   const tokens = await highlightCode(code, "typescript");
   return (
     <CatalogDetail entry={experience}>
-      <CatalogExperience slug={experience.slug} />
-      <CatalogInstall slug={experience.source.item}>
-        <UsageCode slug={experience.slug} code={code}>
-          <CodeBlock code={code} tokens={tokens} />
-        </UsageCode>
-      </CatalogInstall>
+      <CatalogExperience slug={experience.slug} code={code} />
+      {experience.slug !== "groove-mixer" ? (
+        <CatalogInstall slug={experience.source.item}>
+          <UsageCode slug={experience.slug} code={code}>
+            <CodeBlock code={code} tokens={tokens} />
+          </UsageCode>
+        </CatalogInstall>
+      ) : null}
       <section className="catalog-inspector">
         <h2>Customize or inspect</h2>
         <p>

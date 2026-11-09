@@ -53,6 +53,13 @@ These are procedural approximations, not samples or acoustic instrument models.
 Use `createInstrument` for pitched recipes and retain the native Voice for
 release. Song arrangements and game rules remain outside instrument recipes.
 
+Groove Mixer's `createGroove(audio)` loops drums and bass at 120 BPM.
+`start()` requires an activated engine; `setMix(channel, { level, muted })`
+balances `drums`, `bass` and its own `master` bus with normalized levels.
+Mute preserves level. `stop()` cancels future notes; `dispose()` releases
+only the controller. The host owns suspension, gestures and engine disposal.
+Install `groove-mixer` for canonical instrument recipes and the integration guide.
+
 Echo Probe's `createEchoProbe(audio)` takes bounded reflection data through
 `emit(reflections, { seed, strength })`. Each reflection supplies relative distance,
 stereo pan, intensity, and surface character. The controller schedules emission,

@@ -1,6 +1,7 @@
 import registry from "../../../registry.json" with { type: "json" };
 import {
   energyChargeExperience,
+  grooveMixerExperience,
   echoProbeExperience,
   riftExperience,
   riffReactorExperience,
@@ -66,6 +67,11 @@ const experienceEntries = [
     slug: "energy-charge",
     preview: "charge",
     experience: energyChargeExperience,
+  },
+  {
+    slug: "groove-mixer",
+    preview: "pulse",
+    experience: grooveMixerExperience,
   },
 ] as const;
 

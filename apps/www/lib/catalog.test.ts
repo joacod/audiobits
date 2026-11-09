@@ -58,6 +58,7 @@ test("catalog index discovers every registry entry once and groups collections",
     "reactive-thruster",
     "echo-probe",
     "energy-charge",
+    "groove-mixer",
     "echo-vision",
     ...registry.items
       .filter((item) => item.meta.classification === "recipe")
@@ -81,7 +82,15 @@ test("catalog index discovers every registry entry once and groups collections",
 });
 
 test("catalog entries derive links and playback from website metadata", () => {
-  const [lightsaber, , , reactive, , charge] = catalogEntries;
+  const lightsaber = catalogEntries.find(
+    (entry) => entry.slug === "lightsaber",
+  )!;
+  const reactive = catalogEntries.find(
+    (entry) => entry.slug === "reactive-thruster",
+  )!;
+  const charge = catalogEntries.find(
+    (entry) => entry.slug === "energy-charge",
+  )!;
   expect(energyChargeExperience.href).toBe("/catalog/energy-charge");
   expect(reactiveThrusterExperience.href).toBe("/catalog/reactive-thruster");
   expect(charge).toMatchObject({
