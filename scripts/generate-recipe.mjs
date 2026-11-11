@@ -39,6 +39,15 @@ const capabilities = {
     ),
     sources: definitions.Source.anyOf.map((node) => node.properties.type.const),
     waveforms: definitions.Source.anyOf[0].properties.waveform.enum,
+    layerStartOffset: {
+      unit: "seconds",
+      min: definitions.Layer.properties.startOffset.minimum,
+      max: definitions.Layer.properties.startOffset.maximum,
+      default: 0,
+      values: ["number"],
+      oneShotGate: "shared",
+      sustainedAutomationEndSeconds: 60,
+    },
     oscillatorDetune: {
       unit: "cents",
       min: definitions.Detune.anyOf[0].minimum,
@@ -86,6 +95,7 @@ const capabilities = {
     "live-controls",
     "oscillator-detune",
     "scheduled-release",
+    "layer-start-offset",
     "seeded-replay",
     "buses",
     "native-output-tap",

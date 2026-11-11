@@ -6,6 +6,15 @@
     "kinds": ["one-shot", "sustained"],
     "sources": ["oscillator", "noise"],
     "waveforms": ["sine", "triangle", "sawtooth", "square"],
+    "layerStartOffset": {
+      "unit": "seconds",
+      "min": 0,
+      "max": 60,
+      "default": 0,
+      "values": ["number"],
+      "oneShotGate": "shared",
+      "sustainedAutomationEndSeconds": 60
+    },
     "oscillatorDetune": {
       "unit": "cents",
       "min": -4800,
@@ -37,6 +46,7 @@
     "live-controls",
     "oscillator-detune",
     "scheduled-release",
+    "layer-start-offset",
     "seeded-replay",
     "buses",
     "native-output-tap",

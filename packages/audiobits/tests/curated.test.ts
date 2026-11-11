@@ -10,8 +10,9 @@ import { powerUp } from "../../../catalog/recipes/power-up/recipe";
 import { validateRecipe } from "../src/recipe/validate";
 import { compile } from "../src/compiler/plan";
 import { controlsFor } from "../src/compiler/values";
+import type { Recipe } from "../src/index";
 
-const recipes = {
+const recipes: Readonly<Record<string, Recipe>> = {
   confirmation,
   impact,
   thruster,

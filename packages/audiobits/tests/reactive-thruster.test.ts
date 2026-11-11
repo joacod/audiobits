@@ -40,8 +40,14 @@ it("keeps one serializable validated recipe with cohesive live pitch, gain and f
     frequency: 160,
     detune: 0,
   });
-  expect(high.layers[2].layer.effects![1].frequency).toBe(5200);
-  expect(low.layers[2].layer.effects![1].frequency).toBe(220);
+  expect(high.layers[2].layer.effects![1]).toMatchObject({
+    type: "filter",
+    frequency: 5200,
+  });
+  expect(low.layers[2].layer.effects![1]).toMatchObject({
+    type: "filter",
+    frequency: 220,
+  });
   const seed = high.layers[2].noiseSeed;
   const replay = compile(reactiveThruster, { throttle: 1 }, 42);
   const different = compile(reactiveThruster, { throttle: 1 }, 43);

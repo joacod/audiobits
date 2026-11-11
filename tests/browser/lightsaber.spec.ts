@@ -153,6 +153,8 @@ for (const cancellation of ["capture"] as const)
         surface.addEventListener(
           "pointermove",
           (event) => {
+            if (!(event instanceof PointerEvent))
+              throw new Error("Expected pointer move");
             surface.releasePointerCapture(event.pointerId);
           },
           { once: true },
@@ -587,6 +589,7 @@ async function trackBladeGraphics(
     if (failure === "context") {
       const getContext = HTMLCanvasElement.prototype.getContext;
       HTMLCanvasElement.prototype.getContext = function (
+        this: HTMLCanvasElement,
         ...args: Parameters<typeof getContext>
       ) {
         if (args[0] === "webgl2") return null;
@@ -660,6 +663,7 @@ test("development Strict Mode replays effects with a fresh graphics canvas", asy
     const canvases = new Set<HTMLCanvasElement>();
     const getContext = HTMLCanvasElement.prototype.getContext;
     HTMLCanvasElement.prototype.getContext = function (
+      this: HTMLCanvasElement,
       ...args: Parameters<typeof getContext>
     ) {
       if (args[0] === "webgl2") canvases.add(this);

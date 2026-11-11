@@ -15,6 +15,7 @@ const recipe = {
   layers: [
     {
       id: "tone",
+      startOffset: 0.045,
       source: { type: "oscillator", waveform: "sine", frequency: 440 },
       gainDb: -12,
       envelope: { attack: 0.005, decay: 0.02, sustain: 0.1, release: 0.02 },
@@ -53,6 +54,12 @@ test("cwd and explicit resolution use packed external ESM exports", async () => 
   );
   expect(inspected.data.schema.$defs.Recipe).toBeDefined();
   expect(inspected.data.capabilities.recipe.sources).toContain("oscillator");
+  expect(inspected.data.capabilities.runtime).toContain("layer-start-offset");
+  expect(inspected.data.capabilities.recipe.layerStartOffset).toMatchObject({
+    unit: "seconds",
+    default: 0,
+    values: ["number"],
+  });
   const explicit = await call(connection.client, "inspect_project", {
     projectPath: external.consumer,
   });
@@ -62,6 +69,7 @@ test("cwd and explicit resolution use packed external ESM exports", async () => 
 test("packed validateRecipe returns structural, semantic and resource issues", async () => {
   const valid = await call(connection.client, "validate_recipe", { recipe });
   expect(valid.data.validation.ok).toBe(true);
+  expect(valid.data.validation.recipe.layers[0].startOffset).toBe(0.045);
   const invalid = await call(connection.client, "validate_recipe", {
     recipe: { ...recipe, duration: -1, extra: true },
   });

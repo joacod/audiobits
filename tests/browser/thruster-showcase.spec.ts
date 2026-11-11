@@ -117,7 +117,7 @@ test("cancelled activation and visibility cleanup require a fresh gesture", asyn
   await page.mouse.up();
   await page.evaluate(() =>
     (
-      globalThis as unknown as { thrusterProbe: Probe }
+      globalThis as unknown as { thrusterProbe: { releaseActivation(): void } }
     ).thrusterProbe.releaseActivation(),
   );
   await expect

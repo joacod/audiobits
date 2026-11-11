@@ -427,6 +427,7 @@ it("validates play controls and seeds before allocation or stealing", async () =
   expect(second.parameters).toEqual({ intensity: 1 });
   expect(first.seed).toBe(0);
   expect(first.state).toBe("retiring");
+  // @ts-expect-error Exercise runtime rejection of a play-only control.
   expect(() => second.set({ intensity: 0 })).toThrow(/live/);
   expect(second.parameters).toEqual({ intensity: 1 });
   expect(sources.filter((source) => source.buffer !== null)).toHaveLength(2);
@@ -452,6 +453,7 @@ it("retargets live ramps from their current values atomically without new graphs
   voice.set({ throttle: 0 });
   expect(source.frequency.calls.at(-2)).toEqual(["set", 87.5, 1.02]);
   const before = source.frequency.calls.length;
+  // @ts-expect-error Exercise atomic runtime rejection of an undeclared control.
   expect(() => voice.set({ throttle: 1, unknown: 0 })).toThrow();
   expect(source.frequency.calls).toHaveLength(before);
   expect(voice.parameters).toEqual({ throttle: 0 });
@@ -896,6 +898,61 @@ it("cancels reserved onsets, accepts past release, and never stretches a natural
   await audio.dispose();
 });
 
+it("schedules layer clocks and retargets pending live ramps without allocating delays", async () => {
+  const { audio, context, sources, nodes } = setup();
+  await audio.start();
+  const voice = audio
+    .sound({
+      ...thruster,
+      layers: thruster.layers.map((layer) => ({ ...layer, startOffset: 0.5 })),
+    })
+    .play();
+  expect(context.createDelay).not.toHaveBeenCalled();
+  expect(sources.every((source) => source.start.mock.calls[0][0] === 1.5)).toBe(
+    true,
+  );
+  voice.set({ throttle: 1 });
+  const frequency = sources[0].frequency;
+  expect(frequency.calls.at(-2)![2]).toBe(1.5);
+  expect(frequency.calls.at(-1)![2]).toBeGreaterThan(1.5);
+  const initial = frequency.calls[0][1];
+  context.currentTime = 1.2;
+  voice.set({ throttle: 0.5 });
+  expect(frequency.calls.at(-2)).toEqual(["set", initial, 1.5]);
+  voice.stop({ at: 1.3 });
+  expect(
+    sources.every((source) => source.stop.mock.calls.at(-1)![0] === 1.3),
+  ).toBe(true);
+  expect(voice.state).toBe("active");
+  context.currentTime = 1.3;
+  expect(voice.state).toBe("stopping");
+  sources.forEach((source) => source.onended?.());
+  await voice.ended;
+  expect(audio.counts).toEqual({ active: 0, retiring: 0 });
+  expect(
+    nodes.slice(2).every((node) => node.disconnect.mock.calls.length > 0),
+  ).toBe(true);
+  const mixed = audio
+    .sound({
+      ...thruster,
+      layers: thruster.layers.map((layer, index) => ({
+        ...layer,
+        startOffset: index === 0 ? 0 : 0.5,
+      })),
+    })
+    .play();
+  const mixedSources = sources.slice(thruster.layers.length);
+  mixed.stop({ at: 1.6 });
+  expect(mixedSources[0].stop.mock.calls.at(-1)![0]).toBeGreaterThan(1.6);
+  expect(mixedSources[1].stop.mock.calls.at(-1)![0]).toBe(1.6);
+  mixedSources[1].onended?.();
+  expect(audio.counts.active).toBe(1);
+  mixedSources[0].onended?.();
+  await mixed.ended;
+  expect(audio.counts.active).toBe(0);
+  await audio.dispose();
+});
+
 it("pending release retains tails and is overridden by cuts, stealing and explicit owners", async () => {
   for (const cleanup of [
     "tail",
@@ -911,6 +968,7 @@ it("pending release retains tails and is overridden by cuts, stealing and explic
     const bus = audio.bus("release");
     const sound = audio.sound({
       ...thruster,
+      layers: thruster.layers.map((layer) => ({ ...layer, startOffset: 0.5 })),
       effects: [{ type: "delay", time: 0.2, feedback: 0.5, mix: 0.25 }],
     });
     const voice = sound.play({ bus });

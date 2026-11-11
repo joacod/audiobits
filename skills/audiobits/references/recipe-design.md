@@ -59,6 +59,36 @@ The Synth lead installed example demonstrates this through an ordinary Voice.
 
 ## Construct and validate
 
+For silence followed by a crisp secondary transient, check `layer-start-offset`
+and `recipe.layerStartOffset` in the installed capabilities. Numeric
+`startOffset` seconds defaults to zero and schedules the source, envelope and
+layer frequency automation together. Root effects retain voice time zero.
+Keep offset plus effective attack (at least 2 ms) plus decay within the shared
+one-shot duration, and end layer automation within `duration - startOffset`.
+For sustained recipes, offset plus automation time cannot exceed 60 seconds.
+Pending layers share voice ownership, cancellation and resource bounds. Live
+updates before onset retarget a smoothed ramp starting at that onset. Use delay
+for processing an input signal; offsets do not postpone the shared gate or release.
+
+This fixed pair of transients stays in one serializable voice:
+
+```ts
+import { defineSound } from "audiobits";
+
+export const doubleClick = defineSound({
+  schemaVersion: 1,
+  kind: "one-shot",
+  duration: 0.1,
+  layers: [0, 0.045].map((startOffset, index) => ({
+    id: `click-${index}`,
+    startOffset,
+    source: { type: "noise", color: "white" },
+    gainDb: -30,
+    envelope: { attack: 0.002, decay: 0.02, sustain: 0, release: 0.01 },
+  })),
+});
+```
+
 - `one-shot` has a finite `duration`; `sustained` runs until stopped and has no
   duration field. Envelope times are seconds, frequency is Hz, gain is dB.
 - A parameter's `min`, `max` and `default` define input bounds. `mode: "play"`

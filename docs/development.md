@@ -82,6 +82,7 @@ pnpm --filter @audiobits/vanilla dev
 | `pnpm build:site`        | Library build followed by site build                                               |
 | `pnpm build`             | Library, site, and vanilla production builds                                       |
 | `pnpm typecheck`         | Build library, generate site types, check all workspaces                           |
+| `pnpm typecheck:tests`   | Strict TypeScript checks for test fixtures, browser harnesses and test utilities   |
 | `pnpm lint`              | ESLint, formatting, Markdown/MDX files and documentation routes                    |
 | `pnpm format`            | Format in-scope source/configuration/onboarding files                              |
 | `pnpm test`              | Supervisor, recipe/runtime/release checks; schema/metadata drift                   |
