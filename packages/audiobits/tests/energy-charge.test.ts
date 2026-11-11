@@ -19,8 +19,14 @@ it("serializes and validates all charge mappings across the range", () => {
   }
   expect(plans[0].layers[0].layer.source).toMatchObject({ frequency: 80 });
   expect(plans[4].layers[0].layer.source).toMatchObject({ frequency: 320 });
-  expect(plans[0].layers[1].layer.effects![0].frequency).toBe(240);
-  expect(plans[4].layers[1].layer.effects![0].frequency).toBe(3600);
+  expect(plans[0].layers[1].layer.effects![0]).toMatchObject({
+    type: "filter",
+    frequency: 240,
+  });
+  expect(plans[4].layers[1].layer.effects![0]).toMatchObject({
+    type: "filter",
+    frequency: 3600,
+  });
   expect(energyCharge.parameters.charge.smoothing).toBe(0.08);
   expect(() => compile(energyCharge, { charge: 1.1 })).toThrow();
   const invalid = structuredClone(JSON.parse(JSON.stringify(energyCharge)));

@@ -8,7 +8,10 @@ import {
 } from "../apps/www/lib/catalog";
 import { siteUrl } from "../apps/www/lib/site-url";
 
-const docs = readdirSync("apps/www/content/docs", { recursive: true })
+const docs = readdirSync("apps/www/content/docs", {
+  recursive: true,
+  encoding: "utf8",
+})
   .filter((file) => file.endsWith(".mdx"))
   .map((file) => {
     const content = readFileSync(`apps/www/content/docs/${file}`, "utf8");

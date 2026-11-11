@@ -265,7 +265,13 @@ export function validateRecipe(input: unknown): ValidationResult {
         add("range", path, "Exponential mapping endpoints must be positive.");
     }
   }
-  function value(input: Value, min: number, max: number, path: string) {
+  function value(
+    input: Value,
+    min: number,
+    max: number,
+    path: string,
+    offset = 0,
+  ) {
     if (typeof input === "number" || !("points" in input))
       return point(input, min, max, path);
     points += input.points.length;
@@ -274,12 +280,12 @@ export function validateRecipe(input: unknown): ValidationResult {
       if (
         (index === 0 && time !== 0) ||
         time <= previous ||
-        time > (recipe.kind === "one-shot" ? recipe.duration : 60)
+        time + offset > (recipe.kind === "one-shot" ? recipe.duration : 60)
       )
         add(
           "timeline",
           `${path}["points"][${index}][0]`,
-          "Automation must start at zero, increase strictly, and end by gate close (60 seconds for sustained).",
+          "Automation must start at zero, increase strictly, and end by gate close (60 seconds from voice onset for sustained), including the layer start offset.",
         );
       previous = time;
       point(
@@ -292,11 +298,11 @@ export function validateRecipe(input: unknown): ValidationResult {
       );
     });
   }
-  function filters(list: Recipe["effects"], path: string) {
+  function filters(list: Recipe["effects"], path: string, offset = 0) {
     list?.forEach((effect, index) => {
       const at = `${path}[${index}]`;
       if (effect.type === "filter")
-        value(effect.frequency, 20, 20000, `${at}["frequency"]`);
+        value(effect.frequency, 20, 20000, `${at}["frequency"]`, offset);
       else {
         point(effect.time, 0.01, 2, `${at}["time"]`, true);
         point(effect.feedback ?? 0, 0, 0.8, `${at}["feedback"]`, true);
@@ -307,19 +313,20 @@ export function validateRecipe(input: unknown): ValidationResult {
   filters(recipe.effects, '$["effects"]');
   recipe.layers.forEach((layer, i) => {
     const path = `$["layers"][${i}]`;
+    const offset = layer.startOffset ?? 0;
     if (ids.has(layer.id))
       add("duplicate", `${path}["id"]`, "Layer identifiers must be unique.");
     ids.add(layer.id);
     effects += layer.effects?.length ?? 0;
     if (
       recipe.kind === "one-shot" &&
-      Math.max(0.002, layer.envelope.attack) + layer.envelope.decay >
+      offset + Math.max(0.002, layer.envelope.attack) + layer.envelope.decay >
         recipe.duration
     )
       add(
         "timeline",
         `${path}["envelope"]`,
-        "Effective attack plus decay exceeds gate duration.",
+        "Start offset plus effective attack and decay exceeds gate duration.",
       );
     if (layer.source.type === "oscillator") {
       value(
@@ -327,6 +334,7 @@ export function validateRecipe(input: unknown): ValidationResult {
         20,
         20000,
         `${path}["source"]["frequency"]`,
+        offset,
       );
       point(
         layer.source.detune ?? 0,
@@ -343,7 +351,7 @@ export function validateRecipe(input: unknown): ValidationResult {
         );
     }
     value(layer.gainDb, -60, 0, `${path}["gainDb"]`);
-    filters(layer.effects, `${path}["effects"]`);
+    filters(layer.effects, `${path}["effects"]`, offset);
   });
   if (effects > 8)
     add(

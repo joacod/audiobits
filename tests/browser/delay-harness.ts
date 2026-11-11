@@ -311,6 +311,7 @@ async function lifecycle() {
   await audio.start();
   const recipe = {
     ...pulse,
+    layers: pulse.layers.map((layer) => ({ ...layer, startOffset: 0.004 })),
     effects: [{ type: "delay", time: 0.08, feedback: 0.5, mix: 0.25 }],
   } as const;
   const sound = audio.sound(recipe);
@@ -345,7 +346,7 @@ async function lifecycle() {
     .sound({
       schemaVersion: 1,
       kind: "sustained",
-      layers: pulse.layers,
+      layers: recipe.layers,
       effects: recipe.effects,
     })
     .play();

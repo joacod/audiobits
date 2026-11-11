@@ -32,9 +32,11 @@ test("external Skill runs all tools without server dependencies and uses the exp
       ".package-lock.json",
       "audiobits",
     ]);
-    expect(
-      (await call(connection.client, "inspect_project")).data.packagePath,
-    ).toBe(resolve(external.consumer, "node_modules/audiobits"));
+    const inspected = await call(connection.client, "inspect_project");
+    expect(inspected.data.packagePath).toBe(
+      resolve(external.consumer, "node_modules/audiobits"),
+    );
+    expect(inspected.data.capabilities.runtime).toContain("layer-start-offset");
     expect(
       (
         await call(connection.client, "search_catalog", {

@@ -111,11 +111,13 @@ it("resolves variation deterministically despite object insertion order", () => 
   const data = clone(impact);
   data.layers[1].gainDb = { random: [-26, -22] };
   const recipe = defineSound(data);
-  const reordered = defineSound(
+  const reordered = validateRecipe(
     Object.fromEntries(Object.entries(data).reverse()),
   );
+  expect(reordered.ok).toBe(true);
+  if (!reordered.ok) throw new Error(JSON.stringify(reordered.issues));
   const plan = compile(recipe, { intensity: 1 }, 42);
-  expect(compile(reordered, { intensity: 1 }, 42)).toEqual(plan);
+  expect(compile(reordered.recipe, { intensity: 1 }, 42)).toEqual(plan);
   expect(compile(recipe, { intensity: 1 }, 43)).not.toEqual(plan);
   expect(plan.layers[1].layer.gainDb).toBeGreaterThanOrEqual(-26);
   expect(plan.layers[1].layer.gainDb).toBeLessThanOrEqual(-22);

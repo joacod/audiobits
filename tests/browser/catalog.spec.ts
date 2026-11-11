@@ -95,7 +95,11 @@ test("card Play and Start/Stop use one engine, replace other previews, and dispo
 }) => {
   await instrument(page, "normal", "/catalog");
   for (const slug of ["impact", "thruster"]) {
-    const entry = catalogEntries.find((entry) => entry.slug === slug)!;
+    const entry = catalogEntries.find(
+      (entry) => entry.slug === slug && entry.category === "bundled",
+    );
+    if (!entry || entry.category !== "bundled")
+      throw new Error(`Missing bundled sound: ${slug}`);
     const sustained = entry.playback === "sustained";
     const before = (await probe(page)).sources;
     await page

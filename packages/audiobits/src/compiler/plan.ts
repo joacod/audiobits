@@ -150,6 +150,9 @@ export function envelopeAt(
   elapsed: number,
 ): number {
   const { attack, gain } = layer;
+  const offset = layer.layer.startOffset ?? 0;
+  elapsed -= offset;
+  duration -= offset;
   const { decay, sustain, release } = layer.layer.envelope;
   if (elapsed <= 0) return 0;
   if (elapsed < attack)

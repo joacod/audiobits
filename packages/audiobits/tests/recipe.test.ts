@@ -19,8 +19,12 @@ describe("pure recipe contract", () => {
     data.layers[0].source.frequency.points[0][1] = 900;
     expect(JSON.stringify(compile(defined))).toBe(before);
     expect(Object.isFrozen(defined.layers[0].source.frequency)).toBe(true);
-    const reversed = Object.fromEntries(Object.entries(fixture()).reverse());
-    expect(JSON.stringify(defineSound(reversed))).toBe(JSON.stringify(defined));
+    const reversed = validateRecipe(
+      Object.fromEntries(Object.entries(fixture()).reverse()),
+    );
+    expect(reversed.ok).toBe(true);
+    if (!reversed.ok) throw new Error(JSON.stringify(reversed.issues));
+    expect(JSON.stringify(reversed.recipe)).toBe(JSON.stringify(defined));
   });
   it("rejects unknown versions, fields and all deferred forms with stable paths", () => {
     const data = fixture();

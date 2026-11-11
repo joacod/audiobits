@@ -6,6 +6,32 @@ import { resolve } from "node:path";
 const metadata = JSON.parse(
   readFileSync("packages/audiobits/src/recipe/capabilities.json", "utf8"),
 );
+
+declare global {
+  var startOffsetChecks: typeof import("./start-offset-harness").startOffsetChecks;
+}
+
+// Existing source checks cannot catch layer-local clocks or pending attacks.
+for (const check of ["timing", "live"] as const)
+  test(`layer start offsets: native ${check}, cancellation and cleanup`, async ({
+    page,
+  }) => {
+    await page.goto("http://127.0.0.1:4173");
+    if (check === "live") await requireOfflineCheckpoints(page);
+    await page.addScriptTag({
+      path: resolve(
+        "node_modules/.cache/audiobits-audio-tests/audio-harness.iife.js",
+      ),
+    });
+    console.log(
+      JSON.stringify(
+        await page.evaluate(
+          async (check) => await globalThis.startOffsetChecks[check](),
+          check,
+        ),
+      ),
+    );
+  });
 for (const kind of metadata.recipe.kinds)
   test(`advertised ${kind} source, waveform and filter variants execute natively`, async ({
     page,
@@ -30,6 +56,7 @@ for (const kind of metadata.recipe.kinds)
             layers: [
               {
                 id: "candidate",
+                startOffset: 0.045,
                 source:
                   source === "oscillator"
                     ? { type: source, waveform: variant, frequency: 440 }

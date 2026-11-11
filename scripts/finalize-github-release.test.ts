@@ -32,28 +32,31 @@ test("public availability polls only the exact version and stops when visible", 
   let time = 0;
   const fetch = vi
     .fn()
-    .mockResolvedValueOnce({ ok: false, status: 404 })
-    .mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ name: "audiobits", version }),
-    });
-  const wait = vi.fn(async (ms: number) => {
+    .mockResolvedValueOnce(new Response(null, { status: 404 }))
+    .mockResolvedValueOnce(Response.json({ name: "audiobits", version }));
+  const waits: number[] = [];
+  const wait = async <T = void>(ms = 0, value?: T) => {
     time += ms;
-  });
+    waits.push(ms);
+    return value as T;
+  };
   await waitForPublicVersion(version, { fetch, wait, now: () => time });
   expect(fetch).toHaveBeenCalledTimes(2);
   for (const [url] of fetch.mock.calls) {
     expect(url).toBe(`https://registry.npmjs.org/audiobits/${version}`);
   }
-  expect(wait).toHaveBeenCalledExactlyOnceWith(15_000);
+  expect(waits).toEqual([15_000]);
 });
 
 test("availability timeout is bounded and explains finalization-only recovery", async () => {
   let time = 0;
-  const fetch = vi.fn(async () => ({ ok: false, status: 404 }));
-  const wait = vi.fn(async (ms: number) => {
+  const fetch = vi.fn(async () => new Response(null, { status: 404 }));
+  const waits: number[] = [];
+  const wait = async <T = void>(ms = 0, value?: T) => {
     time += ms;
-  });
+    waits.push(ms);
+    return value as T;
+  };
   await expect(
     waitForPublicVersion(version, {
       fetch,
@@ -65,16 +68,16 @@ test("availability timeout is bounded and explains finalization-only recovery", 
   ).rejects.toThrow("Rerun only the failed GitHub Release job");
   expect(time).toBe(35);
   expect(fetch).toHaveBeenCalledTimes(3);
-  expect(wait.mock.calls.map(([ms]) => ms)).toEqual([15, 15, 5]);
+  expect(waits).toEqual([15, 15, 5]);
 });
 
 test("unexpected registry failures and mismatched responses fail without sleeping", async () => {
   const wait = vi.fn();
   for (const response of [
-    { ok: false, status: 403 },
-    { ok: false, status: 500 },
-    { ok: true, json: async () => ({ name: "audiobits", version: "other" }) },
-    { ok: true, json: async () => ({ name: "other", version }) },
+    new Response(null, { status: 403 }),
+    new Response(null, { status: 500 }),
+    Response.json({ name: "audiobits", version: "other" }),
+    Response.json({ name: "other", version }),
   ]) {
     await expect(
       waitForPublicVersion(version, {

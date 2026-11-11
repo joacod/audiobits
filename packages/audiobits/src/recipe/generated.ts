@@ -61,6 +61,7 @@ export type Source =
   | { readonly type: "noise"; readonly color: "white" };
 export type Layer = {
   readonly id: string;
+  readonly startOffset?: number;
   readonly source: Source;
   readonly gainDb: PointValue;
   readonly envelope: Envelope;
@@ -280,6 +281,7 @@ export const recipeSchema: Readonly<Record<string, unknown>> = {
       type: "object",
       properties: {
         id: { type: "string", minLength: 1, maxLength: 64 },
+        startOffset: { type: "number", minimum: 0, maximum: 60 },
         source: { $ref: "#/$defs/Source" },
         gainDb: { $ref: "#/$defs/PointValue" },
         envelope: { $ref: "#/$defs/Envelope" },

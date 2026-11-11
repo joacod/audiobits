@@ -46,7 +46,23 @@ Repeated stop cannot extend playback.
 Disposal cancels scheduled starts, clears tails, and releases all owned resources;
 it is distinct from normal musical release.
 
-All recipe times are relative to voice onset, scheduled against context time.
+Recipe times are relative to voice onset except layer envelopes and automation,
+which use the layer onset. An optional numeric `startOffset` delays that onset
+by 0..60 seconds (default 0), using the audio clock. Sources begin at their own
+onset; layer filter automation follows the same origin. Root effects retain
+voice time zero. For one-shots, offset plus effective attack (at least 2 ms)
+plus decay must fit within `duration`; layer automation must end within
+`duration - startOffset`. The shared gate, release and tail deadlines do not
+shift. Sustained layer automation, including its offset, must end within the
+first 60 seconds of the voice, then hold its last value until stop.
+Stopping at or before a pending layer onset cancels it, including scheduled
+release, voice stealing and Stop All. Pending layers belong to the same graph
+and voice budget from playback reservation onward. Live updates before onset
+retarget a smoothed ramp beginning at that layer onset; later updates use normal
+live smoothing. The numeric offset never changes while playing and consumes no
+random draws. The additive schema-1 field requires `layer-start-offset`;
+older runtimes reject it.
+
 Playback options may supply an absolute `at` time in the owning context's clock;
 omit it for immediate playback. Reject past times rather than interpreting them
 as delayed UI input. A future scheduled voice reserves capacity and can be

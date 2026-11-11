@@ -126,6 +126,7 @@ export const descriptor = {
     Layer: object(
       {
         id: { type: "string", minLength: 1, maxLength: 64 },
+        startOffset: number(0, 60),
         source: ref("Source"),
         gainDb: ref("PointValue"),
         envelope: ref("Envelope"),

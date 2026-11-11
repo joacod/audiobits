@@ -2,6 +2,7 @@ import { synthLead } from "../../catalog/recipes/synth-lead/recipe";
 import type { Recipe } from "../../packages/audiobits/src/index";
 import "./echo-probe-harness";
 import "./delay-harness";
+import "./start-offset-harness";
 import * as bladeRecipes from "../../catalog/experiences/lightsaber/recipe";
 import { energyCharge } from "../../catalog/experiences/energy-charge/recipe";
 import { reactiveThruster } from "../../catalog/experiences/reactive-thruster/recipe";
@@ -136,7 +137,11 @@ async function scheduledReleaseSignal(fallback: boolean) {
               source: {
                 type: "oscillator",
                 waveform: "sine",
-                frequency: { control: "pitch", range: [220, 440] },
+                frequency: {
+                  control: "pitch",
+                  range: [220, 440],
+                  scale: "linear",
+                },
               },
               envelope: { attack: 0.2, decay: 0.2, sustain: 0.5, release: 0.1 },
             },
@@ -683,9 +688,11 @@ Object.assign(globalThis, { mixingSignal, mixingLifecycle });
 
 // Catalog signals retain replay, release, cancellation and live-control checks.
 async function capabilitySignal(recipe: unknown) {
-  const { defineSound } =
+  const { validateRecipe } =
     await import("../../packages/audiobits/src/recipe/validate");
-  const definition = defineSound(recipe);
+  const result = validateRecipe(recipe);
+  if (!result.ok) throw new Error(JSON.stringify(result.issues));
+  const definition = result.recipe;
   const context = new OfflineAudioContext(1, 48000, 48000);
   let finished = 0;
   const graph = createGraph(

@@ -14,6 +14,7 @@ const authored = defineSound({
   layers: [
     {
       id: "body",
+      startOffset: 0.045,
       source: {
         type: "oscillator",
         waveform: "sine",

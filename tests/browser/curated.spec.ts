@@ -17,7 +17,7 @@ test("new sounds render finite, bounded, repeatable output and clear their tails
     ),
   });
   const results = await page.evaluate(
-    async (recipes) => {
+    async (recipes: Recipe[]) => {
       const render = (
         globalThis as unknown as {
           curatedSignal(

@@ -102,6 +102,62 @@ The Workbench editor is documented in [Catalog](/docs/catalog#workbench-editor).
 Typed authoring preserves recipe structure, parameter names and parameter modes.
 Runtime validation remains authoritative for exact schema validity.
 
+## Layer start offsets
+
+Use optional `startOffset` seconds to leave silence before a layer's crisp onset.
+It accepts a finite number from 0 to 60, defaults to 0, and is scheduled through
+the audio clock relative to the voice's start, including `play({ at })`.
+
+```ts
+import { defineSound } from "audiobits";
+
+export const mechanicalImpact = defineSound({
+  schemaVersion: 1,
+  kind: "one-shot",
+  duration: 0.1,
+  layers: [
+    {
+      id: "impact",
+      source: { type: "noise", color: "white" },
+      gainDb: -24,
+      envelope: { attack: 0.002, decay: 0.02, sustain: 0, release: 0.01 },
+    },
+    {
+      id: "bolt-return",
+      startOffset: 0.045,
+      source: { type: "noise", color: "white" },
+      gainDb: -32,
+      envelope: { attack: 0.002, decay: 0.03, sustain: 0, release: 0.01 },
+    },
+  ],
+});
+```
+
+The source, envelope and layer frequency automation (including layer filters)
+use the layer onset as time zero. Recipe effects retain voice time zero.
+One-shot `duration` remains the shared gate-close time: offset plus effective
+attack (at least 2 ms) plus decay must fit within it. Layer automation must end
+by `duration - startOffset`. Release begins at the shared gate; offsets do not
+extend the gate or add another allowance to effect tails.
+
+Sustained recipes still run until stopped. Their layer automation, including
+the offset, must finish within the first 60 seconds of the voice, then holds
+its final value. A numeric frequency needs no automation sequence.
+
+Stopping at or before a layer onset cancels that pending layer while audible
+layers release normally. Scheduled stops, Stop All, voice stealing and disposal
+also cover pending layers. Every layer is owned and counted within its voice
+from reservation; `voice.ended` waits for the owned graph and effect tails.
+Live updates before onset retarget the smoothed ramp scheduled at that layer
+onset. Updates after onset retain ordinary smoothing. Offsets have no live,
+parameter-mapping, random or looping form.
+
+Start offsets schedule a layer's source. The delay effect processes its input
+signal and can repeat it; a wet-only delay with zero feedback shifts the whole
+signal, including release. Check `layer-start-offset` in runtime capabilities
+and `recipe.layerStartOffset` in metadata. This additive schema-1 field is
+rejected by older runtimes.
+
 ## Delay
 
 Add delay to a recipe's `effects` to process its summed layers, or to a layer's

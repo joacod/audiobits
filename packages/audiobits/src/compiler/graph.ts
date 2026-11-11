@@ -74,6 +74,7 @@ export function createGraph(
     param: AudioParam;
     layer: PlannedLayer;
     source: AudioScheduledSourceNode;
+    onset: number;
   }[] = [];
   let clock: ConstantSourceNode | undefined;
   const reserved = at > context.currentTime;
@@ -89,6 +90,7 @@ export function createGraph(
     param: AudioParam;
     mapping: Mapping;
     db: boolean;
+    onset: number;
     start: number;
     from: number;
     to: number;
@@ -104,16 +106,17 @@ export function createGraph(
         },
     definition: Value,
     db = false,
+    onset = at,
   ) {
     const convert = (value: number) => (db ? 10 ** (value / 20) : value);
     if (typeof resolved === "number")
-      param.setValueAtTime(convert(resolved), at);
+      param.setValueAtTime(convert(resolved), onset);
     else
       resolved.points.forEach(([time, value], index) => {
-        if (!index) param.setValueAtTime(convert(value), at);
+        if (!index) param.setValueAtTime(convert(value), onset);
         else if (resolved.curve === "exponential")
-          param.exponentialRampToValueAtTime(convert(value), at + time);
-        else param.linearRampToValueAtTime(convert(value), at + time);
+          param.exponentialRampToValueAtTime(convert(value), onset + time);
+        else param.linearRampToValueAtTime(convert(value), onset + time);
       });
     if (
       typeof definition !== "number" &&
@@ -125,8 +128,9 @@ export function createGraph(
         param,
         mapping: definition,
         db,
-        start: at,
-        end: at,
+        onset,
+        start: onset,
+        end: onset,
         from: initial,
         to: initial,
       });
@@ -160,6 +164,7 @@ export function createGraph(
     input: AudioNode,
     effects: readonly ResolvedEffect[] = [],
     definitions: readonly Effect[] = plan.recipe.effects ?? [],
+    onset = at,
   ): AudioNode {
     let output = input;
     for (const [index, effect] of effects.entries()) {
@@ -205,6 +210,8 @@ export function createGraph(
         filter.frequency,
         effect.frequency,
         (definitions[index] as Extract<Effect, { type: "filter" }>).frequency,
+        false,
+        onset,
       );
       filter.Q.value = effect.q;
       output.connect(filter);
@@ -234,6 +241,7 @@ export function createGraph(
     panner.connect(destination);
     for (const planned of plan.layers) {
       const { layer, attack, gain } = planned;
+      const onset = at + (layer.startOffset ?? 0);
       let source: OscillatorNode | AudioBufferSourceNode;
       if (layer.source.type === "oscillator") {
         const oscillator = own(context.createOscillator());
@@ -245,6 +253,8 @@ export function createGraph(
           planned.definition.source.type === "oscillator"
             ? planned.definition.source.frequency
             : 440,
+          false,
+          onset,
         );
         schedule(
           oscillator.detune,
@@ -252,6 +262,8 @@ export function createGraph(
           planned.definition.source.type === "oscillator"
             ? (planned.definition.source.detune ?? 0)
             : 0,
+          false,
+          onset,
         );
         source = oscillator;
       } else {
@@ -279,16 +291,16 @@ export function createGraph(
       const envelopePlan = dynamic ? { ...planned, gain: 1 } : planned;
       const envelope = own(context.createGain());
       const param = envelope.gain;
-      param.setValueAtTime(0, at);
+      param.setValueAtTime(0, onset);
       param.linearRampToValueAtTime(
         layer.envelope.decay === 0
           ? envelopeGain * layer.envelope.sustain
           : envelopeGain,
-        at + attack,
+        onset + attack,
       );
       param.linearRampToValueAtTime(
         envelopeGain * layer.envelope.sustain,
-        at + attack + layer.envelope.decay,
+        onset + attack + layer.envelope.decay,
       );
       if (Number.isFinite(plan.duration)) {
         param.setValueAtTime(
@@ -300,7 +312,7 @@ export function createGraph(
           at + plan.duration + layer.envelope.release,
         );
       }
-      envelopes.push({ param, layer: envelopePlan, source });
+      envelopes.push({ param, layer: envelopePlan, source, onset });
       // Preserve existing filter/envelope semantics. The first delay and every
       // following effect process the gated signal so tails survive release.
       const chain = layer.effects ?? [];
@@ -313,15 +325,27 @@ export function createGraph(
         source,
         chain.slice(0, split),
         definitions.slice(0, split),
+        onset,
       ).connect(envelope);
       let gated: AudioNode = envelope;
       if (dynamic) {
         const levelNode = own(context.createGain());
-        schedule(levelNode.gain, layer.gainDb, planned.definition.gainDb, true);
+        schedule(
+          levelNode.gain,
+          layer.gainDb,
+          planned.definition.gainDb,
+          true,
+          onset,
+        );
         envelope.connect(levelNode);
         gated = levelNode;
       }
-      filters(gated, chain.slice(split), definitions.slice(split)).connect(sum);
+      filters(
+        gated,
+        chain.slice(split),
+        definitions.slice(split),
+        onset,
+      ).connect(sum);
       if (!plan.hasDelay)
         source.onended = () => {
           if (++ended === sources.length) finish();
@@ -341,7 +365,8 @@ export function createGraph(
       silent.connect(destination);
     }
     // Build the complete graph before scheduling any source.
-    for (const source of sources) source.start(at);
+    for (const { source, onset } of envelopes) source.start(onset);
+    clock?.start(at);
     if (Number.isFinite(plan.lifetime)) {
       if (clock) {
         for (const { source, layer } of envelopes)
@@ -357,8 +382,8 @@ export function createGraph(
       set(controls) {
         if (finished || context.currentTime >= releaseAt)
           throw new AudioBitsError("ended-voice", "Voice is no longer active.");
-        const now = Math.max(at, context.currentTime);
         for (const binding of bindings) {
+          const now = Math.max(binding.onset, context.currentTime);
           const value = mapControl(binding.mapping, plan.recipe, controls);
           const target = binding.db ? 10 ** (value / 20) : value;
           if (target === binding.to) continue;
@@ -409,7 +434,13 @@ export function createGraph(
         releaseAt = Math.min(releaseAt, now, at + plan.duration);
         if (fade === undefined && now >= at + plan.duration) return;
         let end = now;
-        for (const { param, layer, source } of envelopes) {
+        for (const { param, layer, source, onset } of envelopes) {
+          if (onset > at && now <= onset) {
+            // Cancel the pending attack even when another layer is releasing.
+            holdLinear(param, now, 0);
+            source.stop(now);
+            continue;
+          }
           const remaining =
             Math.min(
               stopEnd,
@@ -468,7 +499,11 @@ export function createGraph(
         if (fadeAt > now) output.gain.setValueAtTime(outputValue, fadeAt);
         output.gain.linearRampToValueAtTime(0, end);
         if (clock) clock.stop(end);
-        else for (const source of sources) source.stop(end);
+        else
+          for (const { source, onset } of envelopes)
+            source.stop(
+              onset > at && onset >= releaseAt ? Math.min(end, releaseAt) : end,
+            );
       },
     };
   } catch (error) {

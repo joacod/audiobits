@@ -8,6 +8,7 @@ test("all documentation fences and current gallery examples typecheck through pu
   const snippets: string[] = [];
   for (const name of readdirSync("apps/www/content/docs", {
     recursive: true,
+    encoding: "utf8",
   }).filter((file) => file.endsWith(".mdx"))) {
     const text = readFileSync(`apps/www/content/docs/${name}`, "utf8");
     for (const match of text.matchAll(/```ts\n([\s\S]*?)```/g))
