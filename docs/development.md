@@ -173,8 +173,9 @@ On Linux, run `bash scripts/ci/setup-linux-audio.sh` first. It uses the pinned
 Playwright CLI to install Chromium dependencies and the headless shell, then
 starts and verifies a PulseAudio null sink to provide the audio clock. CI and
 publication use the same script. GitHub supplies the runner's Ubuntu mirror list;
-setup removes its Azure entry after observed download stalls, leaving the official
-Ubuntu HTTPS sources. CI retains traces only on failure.
+setup gives its Azure entry lower priority after observed download stalls, preferring
+the official Ubuntu HTTPS sources while preserving Azure as a fallback. CI retains
+traces only on failure.
 
 ### Flake investigation
 

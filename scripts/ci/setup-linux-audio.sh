@@ -9,9 +9,9 @@ phase() {
 }
 install_os() {
   if [[ "${GITHUB_ACTIONS:-}" == "true" ]]; then
-    # Azure's mirror can stall package downloads. Use the runner's upstream
-    # Ubuntu HTTPS mirrors before Playwright refreshes the package indexes.
-    sudo sed -i '\|://azure\.archive\.ubuntu\.com/ubuntu/|d' /etc/apt/apt-mirrors.txt
+    # Azure's mirror can stall package downloads. Prefer the Ubuntu HTTPS
+    # mirrors, but retain Azure as a fallback if those mirrors are unavailable.
+    sudo sed -i '\|://azure\.archive\.ubuntu\.com/ubuntu/|s/priority:1/priority:4/' /etc/apt/apt-mirrors.txt
   fi
   # The pinned CLI refreshes apt indexes once and installs Chromium dependencies.
   pnpm exec playwright install-deps chromium
