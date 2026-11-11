@@ -192,6 +192,16 @@ export default function Home() {
           <p className="landing-fineprint">
             Available on npm · {siteBuild.version}
           </p>
+          <p className="landing-fineprint">
+            Made by{" "}
+            <a
+              href="https://joacod.com"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              joacod
+            </a>
+          </p>
         </div>
         <div className="landing-links">
           <Link href="/docs">
