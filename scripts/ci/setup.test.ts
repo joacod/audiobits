@@ -75,9 +75,7 @@ if (args.join(' ') === 'list short sinks') console.log('0\\taudiobits_ci\\tmodul
       encoding: "utf8",
     });
     expect(mirrors.status, mirrors.stderr).toBe(0);
-    expect(mirrors.stdout).toBe(
-      "http://azure.archive.ubuntu.com/ubuntu/\tpriority:4\n" + upstream,
-    );
+    expect(mirrors.stdout).toBe(upstream);
     expect(calls.slice(1, 4)).toEqual([dependencies, pulse, browser]);
     expect(calls).toContainEqual([
       "pactl",
